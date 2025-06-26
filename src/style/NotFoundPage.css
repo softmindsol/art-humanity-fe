@@ -1,0 +1,62 @@
+/* Color Palette */
+:root {
+    --primary-dark: #3e2723; /* Dark Brown */
+    --primary: #5d4037; /* Medium Brown */
+    --primary-light: #8d6e63; /* Light Brown */
+    --accent: #d7ccc8; /* Beige */
+    --accent-dark: #a1887f; /* Taupe */
+    --text-dark: #212121; /* Almost Black */
+    --text-light: #efebe9; /* Off White */
+    --gold: #d4af37; /* Gold Accent */
+    --cream: #f5f5dc; /* Cream */
+    --parchment: #f2e8c9; /* Parchment */
+  }
+.not-found-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 80vh;
+    text-align: center;
+    padding: 2rem;
+    font-family: 'Source Serif Pro', serif;
+  }
+  
+  .not-found-content {
+    max-width: 600px;
+  }
+  
+  .not-found-content h1 {
+    font-size: 6rem;
+    margin-bottom: 0.5rem;
+    color: #990000; /* Deep red used in 404 */
+  }
+  
+  .not-found-content h2 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: #1f1f1f;
+    font-weight: 600;
+  }
+  
+  .not-found-content p {
+    font-size: 1.1rem;
+    color: #333;
+    margin-bottom: 2rem;
+  }
+  
+  .back-home-button {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    background-color: #990000; /* Match button red */
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+    font-weight: 600;
+  }
+  
+  .back-home-button:hover {
+    background-color: #800000;
+    color: white;
+  }
+  
