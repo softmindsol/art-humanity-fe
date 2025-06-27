@@ -89,7 +89,12 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                             <button type="submit" className="auth-submit" disabled={loading}>
                                 {loading ? 'Creating...' : 'Create Account'}
                             </button>
-                            {errors.submit && <p className="error">{errors.submit}</p>}
+
+                            <div className="auth-divider"><span>or</span></div>
+                            <button type="button" className="social-auth-btn">
+                                <img src={googleImage} alt="Google" />
+                                Sign in with Google
+                            </button>
                         </form>
                   
                 )}
