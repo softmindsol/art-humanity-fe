@@ -8,6 +8,8 @@ import GuidelinePage from './page/guideline';
 import GalleryPage from './page/gallery';
 import ActiveProjects from './page/contribute/';
 import DemoCanvas from './page/Demo';
+import VerifyEmail from './page/VerifyEmail';
+import ResetPassword from './page/ResetPassword';
 function App() {
   return (
     <Router>
@@ -20,6 +22,9 @@ function App() {
 
         <Route path="/projects" element={<ActiveProjects />} />
         <Route path="/demo" element={<DemoCanvas />} />
+        <Route path='/verify-email/:token' element={<VerifyEmail/>}/>
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
+ 
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
 

@@ -1,11 +1,8 @@
-
 import api from "@/api/api";
 import type { formData } from "@/types/auth";
 
 import { config } from "@/utils/endpoints";
 import { createAsyncThunk } from "@reduxjs/toolkit";
-
-
 
 export const registerUser = createAsyncThunk(
   "user/register",
@@ -13,7 +10,7 @@ export const registerUser = createAsyncThunk(
     try {
       const response = await api.post(
         `${config?.endpoints?.REGISTER}`,
-        formData,
+        formData
       );
       return response.data;
     } catch (error: any) {
@@ -22,19 +19,20 @@ export const registerUser = createAsyncThunk(
   }
 );
 
-// export const verifyEmail = createAsyncThunk(
-//   "user/verifyEmail",
-//   async ({ token }: { token: string }, thunkAPI) => {
-//     try {
-//       const response = await api.post(`${config?.endpoints?.VERIFY_EMAIL}`, {
-//         token,
-//       });
-//       return response.data;
-//     } catch (error) {
-//       return thunkAPI.rejectWithValue(error.response.data);
-//     }
-//   }
-// );
+export const verifyEmail = createAsyncThunk(
+  "user/verifyEmail",
+  async ({ token }: { token: string | undefined }, thunkAPI) => {
+    try {
+      const response = await api.post(`${config?.endpoints?.VERIFY_EMAIL}`, {
+        token,
+      });
+      return response.data;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error.response.data);
+    }
+  }
+);
+
 
 export const loginUser = createAsyncThunk(
   "user/login",
@@ -45,7 +43,7 @@ export const loginUser = createAsyncThunk(
         password,
       });
       return response.data;
-    } catch (error :any) {
+    } catch (error: any) {
       return thunkAPI.rejectWithValue(error.response.data);
     }
   }
@@ -80,7 +78,7 @@ export const refreshToken = createAsyncThunk(
     try {
       const response = await api.get(`/auth/refresh-token`);
       return response.data;
-    } catch (error:any) {
+    } catch (error: any) {
       return thunkAPI.rejectWithValue(error.response.data);
     }
   }
@@ -153,3 +151,36 @@ export const refreshToken = createAsyncThunk(
 //     }
 //   }
 // );
+
+export const forgotPassword = createAsyncThunk(
+  "user/forgotPassword",
+  async ({ email }: { email: string }, thunkAPI) => {
+    try {
+      const response = await api.post(`${config?.endpoints?.FORGOT_PASSWORD}`, {
+        email,
+      });
+      return response.data;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error?.response?.data || error.message);
+    }
+  }
+);
+export const resetPassword = createAsyncThunk(
+  "user/resetPassword",
+  async (
+    { token, password }: { token: string; password: string },
+    thunkAPI
+  ) => {
+    try {
+      const response = await api.post(
+        `${config?.endpoints?.RESET_PASSWORD}/${token}`,
+        {
+          password,
+        }
+      );
+      return response.data;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error?.response?.data || error.message);
+    }
+  }
+);
