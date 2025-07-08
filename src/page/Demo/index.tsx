@@ -1,8 +1,10 @@
 import React, { useRef, useState, useEffect } from 'react';
+import * as fabric  from 'fabric';
 import { RgbaColorPicker } from 'react-colorful';
 import '../../style/demo.css';
 import { Brush, Eraser, Move } from 'lucide-react';
-import house from '../../assets/images/house.png'
+import house from '../../assets/images/house.png';
+
 interface Position {
     x: number;
     y: number;
@@ -10,18 +12,16 @@ interface Position {
 
 const DemoCanvas: React.FC = () => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
+    const fabricCanvasRef = useRef<fabric.Canvas | null>(null);
 
-    const [isDrawing, setIsDrawing] = useState(false);
     const [brushSize, setBrushSize] = useState(3);
     const [color, setColor] = useState({ r: 0, g: 0, b: 0, a: 1 });
     const [zoom, setZoom] = useState(1);
     const [offset, setOffset] = useState<Position>({ x: 0, y: 0 });
-    const [lastPos, setLastPos] = useState<Position>({ x: 0, y: 0 });
     const [mousePos, setMousePos] = useState<Position>({ x: 0, y: 0 });
     const [recentColors, setRecentColors] = useState<string[]>([]);
     const [isPanning, setIsPanning] = useState(false);
     const [panStart, setPanStart] = useState<Position>({ x: 0, y: 0 });
-
     const [mode, setMode] = useState<'brush' | 'eraser' | 'move'>('brush');
 
     // Toolbox drag states
@@ -30,84 +30,102 @@ const DemoCanvas: React.FC = () => {
     const [toolboxStart, setToolboxStart] = useState<Position>({ x: 0, y: 0 });
 
     useEffect(() => {
-        const canvas = canvasRef.current;
-        if (canvas) {
-            const ctx = canvas.getContext('2d');
-            if (ctx) {
-                canvas.width = 1024;
-                canvas.height = 1024;
-                ctx.fillStyle = '#f0f0f0';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-            }
-        }
-    }, []);
+        // Initialize Fabric.js canvas
+        const canvas = new fabric.Canvas(canvasRef.current, {
+            width: 1024,
+            height: 1024,
+            backgroundColor: '#f0f0f0',
+        });
+        fabricCanvasRef.current = canvas;
 
-    const getMousePos = (e: MouseEvent | React.MouseEvent): Position => {
-        const rect = canvasRef.current!.getBoundingClientRect();
-        return {
-            x: (e.clientX - rect.left - offset.x) / zoom,
-            y: (e.clientY - rect.top - offset.y) / zoom,
+        // Initialize brush
+        canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
+        canvas.freeDrawingBrush.width = brushSize;
+        canvas.freeDrawingBrush.color = `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
+        canvas.isDrawingMode = mode === 'brush' || mode === 'eraser';
+
+        // Handle mouse wheel for zooming
+        const handleWheel = (opt: fabric.IEvent) => {
+            const e = opt.e as WheelEvent;
+            e.preventDefault();
+            let newZoom = zoom + (e.deltaY < 0 ? 0.1 : -0.1);
+            newZoom = Math.min(Math.max(newZoom, 0.5), 5);
+            setZoom(newZoom);
+            canvas.setZoom(newZoom);
+            canvas.renderAll();
         };
-    };
 
-    const startDrawing = (e: React.MouseEvent) => {
-        if (mode === 'move') return;
-        setIsDrawing(true);
-        setLastPos(getMousePos(e));
-    };
+        // Update mouse position
+        const handleMouseMove = (opt: fabric.IEvent) => {
+            const pos = canvas.getPointer(opt.e);
+            setMousePos({ x: Math.round(pos.x), y: Math.round(pos.y) });
+        };
 
-    const draw = (e: React.MouseEvent) => {
-        if (!isDrawing || mode === 'move') return;
-        const canvas = canvasRef.current!;
-        const ctx = canvas.getContext('2d')!;
-        const pos = getMousePos(e);
+        // Log path creation to confirm drawing
+        const handlePathCreated = (opt: fabric.IEvent) => {
+            console.log('Path created:', opt);
+            if (mode === 'brush') {
+                const newColor = `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
+                setRecentColors((prev) => {
+                    if (!prev.includes(newColor)) {
+                        return [newColor, ...prev.slice(0, 4)];
+                    }
+                    return prev;
+                });
+            }
+        };
 
+        canvas.on('mouse:wheel', handleWheel);
+        canvas.on('mouse:move', handleMouseMove);
+        canvas.on('path:created', handlePathCreated);
+
+        // Cleanup on unmount
+        return () => {
+            canvas.off('mouse:wheel', handleWheel);
+            canvas.off('mouse:move', handleMouseMove);
+            canvas.off('path:created', handlePathCreated);
+            canvas.dispose();
+        };
+    }, [mode, color]);
+
+    useEffect(() => {
+        const canvas = fabricCanvasRef.current;
+        if (!canvas) return;
+
+        // Update brush settings
         if (mode === 'eraser') {
-            ctx.globalCompositeOperation = 'destination-out';
-        } else {
-            ctx.globalCompositeOperation = 'source-over';
-            ctx.strokeStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
+            canvas.freeDrawingBrush = new fabric.EraserBrush(canvas);
+            canvas.freeDrawingBrush.width = brushSize;
+        } else if (mode === 'brush') {
+            canvas.freeDrawingBrush = new fabric.PencilBrush(canvas);
+            canvas.freeDrawingBrush.width = brushSize;
+            canvas.freeDrawingBrush.color = `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
         }
+        canvas.isDrawingMode = mode === 'brush' || mode === 'eraser';
+        canvas.renderAll();
+    }, [mode, brushSize, color]);
 
-        ctx.lineWidth = brushSize;
-        ctx.lineCap = 'round';
-        ctx.beginPath();
-        ctx.moveTo(lastPos.x, lastPos.y);
-        ctx.lineTo(pos.x, pos.y);
-        ctx.stroke();
-
-        setLastPos(pos);
-    };
-
-    const stopDrawing = () => {
-        if (isDrawing && mode === 'brush') {
-            const newColor = `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
-            setRecentColors((prev) => {
-                if (!prev.includes(newColor)) {
-                    return [newColor, ...prev.slice(0, 4)];
-                }
-                return prev;
-            });
-        }
-        setIsDrawing(false);
-    };
-
-    const handleWheel = (e: React.WheelEvent) => {
-        e.preventDefault();
-        let newZoom = zoom + (e.deltaY < 0 ? 0.1 : -0.1);
-        newZoom = Math.min(Math.max(newZoom, 0.5), 5);
-        setZoom(newZoom);
-    };
-
-    const startPan = (e: React.MouseEvent) => {
+    const startPan = (opt: fabric.IEvent) => {
         if (mode !== 'move') return;
         setIsPanning(true);
+        const e = opt.e as MouseEvent;
         setPanStart({ x: e.clientX - offset.x, y: e.clientY - offset.y });
     };
 
-    const pan = (e: React.MouseEvent) => {
+    const pan = (opt: fabric.IEvent) => {
         if (!isPanning) return;
-        setOffset({ x: e.clientX - panStart.x, y: e.clientY - panStart.y });
+        const e = opt.e as MouseEvent;
+        const newOffset = { x: e.clientX - panStart.x, y: e.clientY - panStart.y };
+        setOffset(newOffset);
+        fabricCanvasRef.current!.setViewportTransform([
+            zoom,
+            0,
+            0,
+            zoom,
+            newOffset.x,
+            newOffset.y,
+        ]);
+        fabricCanvasRef.current!.renderAll();
     };
 
     const stopPan = () => {
@@ -130,31 +148,58 @@ const DemoCanvas: React.FC = () => {
         setIsDraggingToolbox(false);
     };
 
-    // 🔥 Load reference image function with smaller size and centered
+    // Load reference image
     const loadReferenceImage = () => {
-        const canvas = canvasRef.current!;
-        const ctx = canvas.getContext('2d')!;
-        const img = new Image();
-        img.src = `${house}`; // 👈 Put your image in "public" folder with this name
-        img.onload = () => {
-            const imgWidth = 200; // 👈 Desired image width
-            const imgHeight = 200; // 👈 Desired image height
-
-            const x = (canvas.width - imgWidth) / 2; // center X
-            const y = (canvas.height - imgHeight) / 2; // center Y
-
-            ctx.drawImage(img, x, y, imgWidth, imgHeight);
-        };
+        const canvas = fabricCanvasRef.current!;
+        fabric.Image.fromURL(house, (img) => {
+            const imgWidth = 200;
+            const imgHeight = 200;
+            img.set({
+                left: (canvas.width! - imgWidth) / 2,
+                top: (canvas.height! - imgHeight) / 2,
+                scaleX: imgWidth / img.width!,
+                scaleY: imgHeight / img.height!,
+            });
+            canvas.add(img);
+            canvas.renderAll();
+        });
     };
 
+    useEffect(() => {
+        const canvas = fabricCanvasRef.current;
+        if (!canvas) return;
 
+        const handleMouseDown = (opt: fabric.IEvent) => {
+            if ((opt.e as MouseEvent).button === 2 || mode === 'move') {
+                startPan(opt);
+            }
+        };
+
+        const handleMouseMove = (opt: fabric.IEvent) => {
+            if (isPanning) pan(opt);
+        };
+
+        const handleMouseUp = () => {
+            stopPan();
+        };
+
+        canvas.on('mouse:down', handleMouseDown);
+        canvas.on('mouse:move', handleMouseMove);
+        canvas.on('mouse:up', handleMouseUp);
+
+        return () => {
+            canvas.off('mouse:down', handleMouseDown);
+            canvas.off('mouse:move', handleMouseMove);
+            canvas.off('mouse:up', handleMouseUp);
+        };
+    }, [mode, isPanning]);
 
     return (
         <div className="container">
             <main>
                 <section className="contribute-header">
                     <h2>Demo Canvas</h2>
-                    <p>This canvas is 10240px by 10240px, don't believe us? Load the reference images!</p>
+                    <p>This canvas is 1024px by 1024px, don't believe us? Load the reference images!</p>
                 </section>
 
                 <div className="reference-images-container">
@@ -165,7 +210,7 @@ const DemoCanvas: React.FC = () => {
 
                 <section className="contribute-instructions">
                     <p>
-                        Use the mouse wheel to zoom, right-click to pan, and left click to draw when zoomed in.
+                        Use the mouse wheel to zoom, right-click to pan, and left-click to draw when zoomed in.
                         Adjust brush and colors from the toolbox. Drag toolbox to move.
                     </p>
                 </section>
@@ -193,8 +238,12 @@ const DemoCanvas: React.FC = () => {
                     <div className="toolbox-header flex justify-between items-center">
                         <h3>Drawing Tools</h3>
                         <div className="flex items-center gap-2">
-                            <button onClick={() => setMode('brush')} title="Brush"><Brush size={18} /></button>
-                            <button onClick={() => setMode('eraser')} title="Eraser"><Eraser size={18} /></button>
+                            <button onClick={() => setMode('brush')} title="Brush">
+                                <Brush size={18} />
+                            </button>
+                            <button onClick={() => setMode('eraser')} title="Eraser">
+                                <Eraser size={18} />
+                            </button>
                             <div
                                 onMouseDown={startToolboxDrag}
                                 style={{ cursor: 'grab' }}
@@ -248,23 +297,6 @@ const DemoCanvas: React.FC = () => {
 
                 <section
                     className="canvas-container"
-                    onWheel={handleWheel}
-                    onMouseDown={(e) => {
-                        if (e.button === 2 || mode === 'move') startPan(e);
-                        else startDrawing(e);
-                    }}
-                    onMouseMove={(e) => {
-                        const pos = getMousePos(e);
-                        setMousePos({ x: Math.round(pos.x), y: Math.round(pos.y) });
-
-                        if (isPanning) pan(e);
-                        else draw(e);
-                    }}
-                    onMouseUp={() => {
-                        stopDrawing();
-                        stopPan();
-                    }}
-                    onContextMenu={(e) => e.preventDefault()}
                     style={{
                         display: 'flex',
                         justifyContent: 'center',
@@ -274,8 +306,6 @@ const DemoCanvas: React.FC = () => {
                     <canvas
                         ref={canvasRef}
                         style={{
-                            transform: `translate(${offset.x}px, ${offset.y}px) scale(${zoom})`,
-                            transformOrigin: 'center center',
                             border: '2px solid #4d2d2d',
                             backgroundColor: '#f0f0f0',
                             cursor: isPanning ? 'grab' : mode === 'move' ? 'grab' : 'crosshair',

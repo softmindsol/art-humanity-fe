@@ -6,20 +6,26 @@ import {
 //   logoutUser,
 //   getUser,
   refreshToken,
+  googleLogin
 } from "../action/auth";
 
 interface initialStateType {
   user: [] | null;
   loading: boolean;
+  googleAuthUser: [] | null;
+  googleLoading:boolean
   error: string | null;
   successMessage: string | null;
 }
 
 const initialState: initialStateType = {
   user: null,
+  googleAuthUser:null,
   loading: false,
+  googleLoading:false,
   error: null,
   successMessage: null,
+
 };
 
 const authSlice = createSlice({
@@ -75,6 +81,19 @@ const authSlice = createSlice({
       // Refresh token
       .addCase(refreshToken.fulfilled, (state) => {
         state.successMessage = "Token refreshed";
+      })
+
+      .addCase(googleLogin.pending, (state) => {
+        state.googleLoading = true;
+        state.error = null;
+      })
+      .addCase(googleLogin.fulfilled, (state, action) => {
+        state.googleLoading = false;
+        state.googleAuthUser = action.payload;
+      })
+      .addCase(googleLogin.rejected, (state:any, action) => {
+        state.googleLoading = false;
+        state.error = action.payload;
       });
   },
 });

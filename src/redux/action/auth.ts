@@ -1,8 +1,9 @@
 import api from "@/api/api";
 import type { formData } from "@/types/auth";
-
+import { signInWithPopup, getIdToken } from "firebase/auth";
 import { config } from "@/utils/endpoints";
 import { createAsyncThunk } from "@reduxjs/toolkit";
+import { auth, provider } from "../../firebase";
 
 export const registerUser = createAsyncThunk(
   "user/register",
@@ -181,6 +182,30 @@ export const resetPassword = createAsyncThunk(
       return response.data;
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error?.response?.data || error.message);
+    }
+  }
+);
+
+export const googleLogin = createAsyncThunk(
+  "auth/googleLogin",
+  async (_, thunkAPI) => {
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const token = await result.user.getIdToken();
+
+      // Axios request to backend
+      const response = await api.post(
+        `${config?.endpoints?.GOOGLE_AUTH}`,
+        { token },
+        { headers: { "Content-Type": "application/json" } }
+      );
+
+      return response.data.user; // Assuming backend returns { success: true, user: {...} }
+    } catch (error:any) {
+      if (error.response && error.response.data && error.response.data.message) {
+        return thunkAPI.rejectWithValue(error.response.data.message);
+      }
+      return thunkAPI.rejectWithValue(error.message);
     }
   }
 );

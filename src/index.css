@@ -1695,3 +1695,11 @@ footer {
     flex-direction: column;
   }
 }
+.react-colorful {
+  width: 100% !important;
+  height: 150px !important;
+}
+.react-colorful__saturation,
+.react-colorful__hue {
+  border-radius: 8px;
+}

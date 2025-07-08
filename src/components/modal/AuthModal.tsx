@@ -3,6 +3,10 @@ import googleImage from '../../assets/images/google-icon.svg';
 import { useRegisterForm } from '@/hook/useRegisterForm';
 import { Eye, EyeOff } from 'lucide-react';
 import ForgotPasswordForm from './ForgotPasswordForm';
+import { googleLogin } from '../../redux/action/auth';
+import useAppDispatch from '@/hook/useDispatch';
+import { useSelector } from 'react-redux';
+import type { RootState } from '@/redux/store';
 
 interface AuthModalProps {
     isOpen: boolean;
@@ -12,7 +16,9 @@ interface AuthModalProps {
 const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     const [activeTab, setActiveTab] = useState<'sign-in' | 'sign-up'>('sign-in');
     const [showForgotPassword, setShowForgotPassword] = useState(false);
-
+    const dispatch = useAppDispatch();
+    const {  googleLoading } = useSelector((state:RootState) => state.auth);
+    
     const {
         formData,
         errors,
@@ -26,6 +32,14 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         showSigninPassword,
         setShowSigninPassword,
     } = useRegisterForm();
+
+    const handleGoogleLogin = () => {
+        dispatch(googleLogin());
+    };
+    
+
+
+
 
     if (!isOpen) return null;
 
@@ -78,10 +92,16 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                         </div>
                         <button type="submit" className="auth-submit">Sign In</button>
                         <div className="auth-divider"><span>or</span></div>
-                        <button type="button" className="social-auth-btn">
+                        <button
+                            type="button"
+                            className="social-auth-btn"
+                            onClick={handleGoogleLogin}
+                            disabled={googleLoading}
+                            >
                             <img src={googleImage} alt="Google" />
-                            Sign in with Google
-                        </button>
+                            {googleLoading ? 'Signing in...' : 'Sign in with Google'}
+                            </button>
+
                         <div className="auth-footer">
                             <button type="button" onClick={() => setShowForgotPassword(true)} className="text-[#5d4037] hover:underline cursor-pointer">
                                 Forgot password?
@@ -136,10 +156,16 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                             {loading ? 'Creating...' : 'Create Account'}
                         </button>
                         <div className="auth-divider"><span>or</span></div>
-                        <button type="button" className="social-auth-btn">
-                            <img src={googleImage} alt="Google" />
-                            Sign up with Google
+                        <button
+                        type="button"
+                        className="social-auth-btn"
+                        onClick={handleGoogleLogin}
+                        disabled={googleLoading}
+                        >
+                        <img src={googleImage} alt="Google" />
+                        {googleLoading ? 'Signing up...' : 'Sign up with Google'}
                         </button>
+
                     </form>
                 )}
             </div>

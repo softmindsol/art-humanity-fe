@@ -9,6 +9,8 @@ const config = {
     VERIFY_EMAIL: "/auth/verify-email",
     FORGOT_PASSWORD: "/auth/forgot-password",
     RESET_PASSWORD: "/auth/reset-password",
+    GOOGLE_AUTH: "/auth/firebase-login",
+
   },
 };
 
