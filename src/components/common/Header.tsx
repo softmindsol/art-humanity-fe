@@ -12,10 +12,17 @@ const Header = () => {
   const dispatch = useAppDispatch();
   const { user, profile } = useSelector((state: RootState) => state.auth);
 
-  console.log("profile:", profile)
   const handleLogout = () => {
+    // Clear localStorage (including redux-persist)
+    localStorage.clear();
+
+    // Optionally, if you have a logout action, you can also dispatch it
     // dispatch(logout());
+
+    // Optionally reload or navigate to home
+    window.location.href = "/";
   };
+  
   useEffect(() => {
     if (user && user.id) {
       dispatch(getUserById(user.id));

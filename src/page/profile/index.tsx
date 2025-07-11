@@ -76,7 +76,7 @@ const ProfilePage = () => {
 
     return (
         <div className="max-w-md mx-auto mt-12 p-8 bg-[#fef9f4] border border-[#d4af37] rounded-2xl shadow-lg">
-            <h2 className="text-3xl font-serif text-[#5d4037] mb-6">Update Profile</h2>
+            <h2 className="text-2xl font-serif text-[#5d4037] mb-6">Update Profile</h2>
 
             <div className="mb-4">
                 <Label className="text-[#5d4037] mb-1">Full Name</Label>
@@ -137,16 +137,16 @@ const ProfilePage = () => {
                 onClick={handleUpdate}
                 className="w-full bg-[#5d4037] hover:bg-[#7b5c52] text-white font-semibold mb-3 rounded shadow"
             >
-               {` Update Profile ${loader ? "..." : ""}`}
+                {` Update Profile ${loader ? "..." : ""}`}
             </Button>
 
-            <Button
+            {/* <Button
                 onClick={handleLogout}
                 variant="outline"
                 className="w-full border border-red-600 text-red-600 hover:bg-red-50 rounded"
             >
                 Logout
-            </Button>
+            </Button> */}
         </div>
     );
 };
