@@ -1,108 +1,149 @@
-import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { useSelector } from 'react-redux';
-import type { RootState } from '@/redux/store';
+import React, { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useSelector } from "react-redux";
+import type { RootState } from "@/redux/store";
+import { getUserById, updateUser } from "@/redux/action/auth";
+import useAppDispatch from "@/hook/useDispatch";
+import { toast } from "sonner";
 
 const ProfilePage = () => {
     const { profile } = useSelector((state: RootState) => state.auth);
+    const dispatch = useAppDispatch();
+    const [loader, setLoader] = useState(false);
+    const [formData, setFormData] = useState({
+        fullName: "",
+        email: "",
+        profileImage: null as File | null,
+        newPassword: "",
+        confirmPassword: "",
+    });
 
-    const [fullName, setFullName] = useState("");
-    const [email, setEmail] = useState("");
-    const [profileImage, setProfileImage] = useState<File | null>(null);
-    const [newPassword, setNewPassword] = useState("");
-    const [confirmPassword, setConfirmPassword] = useState("");
-
-    // ⭐ Fill fields when profile data is available
     useEffect(() => {
         if (profile) {
-            setFullName(profile.fullName || "");
-            setEmail(profile.email || "");
+            setFormData((prev) => ({
+                ...prev,
+                fullName: profile.fullName || "",
+                email: profile.email || "",
+            }));
         }
     }, [profile]);
 
-    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            setProfileImage(e.target.files[0]);
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value, files } = e.target;
+        if (name === "profileImage" && files) {
+            setFormData((prev) => ({ ...prev, profileImage: files[0] }));
+        } else {
+            setFormData((prev) => ({ ...prev, [name]: value }));
         }
     };
 
     const handleUpdate = () => {
-        // Submit logic here
-        console.log("Updating profile...");
+        if (formData.newPassword && formData.newPassword !== formData.confirmPassword) {
+            alert("Passwords do not match");
+            return;
+        }
+
+        setLoader(true)
+
+        const data = new FormData();
+        data.append("fullName", formData.fullName);
+        if (formData.newPassword) {
+            data.append("password", formData.newPassword);
+        }
+        if (formData.profileImage) {
+            data.append("profileImage", formData.profileImage);
+        }
+
+        dispatch(updateUser({ userId: profile?.id, formData: data })).unwrap()
+            .then(() => {
+                dispatch(getUserById(profile?.id));
+                setLoader(false)
+
+                toast.success("Profile updated successfully");
+            })
+            .catch((error) => {
+                setLoader(false)
+                console.error("Failed to update profile:", error);
+                toast.error("Failed to update profile");
+            });
     };
 
     const handleLogout = () => {
-        // Logout logic here
+        console.log("Logging out...");
     };
 
     return (
-        <div className="max-w-lg mx-auto p-8 mt-12 bg-[#fef9f4] border border-[#d4af37] rounded-lg shadow-md">
-            <h2 className="text-2xl font-bold text-[#5d4037] mb-6">Update Profile</h2>
+        <div className="max-w-md mx-auto mt-12 p-8 bg-[#fef9f4] border border-[#d4af37] rounded-2xl shadow-lg">
+            <h2 className="text-3xl font-serif text-[#5d4037] mb-6">Update Profile</h2>
 
             <div className="mb-4">
-                <Label className="text-[#5d4037]">Full Name</Label>
+                <Label className="text-[#5d4037] mb-1">Full Name</Label>
                 <Input
-                    value={fullName}
-                    onChange={(e:any) => setFullName(e.target.value)}
-                    className="border-[#d4af37] focus:ring-[#d4af37]"
+                    name="fullName"
+                    value={formData.fullName}
+                    onChange={handleChange}
+                    className="bg-[#f9f4ec] border border-[#d4af37] rounded focus:ring-2 focus:ring-[#d4af37]"
                 />
             </div>
 
             <div className="mb-4">
-                <Label className="text-[#5d4037]">Email</Label>
+                <Label className="text-[#5d4037] mb-1">Email</Label>
                 <Input
-                    value={email}
+                    value={formData.email}
                     disabled
-                    className="border-[#d4af37] bg-[#f9f4ec] text-gray-500 cursor-not-allowed"
+                    className="bg-[#f9f4ec] border border-[#d4af37] text-gray-500 cursor-not-allowed"
                 />
             </div>
 
             <div className="mb-4">
-                <Label className="text-[#5d4037]">Profile Picture</Label>
+                <Label className="text-[#5d4037] mb-1">Profile Picture</Label>
                 <Input
                     type="file"
                     accept="image/*"
-                    onChange={handleImageChange}
-                    className="border-none bg-transparent p-0"
+                    name="profileImage"
+                    onChange={handleChange}
+                    className="border-none bg-transparent p-0 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-[#d4af37] file:text-[#5d4037] file:font-semibold hover:file:bg-[#c8a230]"
                 />
-                {profileImage && (
-                    <p className="text-sm text-[#5d4037] mt-1">Selected: {profileImage.name}</p>
+                {formData.profileImage && (
+                    <p className="text-sm text-[#5d4037] mt-1">Selected: {formData.profileImage.name}</p>
                 )}
             </div>
 
             <div className="mb-4">
-                <Label className="text-[#5d4037]">New Password</Label>
+                <Label className="text-[#5d4037] mb-1">New Password</Label>
                 <Input
                     type="password"
-                    value={newPassword}
-                    onChange={(e: any) => setNewPassword(e.target.value)}
-                    className="border-[#d4af37] focus:ring-[#d4af37]"
+                    name="newPassword"
+                    value={formData.newPassword}
+                    onChange={handleChange}
+                    className="bg-[#f9f4ec] border border-[#d4af37] rounded focus:ring-2 focus:ring-[#d4af37]"
                 />
             </div>
 
             <div className="mb-6">
-                <Label className="text-[#5d4037]">Confirm Password</Label>
+                <Label className="text-[#5d4037] mb-1">Confirm Password</Label>
                 <Input
                     type="password"
-                    value={confirmPassword}
-                    onChange={(e: any) => setConfirmPassword(e.target.value)}
-                    className="border-[#d4af37] focus:ring-[#d4af37]"
+                    name="confirmPassword"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    className="bg-[#f9f4ec] border border-[#d4af37] rounded focus:ring-2 focus:ring-[#d4af37]"
                 />
             </div>
 
             <Button
                 onClick={handleUpdate}
-                className="w-full bg-[#5d4037] hover:bg-[#7b5c52] text-white font-semibold mb-3"
+                className="w-full bg-[#5d4037] hover:bg-[#7b5c52] text-white font-semibold mb-3 rounded shadow"
             >
-                Update Profile
+               {` Update Profile ${loader ? "..." : ""}`}
             </Button>
 
             <Button
                 onClick={handleLogout}
                 variant="outline"
-                className="w-full border-red-600 text-red-600 hover:bg-red-50"
+                className="w-full border border-red-600 text-red-600 hover:bg-red-50 rounded"
             >
                 Logout
             </Button>

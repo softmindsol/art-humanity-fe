@@ -12,11 +12,10 @@ const Header = () => {
   const dispatch = useAppDispatch();
   const { user, profile } = useSelector((state: RootState) => state.auth);
 
-
+  console.log("profile:", profile)
   const handleLogout = () => {
     // dispatch(logout());
   };
-  console.log("profile:", profile)
   useEffect(() => {
     if (user && user.id) {
       dispatch(getUserById(user.id));
@@ -49,12 +48,20 @@ const Header = () => {
             <div className="auth-buttons">
               {profile ? (
                 <DropdownMenu >
-                  <DropdownMenuTrigger asChild >
-                    <div
-                      className="w-9 h-9 rounded-full bg-[#5d4037] text-white flex items-center justify-center font-bold cursor-pointer select-none transition-transform hover:scale-105 shadow-md"
-                    >
-                      {profile.fullName.charAt(0).toUpperCase()}
-                    </div>
+                  <DropdownMenuTrigger asChild>
+                    {profile.avatar ? (
+                      <img
+                        src={profile.avatar}
+                        alt="Avatar"
+                        className="w-9 h-9 rounded-full object-cover cursor-pointer border-2 border-[#d4af37] shadow-md hover:scale-105 transition-transform"
+                      />
+                    ) : (
+                      <div
+                        className="w-9 h-9 rounded-full bg-[#5d4037] text-white flex items-center justify-center font-bold cursor-pointer select-none transition-transform hover:scale-105 shadow-md"
+                      >
+                        {profile.fullName.charAt(0).toUpperCase()}
+                      </div>
+                    )}
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
                     align="end"

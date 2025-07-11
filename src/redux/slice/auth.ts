@@ -17,12 +17,14 @@ interface Profile {
   fullName: string;
   isVerified: boolean;
   createdAt: string;
+  avatar: string | null;
 }
 interface User {
   id: string;
   email: string;
   fullName: string;
   token: string;
+  avatar?: string | null;
 }
 
 

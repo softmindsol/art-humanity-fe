@@ -34,7 +34,6 @@ export const verifyEmail = createAsyncThunk(
   }
 );
 
-
 export const loginUser = createAsyncThunk(
   "user/login",
   async ({ email, password }: any, thunkAPI) => {
@@ -50,28 +49,27 @@ export const loginUser = createAsyncThunk(
   }
 );
 
-// export const updateUser = createAsyncThunk(
-//   "user/updateUser",
-//   async (
-//     { formData, userId }: { formData: FormData; userId: string },
-//     { rejectWithValue }
-//   ) => {
-//     try {
-//       console.log(userId);
-//       const response = await api.put(
-//         `${config?.endpoints?.UPDATE_USER}/${userId}`,
-//         formData,
-//         {
-//           headers: { "Content-Type": "multipart/form-data" },
-//           withCredentials: true,
-//         }
-//       );
-//       return response.data;
-//     } catch (err: any) {
-//       return rejectWithValue(err.response?.data?.message || "Update failed");
-//     }
-//   }
-// );
+export const updateUser = createAsyncThunk(
+  "user/updateUser",
+  async (
+    { formData, userId }: { formData: FormData; userId: any },
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await api.put(
+        `${config?.endpoints?.UPDATE_USER}/${userId}`,
+        formData,
+        {
+          headers: { "Content-Type": "multipart/form-data" },
+          withCredentials: true,
+        }
+      );
+      return response.data;
+    } catch (err: any) {
+      return rejectWithValue(err.response?.data?.message || "Update failed");
+    }
+  }
+);
 
 export const refreshToken = createAsyncThunk(
   "user/refreshToken",
@@ -188,7 +186,7 @@ export const resetPassword = createAsyncThunk(
 
 export const getUserById = createAsyncThunk(
   "auth/getUserById",
-  async (id: string, thunkAPI) => {
+  async (id: any, thunkAPI) => {
     try {
       const response = await api.get(`${config?.endpoints?.GET_USER}/${id}`);
       return response.data.data; // backend returns { success: true, data: {...} }
@@ -215,8 +213,12 @@ export const googleLogin = createAsyncThunk(
       );
 
       return response.data.user; // Assuming backend returns { success: true, user: {...} }
-    } catch (error:any) {
-      if (error.response && error.response.data && error.response.data.message) {
+    } catch (error: any) {
+      if (
+        error.response &&
+        error.response.data &&
+        error.response.data.message
+      ) {
         return thunkAPI.rejectWithValue(error.response.data.message);
       }
       return thunkAPI.rejectWithValue(error.message);

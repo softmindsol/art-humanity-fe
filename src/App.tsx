@@ -10,6 +10,7 @@ import ActiveProjects from './page/contribute/';
 import DemoCanvas from './page/Demo';
 import VerifyEmail from './page/VerifyEmail';
 import ResetPassword from './page/ResetPassword';
+import ProfilePage from './page/profile';
 function App() {
   return (
     <Router>
@@ -19,6 +20,7 @@ function App() {
         <Route path="/" element={<HeroSection />} />
         <Route path="/guideline" element={<GuidelinePage />} />
         <Route path="/gallery" element={<GalleryPage />} />
+        <Route path="/profile" element={<ProfilePage />} />
 
         <Route path="/projects" element={<ActiveProjects />} />
         <Route path="/demo" element={<DemoCanvas />} />
