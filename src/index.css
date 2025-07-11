@@ -20,8 +20,8 @@
 
 /* Base Styles */
 * {
-  margin: 0;
-  padding: 0;
+  /* margin: 0;
+  padding: 0; */
   box-sizing: border-box;
 }
 
@@ -69,7 +69,7 @@ a:hover {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   position: sticky;
   top: 0;
-  z-index: 1000;
+  /* z-index: 1000; */
   border-bottom: 1px solid var(--accent-dark);
 }
 
@@ -228,7 +228,6 @@ nav ul li a.active {
   margin-left: auto;
   margin-right: auto;
 }
-
 
 /* Features Section */
 .features {
@@ -972,7 +971,6 @@ footer {
   z-index: 1000;
 }
 
-
 .auth-modal.active {
   display: flex;
 }
@@ -1328,7 +1326,7 @@ footer {
 }
 
 .auth-required h2 {
-  font-family: 'Playfair Display', serif;
+  font-family: "Playfair Display", serif;
   font-size: 2rem;
   margin-bottom: 1rem;
   color: #333;
@@ -1367,7 +1365,7 @@ footer {
 }
 
 .projects-header h2 {
-  font-family: 'Playfair Display', serif;
+  font-family: "Playfair Display", serif;
   font-size: 2.5rem;
   margin-bottom: 1rem;
   color: #333;
@@ -1508,7 +1506,7 @@ footer {
 }
 
 .project-info h3 {
-  font-family: 'Playfair Display', serif;
+  font-family: "Playfair Display", serif;
   font-size: 1.4rem;
   margin-bottom: 0.3rem;
   color: #333;
@@ -1544,7 +1542,9 @@ footer {
   color: #888;
 }
 
-.btn-contribute, .btn-notify, .btn-view {
+.btn-contribute,
+.btn-notify,
+.btn-view {
   display: block;
   width: 100%;
   padding: 0.8rem;
@@ -1590,13 +1590,13 @@ footer {
 /* Responsive Adjustments */
 @media (max-width: 768px) {
   .projects-grid {
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   }
 }
 
 @media (max-width: 480px) {
   .projects-grid {
-      grid-template-columns: 1fr;
+    grid-template-columns: 1fr;
   }
 }
 
@@ -1622,17 +1622,17 @@ footer {
 }
 
 .medieval-theme .progress-fill {
-  background-color: #DAA520 !important;
+  background-color: #daa520 !important;
 }
 
 .medieval-theme .progress-text {
-  color: #DAA520 !important;
+  color: #daa520 !important;
   font-weight: 600;
 }
 
 .medieval-theme .project-info h3 {
   color: #5d4037 !important;
-  font-family: 'Playfair Display', serif;
+  font-family: "Playfair Display", serif;
 }
 
 .medieval-theme .project-stats {
@@ -1648,13 +1648,13 @@ footer {
 }
 
 .medieval-theme .btn-contribute {
-  background-color: #DAA520 !important;
+  background-color: #daa520 !important;
   color: #5d4037 !important;
   border: 1px solid #5d4037 !important;
 }
 
 .medieval-theme .btn-contribute:hover {
-  background-color: #B8860B !important;
+  background-color: #b8860b !important;
   color: #f5f1e6 !important;
 }
 
@@ -1681,9 +1681,13 @@ footer {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-} 
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
 /* Responsive Styles */
 @media (max-width: 768px) {
   .auth-buttons {

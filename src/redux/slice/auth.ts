@@ -10,15 +10,32 @@ import {
   getUserById,
 } from "../action/auth";
 
+
+interface Profile {
+  id: string;
+  email: string;
+  fullName: string;
+  isVerified: boolean;
+  createdAt: string;
+}
+interface User {
+  id: string;
+  email: string;
+  fullName: string;
+  token: string;
+}
+
+
 interface initialStateType {
-  user: [] | null;
-  profile: null; // ✅ New: store profile data
+  user: User | null;
+  profile: Profile | null; // ✅ New: store profile data
   loading: boolean;
   googleAuthUser: [] | null;
   googleLoading: boolean;
   error: string | null;
   successMessage: string | null;
 }
+
 
 const initialState: initialStateType = {
   user: null,
