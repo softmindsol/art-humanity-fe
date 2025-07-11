@@ -1,31 +1,33 @@
 import { createSlice } from "@reduxjs/toolkit";
 import {
   registerUser,
-//   verifyEmail,
+  //   verifyEmail,
   loginUser,
-//   logoutUser,
-//   getUser,
+  //   logoutUser,
+  //   getUser,
   refreshToken,
-  googleLogin
+  googleLogin,
+  getUserById,
 } from "../action/auth";
 
 interface initialStateType {
   user: [] | null;
+  profile: null; // ✅ New: store profile data
   loading: boolean;
   googleAuthUser: [] | null;
-  googleLoading:boolean
+  googleLoading: boolean;
   error: string | null;
   successMessage: string | null;
 }
 
 const initialState: initialStateType = {
   user: null,
-  googleAuthUser:null,
+  googleAuthUser: null,
+  profile: null, // ✅ New: store profile data
   loading: false,
-  googleLoading:false,
+  googleLoading: false,
   error: null,
   successMessage: null,
-
 };
 
 const authSlice = createSlice({
@@ -48,35 +50,35 @@ const authSlice = createSlice({
         state.loading = false;
         state.successMessage = action.payload.message;
       })
-      .addCase(registerUser.rejected, (state, action:any) => {
+      .addCase(registerUser.rejected, (state, action: any) => {
         state.loading = false;
         state.error = action.payload.message;
       })
 
-    //   // Verify
-    //   .addCase(verifyEmail.fulfilled, (state, action) => {
-    //     state.successMessage = action.payload.message;
-    //   })
+      //   // Verify
+      //   .addCase(verifyEmail.fulfilled, (state, action) => {
+      //     state.successMessage = action.payload.message;
+      //   })
 
       // Login
       .addCase(loginUser.fulfilled, (state, action) => {
         state.user = action.payload.data;
         state.successMessage = "Login successful";
       })
-      .addCase(loginUser.rejected, (state, action:any) => {
+      .addCase(loginUser.rejected, (state, action: any) => {
         state.error = action.payload.message;
       })
 
       // Logout
-    //   .addCase(logoutUser.fulfilled, (state) => {
-    //     state.user = null;
-    //     state.successMessage = "Logout successful";
-    //   })
+      //   .addCase(logoutUser.fulfilled, (state) => {
+      //     state.user = null;
+      //     state.successMessage = "Logout successful";
+      //   })
 
       // Get user
-    //   .addCase(getUser.fulfilled, (state, action) => {
-    //     state.user = action.payload.data;
-    //   })
+      //   .addCase(getUser.fulfilled, (state, action) => {
+      //     state.user = action.payload.data;
+      //   })
 
       // Refresh token
       .addCase(refreshToken.fulfilled, (state) => {
@@ -91,9 +93,21 @@ const authSlice = createSlice({
         state.googleLoading = false;
         state.googleAuthUser = action.payload;
       })
-      .addCase(googleLogin.rejected, (state:any, action) => {
+      .addCase(googleLogin.rejected, (state: any, action) => {
         state.googleLoading = false;
         state.error = action.payload;
+      })
+      .addCase(getUserById.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(getUserById.fulfilled, (state, action) => {
+        state.profile = action.payload;
+        state.loading = false;
+      })
+      .addCase(getUserById.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
       });
   },
 });

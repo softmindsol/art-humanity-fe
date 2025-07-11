@@ -16,9 +16,8 @@ interface AuthModalProps {
 const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     const [activeTab, setActiveTab] = useState<'sign-in' | 'sign-up'>('sign-in');
     const [showForgotPassword, setShowForgotPassword] = useState(false);
-    const dispatch = useAppDispatch();
-    const {  googleLoading } = useSelector((state:RootState) => state.auth);
-    
+    const { googleLoading } = useSelector((state: RootState) => state.auth);
+
     const {
         formData,
         errors,
@@ -31,12 +30,18 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         setShowConfirmPassword,
         showSigninPassword,
         setShowSigninPassword,
-    } = useRegisterForm();
+        handleLoginSubmit,
+        handleLoginChange,
+        loginData,
+        loginErrors,
+        loginLoading,
+        handleGoogleLogin
+      
 
-    const handleGoogleLogin = () => {
-        dispatch(googleLogin());
-    };
-    
+    } = useRegisterForm({onClose});
+
+
+
 
 
 
@@ -72,15 +77,25 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 {showForgotPassword ? (
                     <ForgotPasswordForm onBackToSignIn={() => setShowForgotPassword(false)} />
                 ) : activeTab === 'sign-in' ? (
-                    <form className="auth-form">
+                    <form className="auth-form" onSubmit={handleLoginSubmit}>
                         <div className="form-group">
                             <label>Email</label>
-                            <input type="email" required />
+                            <input
+                                type="email"
+                                name="email"
+                                value={loginData.email}
+                                onChange={handleLoginChange}
+                                required
+                            />
+                            {loginErrors.email && <p className="error text-red-500">{loginErrors.email}</p>}
                         </div>
                         <div className="form-group relative">
                             <label>Password</label>
                             <input
                                 type={showSigninPassword ? 'text' : 'password'}
+                                name="password"
+                                value={loginData.password}
+                                onChange={handleLoginChange}
                                 required
                             />
                             <span
@@ -89,18 +104,21 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                             >
                                 {showSigninPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                             </span>
+                            {loginErrors.password && <p className="error text-red-500">{loginErrors.password}</p>}
                         </div>
-                        <button type="submit" className="auth-submit">Sign In</button>
+                        <button type="submit" className="auth-submit" disabled={loginLoading}>
+                            {loginLoading ? 'Signing in...' : 'Sign In'}
+                        </button>
                         <div className="auth-divider"><span>or</span></div>
                         <button
                             type="button"
                             className="social-auth-btn"
                             onClick={handleGoogleLogin}
                             disabled={googleLoading}
-                            >
+                        >
                             <img src={googleImage} alt="Google" />
                             {googleLoading ? 'Signing in...' : 'Sign in with Google'}
-                            </button>
+                        </button>
 
                         <div className="auth-footer">
                             <button type="button" onClick={() => setShowForgotPassword(true)} className="text-[#5d4037] hover:underline cursor-pointer">
@@ -108,8 +126,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                             </button>
                         </div>
                     </form>
+
                 ) : (
-                    <form className="auth-form" onSubmit={handleSubmit}>
+                    <form className="auth-form" >
                         <div className="form-group">
                             <label>Display Name</label>
                             <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} />
@@ -152,18 +171,18 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                             </span>
                             {errors.confirmPassword && <p className="error text-red-500">{errors.confirmPassword}</p>}
                         </div>
-                        <button type="submit" className="auth-submit" disabled={loading}>
+                        <button type="submit" onClick={handleSubmit} className="auth-submit" disabled={loading}>
                             {loading ? 'Creating...' : 'Create Account'}
                         </button>
                         <div className="auth-divider"><span>or</span></div>
                         <button
-                        type="button"
-                        className="social-auth-btn"
-                        onClick={handleGoogleLogin}
-                        disabled={googleLoading}
+                            type="button"
+                            className="social-auth-btn"
+                            onClick={handleGoogleLogin}
+                            disabled={googleLoading}
                         >
-                        <img src={googleImage} alt="Google" />
-                        {googleLoading ? 'Signing up...' : 'Sign up with Google'}
+                            <img src={googleImage} alt="Google" />
+                            {googleLoading ? 'Signing up...' : 'Sign up with Google'}
                         </button>
 
                     </form>

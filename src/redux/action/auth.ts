@@ -1,6 +1,6 @@
 import api from "@/api/api";
 import type { formData } from "@/types/auth";
-import { signInWithPopup, getIdToken } from "firebase/auth";
+import { signInWithPopup } from "firebase/auth";
 import { config } from "@/utils/endpoints";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import { auth, provider } from "../../firebase";
@@ -182,6 +182,20 @@ export const resetPassword = createAsyncThunk(
       return response.data;
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error?.response?.data || error.message);
+    }
+  }
+);
+
+export const getUserById = createAsyncThunk(
+  "auth/getUserById",
+  async (id: string, thunkAPI) => {
+    try {
+      const response = await api.get(`${config?.endpoints?.GET_USER}/${id}`);
+      return response.data.data; // backend returns { success: true, data: {...} }
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response.data.message || "Failed to fetch user"
+      );
     }
   }
 );

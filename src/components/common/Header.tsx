@@ -1,9 +1,21 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import AuthModal from '../modal/AuthModal';
+import {  useSelector } from 'react-redux';
+import { getUserById } from '@/redux/action/auth';
+import type { RootState } from '@/redux/store';
+import useAppDispatch from '@/hook/useDispatch';
 
 const Header = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const dispatch = useAppDispatch();
+  const { user, profile } = useSelector((state: RootState) => state.auth);
+
+  useEffect(() => {
+    if (user && user.id) {
+      dispatch(getUserById(user.id));
+    }
+  }, [user, dispatch]);
 
   return (
     <>
@@ -27,27 +39,21 @@ const Header = () => {
                 <li><NavLink to="/demo">Demo</NavLink></li>
               </ul>
             </nav>
+
             <div className="auth-buttons">
-              <button
-                id="sign-in-btn"
-                className="btn-auth"
-                onClick={() => {
-                  console.log('Sign In Clicked'); // ✅ DEBUG
-                  setIsAuthModalOpen(true);
-                }}
-              >
-                Sign In
-              </button>
-            </div>
-            <div id="user-menu" className="user-menu">
-              <div id="user-menu-button" className="user-menu-button">
-                <div id="user-avatar" className="user-avatar">U</div>
-              </div>
-              <div id="user-menu-dropdown" className="user-menu-dropdown">
-                <div className="user-menu-item" onClick={() => window.location.href = '/profile'}>Profile</div>
-                <div className="user-menu-divider"></div>
-                <div id="sign-out-btn" className="user-menu-item">Sign Out</div>
-              </div>
+              {profile ? (
+                <div className="user-avatar">
+                  {profile.fullName.charAt(0).toUpperCase()}
+                </div>
+              ) : (
+                <button
+                  id="sign-in-btn"
+                  className="btn-auth"
+                  onClick={() => setIsAuthModalOpen(true)}
+                >
+                  Sign In
+                </button>
+              )}
             </div>
           </div>
         </header>
