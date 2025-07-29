@@ -52,7 +52,7 @@ const Header = () => {
               </ul>
             </nav>
 
-            <div className="auth-buttons">
+            <div className="auth-buttons" style={{zIndex:2000}}>
               {profile ? (
                 <DropdownMenu >
                   <DropdownMenuTrigger asChild>

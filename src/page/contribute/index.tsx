@@ -7,11 +7,29 @@ const ActiveProjects: React.FC = () => {
             <section className="projects-header page-header">
                 <h2>Active Projects</h2>
                 <p style={{ color: '#8d6e63' }}>Enter a project, sign up to contribute!</p>
+                {/* Create Project Button */}
+                <Link
+                    to="/create-project"
+                    style={{
+                        display: 'inline-block',
+                        backgroundColor: '#d29000',
+                        color: '#fff',
+                        padding: '10px 20px',
+                        borderRadius: '5px',
+                        textDecoration: 'none',
+                        fontWeight: 'bold',
+                        border: '2px solid #5c3b00',
+                        boxShadow: '2px 2px 0 #5c3b00',
+                        marginTop: '15px'
+                    }}
+                >
+                    Create Project
+                </Link>
             </section>
 
             <section className="projects-grid">
                 {/* Active Project */}
-                <div className="project-card active medieval-theme">
+                {/* <div className="project-card active medieval-theme">
                     <div className="project-image">
                         <div className="image-loading">
                             <div className="loading-spinner"></div>
@@ -45,7 +63,7 @@ const ActiveProjects: React.FC = () => {
                             Enter Project
                         </Link>
                     </div>
-                </div>
+                </div> */}
             </section>
         </div>
     );

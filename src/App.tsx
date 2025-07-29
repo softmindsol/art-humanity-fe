@@ -11,16 +11,18 @@ import DemoCanvas from './page/Demo';
 import VerifyEmail from './page/VerifyEmail';
 import ResetPassword from './page/ResetPassword';
 import ProfilePage from './page/profile';
+import CreateProjectPage from './page/create-project';
 function App() {
   return (
     <Router>
       <Header />
-
+      <main>
       <Routes>
         <Route path="/" element={<HeroSection />} />
         <Route path="/guideline" element={<GuidelinePage />} />
         <Route path="/gallery" element={<GalleryPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/create-project" element={<CreateProjectPage />} />
 
         <Route path="/projects" element={<ActiveProjects />} />
         <Route path="/demo" element={<DemoCanvas />} />
@@ -29,7 +31,7 @@ function App() {
  
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
-
+        </main>
       <Footer />
     </Router>
   );

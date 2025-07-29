@@ -34,7 +34,20 @@ body {
   margin: 0;
   padding: 0;
 }
+body, html, #root {
+  height: 100%;
+  margin: 0;
+}
 
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+main {
+  flex: 1;
+}
 .container {
   max-width: 1200px;
   margin: 0 auto;
@@ -69,7 +82,7 @@ a:hover {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   position: sticky;
   top: 0;
-  /* z-index: 1000; */
+  z-index: 40;
   border-bottom: 1px solid var(--accent-dark);
 }
 

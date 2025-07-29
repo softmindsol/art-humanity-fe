@@ -274,36 +274,7 @@ const DemoCanvas: React.FC = () => {
                         </div>
                     </div>
 
-                    <div className="canvas-drawing-area">
-                        <div id="canvas-viewport">
-                            <div id="canvas-wrapper">
-                                <div className="canvas-boundary"></div>
-                                {/* Tiles rendered dynamically */}
-                            </div>
-                        </div>
-
-                        <div className="scale-reference vertical-scale">
-                            <div className="scale-line">
-                                <div className="scale-arrow top"></div>
-                                <div className="scale-arrow bottom"></div>
-                            </div>
-                            <div className="scale-text">
-                                <span id="vertical-pixels">1024px</span>
-                                <span id="vertical-meters">1.7m</span>
-                            </div>
-                        </div>
-
-                        <div className="scale-reference horizontal-scale">
-                            <div className="scale-line">
-                                <div className="scale-arrow left"></div>
-                                <div className="scale-arrow right"></div>
-                            </div>
-                            <div className="scale-text">
-                                <span id="horizontal-pixels">1024px</span>
-                                <span id="horizontal-meters">1.7m</span>
-                            </div>
-                        </div>
-                    </div>
+                  
                 </section>
             </main>
         </div>
