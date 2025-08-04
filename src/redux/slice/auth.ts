@@ -110,7 +110,7 @@ const authSlice = createSlice({
       })
       .addCase(googleLogin.fulfilled, (state, action) => {
         state.googleLoading = false;
-        state.googleAuthUser = action.payload;
+        state.user = action.payload;
       })
       .addCase(googleLogin.rejected, (state: any, action) => {
         state.googleLoading = false;

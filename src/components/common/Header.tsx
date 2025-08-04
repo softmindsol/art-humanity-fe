@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import AuthModal from '../modal/AuthModal';
 import { useSelector } from 'react-redux';
-import { getUserById } from '@/redux/action/auth';
+import { getUserById, logoutUser } from '@/redux/action/auth';
 import type { RootState } from '@/redux/store';
 import useAppDispatch from '@/hook/useDispatch';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '../ui/dropdown-menu';
@@ -13,14 +13,15 @@ const Header = () => {
   const { user, profile } = useSelector((state: RootState) => state.auth);
 
   const handleLogout = () => {
-    // Clear localStorage (including redux-persist)
-    localStorage.clear();
-
-    // Optionally, if you have a logout action, you can also dispatch it
-    // dispatch(logout());
-
-    // Optionally reload or navigate to home
-    window.location.href = "/";
+    dispatch(logoutUser())
+      .unwrap()
+      .then(() => {
+        localStorage.clear(); // optional, if using redux-persist
+        window.location.reload()
+      })
+      .catch((err) => {
+        console.error("Logout failed", err);
+      });
   };
   
   useEffect(() => {
@@ -32,27 +33,35 @@ const Header = () => {
   return (
     <>
       <div className="header-container">
-        <header className='z-10'>
+        <header className='z-10  '>
           <div className="logo-container">
             <Link to="/" className="logo-link">
               <img src="/favicon.PNG" alt="Logo" className="logo" />
-              <div className="logo-text">
+              <div className="logo-text ">
                 <h1>Project Art of Humanity</h1>
                 <p className="tagline">Collaborative Canvases of Human Expression</p>
               </div>
             </Link>
           </div>
-          <div className="header-right">
+          <div className="header-right flex items-center">
             <nav>
               <ul>
                 <li><NavLink to="/guideline">Guideline</NavLink></li>
-                <li><NavLink to="/gallery">Gallery</NavLink></li>
-                <li><NavLink to="/projects">Contribute</NavLink></li>
+                {
+                  user!=null &&   <li><NavLink to="/gallery">Gallery</NavLink></li>
+                  
+                }
+                {
+                  user != null && <li><NavLink to="/projects">Contribute</NavLink></li>
+
+                }
+               
+              
                 <li><NavLink to="/demo">Demo</NavLink></li>
               </ul>
             </nav>
 
-            <div className="auth-buttons" style={{zIndex:2000}}>
+            <div className="auth-buttons " style={{zIndex:2000}}>
               {profile ? (
                 <DropdownMenu >
                   <DropdownMenuTrigger asChild>
@@ -79,12 +88,14 @@ const Header = () => {
                       <div className="text-xs text-[#7e5d52]">{profile.email}</div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator className="bg-[#d4af37]" />
+
+                    <Link to='/profile'>  
                     <DropdownMenuItem
-                      onClick={() => window.location.href = '/profile'}
                       className="cursor-pointer text-[#5d4037] hover:bg-[#f1e6da] transition-colors"
                     >
-                      Profile
+                      Profile           
                     </DropdownMenuItem>
+                     </Link>
                     <DropdownMenuItem
                       onClick={handleLogout}
                       className="cursor-pointer text-red-600 hover:bg-[#f1e6da] transition-colors"
@@ -95,7 +106,7 @@ const Header = () => {
                 </DropdownMenu>
               ) : (
                 <button
-                  id="sign-in-btn"
+                  id="sign-in-btn" 
                   className="btn-auth"
                   onClick={() => setIsAuthModalOpen(true)}
                 >

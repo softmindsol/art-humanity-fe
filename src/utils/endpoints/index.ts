@@ -10,7 +10,7 @@ const config = {
     FORGOT_PASSWORD: "/auth/forgot-password",
     RESET_PASSWORD: "/auth/reset-password",
     GOOGLE_AUTH: "/auth/firebase-login",
-
+    LOGOUT_AUTH: "/auth/logout",
   },
 };
 

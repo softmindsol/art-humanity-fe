@@ -7,11 +7,15 @@ import type { RootState } from "@/redux/store";
 import { getUserById, updateUser } from "@/redux/action/auth";
 import useAppDispatch from "@/hook/useDispatch";
 import { toast } from "sonner";
+import { Eye, EyeOff } from "lucide-react";
 
 const ProfilePage = () => {
     const { profile } = useSelector((state: RootState) => state.auth);
     const dispatch = useAppDispatch();
     const [loader, setLoader] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
     const [formData, setFormData] = useState({
         fullName: "",
         email: "",
@@ -19,6 +23,11 @@ const ProfilePage = () => {
         newPassword: "",
         confirmPassword: "",
     });
+    const isChanged =
+        formData.fullName !== (profile?.fullName || "") ||
+        formData.newPassword !== "" ||
+        formData.confirmPassword !== "" ||
+        formData.profileImage !== null;
 
     useEffect(() => {
         if (profile) {
@@ -45,7 +54,7 @@ const ProfilePage = () => {
             return;
         }
 
-        setLoader(true)
+        setLoader(true);
 
         const data = new FormData();
         data.append("fullName", formData.fullName);
@@ -56,22 +65,27 @@ const ProfilePage = () => {
             data.append("profileImage", formData.profileImage);
         }
 
-        dispatch(updateUser({ userId: profile?.id, formData: data })).unwrap()
+        dispatch(updateUser({ userId: profile?.id, formData: data }))
+            .unwrap()
             .then(() => {
                 dispatch(getUserById(profile?.id));
-                setLoader(false)
+                setLoader(false);
+
+                // ✅ Reset sensitive fields
+                setFormData((prev) => ({
+                    ...prev,
+                    profileImage: null,
+                    newPassword: "",
+                    confirmPassword: "",
+                }));
 
                 toast.success("Profile updated successfully");
             })
             .catch((error) => {
-                setLoader(false)
+                setLoader(false);
                 console.error("Failed to update profile:", error);
                 toast.error("Failed to update profile");
             });
-    };
-
-    const handleLogout = () => {
-        console.log("Logging out...");
     };
 
     return (
@@ -111,42 +125,51 @@ const ProfilePage = () => {
                 )}
             </div>
 
-            <div className="mb-4">
+            <div className="mb-4 relative">
                 <Label className="text-[#5d4037] mb-1">New Password</Label>
                 <Input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     name="newPassword"
                     value={formData.newPassword}
                     onChange={handleChange}
-                    className="bg-[#f9f4ec] border border-[#d4af37] rounded focus:ring-2 focus:ring-[#d4af37]"
+                    className="bg-[#f9f4ec] border border-[#d4af37] rounded focus:ring-2 focus:ring-[#d4af37] pr-10"
                 />
+                <div
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    className="absolute top-7 right-3 cursor-pointer text-[#5d4037]"
+                >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </div>
             </div>
 
-            <div className="mb-6">
+
+            <div className="mb-6 relative">
                 <Label className="text-[#5d4037] mb-1">Confirm Password</Label>
                 <Input
-                    type="password"
+                    type={showConfirmPassword ? "text" : "password"}
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleChange}
-                    className="bg-[#f9f4ec] border border-[#d4af37] rounded focus:ring-2 focus:ring-[#d4af37]"
+                    className="bg-[#f9f4ec] border border-[#d4af37] rounded focus:ring-2 focus:ring-[#d4af37] pr-10"
                 />
+                <div
+                    onClick={() => setShowConfirmPassword((prev) => !prev)}
+                    className="absolute top-7 right-3 cursor-pointer text-[#5d4037]"
+                >
+                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </div>
             </div>
 
             <Button
                 onClick={handleUpdate}
-                className="w-full bg-[#5d4037] hover:bg-[#7b5c52] text-white font-semibold mb-3 rounded shadow"
+                className="w-full bg-[#5d4037] cursor-pointer hover:bg-[#7b5c52] text-white font-semibold mb-3 rounded shadow disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={loader || !isChanged}
             >
-                {` Update Profile ${loader ? "..." : ""}`}
+                {` Update Profile${loader ? "..." : ""}`}
             </Button>
 
-            {/* <Button
-                onClick={handleLogout}
-                variant="outline"
-                className="w-full border border-red-600 text-red-600 hover:bg-red-50 rounded"
-            >
-                Logout
-            </Button> */}
+
+          
         </div>
     );
 };

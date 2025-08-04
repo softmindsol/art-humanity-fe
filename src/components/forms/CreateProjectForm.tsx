@@ -55,9 +55,8 @@ const CreateProjectForm = () => {
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 2000));
 
-    console.log('Submit to backend:', formData);
     setIsSubmitting(false);
-    // TODO: call POST /api/projects
+
   };
 
   const presetCanvasSizes = [

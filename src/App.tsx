@@ -12,6 +12,7 @@ import VerifyEmail from './page/VerifyEmail';
 import ResetPassword from './page/ResetPassword';
 import ProfilePage from './page/profile';
 import CreateProjectPage from './page/create-project';
+import ProtectedRoute from './routes/PrivateRoute';
 function App() {
   return (
     <Router>
@@ -20,11 +21,11 @@ function App() {
       <Routes>
         <Route path="/" element={<HeroSection />} />
         <Route path="/guideline" element={<GuidelinePage />} />
-        <Route path="/gallery" element={<GalleryPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/gallery" element={<ProtectedRoute><GalleryPage /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
           <Route path="/create-project" element={<CreateProjectPage />} />
 
-        <Route path="/projects" element={<ActiveProjects />} />
+          <Route path="/projects" element={<ProtectedRoute><ActiveProjects /></ProtectedRoute>} />
         <Route path="/demo" element={<DemoCanvas />} />
         <Route path='/verify-email/:token' element={<VerifyEmail/>}/>
         <Route path="/reset-password/:token" element={<ResetPassword />} />

@@ -212,7 +212,8 @@ export const googleLogin = createAsyncThunk(
         { headers: { "Content-Type": "application/json" } }
       );
 
-      return response.data.user; // Assuming backend returns { success: true, user: {...} }
+      console.log("response.data.user:", response.data.data);
+      return response.data.data; // Assuming backend returns { success: true, user: {...} }
     } catch (error: any) {
       if (
         error.response &&
@@ -222,6 +223,20 @@ export const googleLogin = createAsyncThunk(
         return thunkAPI.rejectWithValue(error.response.data.message);
       }
       return thunkAPI.rejectWithValue(error.message);
+    }
+  }
+);
+
+export const logoutUser = createAsyncThunk(
+  "auth/logoutUser",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.post(`${config?.endpoints?.LOGOUT_AUTH}`); // adjust endpoint
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data || { message: "Logout failed" }
+      );
     }
   }
 );

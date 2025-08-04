@@ -138,7 +138,16 @@ export const useRegisterForm = ({onClose}:any) => {
   };
 
   const handleGoogleLogin = () => {
-    dispatch(googleLogin());
+    dispatch(googleLogin())
+      .unwrap()
+      .then(() => {
+        // Now profile is ready in Redux
+        onClose(); 
+      })
+      .catch((err) => {
+        console.error("Google login error:", err);
+      });
+
   };
 
   return {
