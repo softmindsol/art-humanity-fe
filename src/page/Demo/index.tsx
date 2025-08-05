@@ -95,8 +95,10 @@ const DemoCanvas: React.FC = () => {
         setCanvasId(id);
     }, []);
 
+    const boardSize = 768; // or 512, 900 etc.
+    const boardX = (1024 - boardSize) / 2;
+    const boardY = (1024 - boardSize) / 2;
 
-    // Initialize canvas
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -108,15 +110,23 @@ const DemoCanvas: React.FC = () => {
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        // Clear and set background
-        ctx.fillStyle = '#f0f0f0';
+        // Fill entire canvas with gray
+        ctx.fillStyle = '#dcdcdc'; // light gray
         ctx.fillRect(0, 0, canvasSize, canvasSize);
 
-        // Store initial state
+        // Draw central white board
+        const scaledBoardSize = boardSize * canvasState.resolution;
+        const scaledBoardX = boardX * canvasState.resolution;
+        const scaledBoardY = boardY * canvasState.resolution;
+
+        ctx.fillStyle = '#ffffff'; // white board
+        ctx.fillRect(scaledBoardX, scaledBoardY, scaledBoardSize, scaledBoardSize);
+
         initialCanvasState.current = ctx.getImageData(0, 0, canvasSize, canvasSize);
 
         console.log('Canvas initialized:', canvasSize + 'x' + canvasSize);
     }, [canvasState.resolution]);
+
 
     // Redraw canvas when strokes change
     useEffect(() => {
@@ -947,7 +957,7 @@ const DemoCanvas: React.FC = () => {
                         overflow: 'hidden',
                         width: '600px',
                         height: '600px',
-                        backgroundColor: '#f0f0f0',
+                        backgroundColor: '#ccc',
                         cursor: isPanning || brushState.mode === 'move'
                             ? (isPanning ? 'grabbing' : 'grab')
                             : brushState.mode === 'eraser'
@@ -998,7 +1008,7 @@ const DemoCanvas: React.FC = () => {
                             left: '50%',
                             transform: `translate(-50%, -50%) translate(${canvasState.offset.x}px, ${canvasState.offset.y}px) scale(${canvasState.zoomLevel})`,
                             transformOrigin: 'center center',
-                            backgroundColor: '#f0f0f0',
+                            backgroundColor: '#ccc',
                             // cursor: isPanning || brushState.mode === 'move'
                             //     ? (isPanning ? 'grabbing' : 'grab')
                             //     : brushState.mode === 'eraser'
