@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { useSelector } from "react-redux";
 import api from "@/api/api";
@@ -12,7 +12,7 @@ interface ProtectedRouteProps {
     requiredPath?: string; // ✅ new
 
 }
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles, requiredPath }) => {
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
     const user = useSelector((state: RootState) => state?.auth?.user);
 

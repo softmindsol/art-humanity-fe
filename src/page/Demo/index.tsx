@@ -1,5 +1,11 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Brush, Eraser, Move, RotateCcw } from 'lucide-react';
+import api from '@/api/api';
+import { getCanvasData } from '@/redux/action/painPixel';
+import { useDispatch } from 'react-redux';
+import type { AppDispatch } from '@/redux/store';
+import { selectCanvasData } from '@/redux/slice/paintPixel';
+import { useSelector } from 'react-redux';
 
 interface Position {
     x: number;
@@ -13,84 +19,185 @@ interface RgbaColor {
     a: number;
 }
 
+interface StrokeData {
+    fromX: number;
+    fromY: number;
+    toX: number;
+    toY: number;
+}
+
+interface BrushState {
+    mode: 'brush' | 'eraser' | 'move';
+    size: number;
+    color: RgbaColor;
+}
+
+interface CanvasState {
+    resolution: number;
+    zoomLevel: number;
+    offset: Position;
+}
+
 const DemoCanvas: React.FC = () => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const initialCanvasState = useRef<ImageData | null>(null);
 
+    // Canvas and brush state
+    const [canvasState, setCanvasState] = useState<CanvasState>({
+        resolution: 1,
+        zoomLevel: 1,
+        offset: { x: 0, y: 0 }
+    });
+
+    const [brushState, setBrushState] = useState<BrushState>({
+        mode: 'brush',
+        size: 5,
+        color: { r: 0, g: 0, b: 0, a: 1 }
+    });
+
+    // Drawing state
     const [isDrawing, setIsDrawing] = useState(false);
-    const [brushSize, setBrushSize] = useState(3);
-    const [color, setColor] = useState<RgbaColor>({ r: 0, g: 0, b: 0, a: 1 });
-    const [zoom, setZoom] = useState(1);
-    const [offset, setOffset] = useState<Position>({ x: 0, y: 0 });
     const [lastPos, setLastPos] = useState<Position>({ x: 0, y: 0 });
     const [mousePos, setMousePos] = useState<Position>({ x: 0, y: 0 });
     const [recentColors, setRecentColors] = useState<string[]>([]);
     const [isPanning, setIsPanning] = useState(false);
     const [panStart, setPanStart] = useState<Position>({ x: 0, y: 0 });
 
-    const [mode, setMode] = useState<'brush' | 'eraser' | 'move'>('brush');
-
     // Toolbox drag states
     const [toolboxPos, setToolboxPos] = useState<Position>({ x: 20, y: 100 });
     const [isDraggingToolbox, setIsDraggingToolbox] = useState(false);
     const [toolboxStart, setToolboxStart] = useState<Position>({ x: 0, y: 0 });
+    const strokes = useSelector(selectCanvasData);
+    const [isCanvasHovered, setIsCanvasHovered] = useState(false);
 
     // Color picker states
-    const [showColorPicker, setShowColorPicker] = useState(false);
     const [hue, setHue] = useState(0);
     const [saturation, setSaturation] = useState(100);
     const [lightness, setLightness] = useState(50);
+    const [canvasId, setCanvasId] = useState<string>(''); // or pass as prop
+
+    // All strokes for this session
+    const [allStrokes, setAllStrokes] = useState<any[]>([]);
+    const [sessionId, setSessionId] = useState<string>('');
+    const [isSaving, setIsSaving] = useState(false);
+    const [saveError, setSaveError] = useState<string>('');
+    const dispatch = useDispatch<AppDispatch>();
+
+    // Generate session ID on mount
+    useEffect(() => {
+        const newSessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        setSessionId(newSessionId);
+        console.log('🆔 New session created:', newSessionId);
+    }, []);
 
     useEffect(() => {
-        const canvas = canvasRef.current;
-        if (canvas) {
-            const ctx = canvas.getContext('2d');
-            if (ctx) {
-                canvas.width = 1024;
-                canvas.height = 1024;
-                ctx.fillStyle = '#f0f0f0';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                // Save initial state
-                initialCanvasState.current = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            }
-        }
+        const id = `canvas_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+        setCanvasId(id);
     }, []);
+
+
+    // Initialize canvas
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const canvasSize = Math.floor(1024 * canvasState.resolution);
+        canvas.width = canvasSize;
+        canvas.height = canvasSize;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        // Clear and set background
+        ctx.fillStyle = '#f0f0f0';
+        ctx.fillRect(0, 0, canvasSize, canvasSize);
+
+        // Store initial state
+        initialCanvasState.current = ctx.getImageData(0, 0, canvasSize, canvasSize);
+
+        console.log('Canvas initialized:', canvasSize + 'x' + canvasSize);
+    }, [canvasState.resolution]);
+
+    // Redraw canvas when strokes change
+    useEffect(() => {
+        redrawCanvas();
+    }, [allStrokes]);
+
+    const redrawCanvas = () => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        // Clear canvas first
+        if (initialCanvasState.current) {
+            ctx.putImageData(initialCanvasState.current, 0, 0);
+        }
+
+        // Redraw all strokes
+        allStrokes.forEach((stroke: any) => {
+            if (stroke.strokePath && stroke.strokePath.length > 0) {
+                if (stroke.mode === 'eraser') {
+                    ctx.globalCompositeOperation = 'destination-out';
+                } else {
+                    ctx.globalCompositeOperation = 'source-over';
+                    ctx.strokeStyle = `rgba(${stroke.color.r}, ${stroke.color.g}, ${stroke.color.b}, ${stroke.color.a})`;
+                }
+
+                ctx.lineWidth = stroke.brushSize;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+
+                stroke.strokePath.forEach((point: any) => {
+                    ctx.beginPath();
+                    ctx.moveTo(point.fromX, point.fromY);
+                    ctx.lineTo(point.toX, point.toY);
+                    ctx.stroke();
+                });
+            }
+        });
+    };
 
     const getMousePos = (e: MouseEvent | React.MouseEvent): Position => {
         const canvas = canvasRef.current!;
         const rect = canvas.getBoundingClientRect();
 
-        // Calculate the actual canvas coordinates considering zoom and offset
-        const canvasX = (e.clientX - rect.left) / zoom;
-        const canvasY = (e.clientY - rect.top) / zoom;
+        const canvasX = (e.clientX - rect.left) / canvasState.zoomLevel;
+        const canvasY = (e.clientY - rect.top) / canvasState.zoomLevel;
 
-        return {
-            x: canvasX,
-            y: canvasY,
-        };
+        return { x: canvasX, y: canvasY };
     };
 
+    const [currentStrokePath, setCurrentStrokePath] = useState<StrokeData[]>([]);
+
     const startDrawing = (e: React.MouseEvent) => {
-        if (mode === 'move') return;
+        if (brushState.mode === 'move') return;
+
         setIsDrawing(true);
-        setLastPos(getMousePos(e));
+        const pos = getMousePos(e);
+        setLastPos(pos);
+        setCurrentStrokePath([]);
+
+        console.log('🎨 Starting Paint Stroke at:', pos);
     };
 
     const draw = (e: React.MouseEvent) => {
-        if (!isDrawing || mode === 'move') return;
+        if (!isDrawing || brushState.mode === 'move') return;
+
         const canvas = canvasRef.current!;
         const ctx = canvas.getContext('2d')!;
         const pos = getMousePos(e);
 
-        if (mode === 'eraser') {
+        // Draw locally for immediate feedback
+        if (brushState.mode === 'eraser') {
             ctx.globalCompositeOperation = 'destination-out';
         } else {
             ctx.globalCompositeOperation = 'source-over';
-            ctx.strokeStyle = `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
+            ctx.strokeStyle = `rgba(${brushState.color.r}, ${brushState.color.g}, ${brushState.color.b}, ${brushState.color.a})`;
         }
 
-        ctx.lineWidth = brushSize;
+        ctx.lineWidth = brushState.size;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         ctx.beginPath();
@@ -98,12 +205,45 @@ const DemoCanvas: React.FC = () => {
         ctx.lineTo(pos.x, pos.y);
         ctx.stroke();
 
+        // Add to current stroke path
+        const strokePoint: StrokeData = {
+            fromX: lastPos.x,
+            fromY: lastPos.y,
+            toX: pos.x,
+            toY: pos.y
+        };
+
+        setCurrentStrokePath(prev => [...prev, strokePoint]);
         setLastPos(pos);
     };
 
-    const stopDrawing = () => {
-        if (isDrawing && mode === 'brush') {
-            const newColor = `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
+    const stopDrawing = async () => {
+        if (!isDrawing || currentStrokePath.length === 0) {
+            setIsDrawing(false);
+            return;
+        }
+
+        // Prepare stroke data
+        const strokeData = {
+            sessionId: sessionId,
+            canvasId: canvasId, // ✅ add this line
+            strokePath: currentStrokePath,
+            brushSize: brushState.size,
+            color: brushState.color,
+            mode: brushState.mode,
+            canvasResolution: canvasState.resolution,
+            canvasSize: Math.floor(1024 * canvasState.resolution),
+            zoomLevel: canvasState.zoomLevel,
+            canvasOffset: canvasState.offset,
+            timestamp: new Date().toISOString()
+        };
+
+        // Add to local state immediately (optimistic update)
+        setAllStrokes(prev => [...prev, strokeData]);
+
+        // Add color to recent colors if brush mode
+        if (brushState.mode === 'brush') {
+            const newColor = `rgba(${brushState.color.r}, ${brushState.color.g}, ${brushState.color.b}, ${brushState.color.a})`;
             setRecentColors((prev) => {
                 if (!prev.includes(newColor)) {
                     return [newColor, ...prev.slice(0, 4)];
@@ -111,56 +251,161 @@ const DemoCanvas: React.FC = () => {
                 return prev;
             });
         }
+
         setIsDrawing(false);
+        setCurrentStrokePath([]);
+
+        // Save to database in background
+        try {
+            setIsSaving(true);
+            setSaveError('');
+            const response = await api.post(`/stroke`, strokeData);
+            console.log("hello")
+            return response.data; // backend returns { success: true, data: {...} }
+
+        } catch (error) {
+            console.error('❌ Failed to save stroke to database:', error);
+            setSaveError('Failed to save to database');
+
+            // Optionally: Remove the stroke from local state if save failed
+            // setAllStrokes(prev => prev.slice(0, -1));
+
+            // Or show a retry option
+            // You could add a retry mechanism here
+
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const handleWheel = (e: React.WheelEvent) => {
         e.preventDefault();
 
-        // Get container and canvas elements
         const container = e.currentTarget as HTMLElement;
-        const canvas = canvasRef.current!;
         const containerRect = container.getBoundingClientRect();
-
-        // Mouse position relative to container
         const mouseX = e.clientX - containerRect.left;
         const mouseY = e.clientY - containerRect.top;
-
-        // Container center
         const containerCenterX = containerRect.width / 2;
         const containerCenterY = containerRect.height / 2;
 
-        // Calculate zoom factor (smaller increments for smoother zoom)
         const zoomFactor = e.deltaY < 0 ? 1.05 : 0.95;
-        const newZoom = Math.min(Math.max(zoom * zoomFactor, 0.1), 8);
+        const newZoom = Math.min(Math.max(canvasState.zoomLevel * zoomFactor, 0.1), 8);
 
-        // Calculate the point on the canvas that the mouse is over
-        const canvasPointX = (mouseX - containerCenterX - offset.x) / zoom;
-        const canvasPointY = (mouseY - containerCenterY - offset.y) / zoom;
+        const canvasPointX = (mouseX - containerCenterX - canvasState.offset.x) / canvasState.zoomLevel;
+        const canvasPointY = (mouseY - containerCenterY - canvasState.offset.y) / canvasState.zoomLevel;
 
-        // Calculate new offset to keep the same canvas point under the mouse
         const newOffset = {
             x: mouseX - containerCenterX - canvasPointX * newZoom,
             y: mouseY - containerCenterY - canvasPointY * newZoom
         };
 
-        setZoom(newZoom);
-        setOffset(newOffset);
+        setCanvasState(prev => ({
+            ...prev,
+            zoomLevel: newZoom,
+            offset: newOffset
+        }));
     };
 
+    useEffect(() => {
+        if (strokes?.length > 0) {
+            redrawCanvas();
+        }
+    }, [strokes]);
+
+    useEffect(() => {
+        const sessionId = localStorage.getItem('paint-session-id');
+        const resolution = 1;
+
+        if (sessionId) {
+            dispatch(getCanvasData({ sessionId, canvasResolution: resolution }));
+        }
+    }, [dispatch]);
+
+
     const startPan = (e: React.MouseEvent) => {
-        if (mode !== 'move') return;
+        if (brushState.mode !== 'move') return;
         setIsPanning(true);
-        setPanStart({ x: e.clientX - offset.x, y: e.clientY - offset.y });
+        setPanStart({ x: e.clientX - canvasState.offset.x, y: e.clientY - canvasState.offset.y });
     };
 
     const pan = (e: React.MouseEvent) => {
         if (!isPanning) return;
-        setOffset({ x: e.clientX - panStart.x, y: e.clientY - panStart.y });
+        const newOffset = { x: e.clientX - panStart.x, y: e.clientY - panStart.y };
+        setCanvasState(prev => ({ ...prev, offset: newOffset }));
     };
 
     const stopPan = () => {
         setIsPanning(false);
+    };
+
+    const handleClearCanvas = async () => {
+        // Clear locally first for immediate feedback
+        const canvas = canvasRef.current!;
+        const ctx = canvas.getContext('2d')!;
+
+        if (initialCanvasState.current) {
+            ctx.putImageData(initialCanvasState.current, 0, 0);
+        }
+
+        setAllStrokes([]);
+
+        // Clear from database
+        if (sessionId) {
+            try {
+                const response = await fetch(`/api/v1/strokes/${sessionId}`, {
+                    method: 'DELETE',
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                console.log('✅ Canvas cleared from database');
+            } catch (error) {
+                console.error('❌ Failed to clear canvas from database:', error);
+                setSaveError('Failed to clear database');
+            }
+        }
+
+        console.log('🧹 Canvas cleared locally');
+    };
+
+    const loadReferenceImage = () => {
+        const canvas = canvasRef.current!;
+        const ctx = canvas.getContext('2d')!;
+        const scale = canvasState.resolution;
+
+        ctx.save();
+
+        // House body
+        ctx.fillStyle = '#8B4513';
+        ctx.fillRect(400 * scale, 500 * scale, 224 * scale, 200 * scale);
+
+        // Roof
+        ctx.fillStyle = '#CD5C5C';
+        ctx.beginPath();
+        ctx.moveTo(380 * scale, 500 * scale);
+        ctx.lineTo(512 * scale, 400 * scale);
+        ctx.lineTo(644 * scale, 500 * scale);
+        ctx.closePath();
+        ctx.fill();
+
+        // Door
+        ctx.fillStyle = '#654321';
+        ctx.fillRect(480 * scale, 600 * scale, 64 * scale, 100 * scale);
+
+        // Windows
+        ctx.fillStyle = '#87CEEB';
+        ctx.fillRect(420 * scale, 550 * scale, 40 * scale, 40 * scale);
+        ctx.fillRect(564 * scale, 550 * scale, 40 * scale, 40 * scale);
+
+        // Door handle
+        ctx.fillStyle = '#FFD700';
+        ctx.beginPath();
+        ctx.arc(530 * scale, 650 * scale, 3 * scale, 0, 2 * Math.PI);
+        ctx.fill();
+
+        ctx.restore();
     };
 
     // Toolbox drag handlers
@@ -179,7 +424,46 @@ const DemoCanvas: React.FC = () => {
         setIsDraggingToolbox(false);
     }, []);
 
-    // Add global mouse events for toolbox dragging
+    useEffect(() => {
+        if (isCanvasHovered) {
+            document.body.style.overflow = 'hidden'; // Disable scroll
+        } else {
+            document.body.style.overflow = ''; // Restore scroll
+        }
+
+        return () => {
+            document.body.style.overflow = ''; // Cleanup on unmount
+        };
+    }, [isCanvasHovered]);
+
+    useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        const resizeCanvas = () => {
+            const parent = canvas.parentElement;
+            if (!parent) return;
+
+            const { width, height } = parent.getBoundingClientRect();
+            canvas.width = width;
+            canvas.height = height;
+
+            // Optional: Store initial state again
+            ctx.fillStyle = '#f0f0f0';
+            ctx.fillRect(0, 0, width, height);
+            initialCanvasState.current = ctx.getImageData(0, 0, width, height);
+
+            redrawCanvas(); // Redraw after resize
+        };
+
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        return () => window.removeEventListener('resize', resizeCanvas);
+    }, []);
+
     useEffect(() => {
         if (isDraggingToolbox) {
             document.addEventListener('mousemove', dragToolbox);
@@ -225,78 +509,32 @@ const DemoCanvas: React.FC = () => {
         };
     };
 
-    // Update color when HSL changes
+    // Update brush color when HSL changes
     useEffect(() => {
         const newColor = hslToRgb(hue, saturation, lightness);
-        setColor(newColor);
+        setBrushState(prev => ({ ...prev, color: newColor }));
     }, [hue, saturation, lightness]);
 
-    const loadReferenceImage = () => {
-        const canvas = canvasRef.current!;
-        const ctx = canvas.getContext('2d')!;
-
-        // Create a simple house drawing as reference
-        ctx.save();
-
-        // House body
-        ctx.fillStyle = '#8B4513';
-        ctx.fillRect(400, 500, 224, 200);
-
-        // Roof
-        ctx.fillStyle = '#CD5C5C';
-        ctx.beginPath();
-        ctx.moveTo(380, 500);
-        ctx.lineTo(512, 400);
-        ctx.lineTo(644, 500);
-        ctx.closePath();
-        ctx.fill();
-
-        // Door
-        ctx.fillStyle = '#654321';
-        ctx.fillRect(480, 600, 64, 100);
-
-        // Windows
-        ctx.fillStyle = '#87CEEB';
-        ctx.fillRect(420, 550, 40, 40);
-        ctx.fillRect(564, 550, 40, 40);
-
-        // Door handle
-        ctx.fillStyle = '#FFD700';
-        ctx.beginPath();
-        ctx.arc(530, 650, 3, 0, 2 * Math.PI);
-        ctx.fill();
-
-        ctx.restore();
-    };
-
-    const clearCanvas = () => {
-        const canvas = canvasRef.current!;
-        const ctx = canvas.getContext('2d')!;
-        if (initialCanvasState.current) {
-            ctx.putImageData(initialCanvasState.current, 0, 0);
-        }
-    };
-
     const selectRecentColor = (colorString: string) => {
-        // Parse the rgba string to extract values
         const match = colorString.match(/rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/);
         if (match) {
-            setColor({
+            const newColor = {
                 r: parseInt(match[1]),
                 g: parseInt(match[2]),
                 b: parseInt(match[3]),
                 a: parseFloat(match[4])
-            });
+            };
+            setBrushState(prev => ({ ...prev, color: newColor }));
         }
     };
 
-    const currentColorString = `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`;
+    const currentColorString = `rgba(${brushState.color.r}, ${brushState.color.g}, ${brushState.color.b}, ${brushState.color.a})`;
 
     return (
         <div style={{
-            width: '100vw',
+            
             height: '100vh',
-            backgroundColor: '#d4c4a8',
+           
             fontFamily: 'Georgia, serif',
             overflow: 'hidden',
             position: 'relative'
@@ -305,7 +543,7 @@ const DemoCanvas: React.FC = () => {
             <div style={{
                 padding: '20px',
                 textAlign: 'center',
-                backgroundColor: 'rgba(139, 121, 94, 0.1)'
+                // backgroundColor: 'rgba(139, 121, 94, 0.1)'
             }}>
                 <h1 style={{
                     fontSize: '2.5rem',
@@ -318,7 +556,7 @@ const DemoCanvas: React.FC = () => {
                     fontStyle: 'italic',
                     margin: '0 0 20px 0'
                 }}>
-                    This canvas is 1024px by 1024px, don't believe us? Load the reference images!
+                    Canvas: {Math.floor(1024 * canvasState.resolution)}px × {Math.floor(1024 * canvasState.resolution)}px at {canvasState.resolution}x resolution
                 </p>
 
                 <button
@@ -338,7 +576,7 @@ const DemoCanvas: React.FC = () => {
                 </button>
 
                 <button
-                    onClick={clearCanvas}
+                    onClick={handleClearCanvas}
                     style={{
                         backgroundColor: '#cd5c5c',
                         color: 'white',
@@ -346,19 +584,69 @@ const DemoCanvas: React.FC = () => {
                         padding: '10px 20px',
                         borderRadius: '4px',
                         cursor: 'pointer',
-                        fontSize: '16px'
+                        fontSize: '16px',
+                        marginRight: '10px'
                     }}
                 >
                     Clear Canvas
                 </button>
+
+                {/* Resolution Controls */}
+                <div style={{
+                    position: 'relative',
+                    display: 'inline-block',
+                    width: '220px' // optional: control width
+                }}>
+                    <select
+                        value={canvasState.resolution}
+                        onChange={(e) => {
+                            const newRes = Number(e.target.value);
+                            setCanvasState(prev => ({ ...prev, resolution: newRes }));
+                            console.log('Resolution changed to:', newRes);
+                        }}
+                        style={{
+                            appearance: 'none', // hide default arrow
+                            WebkitAppearance: 'none',
+                            MozAppearance: 'none',
+                            backgroundColor: '#8b795e',
+                            color: 'white',
+                            border: 'none',
+                            padding: '10px 15px',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontSize: '16px',
+                            width: '100%',
+                        }}
+                    >
+                        <option value={0.25}>256px (0.25x)</option>
+                        <option value={0.5}>512px (0.5x)</option>
+                        <option value={1}>1024px (1x)</option>
+                        <option value={2}>2048px (2x)</option>
+                        <option value={4}>4096px (4x)</option>
+                    </select>
+
+                    {/* Arrow icon */}
+                    <div style={{
+                        position: 'absolute',
+                        top: '50%',
+                        right: '12px',
+                        pointerEvents: 'none',
+                        transform: 'translateY(-50%)',
+                        color: 'white',
+                        fontSize: '14px'
+                    }}>
+                        ▼
+                    </div>
+                </div>
+
 
                 <p style={{
                     color: '#8b795e',
                     fontSize: '14px',
                     margin: '20px 0 0 0'
                 }}>
-                    Use the mouse wheel to zoom, right-click to pan, and left click to draw when zoomed in.
-                    Adjust brush and colors from the toolbox. Drag toolbox to move.
+                    Use mouse wheel to zoom, right-click to pan, and left click to draw.
+                    Drag toolbox to move. Now saves to database with local feedback!
                 </p>
             </div>
 
@@ -387,17 +675,17 @@ const DemoCanvas: React.FC = () => {
                     paddingBottom: '10px',
                     borderBottom: '1px solid #e0e0e0'
                 }}>
-                    <h3 style={{
-                        margin: 0,
+                    <h3 className='mt-3' style={{
+                        marginRight: 10,
                         color: '#5d4e37',
                         fontSize: '16px'
                     }}>Drawing Tools</h3>
-                    <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <button
-                            onClick={() => setMode('brush')}
+                            onClick={() => setBrushState(prev => ({ ...prev, mode: 'brush' }))}
                             style={{
-                                background: mode === 'brush' ? '#8b795e' : 'transparent',
-                                color: mode === 'brush' ? 'white' : '#8b795e',
+                                background: brushState.mode === 'brush' ? '#8b795e' : 'transparent',
+                                color: brushState.mode === 'brush' ? 'white' : '#8b795e',
                                 border: '1px solid #8b795e',
                                 borderRadius: '4px',
                                 padding: '5px',
@@ -408,10 +696,10 @@ const DemoCanvas: React.FC = () => {
                             <Brush size={16} />
                         </button>
                         <button
-                            onClick={() => setMode('eraser')}
+                            onClick={() => setBrushState(prev => ({ ...prev, mode: 'eraser' }))}
                             style={{
-                                background: mode === 'eraser' ? '#8b795e' : 'transparent',
-                                color: mode === 'eraser' ? 'white' : '#8b795e',
+                                background: brushState.mode === 'eraser' ? '#8b795e' : 'transparent',
+                                color: brushState.mode === 'eraser' ? 'white' : '#8b795e',
                                 border: '1px solid #8b795e',
                                 borderRadius: '4px',
                                 padding: '5px',
@@ -421,11 +709,11 @@ const DemoCanvas: React.FC = () => {
                         >
                             <Eraser size={16} />
                         </button>
-                        <button
-                            onClick={() => setMode('move')}
+                        {/* <button
+                            onClick={() => setBrushState(prev => ({ ...prev, mode: 'move' }))}
                             style={{
-                                background: mode === 'move' ? '#8b795e' : 'transparent',
-                                color: mode === 'move' ? 'white' : '#8b795e',
+                                background: brushState.mode === 'move' ? '#8b795e' : 'transparent',
+                                color: brushState.mode === 'move' ? 'white' : '#8b795e',
                                 border: '1px solid #8b795e',
                                 borderRadius: '4px',
                                 padding: '5px',
@@ -434,7 +722,7 @@ const DemoCanvas: React.FC = () => {
                             title="Move/Pan"
                         >
                             <Move size={16} />
-                        </button>
+                        </button> */}
                         <div
                             onMouseDown={startToolboxDrag}
                             style={{
@@ -556,7 +844,9 @@ const DemoCanvas: React.FC = () => {
                                 return (
                                     <div
                                         key={index}
-                                        onClick={() => setColor({ r, g, b, a: 1 })}
+                                        onClick={() => {
+                                            setBrushState(prev => ({ ...prev, color: { r, g, b, a: 1 } }));
+                                        }}
                                         style={{
                                             width: '16px',
                                             height: '16px',
@@ -585,15 +875,17 @@ const DemoCanvas: React.FC = () => {
                             type="range"
                             min="1"
                             max="50"
-                            value={brushSize}
-                            onChange={(e) => setBrushSize(Number(e.target.value))}
+                            value={brushState.size}
+                            onChange={(e) => {
+                                setBrushState(prev => ({ ...prev, size: Number(e.target.value) }));
+                            }}
                             style={{ flex: 1 }}
                         />
-                        <span style={{ fontSize: '12px', minWidth: '20px' }}>{brushSize}</span>
+                        <span style={{ fontSize: '12px', minWidth: '20px' }}>{brushState.size}</span>
                         <div
                             style={{
-                                width: Math.min(brushSize * 2, 30),
-                                height: Math.min(brushSize * 2, 30),
+                                width: Math.min(brushState.size * 2, 30),
+                                height: Math.min(brushState.size * 2, 30),
                                 backgroundColor: currentColorString,
                                 borderRadius: '50%',
                                 border: '1px solid #ddd'
@@ -644,40 +936,41 @@ const DemoCanvas: React.FC = () => {
                     overflow: 'hidden'
                 }}
                 onContextMenu={(e) => e.preventDefault()}
+                onMouseEnter={() => setIsCanvasHovered(true)}
+                onMouseLeave={() => setIsCanvasHovered(false)}
+               
             >
                 <div
                     style={{
-                        position: 'relative',
-                        border: '2px solid #4d2d2d',
+                        // position: 'relative',
+                        border: '4px solid #4d2d2d',
                         overflow: 'hidden',
                         width: '600px',
                         height: '600px',
                         backgroundColor: '#f0f0f0',
-                        cursor: isPanning || mode === 'move'
+                        cursor: isPanning || brushState.mode === 'move'
                             ? (isPanning ? 'grabbing' : 'grab')
-                            : mode === 'eraser'
+                            : brushState.mode === 'eraser'
                                 ? 'crosshair'
                                 : 'crosshair'
                     }}
                     onWheel={handleWheel}
                     onMouseDown={(e) => {
-                        if (e.button === 2 || mode === 'move') startPan(e);
+                        if (e.button === 2 || brushState.mode === 'move') startPan(e);
                         else startDrawing(e);
                     }}
                     onMouseMove={(e) => {
-                        // Always update mouse position for cursor tracking
                         const container = e.currentTarget;
                         const canvas = canvasRef.current!;
                         const containerRect = container.getBoundingClientRect();
                         const canvasRect = canvas.getBoundingClientRect();
 
-                        // Calculate mouse position on the actual canvas
-                        const canvasX = (e.clientX - canvasRect.left) / zoom;
-                        const canvasY = (e.clientY - canvasRect.top) / zoom;
+                        const canvasX = (e?.clientX - canvasRect?.left) / canvasState.zoomLevel;
+                        const canvasY = (e?.clientY - canvasRect?.top) / canvasState.zoomLevel;
 
-                        // Clamp to canvas bounds for display
-                        const clampedX = Math.max(0, Math.min(1024, canvasX));
-                        const clampedY = Math.max(0, Math.min(1024, canvasY));
+                        const canvasSize = Math.floor(1024 * canvasState.resolution);
+                        const clampedX = Math.max(0, Math.min(canvasSize, canvasX));
+                        const clampedY = Math.max(0, Math.min(canvasSize, canvasY));
 
                         setMousePos({ x: Math.round(clampedX), y: Math.round(clampedY) });
 
@@ -692,7 +985,6 @@ const DemoCanvas: React.FC = () => {
                         stopPan();
                     }}
                     onMouseLeave={() => {
-                        // Stop drawing/panning when mouse leaves the container
                         stopDrawing();
                         stopPan();
                     }}
@@ -701,18 +993,21 @@ const DemoCanvas: React.FC = () => {
                         ref={canvasRef}
                         style={{
                             position: 'absolute',
+                            
                             top: '50%',
                             left: '50%',
-                            transform: `translate(-50%, -50%) translate(${offset.x}px, ${offset.y}px) scale(${zoom})`,
+                            transform: `translate(-50%, -50%) translate(${canvasState.offset.x}px, ${canvasState.offset.y}px) scale(${canvasState.zoomLevel})`,
                             transformOrigin: 'center center',
                             backgroundColor: '#f0f0f0',
-                            cursor: isPanning || mode === 'move'
-                                ? (isPanning ? 'grabbing' : 'grab')
-                                : mode === 'eraser'
-                                    ? 'crosshair'
-                                    : 'crosshair',
-                            imageRendering: zoom > 2 ? 'pixelated' : 'auto',
-                            transition: 'none'
+                            // cursor: isPanning || brushState.mode === 'move'
+                            //     ? (isPanning ? 'grabbing' : 'grab')
+                            //     : brushState.mode === 'eraser'
+                            //         ? 'crosshair'
+                            //         : 'crosshair',
+                            imageRendering: canvasState.zoomLevel > 2 ? 'pixelated' : 'auto',
+                            transition: 'none',
+                             cursor: brushState.mode === 'move' ? (isPanning ? 'grabbing' : 'grab') : 'crosshair',
+                            // imageRendering: canvasState.zoomLevel > 2 ? 'pixelated' : 'auto',
                         }}
                     />
                 </div>
@@ -720,18 +1015,23 @@ const DemoCanvas: React.FC = () => {
                 {/* Canvas Info */}
                 <div style={{
                     position: 'absolute',
-                    bottom: '20px',
+                    bottom: '40px',
                     right: '20px',
                     backgroundColor: 'rgba(255, 255, 255, 0.9)',
                     padding: '10px',
                     borderRadius: '8px',
                     fontSize: '12px',
                     color: '#5d4e37',
-                    border: '1px solid #ddd'
+                    border: '2px solid #3e2723'
                 }}>
-                    <div>Zoom: {Math.round(zoom * 100)}%</div>
+                    <div>Canvas: {Math.floor(1024 * canvasState.resolution)}×{Math.floor(1024 * canvasState.resolution)}px</div>
+                    <div>Zoom: {Math.round(canvasState.zoomLevel * 100)}%</div>
                     <div>Position: ({mousePos.x}, {mousePos.y})</div>
-                    <div>Mode: {mode}</div>
+                    <div>Mode: {brushState.mode}</div>
+                    <div>Strokes: {allStrokes.length}</div>
+                    {isDrawing && <div style={{ color: '#cd5c5c' }}>✏️ Drawing...</div>}
+                    {isSaving && <div style={{ color: '#FFA500' }}>💾 Saving...</div>}
+                    {saveError && <div style={{ color: '#cd5c5c' }}>❌ Save Error</div>}
                 </div>
             </div>
         </div>
