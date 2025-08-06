@@ -72,7 +72,7 @@ const TiledCanvas: React.FC = () => {
     const [isPanning, setIsPanning] = useState(false);
     const [panStart, setPanStart] = useState<Position>({ x: 0, y: 0 });
 
-    const [toolboxPos, setToolboxPos] = useState<Position>({ x: 20, y: 150 });
+    const [toolboxPos, setToolboxPos] = useState<Position>({ x: 20, y: 172 });
     const [isDraggingToolbox, setIsDraggingToolbox] = useState(false);
     const [toolboxStart, setToolboxStart] = useState<Position>({ x: 0, y: 0 });
     const [isCanvasHovered, setIsCanvasHovered] = useState(false);
@@ -389,10 +389,10 @@ const TiledCanvas: React.FC = () => {
     const currentColorString = `rgba(${brushState.color.r}, ${brushState.color.g}, ${brushState.color.b}, ${brushState.color.a})`;
 
     return (
-        <div style={{ height: '100vh',fontFamily: 'Georgia, serif', overflow: 'hidden', position: 'relative', backgroundColor:""}}>
+        <div style={{ minHeight: '135vh',fontFamily: 'Georgia, serif', overflow: 'hidden', position: 'relative'}}>
             {/* Header */}
-            <div className='' style={{ marginBottom: "100px", padding: '10px 20px', textAlign: 'center' }}>
-                <h1 style={{ fontSize: '2rem', color: '#5d4e37', margin: '0 0 5px 0', fontWeight: 'normal' }}>Tiled Canvas</h1>
+            <div className='' style={{ marginBottom: "150px", padding: '10px 20px', textAlign: 'center' }}>
+                <h1 style={{ fontSize: '2rem', color: '#5d4e37', margin: '0 0 5px 0', fontWeight: 'normal' }}>Demo Canvas</h1>
                 <p style={{ color: '#8b795e', fontStyle: 'italic', margin: '0 0 10px 0' }}>
                     Zoom with wheel, pan with Move tool. Drawing disabled when zoomed out.
                 </p>
@@ -405,7 +405,7 @@ const TiledCanvas: React.FC = () => {
             </div>
 
             {/* Drawing Toolbox */}
-            <div style={{ position: 'absolute', left: toolboxPos.x, top: toolboxPos.y, backgroundColor: 'white', border: '2px solid #8b795e', borderRadius: '8px', padding: '15px', minWidth: '200px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 1000, userSelect: 'none' }}>
+            <div style={{ position: 'absolute', left: toolboxPos.x, top: toolboxPos.y, backgroundColor: 'white', border: '2px solid #8b795e', borderRadius: '8px', padding: '15px', minWidth: '210px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 1000, userSelect: 'none' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', paddingBottom: '10px', borderBottom: '1px solid #e0e0e0' }}>
                     <h3 style={{ margin: 0, color: '#5d4e37', fontSize: '16px' }}>Tools</h3>
                     <div style={{ display: 'flex', gap: '8px' }}>
@@ -435,7 +435,7 @@ const TiledCanvas: React.FC = () => {
             </div>
 
             {/* Canvas Container */}
-            <div ref={containerRef} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 'calc(100vh - 80px)' }} onContextMenu={(e) => e.preventDefault()} onMouseEnter={() => setIsCanvasHovered(true)} onMouseLeave={() => setIsCanvasHovered(false)}>
+            <div ref={containerRef} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 'calc(100vh - 150px)' }} onContextMenu={(e) => e.preventDefault()} onMouseEnter={() => setIsCanvasHovered(true)} onMouseLeave={() => setIsCanvasHovered(false)}>
                 <canvas
                     ref={viewportCanvasRef}
                     width={VIEWPORT_WIDTH}
@@ -463,7 +463,7 @@ const TiledCanvas: React.FC = () => {
             </div>
 
             {/* Info Display */}
-            <div style={{ position: 'absolute', bottom: '10px', right: '10px', backgroundColor: 'rgba(255, 255, 255, 0.9)', padding: '10px', borderRadius: '8px', fontSize: '12px', color: '#5d4e37', border: '1px solid #3e2723' }}>
+            <div style={{ position: 'absolute', bottom: '40px', right: '10px', backgroundColor: 'rgba(255, 255, 255, 0.9)', padding: '10px', borderRadius: '8px', fontSize: '16px', color: '#5d4e37', border: '1px solid #3e2723' }}>
                 <div>Zoom: {Math.round(canvasState.zoomLevel * 100)}%</div>
                 <div>World Pos: ({mousePos.x}, {mousePos.y})</div>
                 <div>Tiles: {totalTiles}</div>
