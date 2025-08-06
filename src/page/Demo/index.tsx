@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { Brush, Eraser, Move } from 'lucide-react';
+import { Brush, Eraser, Move, Grid } from 'lucide-react'; // Grid icon imported
 
 // --- TYPE DEFINITIONS ---
 interface Position {
@@ -41,7 +41,7 @@ interface Tile {
 }
 
 // --- CONSTANTS ---
-const TILE_SIZE = 256; // Optimal tile size for performance
+const TILE_SIZE = 512; // Optimal tile size for performance
 const VIEWPORT_WIDTH = 1024; // Fixed viewport width
 const VIEWPORT_HEIGHT = 1024; // Fixed viewport height
 
@@ -64,6 +64,7 @@ const TiledCanvas: React.FC = () => {
     const [isDraggingToolbox, setIsDraggingToolbox] = useState(false);
     const [toolboxStart, setToolboxStart] = useState<Position>({ x: 0, y: 0 });
     const [isCanvasHovered, setIsCanvasHovered] = useState(false);
+    const [showGrid, setShowGrid] = useState(true); // State to control grid visibility
     const [hue, setHue] = useState(0);
     const [saturation, setSaturation] = useState(100);
     const [lightness, setLightness] = useState(50);
@@ -75,29 +76,29 @@ const TiledCanvas: React.FC = () => {
     const [sessionId, setSessionId] = useState('');
     const [canvasId, setCanvasId] = useState('');
 
-    // --- INITIALIZATION ---
+    // --- INITIALIZATION & PAGE SCROLL LOCK ---
     useEffect(() => {
         setSessionId(`session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
         setCanvasId(`canvas_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`);
     }, []);
 
-    // --- PAGE SCROLL LOCK ---
-    useEffect(() => {
-        if (isCanvasHovered) {
-            document.body.style.overflow = 'hidden';
-        } else {
-            document.body.style.overflow = '';
-        }
-        return () => { document.body.style.overflow = ''; };
-    }, [isCanvasHovered]);
+    // useEffect(() => {
+    //     if (isCanvasHovered) {
+    //         document.body.style.overflow = 'hidden';
+    //     } else {
+    //         document.body.style.overflow = '';
+    //     }
+    //     return () => { document.body.style.overflow = ''; };
+    // }, [isCanvasHovered]);
 
     // --- TILE MANAGEMENT ---
     const getTileKey = (tileX: number, tileY: number): string => `${tileX},${tileY}`;
 
     const worldToTileCoords = (worldX: number, worldY: number) => {
-        const tileX = Math.floor(worldX / TILE_SIZE);
-        const tileY = Math.floor(worldY / TILE_SIZE);
-        return { tileX, tileY };
+        return {
+            tileX: Math.floor(worldX / TILE_SIZE),
+            tileY: Math.floor(worldY / TILE_SIZE)
+        };
     };
 
     const createTile = (tileX: number, tileY: number): Tile => {
@@ -107,9 +108,7 @@ const TiledCanvas: React.FC = () => {
         const context = canvas.getContext('2d', { willReadFrequently: true })!;
         context.fillStyle = '#ffffff';
         context.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
-        const tile: Tile = { x: tileX, y: tileY, canvas, context, isDirty: true };
-        console.log(`🆕 Created tile at (${tileX}, ${tileY})`);
-        return tile;
+        return { x: tileX, y: tileY, canvas, context, isDirty: true };
     };
 
     const getTile = (tileX: number, tileY: number): Tile => {
@@ -153,11 +152,19 @@ const TiledCanvas: React.FC = () => {
                 const viewY = (y * TILE_SIZE * zoomLevel) + offset.y;
                 const viewWidth = TILE_SIZE * zoomLevel;
                 const viewHeight = TILE_SIZE * zoomLevel;
+
                 ctx.drawImage(tile.canvas, viewX, viewY, viewWidth, viewHeight);
+
+                // ** NEW: Draw grid lines if showGrid is true **
+                if (showGrid) {
+                    ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)'; // Light gray for the grid
+                    ctx.lineWidth = 1;
+                    ctx.strokeRect(viewX, viewY, viewWidth, viewHeight);
+                }
             }
         }
         ctx.restore();
-    }, [canvasState]);
+    }, [canvasState, showGrid]); // Dependency array updated
 
     useEffect(() => {
         renderVisibleTiles();
@@ -167,9 +174,10 @@ const TiledCanvas: React.FC = () => {
     const getMousePosInWorld = (e: MouseEvent | React.MouseEvent): Position => {
         const viewport = viewportCanvasRef.current!;
         const rect = viewport.getBoundingClientRect();
-        const worldX = (e.clientX - rect.left - canvasState.offset.x) / canvasState.zoomLevel;
-        const worldY = (e.clientY - rect.top - canvasState.offset.y) / canvasState.zoomLevel;
-        return { x: worldX, y: worldY };
+        return {
+            x: (e.clientX - rect.left - canvasState.offset.x) / canvasState.zoomLevel,
+            y: (e.clientY - rect.top - canvasState.offset.y) / canvasState.zoomLevel
+        };
     };
 
     const drawOnTile = (tile: Tile, fromX: number, fromY: number, toX: number, toY: number) => {
@@ -200,13 +208,7 @@ const TiledCanvas: React.FC = () => {
         const pos = getMousePosInWorld(e);
         const tileInfo = worldToTileCoords(pos.x, pos.y);
         const tile = getTile(tileInfo.tileX, tileInfo.tileY);
-        drawOnTile(
-            tile,
-            lastPos.x - tile.x * TILE_SIZE,
-            lastPos.y - tile.y * TILE_SIZE,
-            pos.x - tile.x * TILE_SIZE,
-            pos.y - tile.y * TILE_SIZE
-        );
+        drawOnTile(tile, lastPos.x - tile.x * TILE_SIZE, lastPos.y - tile.y * TILE_SIZE, pos.x - tile.x * TILE_SIZE, pos.y - tile.y * TILE_SIZE);
         setCurrentStrokePath(prev => [...prev, { fromX: lastPos.x, fromY: lastPos.y, toX: pos.x, toY: pos.y }]);
         setLastPos(pos);
         renderVisibleTiles();
@@ -224,10 +226,8 @@ const TiledCanvas: React.FC = () => {
         try {
             setIsSaving(true);
             setSaveError('');
-            console.log('💾 Saving stroke:', strokeData);
             await new Promise(resolve => setTimeout(resolve, 500));
         } catch (error) {
-            console.error('❌ Failed to save stroke:', error);
             setSaveError('Failed to save stroke.');
         } finally {
             setIsSaving(false);
@@ -272,10 +272,7 @@ const TiledCanvas: React.FC = () => {
         const tile = getTile(0, 0);
         const ctx = tile.context;
         ctx.save();
-        // Adjusted scale and offset for 256x256 tile
-        const scale = 0.5;
-        const offsetX = 60;
-        const offsetY = 80;
+        const scale = 0.5, offsetX = 60, offsetY = 80;
         ctx.fillStyle = '#8B4513';
         ctx.fillRect(100 * scale + offsetX, 150 * scale + offsetY, 80 * scale, 60 * scale);
         ctx.fillStyle = '#CD5C5C';
@@ -291,13 +288,8 @@ const TiledCanvas: React.FC = () => {
     };
 
     // --- TOOLBOX DRAG LOGIC ---
-    const startToolboxDrag = (e: React.MouseEvent) => {
-        e.stopPropagation(); setIsDraggingToolbox(true);
-        setToolboxStart({ x: e.clientX - toolboxPos.x, y: e.clientY - toolboxPos.y });
-    };
-    const dragToolbox = useCallback((e: MouseEvent) => {
-        if (isDraggingToolbox) setToolboxPos({ x: e.clientX - toolboxStart.x, y: e.clientY - toolboxStart.y });
-    }, [isDraggingToolbox, toolboxStart]);
+    const startToolboxDrag = (e: React.MouseEvent) => { e.stopPropagation(); setIsDraggingToolbox(true); setToolboxStart({ x: e.clientX - toolboxPos.x, y: e.clientY - toolboxPos.y }); };
+    const dragToolbox = useCallback((e: MouseEvent) => { if (isDraggingToolbox) setToolboxPos({ x: e.clientX - toolboxStart.x, y: e.clientY - toolboxStart.y }); }, [isDraggingToolbox, toolboxStart]);
     const stopToolboxDrag = useCallback(() => setIsDraggingToolbox(false), []);
 
     useEffect(() => {
@@ -317,8 +309,8 @@ const TiledCanvas: React.FC = () => {
             s /= 100; l /= 100;
             const c = (1 - Math.abs(2 * l - 1)) * s, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = l - c / 2;
             let r = 0, g = 0, b = 0;
-            if (0 <= h && h < 60) { r = c; g = x; b = 0 } else if (60 <= h && h < 120) { r = x; g = c; b = 0 } else if (120 <= h && h < 180) { r = 0; g = c; b = x }
-            else if (180 <= h && h < 240) { r = 0; g = x; b = c } else if (240 <= h && h < 300) { r = x; g = 0; b = c } else { r = c; g = 0; b = x }
+            if (h < 60) { r = c; g = x; } else if (h < 120) { r = x; g = c; } else if (h < 180) { g = c; b = x; }
+            else if (h < 240) { g = x; b = c; } else if (h < 300) { r = x; b = c; } else { r = c; b = x; }
             return { r: Math.round((r + m) * 255), g: Math.round((g + m) * 255), b: Math.round((b + m) * 255), a: 1 };
         };
         setBrushState(prev => ({ ...prev, color: hslToRgb(hue, saturation, lightness) }));
@@ -326,53 +318,29 @@ const TiledCanvas: React.FC = () => {
 
     const currentColorString = `rgba(${brushState.color.r}, ${brushState.color.g}, ${brushState.color.b}, ${brushState.color.a})`;
 
-    // --- JSX ---
     return (
         <div style={{ minHeight: '135vh', fontFamily: 'Georgia, serif', overflow: 'auto', position: 'relative' }}>
             <div style={{ marginBottom: "150px", padding: '10px 20px', textAlign: 'center' }}>
                 <h1 style={{ fontSize: '2rem', color: '#5d4e37', margin: '0 0 5px 0', fontWeight: 'normal' }}>Demo Canvas</h1>
-                <p style={{ color: '#8b795e', fontStyle: 'italic', margin: '0 0 10px 0' }}>
-                    Using {TILE_SIZE}px tiles. Zoom with wheel, pan with Move tool.
-                </p>
-                <button onClick={loadReferenceImage} style={{ backgroundColor: '#8b795e', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer', marginRight: '10px' }}>
-                    Load Image
-                </button>
-                <button onClick={handleClearCanvas} style={{ backgroundColor: '#cd5c5c', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer' }}>
-                    Clear Canvas
-                </button>
+                <p style={{ color: '#8b795e', fontStyle: 'italic', margin: '0 0 10px 0' }}>Using {TILE_SIZE}px tiles. Zoom with wheel, pan with Move tool.</p>
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
+                    <button onClick={loadReferenceImage} style={{ backgroundColor: '#8b795e', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer' }}>Load Image</button>
+                    <button onClick={handleClearCanvas} style={{ backgroundColor: '#cd5c5c', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer' }}>Clear Canvas</button>
+                    <button onClick={() => setShowGrid(!showGrid)} style={{ backgroundColor: showGrid ? '#5d4037' : '#8b795e', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Grid size={16} />{showGrid ? 'Hide Grid' : 'Show Grid'}
+                    </button>
+                </div>
             </div>
 
             <div style={{ position: 'absolute', left: toolboxPos.x, top: toolboxPos.y, backgroundColor: 'white', border: '2px solid #8b795e', borderRadius: '8px', padding: '15px', minWidth: '210px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 1000, userSelect: 'none' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', paddingBottom: '10px', borderBottom: '1px solid #e0e0e0' }}>
-                    <h3 style={{ margin: 0, color: '#5d4e37', fontSize: '16px' }}>Tools</h3>
-                    <div onMouseDown={startToolboxDrag} style={{ cursor: 'grab', padding: '5px', color: '#8b795e' }} title="Drag Toolbox">⋮⋮</div>
-                </div>
-                <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
-                    <button onClick={() => setBrushState(p => ({ ...p, mode: 'brush' }))} style={{ background: brushState.mode === 'brush' ? '#8b795e' : 'transparent', color: brushState.mode === 'brush' ? 'white' : '#8b795e', border: '1px solid #8b795e', borderRadius: '4px', padding: '5px', cursor: 'pointer', flex: 1 }} title="Brush"><Brush size={16} /></button>
-                    <button onClick={() => setBrushState(p => ({ ...p, mode: 'eraser' }))} style={{ background: brushState.mode === 'eraser' ? '#8b795e' : 'transparent', color: brushState.mode === 'eraser' ? 'white' : '#8b795e', border: '1px solid #8b795e', borderRadius: '4px', padding: '5px', cursor: 'pointer', flex: 1 }} title="Eraser"><Eraser size={16} /></button>
-                    <button onClick={() => setBrushState(p => ({ ...p, mode: 'move' }))} style={{ background: brushState.mode === 'move' ? '#8b795e' : 'transparent', color: brushState.mode === 'move' ? 'white' : '#8b795e', border: '1px solid #8b795e', borderRadius: '4px', padding: '5px', cursor: 'pointer', flex: 1 }} title="Move/Pan"><Move size={16} /></button>
-                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', paddingBottom: '10px', borderBottom: '1px solid #e0e0e0' }}><h3 style={{ margin: 0, color: '#5d4e37', fontSize: '16px' }}>Tools</h3><div onMouseDown={startToolboxDrag} style={{ cursor: 'grab', padding: '5px', color: '#8b795e' }} title="Drag Toolbox">⋮⋮</div></div>
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}><button onClick={() => setBrushState(p => ({ ...p, mode: 'brush' }))} style={{ background: brushState.mode === 'brush' ? '#8b795e' : 'transparent', color: brushState.mode === 'brush' ? 'white' : '#8b795e', border: '1px solid #8b795e', borderRadius: '4px', padding: '5px', cursor: 'pointer', flex: 1 }} title="Brush"><Brush size={16} /></button><button onClick={() => setBrushState(p => ({ ...p, mode: 'eraser' }))} style={{ background: brushState.mode === 'eraser' ? '#8b795e' : 'transparent', color: brushState.mode === 'eraser' ? 'white' : '#8b795e', border: '1px solid #8b795e', borderRadius: '4px', padding: '5px', cursor: 'pointer', flex: 1 }} title="Eraser"><Eraser size={16} /></button><button onClick={() => setBrushState(p => ({ ...p, mode: 'move' }))} style={{ background: brushState.mode === 'move' ? '#8b795e' : 'transparent', color: brushState.mode === 'move' ? 'white' : '#8b795e', border: '1px solid #8b795e', borderRadius: '4px', padding: '5px', cursor: 'pointer', flex: 1 }} title="Move/Pan"><Move size={16} /></button></div>
                 <label style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: '#5d4e37' }}>Color</label>
-                <div style={{ position: 'relative', width: '120px', height: '120px', margin: '0 auto 10px', borderRadius: '50%', background: `conic-gradient(hsl(0,100%,50%),hsl(60,100%,50%),hsl(120,100%,50%),hsl(180,100%,50%),hsl(240,100%,50%),hsl(300,100%,50%),hsl(360,100%,50%))`, cursor: 'pointer' }}
-                    onClick={(e) => {
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        const angle = Math.atan2(e.clientY - (rect.top + rect.height / 2), e.clientX - (rect.left + rect.width / 2));
-                        setHue(((angle * 180 / Math.PI) + 360) % 360);
-                    }}>
-                    <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '30px', height: '30px', backgroundColor: currentColorString, borderRadius: '50%', border: '3px solid white', boxShadow: '0 0 0 1px rgba(0,0,0,0.1)' }} />
-                </div>
-                <div style={{ marginBottom: '15px', marginTop: '15px' }}>
-                    <label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '5px' }}>Brush Size: {brushState.size}px</label>
-                    <input type="range" min="1" max="50" value={brushState.size} onChange={e => setBrushState(p => ({ ...p, size: +e.target.value }))} style={{ width: '100%' }} />
-                </div>
+                <div style={{ position: 'relative', width: '120px', height: '120px', margin: '0 auto 10px', borderRadius: '50%', background: `conic-gradient(hsl(0,100%,50%),hsl(60,100%,50%),hsl(120,100%,50%),hsl(180,100%,50%),hsl(240,100%,50%),hsl(300,100%,50%),hsl(360,100%,50%))`, cursor: 'pointer' }} onClick={(e) => { const rect = e.currentTarget.getBoundingClientRect(); const angle = Math.atan2(e.clientY - (rect.top + rect.height / 2), e.clientX - (rect.left + rect.width / 2)); setHue(((angle * 180 / Math.PI) + 360) % 360); }}><div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '30px', height: '30px', backgroundColor: currentColorString, borderRadius: '50%', border: '3px solid white', boxShadow: '0 0 0 1px rgba(0,0,0,0.1)' }} /></div>
+                <div style={{ marginBottom: '15px', marginTop: '15px' }}><label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '5px' }}>Brush Size: {brushState.size}px</label><input type="range" min="1" max="50" value={brushState.size} onChange={e => setBrushState(p => ({ ...p, size: +e.target.value }))} style={{ width: '100%' }} /></div>
             </div>
 
-            <div
-                ref={containerRef}
-                style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 'calc(100vh - 150px)' }}
-                // onMouseEnter={() => setIsCanvasHovered(true)}
-                // onMouseLeave={() => setIsCanvasHovered(false)}
-            >
+            <div ref={containerRef} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 'calc(100vh - 150px)' }} onMouseEnter={() => setIsCanvasHovered(true)} onMouseLeave={() => setIsCanvasHovered(false)}>
                 <canvas
                     ref={viewportCanvasRef}
                     width={VIEWPORT_WIDTH}
@@ -408,4 +376,4 @@ const TiledCanvas: React.FC = () => {
     );
 };
 
-export default TiledCanvas; 
+export default TiledCanvas;
