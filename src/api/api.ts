@@ -14,6 +14,8 @@ const api: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_BASE_URL,
   withCredentials: true,
 });
+console.log("✅ Axios Base URL:", import.meta.env.VITE_BASE_URL);
+
 // RESPONSE INTERCEPTOR
 api.interceptors.response.use(
   (response: AxiosResponse) => {

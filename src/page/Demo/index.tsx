@@ -388,11 +388,10 @@ const TiledCanvas: React.FC = () => {
 
     const currentColorString = `rgba(${brushState.color.r}, ${brushState.color.g}, ${brushState.color.b}, ${brushState.color.a})`;
 
-    // --- JSX ---
     return (
-        <div style={{ height: '100vh', fontFamily: 'Georgia, serif', overflow: 'hidden', position: 'relative' }}>
+        <div style={{ height: '100vh',fontFamily: 'Georgia, serif', overflow: 'hidden', position: 'relative', backgroundColor:""}}>
             {/* Header */}
-            <div style={{ padding: '10px 20px', textAlign: 'center' }}>
+            <div className='' style={{ marginBottom: "100px", padding: '10px 20px', textAlign: 'center' }}>
                 <h1 style={{ fontSize: '2rem', color: '#5d4e37', margin: '0 0 5px 0', fontWeight: 'normal' }}>Tiled Canvas</h1>
                 <p style={{ color: '#8b795e', fontStyle: 'italic', margin: '0 0 10px 0' }}>
                     Zoom with wheel, pan with Move tool. Drawing disabled when zoomed out.
@@ -436,7 +435,7 @@ const TiledCanvas: React.FC = () => {
             </div>
 
             {/* Canvas Container */}
-            <div ref={containerRef} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 'calc(100vh - 120px)' }} onContextMenu={(e) => e.preventDefault()} onMouseEnter={() => setIsCanvasHovered(true)} onMouseLeave={() => setIsCanvasHovered(false)}>
+            <div ref={containerRef} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 'calc(100vh - 80px)' }} onContextMenu={(e) => e.preventDefault()} onMouseEnter={() => setIsCanvasHovered(true)} onMouseLeave={() => setIsCanvasHovered(false)}>
                 <canvas
                     ref={viewportCanvasRef}
                     width={VIEWPORT_WIDTH}
@@ -472,6 +471,7 @@ const TiledCanvas: React.FC = () => {
                 {isSaving && <div style={{ color: '#FFA500' }}>Saving...</div>}
                 {saveError && <div style={{ color: '#cd5c5c' }}>{saveError}</div>}
             </div>
+
         </div>
     );
 };
