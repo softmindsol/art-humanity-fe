@@ -1,4 +1,4 @@
-name: Deploy to Gorankai-be VPS via SSH
+name: Deploy to art-humanity-be VPS via SSH
 
 on:
   push:
@@ -21,7 +21,7 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           port: 22
           script: |
-            sh /root/.gorankai-deploy.sh
+            sh /root/.fe.deploy.sh
 
   notify-status:
     name: Notify Deployment Completed
