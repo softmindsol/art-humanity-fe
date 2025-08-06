@@ -91,7 +91,7 @@ export const useRegisterForm = ({onClose}:any) => {
         confirmPassword: "",
       });
     } catch (err: any) {
-      console.error(err);
+      console.log(err);
       setErrors({ submit: err.message || "Registration failed" });
     } finally {
       setLoading(false);
