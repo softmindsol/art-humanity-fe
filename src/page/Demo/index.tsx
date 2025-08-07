@@ -1,44 +1,8 @@
-import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { Brush, Eraser, Move, Grid } from 'lucide-react'; // Grid icon imported
+import React, { useEffect, useCallback } from 'react';
+import { Brush, Eraser, Move, Grid, Undo, Redo } from 'lucide-react'; // Grid icon imported
+import { useCanvasState } from '@/hook/useCanvasState';
+import type { Position, Tile } from '@/types/canvas';
 
-// --- TYPE DEFINITIONS ---
-interface Position {
-    x: number;
-    y: number;
-}
-
-interface RgbaColor {
-    r: number;
-    g: number;
-    b: number;
-    a: number;
-}
-
-interface StrokeData {
-    fromX: number;
-    fromY: number;
-    toX: number;
-    toY: number;
-}
-
-interface BrushState {
-    mode: 'brush' | 'eraser' | 'move';
-    size: number;
-    color: RgbaColor;
-}
-
-interface CanvasState {
-    zoomLevel: number;
-    offset: Position;
-}
-
-interface Tile {
-    x: number;
-    y: number;
-    canvas: HTMLCanvasElement;
-    context: CanvasRenderingContext2D;
-    isDirty: boolean;
-}
 
 // --- CONSTANTS ---
 const TILE_SIZE = 512; // Optimal tile size for performance
@@ -47,39 +11,70 @@ const VIEWPORT_HEIGHT = 1024; // Fixed viewport height
 
 
 const TiledCanvas: React.FC = () => {
-    // --- REFS ---
-    const containerRef = useRef<HTMLDivElement | null>(null);
-    const viewportCanvasRef = useRef<HTMLCanvasElement | null>(null);
-    const tilesRef = useRef<Map<string, Tile>>(new Map());
+    const {
+        // Refs
+        containerRef,
+        viewportCanvasRef,
+        tilesRef,
 
-    // --- STATE MANAGEMENT ---
-    const [canvasState, setCanvasState] = useState<CanvasState>({ zoomLevel: 1, offset: { x: 0, y: 0 } });
-    const [brushState, setBrushState] = useState<BrushState>({ mode: 'brush', size: 5, color: { r: 0, g: 0, b: 0, a: 1 } });
-    const [isDrawing, setIsDrawing] = useState(false);
-    const [lastPos, setLastPos] = useState<Position>({ x: 0, y: 0 });
-    const [mousePos, setMousePos] = useState<Position>({ x: 0, y: 0 });
-    const [isPanning, setIsPanning] = useState(false);
-    const [panStart, setPanStart] = useState<Position>({ x: 0, y: 0 });
-    const [toolboxPos, setToolboxPos] = useState<Position>({ x: 20, y: 172 });
-    const [isDraggingToolbox, setIsDraggingToolbox] = useState(false);
-    const [toolboxStart, setToolboxStart] = useState<Position>({ x: 0, y: 0 });
-    const [isCanvasHovered, setIsCanvasHovered] = useState(false);
-    const [showGrid, setShowGrid] = useState(true); // State to control grid visibility
-    const [hue, setHue] = useState(0);
-    const [saturation, setSaturation] = useState(100);
-    const [lightness, setLightness] = useState(50);
-    const [allStrokes, setAllStrokes] = useState<any[]>([]);
-    const [currentStrokePath, setCurrentStrokePath] = useState<StrokeData[]>([]);
-    const [totalTiles, setTotalTiles] = useState(0);
-    const [isSaving, setIsSaving] = useState(false);
-    const [saveError, setSaveError] = useState<string>('');
-    const [sessionId, setSessionId] = useState('');
-    const [canvasId, setCanvasId] = useState('');
+        // Canvas states
+        canvasState,
+        setCanvasState,
+        brushState,
+        setBrushState,
+        isDrawing,
+        setIsDrawing,
+        lastPos,
+        setLastPos,
+        mousePos,
+        setMousePos,
+        isPanning,
+        setIsPanning,
+        panStart,
+        setPanStart,
+        toolboxPos,
+        setToolboxPos,
+        isDraggingToolbox,
+        setIsDraggingToolbox,
+        toolboxStart,
+        setToolboxStart,
+        isCanvasHovered,
+        setIsCanvasHovered,
+        showGrid,
+        setShowGrid,
+        hue,
+        setHue,
+        saturation,
+        setSaturation,
+        lightness,
+        setLightness,
+        allStrokes,
+        setAllStrokes,
+        currentStrokePath,
+        setCurrentStrokePath,
+        totalTiles,
+        setTotalTiles,
+        isSaving,
+        setIsSaving,
+        saveError,
+        setSaveError,
+        sessionId,
+        setSessionId,
+        canvasId,
+        setCanvasId,
 
+        // History
+        history,
+        setHistory,
+        historyIndex,
+        setHistoryIndex,
+    } = useCanvasState();
     // --- INITIALIZATION & PAGE SCROLL LOCK ---
     useEffect(() => {
         setSessionId(`session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
         setCanvasId(`canvas_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`);
+        saveStateToHistory();
+
     }, []);
 
     // useEffect(() => {
@@ -91,6 +86,64 @@ const TiledCanvas: React.FC = () => {
     //     return () => { document.body.style.overflow = ''; };
     // }, [isCanvasHovered]);
 
+
+    // --- HISTORY MANAGEMENT ---
+    const saveStateToHistory = useCallback(() => {
+        const snapshot = new Map();
+        tilesRef.current.forEach((tile, key) => {
+            snapshot.set(key, tile.context.getImageData(0, 0, TILE_SIZE, TILE_SIZE));
+        });
+
+        const newHistory = history.slice(0, historyIndex + 1);
+        setHistory([...newHistory, snapshot]);
+        setHistoryIndex(newHistory.length);
+    }, [history, historyIndex]);
+
+    const restoreStateFromHistory = useCallback((index: number) => {
+        if (index < 0 || index >= history.length) return;
+
+        const snapshot = history[index];
+        tilesRef.current.clear(); // Clear current tiles to handle undoing tile creation
+
+        snapshot.forEach((imageData: any, key: any) => {
+            const [tileX, tileY] = key.split(',').map(Number);
+            const tile = getTile(tileX, tileY);
+            tile.context.putImageData(imageData, 0, 0);
+        });
+
+        setHistoryIndex(index);
+        renderVisibleTiles();
+    }, [history]);
+
+    const handleUndo = useCallback(() => {
+        if (historyIndex > 0) {
+            restoreStateFromHistory(historyIndex - 1);
+        }
+    }, [historyIndex, restoreStateFromHistory]);
+
+    const handleRedo = useCallback(() => {
+        if (historyIndex < history.length - 1) {
+            restoreStateFromHistory(historyIndex + 1);
+        }
+    }, [historyIndex, history.length, restoreStateFromHistory]);
+
+    // Keyboard Shortcuts for Undo/Redo
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.ctrlKey || e.metaKey) { // metaKey for Command on Mac
+                if (e.key === 'z') {
+                    e.preventDefault();
+                    handleUndo();
+                } else if (e.key === 'y') {
+                    e.preventDefault();
+                    handleRedo();
+                }
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [handleUndo, handleRedo]);
+
     // --- TILE MANAGEMENT ---
     const getTileKey = (tileX: number, tileY: number): string => `${tileX},${tileY}`;
 
@@ -101,7 +154,7 @@ const TiledCanvas: React.FC = () => {
         };
     };
 
-    const createTile = (tileX: number, tileY: number): Tile => {
+    const createTile = (tileX: any, tileY: any): Tile => {
         const canvas = document.createElement('canvas');
         canvas.width = TILE_SIZE;
         canvas.height = TILE_SIZE;
@@ -111,7 +164,7 @@ const TiledCanvas: React.FC = () => {
         return { x: tileX, y: tileY, canvas, context, isDirty: true };
     };
 
-    const getTile = (tileX: number, tileY: number): Tile => {
+    const getTile = (tileX: any, tileY: any): Tile => {
         const key = getTileKey(tileX, tileY);
         let tile = tilesRef.current.get(key);
         if (!tile) {
@@ -131,20 +184,16 @@ const TiledCanvas: React.FC = () => {
         ctx.clearRect(0, 0, VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
         ctx.fillStyle = '#f0f0f0';
         ctx.fillRect(0, 0, VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
-
         const { zoomLevel, offset } = canvasState;
         const worldLeft = -offset.x / zoomLevel;
         const worldTop = -offset.y / zoomLevel;
         const worldRight = worldLeft + VIEWPORT_WIDTH / zoomLevel;
         const worldBottom = worldTop + VIEWPORT_HEIGHT / zoomLevel;
-
         const startTileX = Math.floor(worldLeft / TILE_SIZE);
         const startTileY = Math.floor(worldTop / TILE_SIZE);
         const endTileX = Math.ceil(worldRight / TILE_SIZE);
         const endTileY = Math.ceil(worldBottom / TILE_SIZE);
-
         ctx.imageSmoothingEnabled = zoomLevel < 1;
-
         for (let y = startTileY; y < endTileY; y++) {
             for (let x = startTileX; x < endTileX; x++) {
                 const tile = getTile(x, y);
@@ -152,19 +201,16 @@ const TiledCanvas: React.FC = () => {
                 const viewY = (y * TILE_SIZE * zoomLevel) + offset.y;
                 const viewWidth = TILE_SIZE * zoomLevel;
                 const viewHeight = TILE_SIZE * zoomLevel;
-
                 ctx.drawImage(tile.canvas, viewX, viewY, viewWidth, viewHeight);
-
-                // ** NEW: Draw grid lines if showGrid is true **
                 if (showGrid) {
-                    ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)'; // Light gray for the grid
+                    ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
                     ctx.lineWidth = 1;
                     ctx.strokeRect(viewX, viewY, viewWidth, viewHeight);
                 }
             }
         }
         ctx.restore();
-    }, [canvasState, showGrid]); // Dependency array updated
+    }, [canvasState, showGrid]);
 
     useEffect(() => {
         renderVisibleTiles();
@@ -180,10 +226,14 @@ const TiledCanvas: React.FC = () => {
         };
     };
 
-    const drawOnTile = (tile: Tile, fromX: number, fromY: number, toX: number, toY: number) => {
+
+    const drawOnTile = (tile: any, fromX: any, fromY: any, toX: any, toY: any) => {
         const ctx = tile.context;
-        ctx.globalCompositeOperation = brushState.mode === 'eraser' ? 'destination-out' : 'source-over';
-        if (brushState.mode !== 'eraser') {
+        if (brushState.mode === 'eraser') {
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.strokeStyle = 'rgba(0,0,0,1)'; // Must be opaque for eraser to work
+        } else {
+            ctx.globalCompositeOperation = 'source-over';
             ctx.strokeStyle = `rgba(${brushState.color.r}, ${brushState.color.g}, ${brushState.color.b}, ${brushState.color.a})`;
         }
         ctx.lineWidth = brushState.size;
@@ -200,38 +250,31 @@ const TiledCanvas: React.FC = () => {
         if (brushState.mode === 'move' || canvasState.zoomLevel < 1) return;
         setIsDrawing(true);
         setLastPos(getMousePosInWorld(e));
-        setCurrentStrokePath([]);
     };
 
-    const draw = (e: React.MouseEvent) => {
+    const draw = (e:any) => {
         if (!isDrawing || brushState.mode === 'move' || canvasState.zoomLevel < 1) return;
         const pos = getMousePosInWorld(e);
-        const tileInfo = worldToTileCoords(pos.x, pos.y);
-        const tile = getTile(tileInfo.tileX, tileInfo.tileY);
-        drawOnTile(tile, lastPos.x - tile.x * TILE_SIZE, lastPos.y - tile.y * TILE_SIZE, pos.x - tile.x * TILE_SIZE, pos.y - tile.y * TILE_SIZE);
-        setCurrentStrokePath(prev => [...prev, { fromX: lastPos.x, fromY: lastPos.y, toX: pos.x, toY: pos.y }]);
+        const fromCoords = worldToTileCoords(lastPos.x, lastPos.y);
+        const toCoords = worldToTileCoords(pos.x, pos.y);
+        const minTileX = Math.min(fromCoords.tileX, toCoords.tileX);
+        const maxTileX = Math.max(fromCoords.tileX, toCoords.tileX);
+        const minTileY = Math.min(fromCoords.tileY, toCoords.tileY);
+        const maxTileY = Math.max(fromCoords.tileY, toCoords.tileY);
+        for (let y = minTileY; y <= maxTileY; y++) {
+            for (let x = minTileX; x <= maxTileX; x++) {
+                const tile = getTile(x, y);
+                drawOnTile(tile, lastPos.x - x * TILE_SIZE, lastPos.y - y * TILE_SIZE, pos.x - x * TILE_SIZE, pos.y - y * TILE_SIZE);
+            }
+        }
         setLastPos(pos);
         renderVisibleTiles();
     };
 
     const stopDrawing = async () => {
-        if (!isDrawing || currentStrokePath.length === 0) {
-            setIsDrawing(false);
-            return;
-        }
+        if (!isDrawing) return;
         setIsDrawing(false);
-        const strokeData = { sessionId, canvasId, path: currentStrokePath, brush: brushState, timestamp: new Date().toISOString() };
-        setAllStrokes(prev => [...prev, strokeData]);
-        setCurrentStrokePath([]);
-        try {
-            setIsSaving(true);
-            setSaveError('');
-            await new Promise(resolve => setTimeout(resolve, 500));
-        } catch (error) {
-            setSaveError('Failed to save stroke.');
-        } finally {
-            setIsSaving(false);
-        }
+        saveStateToHistory();
     };
 
     // --- PAN AND ZOOM HANDLERS ---
@@ -259,14 +302,14 @@ const TiledCanvas: React.FC = () => {
     // --- OTHER ACTIONS ---
     const handleClearCanvas = () => {
         tilesRef.current.forEach(tile => {
-            const ctx = tile.context;
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
+            tile.context.fillStyle = '#ffffff';
+            tile.context.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
             tile.isDirty = true;
         });
-        setAllStrokes([]);
         renderVisibleTiles();
+        saveStateToHistory();
     };
+
 
     const loadReferenceImage = () => {
         const tile = getTile(0, 0);
@@ -320,25 +363,144 @@ const TiledCanvas: React.FC = () => {
 
     return (
         <div style={{ minHeight: '135vh', fontFamily: 'Georgia, serif', overflow: 'auto', position: 'relative' }}>
-            <div style={{ marginBottom: "150px", padding: '10px 20px', textAlign: 'center' }}>
-                <h1 style={{ fontSize: '2rem', color: '#5d4e37', margin: '0 0 5px 0', fontWeight: 'normal' }}>Demo Canvas</h1>
-                <p style={{ color: '#8b795e', fontStyle: 'italic', margin: '0 0 10px 0' }}>Using {TILE_SIZE}px tiles. Zoom with wheel, pan with Move tool.</p>
-                <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
-                    <button onClick={loadReferenceImage} style={{ backgroundColor: '#8b795e', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer' }}>Load Image</button>
-                    <button onClick={handleClearCanvas} style={{ backgroundColor: '#cd5c5c', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer' }}>Clear Canvas</button>
-                    <button onClick={() => setShowGrid(!showGrid)} style={{ backgroundColor: showGrid ? '#5d4037' : '#8b795e', color: 'white', border: 'none', padding: '8px 16px', borderRadius: '4px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Grid size={16} />{showGrid ? 'Hide Grid' : 'Show Grid'}
+            <div className="mb-[150px] px-5 py-2 text-center">
+                <h1 className="text-2xl text-[#5d4e37] mb-1 font-normal">Demo Canvas</h1>
+                <p className="text-[#8b795e] italic mb-2">
+                    Using {TILE_SIZE}px tiles. Zoom with wheel, pan with Move tool.
+                </p>
+
+                <div className="flex justify-center gap-3">
+                    <button
+                        onClick={loadReferenceImage}
+                        className="bg-[#8b795e] text-white border-none px-4 py-2 rounded cursor-pointer"
+                    >
+                        Load Image
+                    </button>
+
+                    <button
+                        onClick={handleClearCanvas}
+                        className="bg-[#cd5c5c] text-white border-none px-4 py-2 rounded cursor-pointer"
+                    >
+                        Clear Canvas
+                    </button>
+
+                    <button
+                        onClick={() => setShowGrid(!showGrid)}
+                        className={`${showGrid ? 'bg-[#5d4037]' : 'bg-[#8b795e]'
+                            } text-white border-none px-4 py-2 rounded cursor-pointer flex items-center gap-2`}
+                    >
+                        <Grid size={16} />
+                        {showGrid ? 'Hide Grid' : 'Show Grid'}
                     </button>
                 </div>
             </div>
 
-            <div style={{ position: 'absolute', left: toolboxPos.x, top: toolboxPos.y, backgroundColor: 'white', border: '2px solid #8b795e', borderRadius: '8px', padding: '15px', minWidth: '210px', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', zIndex: 1000, userSelect: 'none' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', paddingBottom: '10px', borderBottom: '1px solid #e0e0e0' }}><h3 style={{ margin: 0, color: '#5d4e37', fontSize: '16px' }}>Tools</h3><div onMouseDown={startToolboxDrag} style={{ cursor: 'grab', padding: '5px', color: '#8b795e' }} title="Drag Toolbox">⋮⋮</div></div>
-                <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}><button onClick={() => setBrushState(p => ({ ...p, mode: 'brush' }))} style={{ background: brushState.mode === 'brush' ? '#8b795e' : 'transparent', color: brushState.mode === 'brush' ? 'white' : '#8b795e', border: '1px solid #8b795e', borderRadius: '4px', padding: '5px', cursor: 'pointer', flex: 1 }} title="Brush"><Brush size={16} /></button><button onClick={() => setBrushState(p => ({ ...p, mode: 'eraser' }))} style={{ background: brushState.mode === 'eraser' ? '#8b795e' : 'transparent', color: brushState.mode === 'eraser' ? 'white' : '#8b795e', border: '1px solid #8b795e', borderRadius: '4px', padding: '5px', cursor: 'pointer', flex: 1 }} title="Eraser"><Eraser size={16} /></button><button onClick={() => setBrushState(p => ({ ...p, mode: 'move' }))} style={{ background: brushState.mode === 'move' ? '#8b795e' : 'transparent', color: brushState.mode === 'move' ? 'white' : '#8b795e', border: '1px solid #8b795e', borderRadius: '4px', padding: '5px', cursor: 'pointer', flex: 1 }} title="Move/Pan"><Move size={16} /></button></div>
-                <label style={{ fontSize: '14px', fontWeight: 'bold', marginBottom: '8px', color: '#5d4e37' }}>Color</label>
-                <div style={{ position: 'relative', width: '120px', height: '120px', margin: '0 auto 10px', borderRadius: '50%', background: `conic-gradient(hsl(0,100%,50%),hsl(60,100%,50%),hsl(120,100%,50%),hsl(180,100%,50%),hsl(240,100%,50%),hsl(300,100%,50%),hsl(360,100%,50%))`, cursor: 'pointer' }} onClick={(e) => { const rect = e.currentTarget.getBoundingClientRect(); const angle = Math.atan2(e.clientY - (rect.top + rect.height / 2), e.clientX - (rect.left + rect.width / 2)); setHue(((angle * 180 / Math.PI) + 360) % 360); }}><div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: '30px', height: '30px', backgroundColor: currentColorString, borderRadius: '50%', border: '3px solid white', boxShadow: '0 0 0 1px rgba(0,0,0,0.1)' }} /></div>
-                <div style={{ marginBottom: '15px', marginTop: '15px' }}><label style={{ fontSize: '12px', color: '#666', display: 'block', marginBottom: '5px' }}>Brush Size: {brushState.size}px</label><input type="range" min="1" max="50" value={brushState.size} onChange={e => setBrushState(p => ({ ...p, size: +e.target.value }))} style={{ width: '100%' }} /></div>
+
+            <div
+                className="absolute bg-white border border-[#8b795e] rounded-lg p-4 min-w-[210px] shadow-lg z-[1000] select-none"
+                style={{ left: toolboxPos.x, top: toolboxPos.y }}
+            >
+                {/* Header */}
+                <div className="flex justify-between items-center mb-4 pb-2 border-b border-gray-300">
+                    <h3 className="text-[#5d4e37] text-sm font-semibold m-0">Tools</h3>
+                    <div
+                        onMouseDown={startToolboxDrag}
+                        className="cursor-grab p-1 text-[#8b795e]"
+                        title="Drag Toolbox"
+                    >
+                        ⋮⋮
+                    </div>
+                </div>
+
+                {/* Undo / Redo */}
+                <div className="flex gap-2 justify-end mb-2">
+                    <button
+                        onClick={handleUndo}
+                        disabled={historyIndex <= 0}
+                        title="Undo (Ctrl+Z)"
+                        className={`p-1 border border-[#8b795e] rounded text-[#8b795e] ${historyIndex <= 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#f9f4f2]'
+                            }`}
+                    >
+                        <Undo size={16} />
+                    </button>
+                    <button
+                        onClick={handleRedo}
+                        disabled={historyIndex >= history.length - 1}
+                        title="Redo (Ctrl+Y)"
+                        className={`p-1 border border-[#8b795e] rounded text-[#8b795e] ${historyIndex >= history.length - 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#f9f4f2]'
+                            }`}
+                    >
+                        <Redo size={16} />
+                    </button>
+                </div>
+
+                {/* Brush / Eraser / Move */}
+                <div className="flex gap-2 mb-5">
+                    {['brush', 'eraser', 'move'].map((mode) => {
+                        const Icon = mode === 'brush' ? Brush : mode === 'eraser' ? Eraser : Move;
+                        const isActive = brushState.mode === mode;
+                        return (
+                            <button
+                                key={mode}
+                                onClick={() => setBrushState((p) => ({ ...p, mode }))}
+                                title={mode.charAt(0).toUpperCase() + mode.slice(1)}
+                                className={`flex-1 p-1 border border-[#8b795e] rounded ${isActive ? 'bg-[#8b795e] text-white' : 'bg-transparent text-[#8b795e]'
+                                    }`}
+                            >
+                                <Icon size={16} />
+                            </button>
+                        );
+                    })}
+                </div>
+
+                {/* Color Picker Label */}
+                <label className="text-sm font-bold text-[#5d4e37] mb-2 block">Color</label>
+
+                {/* Color Wheel */}
+                <div
+                    className="relative w-[120px] h-[120px] mx-auto rounded-full cursor-pointer mb-3"
+                    style={{
+                        background:
+                            'conic-gradient(hsl(0,100%,50%),hsl(60,100%,50%),hsl(120,100%,50%),hsl(180,100%,50%),hsl(240,100%,50%),hsl(300,100%,50%),hsl(360,100%,50%))',
+                    }}
+                    onClick={(e) => {
+                        const rect = e.currentTarget.getBoundingClientRect();
+                        const angle = Math.atan2(
+                            e.clientY - (rect.top + rect.height / 2),
+                            e.clientX - (rect.left + rect.width / 2)
+                        );
+                        setHue(((angle * 180) / Math.PI + 360) % 360);
+                    }}
+                >
+                    <div
+                        className="absolute w-[30px] h-[30px] rounded-full border-4 border-white shadow"
+                        style={{
+                            top: '50%',
+                            left: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            backgroundColor: currentColorString,
+                        }}
+                    />
+                </div>
+
+                {/* Brush Size Slider */}
+                <div className="mb-4 mt-4">
+                    <label className="text-xs text-gray-600 block mb-1">
+                        Brush Size: {brushState.size}px
+                    </label>
+                    <input
+                        type="range"
+                        min="1"
+                        max="50"
+                        value={brushState.size}
+                        onChange={(e) =>
+                            setBrushState((p) => ({ ...p, size: +e.target.value }))
+                        }
+                        className="w-full"
+                    />
+                </div>
             </div>
+
 
             <div ref={containerRef} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 'calc(100vh - 150px)' }} onMouseEnter={() => setIsCanvasHovered(true)} onMouseLeave={() => setIsCanvasHovered(false)}>
                 <canvas
@@ -364,14 +526,15 @@ const TiledCanvas: React.FC = () => {
                 />
             </div>
 
-            <div style={{ position: 'absolute', bottom: '40px', right: '10px', backgroundColor: 'rgba(255, 255, 255, 0.9)', padding: '10px', borderRadius: '8px', fontSize: '16px', color: '#5d4e37', border: '1px solid #3e2723' }}>
+            <div className="absolute bottom-16 right-10 bg-white/90 p-3 rounded-lg text-base text-[#5d4e37] border border-[#3e2723]">
                 <div>Zoom: {Math.round(canvasState.zoomLevel * 100)}%</div>
                 <div>World Pos: ({mousePos.x}, {mousePos.y})</div>
                 <div>Tiles: {totalTiles}</div>
                 <div>Strokes: {allStrokes.length}</div>
-                {isSaving && <div style={{ color: '#FFA500' }}>Saving...</div>}
-                {saveError && <div style={{ color: '#cd5c5c' }}>{saveError}</div>}
+                {isSaving && <div className="text-orange-500">Saving...</div>}
+                {saveError && <div className="text-[#cd5c5c]">{saveError}</div>}
             </div>
+
         </div>
     );
 };
