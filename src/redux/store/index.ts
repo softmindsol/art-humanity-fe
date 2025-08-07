@@ -12,10 +12,11 @@ import {
   REGISTER,
 } from "redux-persist";
 import storage from "redux-persist/lib/storage"; // uses localStorage by default
-
+import paintPixelReducer from '../slice/paintPixel'
 // Combine your reducers (if you have more later)
 const rootReducer = combineReducers({
   auth: authModalReducer,
+  paintPixel: paintPixelReducer,
 });
 
 // Persist config

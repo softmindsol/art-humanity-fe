@@ -30,12 +30,19 @@ export const useCanvasState = () => {
   const [saturation, setSaturation] = useState(100);
   const [lightness, setLightness] = useState(50);
   const [allStrokes, setAllStrokes] = useState<any[]>([]);
-  const [currentStrokePath, setCurrentStrokePath] = useState([]);
+  const [currentStrokePath, setCurrentStrokePath] = useState<any>([]);
   const [totalTiles, setTotalTiles] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string>("");
-  const [sessionId, setSessionId] = useState("");
-  const [canvasId, setCanvasId] = useState("");
+  const [sessionId] = useState(
+    `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+  );
+  const [canvasId] = useState(
+    `canvas_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`
+  );
+
+  const [currentPixelLog, setCurrentPixelLog]=useState<any>('');
+    const [strokeStartTime, setStrokeStartTime] = useState<Date>();
 
   // --- Undo/Redo ---
   const [history, setHistory] = useState<any[]>([]);
@@ -89,14 +96,17 @@ export const useCanvasState = () => {
     saveError,
     setSaveError,
     sessionId,
-    setSessionId,
     canvasId,
-    setCanvasId,
-
+   
+    currentPixelLog,
+    setCurrentPixelLog,
+    strokeStartTime,
+    setStrokeStartTime,
     // History
     history,
     setHistory,
     historyIndex,
     setHistoryIndex,
+    
   };
 };

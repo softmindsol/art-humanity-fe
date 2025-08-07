@@ -2,6 +2,10 @@ import React, { useEffect, useCallback } from 'react';
 import { Brush, Eraser, Move, Grid, Undo, Redo } from 'lucide-react'; // Grid icon imported
 import { useCanvasState } from '@/hook/useCanvasState';
 import type { Position, Tile } from '@/types/canvas';
+import { useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
+import { selectCurrentBrush, selectCurrentCanvas, selectErrorForOperation, selectIsLoadingOperation, setBrushColor, setCanvasOffset, setZoomLevel } from '@/redux/slice/paintPixel';
+import { createStroke } from '@/redux/action/painPixel';
 
 
 // --- CONSTANTS ---
@@ -11,16 +15,20 @@ const VIEWPORT_HEIGHT = 1024; // Fixed viewport height
 
 
 const TiledCanvas: React.FC = () => {
+    const dispatch = useDispatch();
+
+    // --- REDUX STATE ---
+    // Get state directly from the Redux store
+    const brushState = useSelector(selectCurrentBrush);
+    const canvasState = useSelector(selectCurrentCanvas);
+    const isSaving = useSelector(selectIsLoadingOperation('createStroke'));
+    const saveError = useSelector(selectErrorForOperation('createStroke'));
     const {
         // Refs
         containerRef,
         viewportCanvasRef,
         tilesRef,
-
-        // Canvas states
-        canvasState,
         setCanvasState,
-        brushState,
         setBrushState,
         isDrawing,
         setIsDrawing,
@@ -38,43 +46,34 @@ const TiledCanvas: React.FC = () => {
         setIsDraggingToolbox,
         toolboxStart,
         setToolboxStart,
-        isCanvasHovered,
         setIsCanvasHovered,
         showGrid,
         setShowGrid,
         hue,
         setHue,
         saturation,
-        setSaturation,
         lightness,
-        setLightness,
         allStrokes,
-        setAllStrokes,
         currentStrokePath,
         setCurrentStrokePath,
         totalTiles,
         setTotalTiles,
-        isSaving,
-        setIsSaving,
-        saveError,
-        setSaveError,
-        sessionId,
-        setSessionId,
-        canvasId,
-        setCanvasId,
-
+        sessionId,    
+        canvasId,  
+        setCurrentPixelLog,
+        strokeStartTime, 
+        setStrokeStartTime,
         // History
         history,
         setHistory,
         historyIndex,
         setHistoryIndex,
     } = useCanvasState();
-    // --- INITIALIZATION & PAGE SCROLL LOCK ---
     useEffect(() => {
-        setSessionId(`session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
-        setCanvasId(`canvas_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`);
+        console.log("currentStrokePath:",currentStrokePath)
+    }, [currentStrokePath])
+    useEffect(() => {
         saveStateToHistory();
-
     }, []);
 
     // useEffect(() => {
@@ -250,11 +249,19 @@ const TiledCanvas: React.FC = () => {
         if (brushState.mode === 'move' || canvasState.zoomLevel < 1) return;
         setIsDrawing(true);
         setLastPos(getMousePosInWorld(e));
+        setCurrentPixelLog([]); // Clear pixel log for the new stroke
+        setCurrentStrokePath([])
+        setStrokeStartTime(new Date()); // Set start time
     };
 
-    const draw = (e:any) => {
+    const draw = (e: React.MouseEvent) => {
         if (!isDrawing || brushState.mode === 'move' || canvasState.zoomLevel < 1) return;
         const pos = getMousePosInWorld(e);
+
+        // **CHANGE**: Add the new segment to the stroke path state
+        setCurrentStrokePath((prev:any) => [...prev, { fromX: lastPos.x, fromY: lastPos.y, toX: pos.x, toY: pos.y }]);
+
+        // Draw visually on the canvas
         const fromCoords = worldToTileCoords(lastPos.x, lastPos.y);
         const toCoords = worldToTileCoords(pos.x, pos.y);
         const minTileX = Math.min(fromCoords.tileX, toCoords.tileX);
@@ -272,10 +279,36 @@ const TiledCanvas: React.FC = () => {
     };
 
     const stopDrawing = async () => {
-        if (!isDrawing) return;
+        if (!isDrawing || currentStrokePath.length === 0) { // **CHANGE**: Check stroke path
+            setIsDrawing(false);
+            return;
+        }
         setIsDrawing(false);
         saveStateToHistory();
+
+        // **THE FIX IS HERE**: Prepare payload with `strokePath` to match your backend
+        const strokePayload = {
+            canvasId: canvasId,
+            canvasResolution: canvasState.resolution,
+            canvasSize: TILE_SIZE,
+            strokePath: currentStrokePath, // **CHANGE**: Send strokePath, not pixels
+            brushSize: brushState.size,
+            color: brushState.color,
+            mode: brushState.mode,
+            sessionId: sessionId,
+            userId: null,
+            zoomLevel: canvasState.zoomLevel,
+            canvasOffset: canvasState.offset,
+            strokeStartTime: strokeStartTime?.toISOString(),
+            strokeEndTime: new Date().toISOString(),
+        };
+
+        console.log("Dispatching createStroke with payload:", strokePayload);
+        dispatch(createStroke(strokePayload) as any);
+
+        setCurrentStrokePath([]); // Clear path for the next stroke
     };
+
 
     // --- PAN AND ZOOM HANDLERS ---
     const handleWheel = (e: React.WheelEvent) => {
@@ -287,7 +320,9 @@ const TiledCanvas: React.FC = () => {
         const newZoom = Math.min(Math.max(canvasState.zoomLevel * zoomFactor, 0.05), 4);
         const worldX = (mouseX - canvasState.offset.x) / canvasState.zoomLevel;
         const worldY = (mouseY - canvasState.offset.y) / canvasState.zoomLevel;
-        setCanvasState({ zoomLevel: newZoom, offset: { x: mouseX - worldX * newZoom, y: mouseY - worldY * newZoom } });
+        // setCanvasState({ zoomLevel: newZoom, offset: { x: mouseX - worldX * newZoom, y: mouseY - worldY * newZoom } });
+        dispatch(setZoomLevel(newZoom));
+        dispatch(setCanvasOffset({ x: mouseX - worldX * newZoom, y: mouseY - worldY * newZoom }));
     };
 
     const startPan = (e: React.MouseEvent) => {
@@ -356,10 +391,17 @@ const TiledCanvas: React.FC = () => {
             else if (h < 240) { g = x; b = c; } else if (h < 300) { r = x; b = c; } else { r = c; b = x; }
             return { r: Math.round((r + m) * 255), g: Math.round((g + m) * 255), b: Math.round((b + m) * 255), a: 1 };
         };
-        setBrushState(prev => ({ ...prev, color: hslToRgb(hue, saturation, lightness) }));
+        // setBrushState(prev => ({ ...prev, color: hslToRgb(hue, saturation, lightness) }));
+        dispatch(setBrushColor(hslToRgb(hue, saturation, lightness)));
     }, [hue, saturation, lightness]);
 
+    if (!brushState || !canvasState) {
+        return <div>Loading Canvas...</div>;
+    }
+   
+    // Ab jab humein pata hai ke brushState maujood hai, to hum is variable ko safely bana sakte hain.
     const currentColorString = `rgba(${brushState.color.r}, ${brushState.color.g}, ${brushState.color.b}, ${brushState.color.a})`;
+
 
     return (
         <div style={{ minHeight: '135vh', fontFamily: 'Georgia, serif', overflow: 'auto', position: 'relative' }}>
@@ -485,17 +527,13 @@ const TiledCanvas: React.FC = () => {
 
                 {/* Brush Size Slider */}
                 <div className="mb-4 mt-4">
-                    <label className="text-xs text-gray-600 block mb-1">
-                        Brush Size: {brushState.size}px
-                    </label>
+                    <label>Brush Size: {brushState.size}px</label>
                     <input
                         type="range"
                         min="1"
                         max="50"
                         value={brushState.size}
-                        onChange={(e) =>
-                            setBrushState((p) => ({ ...p, size: +e.target.value }))
-                        }
+                        // onChange={(e) => dispatch(setBrushSize(Number(e.target.value)))}
                         className="w-full"
                     />
                 </div>
