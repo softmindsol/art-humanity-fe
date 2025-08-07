@@ -1,11 +1,20 @@
 import React, { useEffect, useCallback } from 'react';
-import { Brush, Eraser, Move, Grid, Undo, Redo } from 'lucide-react'; // Grid icon imported
+import { Brush, Eraser, Move, Grid, Undo, Redo, Film } from 'lucide-react'; // Grid icon imported
 import { useCanvasState } from '@/hook/useCanvasState';
 import type { Position, Tile } from '@/types/canvas';
-import { useDispatch } from 'react-redux';
-import { useSelector } from 'react-redux';
-import { selectCurrentBrush, selectCurrentCanvas, selectErrorForOperation, selectIsLoadingOperation, setBrushColor, setCanvasOffset, setZoomLevel } from '@/redux/slice/paintPixel';
-import { createStroke } from '@/redux/action/painPixel';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog"
+import {
+    selectCurrentBrush, selectCurrentCanvas, selectErrorForOperation, selectIsLoadingOperation, setBrushColor, setCanvasOffset, setZoomLevel, selectTimelapseUrl,
+    clearTimelapseUrl,
+} from '@/redux/slice/paintPixel';
+import { createStroke, generateTimelapseVideo } from '@/redux/action/painPixel';
 
 
 // --- CONSTANTS ---
@@ -23,7 +32,11 @@ const TiledCanvas: React.FC = () => {
     const canvasState = useSelector(selectCurrentCanvas);
     const isSaving = useSelector(selectIsLoadingOperation('createStroke'));
     const saveError = useSelector(selectErrorForOperation('createStroke'));
+    const timelapseUrl = useSelector(selectTimelapseUrl);
+    const isGeneratingTimelapse = useSelector(selectIsLoadingOperation('generateTimelapse'));
+    const timelapseError = useSelector(selectErrorForOperation('generateTimelapse'));
     const {
+        isModalOpen, setIsModalOpen,
         // Refs
         containerRef,
         viewportCanvasRef,
@@ -58,10 +71,10 @@ const TiledCanvas: React.FC = () => {
         setCurrentStrokePath,
         totalTiles,
         setTotalTiles,
-        sessionId,    
-        canvasId,  
+        sessionId,
+        canvasId,
         setCurrentPixelLog,
-        strokeStartTime, 
+        strokeStartTime,
         setStrokeStartTime,
         // History
         history,
@@ -70,7 +83,7 @@ const TiledCanvas: React.FC = () => {
         setHistoryIndex,
     } = useCanvasState();
     useEffect(() => {
-        console.log("currentStrokePath:",currentStrokePath)
+        console.log("currentStrokePath:", currentStrokePath)
     }, [currentStrokePath])
     useEffect(() => {
         saveStateToHistory();
@@ -126,6 +139,15 @@ const TiledCanvas: React.FC = () => {
         }
     }, [historyIndex, history.length, restoreStateFromHistory]);
 
+
+    const handleGenerateTimelapse = () => {
+        if (!sessionId) {
+            alert("Session ID is not available.");
+            return;
+        }
+        console.log(`Requesting timelapse for session: ${sessionId}`);
+        dispatch(generateTimelapseVideo({ sessionId }) as any);
+    };
     // Keyboard Shortcuts for Undo/Redo
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -214,7 +236,13 @@ const TiledCanvas: React.FC = () => {
     useEffect(() => {
         renderVisibleTiles();
     }, [canvasState, renderVisibleTiles]);
-
+    useEffect(() => {
+        // Agar `timelapseUrl` mein koi value aayi hai (null nahi hai),
+        // to modal ko open kar do.
+        if (timelapseUrl) {
+            setIsModalOpen(true);
+        }
+    }, [timelapseUrl]);
     // --- MOUSE AND DRAWING HANDLERS ---
     const getMousePosInWorld = (e: MouseEvent | React.MouseEvent): Position => {
         const viewport = viewportCanvasRef.current!;
@@ -259,7 +287,7 @@ const TiledCanvas: React.FC = () => {
         const pos = getMousePosInWorld(e);
 
         // **CHANGE**: Add the new segment to the stroke path state
-        setCurrentStrokePath((prev:any) => [...prev, { fromX: lastPos.x, fromY: lastPos.y, toX: pos.x, toY: pos.y }]);
+        setCurrentStrokePath((prev: any) => [...prev, { fromX: lastPos.x, fromY: lastPos.y, toX: pos.x, toY: pos.y }]);
 
         // Draw visually on the canvas
         const fromCoords = worldToTileCoords(lastPos.x, lastPos.y);
@@ -398,7 +426,7 @@ const TiledCanvas: React.FC = () => {
     if (!brushState || !canvasState) {
         return <div>Loading Canvas...</div>;
     }
-   
+
     // Ab jab humein pata hai ke brushState maujood hai, to hum is variable ko safely bana sakte hain.
     const currentColorString = `rgba(${brushState.color.r}, ${brushState.color.g}, ${brushState.color.b}, ${brushState.color.a})`;
 
@@ -434,9 +462,60 @@ const TiledCanvas: React.FC = () => {
                         <Grid size={16} />
                         {showGrid ? 'Hide Grid' : 'Show Grid'}
                     </button>
+                    <button
+                        onClick={handleGenerateTimelapse}
+                        disabled={isGeneratingTimelapse}
+                        className="bg-[#003366] text-white border-none px-4 py-2 rounded cursor-pointer flex items-center gap-2 disabled:opacity-50"
+                    >
+                        <Film size={16} />
+                        {isGeneratingTimelapse ? 'Generating...' : 'Create Timelapse'}
+                    </button>
                 </div>
             </div>
 
+            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                <DialogContent className="max-w-4xl bg-[#5d4037] border-gray-700 text-white">
+                    <DialogHeader>
+                        <DialogTitle >
+                            <p className='text-white'> Project Timelapse</p>
+                        </DialogTitle>
+                    </DialogHeader>
+
+                    <div className="p-4 min-h-[300px] flex items-center justify-center">
+
+                        {/* CASE 1: Loading State */}
+                        {isGeneratingTimelapse && (
+                            <div className="text-center">
+                                <div className="w-12 h-12 border-4 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                                <p className="text-blue-300">Generating your timelapse video...</p>
+                                <p className="text-sm text-gray-400">This might take a few moments.</p>
+                            </div>
+                        )}
+
+                        {/* CASE 2: Error State */}
+                        {timelapseError && !isGeneratingTimelapse && (
+                            <div className="text-center text-red-400">
+                                <h3 className="text-xl font-bold mb-2">Error!</h3>
+                                <p>Failed to generate the timelapse.</p>
+                                <p className="text-xs text-gray-500 mt-1">{timelapseError}</p>
+                            </div>
+                        )}
+
+                        {/* CASE 3: Success State (Video Ready) */}
+                        {timelapseUrl && !isGeneratingTimelapse && (
+                            <video
+                                key={timelapseUrl} // Key add karne se URL change hone par video re-render hoti hai
+                                src={`${import.meta.env.VITE_BASE}${timelapseUrl}`}
+                                controls
+                                autoPlay
+                                className="w-full max-h-[70vh] rounded-lg"
+                            >
+                                Your browser does not support the video tag.
+                            </video>
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
 
             <div
                 className="absolute bg-white border border-[#8b795e] rounded-lg p-4 min-w-[210px] shadow-lg z-[1000] select-none"

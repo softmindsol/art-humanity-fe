@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { batchCreateStrokes, clearCanvas, createStroke, exportCanvas, getCanvasData, getCanvasStats, getTileData, importCanvas } from "../action/painPixel";
+import { batchCreateStrokes, clearCanvas, createStroke, exportCanvas, generateTimelapseVideo, getCanvasData, getCanvasStats, getTileData, importCanvas } from "../action/painPixel";
 
 // Async Thunks for API calls
 
@@ -42,6 +42,7 @@ const initialState = {
     getCanvasStats: false,
     exportCanvas: false,
     importCanvas: false,
+    generateTimelapse:false
   },
 
   // Error states
@@ -54,7 +55,9 @@ const initialState = {
     getCanvasStats: null,
     exportCanvas: null,
     importCanvas: null,
+    generateTimelapse: null,
   },
+  timelapseVideoUrl: null,
 };
 
 // Paint Pixel slice
@@ -114,11 +117,30 @@ const paintPixelSlice = createSlice({
     addStrokesLocally: (state: any, action) => {
       state.canvasData.push(...action.payload);
     },
+    clearTimelapseUrl: (state) => {
+      state.timelapseVideoUrl = null;
+    },
   },
 
   extraReducers: (builder) => {
     // Create Stroke
     builder
+
+      .addCase(generateTimelapseVideo.pending, (state: any) => {
+        state.loading.generateTimelapse = true;
+        state.error.generateTimelapse = null;
+        state.timelapseVideoUrl = null; // Purana URL hata dein
+      })
+      .addCase(generateTimelapseVideo.fulfilled, (state: any, action) => {
+        state.loading.generateTimelapse = false;
+        if (action.payload.success) {
+          state.timelapseVideoUrl = action.payload.videoUrl; // Naya URL save karein
+        }
+      })
+      .addCase(generateTimelapseVideo.rejected, (state, action) => {
+        state.loading.generateTimelapse = false;
+        state.error.generateTimelapse = action.payload as any;
+      })
       .addCase(createStroke.pending, (state: any) => {
         state.loading.createStroke = true;
         state.error.createStroke = null;
@@ -280,6 +302,8 @@ export const {
   clearErrors,
   addStrokeLocally,
   addStrokesLocally,
+  clearTimelapseUrl,
+  
 } = paintPixelSlice.actions;
 
 // Selectors
@@ -293,6 +317,8 @@ export const selectCurrentBrush = (state: any) => state?.paintPixel?.currentBrus
 export const selectCurrentCanvas = (state: any) => state?.paintPixel?.currentCanvas;
 export const selectLoading = (state: any) => state?.paintPixel?.loading;
 export const selectErrors = (state: any) => state?.paintPixel?.error;
+export const selectTimelapseUrl = (state: any) =>
+  state.paintPixel.timelapseVideoUrl;
 
 // Get specific tile data
 export const selectTileDataByCoordinates =

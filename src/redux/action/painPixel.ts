@@ -22,6 +22,22 @@ export const createStroke = createAsyncThunk(
   }
 );
 
+export const generateTimelapseVideo = createAsyncThunk(
+  "paintPixel/generateTimelapse",
+  async ({ sessionId }: { sessionId: string }, thunkAPI) => {
+    try {
+      // API endpoint ko call karein. Response mein video ka URL aayega.
+      const response = await api.get(`/timelapse/${sessionId}`);
+      console.log("Timelapse generation response:", response.data);
+      return response.data; // Yeh { success: true, videoUrl: '...' } return karega
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || "Failed to generate timelapse"
+      );
+    }
+  }
+);
+
 // Batch create multiple strokes
 export const batchCreateStrokes = createAsyncThunk(
   "paintPixel/batchCreateStrokes",

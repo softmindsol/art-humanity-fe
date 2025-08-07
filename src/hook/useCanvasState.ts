@@ -16,6 +16,8 @@ export const useCanvasState = () => {
     size: 5,
     color: { r: 0, g: 0, b: 0, a: 1 },
   });
+      const [isModalOpen, setIsModalOpen] = useState(false);
+
   const [isDrawing, setIsDrawing] = useState(false);
   const [lastPos, setLastPos] = useState({ x: 0, y: 0 });
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -97,7 +99,7 @@ export const useCanvasState = () => {
     setSaveError,
     sessionId,
     canvasId,
-   
+   isModalOpen, setIsModalOpen,
     currentPixelLog,
     setCurrentPixelLog,
     strokeStartTime,
