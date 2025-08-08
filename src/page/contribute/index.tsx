@@ -24,7 +24,7 @@ const ActiveProjects: React.FC = () => {
 
     // Helper component for loading state
     const LoadingSpinner = () => (
-        <div className="flex justify-center items-center py-20">
+        <div className="flex justify-center items-center w-full py-20">
             <div className="w-16 h-16 border-4 border-[#d29000] border-t-transparent rounded-full animate-spin"></div>
         </div>
     );
@@ -63,7 +63,7 @@ const ActiveProjects: React.FC = () => {
                 {error && <ErrorMessage message={error} />}
 
                 {!isLoading && !error && projects.length === 0 && (
-                    <div className="text-center py-20">
+                    <div className="text-center w-full py-20">
                         <h3 className="text-2xl text-gray-500">No active projects found.</h3>
                         <p className="text-gray-400">Why not be the first to create one?</p>
                     </div>
