@@ -11,6 +11,9 @@ const config = {
     RESET_PASSWORD: "/auth/reset-password",
     GOOGLE_AUTH: "/auth/firebase-login",
     LOGOUT_AUTH: "/auth/logout",
+    PROJECT_CREATE: "/projects/create",
+    FETCH_ACTIVE_PROJECT: "/projects",
+    FETCH_PROJECT_BY_ID: "/projects",
   },
 };
 

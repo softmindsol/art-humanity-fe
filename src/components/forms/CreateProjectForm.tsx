@@ -5,48 +5,38 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Calendar, Palette, Image, Monitor, Sparkles, Upload, Eye, X } from 'lucide-react';
 
-// Define the shape of the props the component expects
+// Define the shape of the props the component expects from its parent
 interface CreateProjectFormProps {
   onProjectCreated: (projectData: any) => void;
+  isLoading: boolean;
+  error: string | null;
 }
 
-const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onProjectCreated }) => {
-  // --- ID GENERATION & INITIALIZATION ---
-  // Helper functions to generate unique IDs
-  const generateProjectId = () => `project_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  const generateCanvasId = () => `canvas_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
-
-  // State to hold the generated IDs. They are created once when the component mounts.
-  const [projectId] = useState(generateProjectId());
-  const [canvasId] = useState(generateCanvasId());
-
+const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onProjectCreated, isLoading, error: propError }) => {
   // --- STATE MANAGEMENT ---
   const [formData, setFormData] = useState({
-    projectId,
-    canvasId,
+    // `projectId` and `canvasId` are removed as they are now handled by the parent/backend
     title: '',
     description: '',
     width: 1024,
     height: 1024,
-    palette: '',
     thumbnailUrl: '',
     baseImageUrl: '',
     targetCompletionDate: '',
-    createdAt: new Date().toISOString()
   });
 
   const [colorPalette, setColorPalette] = useState<string[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
-  const [error, setError] = useState('');
- 
+  // Local error state for form validation
+  const [formError, setFormError] = useState('');
+
   // Refs for triggering file inputs
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
   const baseImageInputRef = useRef<HTMLInputElement>(null);
 
   // --- EVENT HANDLERS ---
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setError('');
+    setFormError('');
     setFormData(prev => ({
       ...prev,
       [e.target.name]: e.target.value
@@ -66,70 +56,45 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onProjectCreated 
 
   const handleColorAdd = (color: string) => {
     if (color && !colorPalette.includes(color)) {
-      const newPalette = [...colorPalette, color];
-      setColorPalette(newPalette);
-      setFormData(prev => ({ ...prev, palette: newPalette.join(', ') }));
+      setColorPalette(prev => [...prev, color]);
     }
   };
 
   const removeColor = (colorToRemove: string) => {
-    const newPalette = colorPalette.filter((color) => color !== colorToRemove);
-    setColorPalette(newPalette);
-    setFormData(prev => ({ ...prev, palette: newPalette.join(', ') }));
+    setColorPalette(prev => prev.filter((color) => color !== colorToRemove));
   };
 
   // --- NAVIGATION & SUBMISSION ---
   const handleNextStep = () => {
     if (currentStep === 1 && !formData.title.trim()) {
-      setError('Project Title is required.');
+      setFormError('Project Title is required.');
       return;
     }
-    if (currentStep === 2 && (!formData.width || !formData.height)) {
-      setError('Canvas width and height are required.');
-      return;
-    }
-    setError('');
+    setFormError('');
     setCurrentStep(s => s + 1);
   };
 
   const handlePreviousStep = () => {
-    setError('');
+    setFormError('');
     setCurrentStep(s => s - 1);
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!formData.thumbnailUrl) {
-      setError('A thumbnail image is required.');
+      setFormError('A thumbnail image is required.');
       return;
     }
-    setError('');
-    setIsSubmitting(true);
+    setFormError('');
 
-    try {
-      // Create the final project data object
-      const projectData = {
-        ...formData,
-        colorPalette: colorPalette.length > 0 ? colorPalette : [], // Use the array of colors
-        updatedAt: new Date().toISOString()
-      };
+    // Create the final project data object to send to the parent
+    const projectData = {
+      ...formData,
+      palette: colorPalette, // Send the array of colors, matching the backend schema
+    };
 
-      console.log("Submitting Project Data:", projectData);
-
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      // Call parent callback with the complete project data
-      if (onProjectCreated) {
-        onProjectCreated(projectData);
-      }
-
-      console.log("Form submission complete. Parent will handle redirection.");
-
-    } catch (err) {
-      setError('Failed to create project. Please try again.');
-      console.error('Project creation error:', err);
-    } finally {
-      setIsSubmitting(false);
+    // Call the parent's function
+    if (onProjectCreated) {
+      onProjectCreated(projectData);
     }
   };
 
@@ -154,7 +119,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onProjectCreated 
           <h1 className="text-4xl font-bold text-[#3e2723] mb-2">Create New Project</h1>
           <p className="text-[#8d6e63] text-lg">Collaborative Canvases of Human Expression</p>
           <div className="mt-4 text-sm text-[#8d6e63]">
-            <div>Project ID: <code className="bg-gray-100 px-2 py-1 rounded text-xs">{projectId}</code></div>
+            {/* <div>Project ID: <code className="bg-gray-100 px-2 py-1 rounded text-xs">{projectId}</code></div> */}
           </div>
         </div>
 
@@ -173,8 +138,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onProjectCreated 
 
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8">
           <div className="space-y-8">
-            {error && <div className="p-3 text-center text-red-800 bg-red-100 border border-red-300 rounded-lg">{error}</div>}
-
+            {(formError || propError) && <div className="p-3 text-center text-red-800 bg-red-100 border border-red-300 rounded-lg">{formError || propError}</div>}
             <div className={`${currentStep === 1 ? 'block' : 'hidden'}`}>
               <div className="flex items-center space-x-3 mb-6"><div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center"><Sparkles className="w-5 h-5 text-white" /></div><h2 className="text-2xl font-bold text-[#3e2723] mt-2">Project Details</h2></div>
               <div className="group space-y-6">
@@ -229,10 +193,17 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onProjectCreated 
                 {currentStep < 3 ? (
                   <Button type="button" onClick={handleNextStep} className="h-12 px-8 bg-gradient-to-r from-[#d4af37] to-[#5d4037] text-white rounded-xl shadow-lg">Next</Button>
                 ) : (
-                  <Button type="button" onClick={handleSubmit} disabled={isSubmitting} className="h-12 px-8 bg-gradient-to-r from-[#3e2723] to-[#5d4037] text-white rounded-xl shadow-lg disabled:opacity-70">{isSubmitting ? (<div className="flex items-center"><div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>Creating...</div>) : (<div className="flex items-center"><Sparkles className="w-4 h-4 mr-2" />Create Project</div>)}</Button>
+                  <Button type="button" onClick={handleSubmit} disabled={isLoading} className="h-12 px-8 bg-gradient-to-r from-[#3e2723] to-[#5d4037] text-white rounded-xl shadow-lg disabled:opacity-70 disabled:cursor-not-allowed">
+                    {isLoading ? (
+                      <div className="flex items-center"><div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>Creating...</div>
+                    ) : (
+                      <div className="flex items-center"><Sparkles className="w-4 h-4 mr-2" />Create Project</div>
+                    )}
+                  </Button>
                 )}
               </div>
             </div>
+
           </div>
         </div>
       </div>
