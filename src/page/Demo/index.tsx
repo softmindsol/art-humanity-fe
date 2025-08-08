@@ -8,7 +8,7 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogTrigger,
+ 
 } from "@/components/ui/dialog"
 import {
     selectCurrentBrush, selectCurrentCanvas, selectErrorForOperation, selectIsLoadingOperation, setBrushColor, setCanvasOffset, setZoomLevel, selectTimelapseUrl,

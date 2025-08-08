@@ -13,10 +13,12 @@ import ResetPassword from './page/ResetPassword';
 import ProfilePage from './page/profile';
 import CreateProjectPage from './page/create-project';
 import ProtectedRoute from './routes/PrivateRoute';
+import { ProjectProvider } from './context/ProjectContext';
 function App() {
   return (
     <Router>
       <Header />
+      <ProjectProvider>
       <main>
       <Routes>
         <Route path="/" element={<HeroSection />} />
@@ -33,6 +35,7 @@ function App() {
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
         </main>
+      </ProjectProvider>
       <Footer />
     </Router>
   );

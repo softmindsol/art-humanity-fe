@@ -39,7 +39,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onProjectCreated 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const [error, setError] = useState('');
-
+ 
   // Refs for triggering file inputs
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
   const baseImageInputRef = useRef<HTMLInputElement>(null);
