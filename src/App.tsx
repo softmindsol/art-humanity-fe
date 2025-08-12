@@ -14,6 +14,7 @@ import ProfilePage from './page/profile';
 import CreateProjectPage from './page/create-project';
 import ProtectedRoute from './routes/PrivateRoute';
 import { ProjectProvider } from './context/ProjectContext';
+import TiledCanvasPage from './page/TiledCanvasPage';
 function App() {
   return (
     <Router>
@@ -27,11 +28,12 @@ function App() {
           <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
           <Route path="/create-project" element={<CreateProjectPage />} />
 
-          <Route path="/projects" element={<ProtectedRoute><ActiveProjects /></ProtectedRoute>} />
+        <Route path="/projects" element={<ProtectedRoute><ActiveProjects /></ProtectedRoute>} />
         <Route path="/demo" element={<DemoCanvas />} />
         <Route path='/verify-email/:token' element={<VerifyEmail/>}/>
         <Route path="/reset-password/:token" element={<ResetPassword />} />
- 
+            <Route path="/project/:projectId" element={<TiledCanvasPage />} />
+
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
         </main>

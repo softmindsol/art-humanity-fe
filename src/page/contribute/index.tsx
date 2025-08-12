@@ -8,6 +8,7 @@ import {
 } from '@/redux/slice/project';
 import { fetchActiveProjects } from '@/redux/action/project';
 import type { AppDispatch } from '@/redux/store';
+import { getImageUrl } from '@/utils/publicUrl';
 
 const ActiveProjects: React.FC = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -37,26 +38,26 @@ const ActiveProjects: React.FC = () => {
         </div>
     );
 
+    // console.log("projects:", getPublicUrl(projects[0]?.thumbnailUrl));
+
     return (
         <div id="projects-content" className="projects-content">
             <section className="projects-header page-header">
                 <h2>Active Projects</h2>
                 <p style={{ color: '#8d6e63' }}>Enter a project, or sign up to contribute!</p>
             </section>
-
-            {/* Create Project Button (ab iski zaroorat shayad homepage par na ho, lekin rakhte hain) */}
             <section className='flex items-center justify-center'>
                 <div>
                     <Link
                         to="/create-project"
-                        className="inline-block bg-[#d29000] !text-white px-5 py-2.5 rounded font-bold border-2 border-[#5c3b00] shadow-[2px_2px_0_#5c3b00] mt-4 no-underline"
+                        className="inline-block bg-[#d29000] !text-white px-5 py-2.5 rounded font-bold border-2 border-[#5c3b00] shadow-[2px_2px_0_#5c3b00] mt- no-underline"
                     >
                         Create a New Project
                     </Link>
                 </div>
             </section>
 
-            <section className="projects-grid mt-8">
+            <section className="projects-grid mt-5">
                 {/* Step 2: Conditional Rendering */}
                 {isLoading && <LoadingSpinner />}
 
@@ -71,14 +72,14 @@ const ActiveProjects: React.FC = () => {
 
                 {/* Step 3: Projects ko map karke display karein */}
                 {!isLoading && !error && projects.map((project: any) => (
-                    <div key={project._id} className="project-card active medieval-theme">
+                    <div key={project._id} className="project-card active ">
                         <div className="project-image">
                             {/* Thumbnail image ko project data se lein */}
                             <img
-                                src={project.thumbnailUrl || 'https://via.placeholder.com/400x250'}
+                                src={getImageUrl(project.thumbnailUrl) || 'https://via.placeholder.com/400x250'}
                                 alt={project.title}
-                                style={{ display: 'block' }} // Image ko hamesha dikhayein
                             />
+
                             <div className="project-progress">
                                 <div className="progress-bar">
                                     <div className="progress-fill" style={{ width: `${project.stats?.percentComplete || 0}%` }}></div>
@@ -101,7 +102,7 @@ const ActiveProjects: React.FC = () => {
                                 </div>
                             </div>
                             {/* Link ko dynamic banayein taaki woh sahi canvas page par jaye */}
-                            <Link to={`/canvas/${project._id}`} className="btn-contribute">
+                            <Link to={`/project/${project._id}`} className="btn-contribute !text-white">
                                 Enter Project
                             </Link>
                         </div>

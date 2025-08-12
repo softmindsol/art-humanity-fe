@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback } from 'react';
-import { Brush, Eraser, Move, Grid, Undo, Redo } from 'lucide-react'; // Grid icon imported
+import { Brush, Eraser, Move, Grid, Undo, Redo, Film } from 'lucide-react'; // Grid icon imported
 import { useCanvasState } from '@/hook/useCanvasState';
 import type { Position, Tile } from '@/types/canvas';
 import { useDispatch, useSelector } from 'react-redux';
@@ -8,15 +8,29 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
- 
+
 } from "@/components/ui/dialog"
 import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import {
     selectCurrentBrush, selectCurrentCanvas, selectErrorForOperation, selectIsLoadingOperation, setBrushColor, setCanvasOffset, setZoomLevel, selectTimelapseUrl,
-   
+    // clearTimelapseUrl,
     setBrushMode,
     setBrushSize,
     selectCanvasData,
+    clearCanvasData,
 } from '@/redux/slice/paintPixel';
+import { clearCanvas, createStroke, generateTimelapseVideo, getCanvasData } from '@/redux/action/painPixel';
+import type { AppDispatch, RootState } from '@/redux/store';
 
 
 // --- CONSTANTS ---
@@ -24,10 +38,15 @@ const TILE_SIZE = 512; // Optimal tile size for performance
 const VIEWPORT_WIDTH = 1024; // Fixed viewport width
 const VIEWPORT_HEIGHT = 1024; // Fixed viewport height
 
+interface TiledCanvasProps {
+    projectName: string;
+    canvasId: string;
+    projectId: string;
+}
 
-
-const TiledCanvas: React.FC = () => {
-    const dispatch = useDispatch();
+const TiledCanvas = ({ projectName, canvasId, projectId }: TiledCanvasProps) => {
+    const dispatch = useDispatch<AppDispatch>();
+    const user = useSelector((state: RootState) => state?.auth?.user);
 
     // --- REDUX STATE ---
     // Get state directly from the Redux store
@@ -62,7 +81,9 @@ const TiledCanvas: React.FC = () => {
         setIsDraggingToolbox,
         toolboxStart,
         setToolboxStart,
+        isCanvasHovered,
         // setIsCanvasHovered,
+        isClearAlertOpen, setIsClearAlertOpen,
         showGrid,
         setShowGrid,
         hue,
@@ -74,7 +95,10 @@ const TiledCanvas: React.FC = () => {
         setCurrentStrokePath,
         totalTiles,
         setTotalTiles,
-        // sessionId,
+        sessionId,
+        // currentPixelLog,
+        // setCurrentPixelLog,
+        strokeStartTime,
         setStrokeStartTime,
         // History
         history,
@@ -82,16 +106,42 @@ const TiledCanvas: React.FC = () => {
         historyIndex,
         setHistoryIndex,
     } = useCanvasState();
-   
+
     const savedStrokes = useSelector(selectCanvasData);
 
-    // useEffect(() => {
-    //     console.log("currentStrokePath:", currentStrokePath)
-    // }, [currentStrokePath])
+    useEffect(() => {
+        console.log("currentStrokePath:", currentStrokePath)
+    }, [currentStrokePath])
     useEffect(() => {
         saveStateToHistory();
     }, []);
+    useEffect(() => {
 
+        console.log(`Fetching strokes for canvasId: ${canvasId}`);
+        dispatch(getCanvasData({ canvasId: projectId }));
+
+        // ya jab `projectId` badlega (naye data fetch hone se pehle).
+        return () => {
+            console.log("Cleaning up canvas for new project...");
+
+            // 1. Redux store se purane strokes saaf karein
+            dispatch(clearCanvasData());
+
+            // 2. Component ke local state (tiles) ko saaf karein
+            tilesRef.current.clear();
+
+            // 3. Undo/Redo history ko reset karein
+            setHistory([]);
+            setHistoryIndex(-1);
+
+            // // 4. Viewport ko turant saaf karein taaki user ko blank canvas dikhe
+            // const viewport = viewportCanvasRef.current;
+            // if (viewport) {
+            //     const ctx = viewport.getContext('2d')!;
+            //     ctx.clearRect(0, 0, viewport.width, viewport.height);
+            // }
+        }
+    }, [canvasId, dispatch]);
 
     useEffect(() => {
         // Yeh effect tab he chalega jab strokes fetch ho chuke honge
@@ -112,7 +162,12 @@ const TiledCanvas: React.FC = () => {
                         for (let x = Math.min(fromCoords.tileX, toCoords.tileX); x <= Math.max(fromCoords.tileX, toCoords.tileX); x++) {
                             const tile = getTile(x, y);
 
-                            
+                            // Ek temporary brush state banayein jo save hue stroke se data le
+                            // const tempBrushState = {
+                            //     mode: stroke.mode,
+                            //     size: stroke.brushSize,
+                            //     color: stroke.color,
+                            // };
 
                             drawOnTile(tile, pathSegment.fromX - x * TILE_SIZE, pathSegment.fromY - y * TILE_SIZE, pathSegment.toX - x * TILE_SIZE, pathSegment.toY - y * TILE_SIZE);
                         }
@@ -127,15 +182,14 @@ const TiledCanvas: React.FC = () => {
         }
     }, [savedStrokes]); // Yeh effect tab chalega jab `savedStrokes` Redux se aayega
 
-
-    // useEffect(() => {
-    //     if (isCanvasHovered) {
-    //         document.body.style.overflow = 'hidden';
-    //     } else {
-    //         document.body.style.overflow = '';
-    //     }
-    //     return () => { document.body.style.overflow = ''; };
-    // }, [isCanvasHovered]);
+    useEffect(() => {
+        if (isCanvasHovered) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => { document.body.style.overflow = ''; };
+    }, [isCanvasHovered]);
 
 
     // --- HISTORY MANAGEMENT ---
@@ -179,14 +233,14 @@ const TiledCanvas: React.FC = () => {
     }, [historyIndex, history.length, restoreStateFromHistory]);
 
 
-    // const handleGenerateTimelapse = () => {
-    //     if (!sessionId) {
-    //         alert("Session ID is not available.");
-    //         return;
-    //     }
-    //     console.log(`Requesting timelapse for session: ${sessionId}`);
-    //     dispatch(generateTimelapseVideo({ sessionId }) as any);
-    // };
+    const handleGenerateTimelapse = () => {
+        if (!sessionId) {
+            alert("Session ID is not available.");
+            return;
+        }
+        console.log(`Requesting timelapse for session: ${sessionId}`);
+        dispatch(generateTimelapseVideo({ sessionId }) as any);
+    };
     // Keyboard Shortcuts for Undo/Redo
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -275,6 +329,8 @@ const TiledCanvas: React.FC = () => {
     useEffect(() => {
         renderVisibleTiles();
     }, [canvasState, renderVisibleTiles]);
+
+
     useEffect(() => {
         // Agar `timelapseUrl` mein koi value aayi hai (null nahi hai),
         // to modal ko open kar do.
@@ -282,6 +338,8 @@ const TiledCanvas: React.FC = () => {
             setIsModalOpen(true);
         }
     }, [timelapseUrl]);
+
+
     // --- MOUSE AND DRAWING HANDLERS ---
     const getMousePosInWorld = (e: MouseEvent | React.MouseEvent): Position => {
         const viewport = viewportCanvasRef.current!;
@@ -294,39 +352,39 @@ const TiledCanvas: React.FC = () => {
 
 
 
-   const drawOnTile = (tile: any, fromX: any, fromY: any, toX: any, toY: any) => {
-    const ctx = tile.context;
+    const drawOnTile = (tile: any, fromX: any, fromY: any, toX: any, toY: any) => {
+        const ctx = tile.context;
 
-    // Common settings
-    ctx.lineWidth = brushState.size;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.beginPath();
-    ctx.moveTo(fromX, fromY);
-    ctx.lineTo(toX, toY);
+        // Common settings
+        ctx.lineWidth = brushState.size;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        ctx.moveTo(fromX, fromY);
+        ctx.lineTo(toX, toY);
 
-    if (brushState.mode === 'eraser') {
-       
-        // Step 1: Pehle, purani drawing ke PEECHE ek safed line draw karo.
-        // Isse jab aage se drawing mitegi, to peeche safed color dikhega.
-        ctx.globalCompositeOperation = 'destination-over';
-        ctx.strokeStyle = '#ffffff'; // Background color
-        ctx.stroke(); // Yahan stroke() call karna zaroori hai
+        if (brushState.mode === 'eraser') {
 
-        // Step 2: Ab, purani drawing ke UPAR se pixels ko mitao.
-        ctx.globalCompositeOperation = 'destination-out';
-        ctx.strokeStyle = 'rgba(0,0,0,1)'; // Koi bhi opaque color
-        ctx.stroke(); // Yahan dobara stroke() call karna zaroori hai
+            // Step 1: Pehle, purani drawing ke PEECHE ek safed line draw karo.
+            // Isse jab aage se drawing mitegi, to peeche safed color dikhega.
+            ctx.globalCompositeOperation = 'destination-over';
+            ctx.strokeStyle = '#ffffff'; // Background color
+            ctx.stroke(); // Yahan stroke() call karna zaroori hai
 
-    } else {
-        // Brush ka logic same rahega
-        ctx.globalCompositeOperation = 'source-over';
-        ctx.strokeStyle = `rgba(${brushState.color.r}, ${brushState.color.g}, ${brushState.color.b}, ${brushState.color.a})`;
-        ctx.stroke();
-    }
+            // Step 2: Ab, purani drawing ke UPAR se pixels ko mitao.
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.strokeStyle = 'rgba(0,0,0,1)'; // Koi bhi opaque color
+            ctx.stroke(); // Yahan dobara stroke() call karna zaroori hai
 
-    tile.isDirty = true;
-};
+        } else {
+            // Brush ka logic same rahega
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.strokeStyle = `rgba(${brushState.color.r}, ${brushState.color.g}, ${brushState.color.b}, ${brushState.color.a})`;
+            ctx.stroke();
+        }
+
+        tile.isDirty = true;
+    };
 
     const startDrawing = (e: React.MouseEvent) => {
         if (brushState.mode === 'move' || canvasState.zoomLevel < 1) return;
@@ -357,15 +415,10 @@ const TiledCanvas: React.FC = () => {
         if (!isDrawing || currentStrokePath.length === 0) { setIsDrawing(false); return; }
         setIsDrawing(false);
         saveStateToHistory();
-        // const strokePayload = { canvasId, canvasResolution: canvasState.resolution, canvasSize: TILE_SIZE, strokePath: currentStrokePath, brushSize: brushState.size, color: brushState.color, mode: brushState.mode, sessionId, userId: null, zoomLevel: canvasState.zoomLevel, canvasOffset: canvasState.offset, strokeStartTime: strokeStartTime?.toISOString(), strokeEndTime: new Date().toISOString() };
-        // dispatch(createStroke(strokePayload) as any);
+        const strokePayload = { canvasId: projectId, projectId, canvasResolution: canvasState.resolution, canvasSize: TILE_SIZE, strokePath: currentStrokePath, brushSize: brushState.size, color: brushState.color, mode: brushState.mode, sessionId, userId: user?.id, zoomLevel: canvasState.zoomLevel, canvasOffset: canvasState.offset, strokeStartTime: strokeStartTime?.toISOString(), strokeEndTime: new Date().toISOString() };
+        dispatch(createStroke(strokePayload) as any);
         setCurrentStrokePath([]);
     };
-
-
-   
-
-
 
     // --- PAN AND ZOOM HANDLERS ---
     const handleWheel = (e: React.WheelEvent) => {
@@ -391,6 +444,7 @@ const TiledCanvas: React.FC = () => {
 
     // --- OTHER ACTIONS ---
     const handleClearCanvas = () => {
+        dispatch(clearCanvas({ canvasId: projectId }));
         tilesRef.current.forEach(tile => {
             tile.context.fillStyle = '#ffffff';
             tile.context.fillRect(0, 0, TILE_SIZE, TILE_SIZE);
@@ -398,6 +452,7 @@ const TiledCanvas: React.FC = () => {
         });
         renderVisibleTiles();
         saveStateToHistory();
+
     };
 
 
@@ -461,7 +516,7 @@ const TiledCanvas: React.FC = () => {
     return (
         <div className='h-[100vh] md:h-[155vh] lg:!h-[145vh] xl:!h-[145vh] 2xl:h-[135vh]' style={{ fontFamily: 'Georgia, serif', overflow: 'auto', position: 'relative' }}>
             <div className=" md:mb-[190px] 3xl:mb-[150px] px-5 py-2 text-center">
-                <h1 className="text-2xl md:text-[40px] text-[#5d4e37] mb-1 font-normal">Demo Canvas</h1>
+                <h1 className="text-2xl text-[#5d4e37] mb-1 font-normal">{projectName}</h1>
                 <p className="text-[#8b795e] italic mb-2">
                     Using {TILE_SIZE}px tiles. Zoom with wheel, pan with Move tool.
                 </p>
@@ -469,34 +524,67 @@ const TiledCanvas: React.FC = () => {
                 <div className="flex justify-center gap-3">
                     <button
                         onClick={loadReferenceImage}
-                        className="bg-[#8b795e] text-white border-none px-4 py-2 rounded cursor-pointer"
+                        className="bg-[#8b795e] text-white border-none text-[12px] md:text-[16px] px-2 py-2 md:px-4 md:py-2 rounded cursor-pointer"
                     >
                         Load Image
                     </button>
 
-                    <button
-                        onClick={handleClearCanvas}
-                        className="bg-[#cd5c5c] text-white border-none px-4 py-2 rounded cursor-pointer"
-                    >
-                        Clear Canvas
-                    </button>
+                    <AlertDialog open={isClearAlertOpen} onOpenChange={setIsClearAlertOpen}>
+                        {/* Yeh button ab sirf dialog ko trigger karega */}
+                        <AlertDialogTrigger asChild>
+                            <button
+                                className="bg-[#cd5c5c] text-white border-none text-[12px] md:text-[16px] px-2 py-2 md:px-4 md:py-2 rounded cursor-pointer"
+                            >
+                                Clear Canvas
+                            </button>
+                        </AlertDialogTrigger>
+
+                        {/* Yeh dialog ka content hai */}
+                        <AlertDialogContent className="bg-[#5d4037] border-2 border-[#3e2723] text-white font-[Georgia, serif]">
+                            <AlertDialogHeader>
+                                <AlertDialogTitle className="text-2xl !text-white">
+                                    Are you absolutely sure?
+                                </AlertDialogTitle>
+                                <AlertDialogDescription className="text-gray-300 pt-2">
+                                    This action cannot be undone. This will permanently delete all
+                                    the drawings for the project <strong className="text-amber-300">{projectName}</strong> from our servers.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter className="mt-4">
+                                {/* Cancel Button */}
+                                <AlertDialogCancel
+                                    className="bg-transparent cursor-pointer border border-gray-500 text-white hover:bg-gray-700 hover:text-white"
+                                >
+                                    Cancel
+                                </AlertDialogCancel>
+
+                                {/* Continue Button (Destructive Action) */}
+                                <AlertDialogAction
+                                    onClick={handleClearCanvas}
+                                    className="bg-red-600 text-white cursor-pointer hover:bg-red-700"
+                                >
+                                    Yes, Clear Canvas
+                                </AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
 
                     <button
                         onClick={() => setShowGrid(!showGrid)}
                         className={`${showGrid ? 'bg-[#5d4037]' : 'bg-[#8b795e]'
-                            } text-white border-none px-4 py-2 rounded cursor-pointer flex items-center gap-2`}
+                            } text-white border-none text-[12px] md:text-[16px] px-2 py-2 md:px-4 md:py-2  rounded cursor-pointer flex items-center gap-2`}
                     >
                         <Grid size={16} />
                         {showGrid ? 'Hide Grid' : 'Show Grid'}
                     </button>
-                    {/* <button
+                    <button
                         onClick={handleGenerateTimelapse}
                         disabled={isGeneratingTimelapse}
-                        className="bg-[#003366] text-white border-none px-4 py-2 rounded cursor-pointer flex items-center gap-2 disabled:opacity-50"
+                        className="bg-[#003366] text-white border-none text-[12px] md:text-[16px] px-2 py-2 md:px-4 md:py-2  rounded cursor-pointer flex items-center gap-2 disabled:opacity-50"
                     >
                         <Film size={16} />
                         {isGeneratingTimelapse ? 'Generating...' : 'Create Timelapse'}
-                    </button> */}
+                    </button>
                 </div>
             </div>
 
@@ -545,7 +633,7 @@ const TiledCanvas: React.FC = () => {
             </Dialog>
 
             <div
-                className="absolute bg-white border border-[#8b795e] rounded-lg p-4 min-w-[210px] shadow-lg z-[1000] select-none"
+                className="absolute bg-white border border-[#8b795e] rounded-lg p-4 max-w-[250px] shadow-lg z-[1000] select-none overflow-hidden"
                 style={{ left: toolboxPos.x, top: toolboxPos.y }}
             >
                 {/* Header */}
@@ -652,7 +740,7 @@ const TiledCanvas: React.FC = () => {
                     ref={viewportCanvasRef}
                     width={VIEWPORT_WIDTH}
                     height={VIEWPORT_HEIGHT}
-                      className=' w-[95%] md:w-[90%] md:h-[1024px]  xl:w-[1024px] xl:h-[1024px] relative'
+                    className=' w-[95%] md:w-[90%] md:h-[1024px]  xl:w-[1024px] xl:h-[1024px] relative'
                     style={{
                         // width: `${VIEWPORT_WIDTH}px`,
                         // height: `${VIEWPORT_HEIGHT}px`,

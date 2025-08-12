@@ -2,10 +2,6 @@ import api from "@/api/api";
 import { config } from "@/utils/endpoints";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 
-
-
-
-
 // Create a single stroke
 export const createStroke = createAsyncThunk(
   "paintPixel/createStroke",
@@ -38,6 +34,20 @@ export const generateTimelapseVideo = createAsyncThunk(
   }
 );
 
+export const getCanvasData = createAsyncThunk(
+  "paintPixel/getCanvasData",
+  async ({ canvasId }: { canvasId: string }, thunkAPI) => {
+    try {
+      const response = await api.get(`/canvas/${canvasId}`);
+      return response.data.data; // Backend se strokes ka array return hoga
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || "Failed to fetch canvas data"
+      );
+    }
+  }
+);
+
 // Batch create multiple strokes
 export const batchCreateStrokes = createAsyncThunk(
   "paintPixel/batchCreateStrokes",
@@ -54,34 +64,33 @@ export const batchCreateStrokes = createAsyncThunk(
 );
 
 // Get canvas data
-export const getCanvasData = createAsyncThunk(
-  "paintPixel/getCanvasData",
-  async ({ sessionId, canvasResolution = 1, limit = 1000, offset = 0 }: any, thunkAPI) => {
-    try {
-      const params = new URLSearchParams({
-        canvasResolution: canvasResolution.toString(),
-        limit: limit.toString(),
-        offset: offset.toString(),
-      });
-      const response = await api.get(`/canvas/${sessionId}?${params}`);
-      return response.data;
-    } catch (error: any) {
-      return thunkAPI.rejectWithValue(
-        error.response?.data?.message || "Failed to fetch canvas data"
-      );
-    }
-  }
-);
+// export const getCanvasData = createAsyncThunk(
+//   "paintPixel/getCanvasData",
+//   async ({ sessionId, canvasResolution = 1, limit = 1000, offset = 0 }: any, thunkAPI) => {
+//     try {
+//       const params = new URLSearchParams({
+//         canvasResolution: canvasResolution.toString(),
+//         limit: limit.toString(),
+//         offset: offset.toString(),
+//       });
+//       const response = await api.get(`/canvas/${sessionId}?${params}`);
+//       return response.data;
+//     } catch (error: any) {
+//       return thunkAPI.rejectWithValue(
+//         error.response?.data?.message || "Failed to fetch canvas data"
+//       );
+//     }
+//   }
+// );
 
 // Clear canvas
 export const clearCanvas = createAsyncThunk(
-  "paintPixel/clearCanvas",
-  async ({ sessionId, canvasResolution = 1 }: any, thunkAPI) => {
+  "paintPixel/clearCanvasAPI",
+  async ({ canvasId }: { canvasId: string }, thunkAPI) => {
     try {
-      const response = await api.delete(`${config?.endpoints?.GET_USER}/canvas/${sessionId}/clear`, {
-        data: { canvasResolution }
-      });
-      return response.data;
+      // Call the new DELETE endpoint
+      const response = await api.delete(`/canvas/${canvasId}/clear`);
+      return response.data; // Should return { success: true, ... }
     } catch (error: any) {
       return thunkAPI.rejectWithValue(
         error.response?.data?.message || "Failed to clear canvas"

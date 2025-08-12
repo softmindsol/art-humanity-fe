@@ -7,15 +7,15 @@ export const useCanvasState = () => {
   const tilesRef = useRef(new Map());
 
   // --- STATE ---
-  const [canvasState, setCanvasState] = useState({
-    zoomLevel: 1,
-    offset: { x: 0, y: 0 },
-  });
-  const [brushState, setBrushState] = useState({
-    mode: "brush",
-    size: 5,
-    color: { r: 0, g: 0, b: 0, a: 1 },
-  });
+  // const [canvasState, setCanvasState] = useState({
+  //   zoomLevel: 1,
+  //   offset: { x: 0, y: 0 },
+  // });
+  // const [brushState, setBrushState] = useState({
+  //   mode: "brush",
+  //   size: 5,
+  //   color: { r: 0, g: 0, b: 0, a: 1 },
+  // });
       const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [isDrawing, setIsDrawing] = useState(false);
@@ -42,7 +42,7 @@ export const useCanvasState = () => {
   const [canvasId] = useState(
     `canvas_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`
   );
-
+const [ isClearAlertOpen, setIsClearAlertOpen ]=useState(false);
   const [currentPixelLog, setCurrentPixelLog]=useState<any>('');
     const [strokeStartTime, setStrokeStartTime] = useState<Date>();
 
@@ -57,10 +57,10 @@ export const useCanvasState = () => {
     tilesRef,
 
     // Canvas states
-    canvasState,
-    setCanvasState,
-    brushState,
-    setBrushState,
+    // canvasState,
+    // setCanvasState,
+    // brushState,
+    // setBrushState,
     isDrawing,
     setIsDrawing,
     lastPos,
@@ -99,7 +99,8 @@ export const useCanvasState = () => {
     setSaveError,
     sessionId,
     canvasId,
-   isModalOpen, setIsModalOpen,
+    isModalOpen,
+    setIsModalOpen,
     currentPixelLog,
     setCurrentPixelLog,
     strokeStartTime,
@@ -109,6 +110,7 @@ export const useCanvasState = () => {
     setHistory,
     historyIndex,
     setHistoryIndex,
-    
+    isClearAlertOpen,
+    setIsClearAlertOpen,
   };
 };

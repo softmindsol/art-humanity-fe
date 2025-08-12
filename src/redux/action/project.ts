@@ -47,7 +47,7 @@ export const fetchProjectById = createAsyncThunk(
      
         
       const response = await api.get(
-        `${config?.endpoints?.FETCH_PROJECT_BY_ID}`
+        `${config?.endpoints?.FETCH_PROJECT_BY_ID}/${projectId}`
       );
       return response.data.data;
     } catch (error: any) {

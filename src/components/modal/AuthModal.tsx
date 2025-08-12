@@ -3,8 +3,7 @@ import googleImage from '../../assets/images/google-icon.svg';
 import { useRegisterForm } from '@/hook/useRegisterForm';
 import { Eye, EyeOff } from 'lucide-react';
 import ForgotPasswordForm from './ForgotPasswordForm';
-import { googleLogin } from '../../redux/action/auth';
-import useAppDispatch from '@/hook/useDispatch';
+
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/redux/store';
 

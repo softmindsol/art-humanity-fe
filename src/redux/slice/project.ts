@@ -69,7 +69,7 @@ const projectSlice = createSlice({
         state.loading.fetchingById = false;
         state.error.fetchingById = action.payload as any;
       });
-  },
+  }, 
 });
 
 export const { clearCurrentProject } = projectSlice.actions;

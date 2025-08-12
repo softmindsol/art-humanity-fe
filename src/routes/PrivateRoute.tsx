@@ -39,7 +39,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     }
     if (isAuthenticated === null) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-[#f2e8c9] dark:bg-gray-900">
+            <div className="min-h-screen flex items-center justify-center dark:bg-gray-900">
                 <div className="flex flex-col items-center text-center text-gray-600 dark:text-gray-300">
                     <Loader2 className="animate-spin w-8 h-8 mb-2" />
                     <p>Checking authentication...</p>

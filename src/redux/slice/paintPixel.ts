@@ -120,6 +120,11 @@ const paintPixelSlice = createSlice({
     clearTimelapseUrl: (state) => {
       state.timelapseVideoUrl = null;
     },
+    clearCanvasData: (state) => {
+      state.canvasData = []; // Strokes ki list ko khali kar dein
+      state.loading.getCanvasData = false; // Loading ko reset karein
+      state.error.getCanvasData = null; // Error ko reset karein
+    },
   },
 
   extraReducers: (builder) => {
@@ -185,33 +190,13 @@ const paintPixelSlice = createSlice({
         state.loading.getCanvasData = true;
         state.error.getCanvasData = null;
       })
-      .addCase(getCanvasData.fulfilled, (state, action) => {
+      .addCase(getCanvasData.fulfilled, (state: any, action) => {
         state.loading.getCanvasData = false;
-        if (action.payload.success) {
-          state.canvasData = action.payload.data;
-        }
+        state.canvasData = action.payload; // Fetched strokes ko state mein save karein
       })
       .addCase(getCanvasData.rejected, (state, action) => {
         state.loading.getCanvasData = false;
         state.error.getCanvasData = action.payload as any;
-      });
-
-    // Clear Canvas
-    builder
-      .addCase(clearCanvas.pending, (state: any) => {
-        state.loading.clearCanvas = true;
-        state.error.clearCanvas = null;
-      })
-      .addCase(clearCanvas.fulfilled, (state, action) => {
-        state.loading.clearCanvas = false;
-        if (action.payload.success) {
-          state.canvasData = [];
-          state.tileData = {};
-        }
-      })
-      .addCase(clearCanvas.rejected, (state, action) => {
-        state.loading.clearCanvas = false;
-        state.error.clearCanvas = action.payload as any;
       });
 
     // Get Tile Data
@@ -285,6 +270,23 @@ const paintPixelSlice = createSlice({
         state.loading.importCanvas = false;
         state.error.importCanvas = action.payload as any;
       });
+    // Clear Canvas  ✅ KEEP THIS ONE
+    builder
+      .addCase(clearCanvas.pending, (state: any) => {
+        state.loading.clearCanvas = true;
+        state.error.clearCanvas = null;
+      })
+      .addCase(clearCanvas.fulfilled, (state, action) => {
+        state.loading.clearCanvas = false;
+        if (action.payload.success) {
+          state.canvasData = [];
+          state.tileData = {};
+        }
+      })
+      .addCase(clearCanvas.rejected, (state, action) => {
+        state.loading.clearCanvas = false;
+        state.error.clearCanvas = action.payload as any;
+      });
   },
 });
 
@@ -303,7 +305,7 @@ export const {
   addStrokeLocally,
   addStrokesLocally,
   clearTimelapseUrl,
-  
+  clearCanvasData,
 } = paintPixelSlice.actions;
 
 // Selectors

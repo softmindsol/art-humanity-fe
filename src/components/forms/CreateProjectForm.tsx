@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Calendar, Palette, Image, Monitor, Sparkles, Upload, Eye, X } from 'lucide-react';
+import { Calendar, Image, Sparkles, Upload, Eye } from 'lucide-react';
 
 // Define the shape of the props the component expects from its parent
 interface CreateProjectFormProps {
@@ -13,7 +13,7 @@ interface CreateProjectFormProps {
 }
 
 const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onProjectCreated, isLoading, error: propError }) => {
-  // --- STATE MANAGEMENT ---
+
   const [formData, setFormData] = useState({
     // `projectId` and `canvasId` are removed as they are now handled by the parent/backend
     title: '',
@@ -21,18 +21,19 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onProjectCreated,
     width: 1024,
     height: 1024,
     thumbnailUrl: '',
-    baseImageUrl: '',
+
     targetCompletionDate: '',
   });
+  const [files, setFiles] = useState<{
+    thumbnail?: File;
+  }>({});
 
-  const [colorPalette, setColorPalette] = useState<string[]>([]);
   const [currentStep, setCurrentStep] = useState(1);
   // Local error state for form validation
   const [formError, setFormError] = useState('');
 
   // Refs for triggering file inputs
   const thumbnailInputRef = useRef<HTMLInputElement>(null);
-  const baseImageInputRef = useRef<HTMLInputElement>(null);
 
   // --- EVENT HANDLERS ---
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -46,23 +47,19 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onProjectCreated,
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      const fakeUrl = URL.createObjectURL(file); // For local preview
-      setFormData(prev => ({
-        ...prev,
-        [e.target.name]: fakeUrl
-      }));
+      const previewUrl = URL.createObjectURL(file);
+
+      if (e.target.name === "thumbnailUrl") {
+        setFormData(prev => ({
+          ...prev,
+          thumbnailUrl: previewUrl
+        }));
+        setFiles(prev => ({ ...prev, thumbnail: file }));
+      }
+
     }
   };
 
-  const handleColorAdd = (color: string) => {
-    if (color && !colorPalette.includes(color)) {
-      setColorPalette(prev => [...prev, color]);
-    }
-  };
-
-  const removeColor = (colorToRemove: string) => {
-    setColorPalette(prev => prev.filter((color) => color !== colorToRemove));
-  };
 
   // --- NAVIGATION & SUBMISSION ---
   const handleNextStep = () => {
@@ -80,39 +77,30 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onProjectCreated,
   };
 
   const handleSubmit = () => {
-    if (!formData.thumbnailUrl) {
+    if (!files.thumbnail && !formData.thumbnailUrl) {
       setFormError('A thumbnail image is required.');
       return;
     }
     setFormError('');
 
-    // Create the final project data object to send to the parent
-    const projectData = {
-      ...formData,
-      palette: colorPalette, // Send the array of colors, matching the backend schema
-    };
+    const fd = new FormData();
+    fd.append('title', formData.title);
+    fd.append('description', formData.description);
+    fd.append('width', String(formData.width));
+    fd.append('height', String(formData.height));
+    fd.append('targetCompletionDate', formData.targetCompletionDate || '');
 
-    // Call the parent's function
-    if (onProjectCreated) {
-      onProjectCreated(projectData);
-    }
+    if (files.thumbnail) fd.append('thumbnail', files.thumbnail);
+    else if (formData.thumbnailUrl) fd.append('thumbnailUrl', formData.thumbnailUrl);
+
+    onProjectCreated(fd);
   };
 
-  // --- PRESET DATA ---
-  const presetCanvasSizes = [
-    { name: 'Default Square', width: 1024, height: 1024 },
-    { name: 'Landscape', width: 1024, height: 768 },
-    { name: 'Portrait', width: 768, height: 1024 },
-    { name: 'Wide Banner', width: 1920, height: 1080 },
-  ];
-
-  const popularColors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57', '#FF9FF3', '#54A0FF', '#5F27CD'];
-
-  // --- JSX RENDER ---
   return (
-    <div className="min-h-screen py-12 px-4">
+    <div className="min-h-screen py-5 px-4">
       <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-12">
+        
+        <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-[#d4af37] to-[#5d4037] rounded-full mb-4">
             <Sparkles className="w-8 h-8 text-white" />
           </div>
@@ -123,14 +111,14 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onProjectCreated,
           </div>
         </div>
 
-        <div className="flex justify-center mb-8">
+        <div className="flex justify-center mb-4">
           <div className="flex items-center space-x-4">
-            {[1, 2, 3].map((step) => (
+            {[1, 2].map((step) => (
               <div key={step} className="flex items-center">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all duration-300 ${currentStep >= step ? 'bg-gradient-to-r from-[#d4af37] to-[#5d4037] text-white shadow-lg' : 'bg-white text-gray-400 border-2 border-gray-200'}`}>
                   {step}
                 </div>
-                {step < 3 && <div className={`w-16 h-1 mx-2 rounded transition-all duration-300 ${currentStep > step ? 'bg-gradient-to-r from-[#d4af37] to-[#5d4037]' : 'bg-gray-200'}`} />}
+                {step < 2 && <div className={`w-16 h-1 mx-2 rounded transition-all duration-300 ${currentStep > step ? 'bg-gradient-to-r from-[#d4af37] to-[#5d4037]' : 'bg-gray-200'}`} />}
               </div>
             ))}
           </div>
@@ -147,7 +135,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onProjectCreated,
               </div>
             </div>
 
-            <div className={`${currentStep === 2 ? 'block' : 'hidden'}`}>
+            {/* <div className={`${currentStep === 2 ? 'block' : 'hidden'}`}>
               <div className="flex items-center space-x-3 mb-6"><div className="w-8 h-8 bg-gradient-to-r from-green-500 to-teal-500 rounded-lg flex items-center justify-center"><Monitor className="w-5 h-5 text-white" /></div><h2 className="text-2xl font-bold text-[#3e2723]  mt-2">Canvas & Design</h2></div>
               <div className="space-y-6">
                 <div>
@@ -165,9 +153,9 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onProjectCreated,
                   <Input type="color" onChange={(e) => handleColorAdd(e.target.value)} className="w-16 h-12 border-2 border-gray-200 rounded-xl cursor-pointer p-1" title="Pick a custom color" />
                 </div>
               </div>
-            </div>
-
-            <div className={`${currentStep === 3 ? 'block' : 'hidden'}`}>
+            </div> */}
+ 
+            <div className={`${currentStep === 2 ? 'block' : 'hidden'}`}>
               <div className="flex items-center space-x-3 mb-6"><div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center"><Image className="w-5 h-5 text-white" /></div><h2 className="text-2xl font-bold text-[#3e2723] mt-2">Media & Timeline</h2></div>
               <div className="space-y-6">
                 <div>
@@ -175,11 +163,7 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onProjectCreated,
                   <div className="flex space-x-3"><Input id="thumbnailUrl" name="thumbnailUrl" value={formData.thumbnailUrl} onChange={handleChange} className="h-12 border-2 border-gray-200 rounded-xl" placeholder="https://... or upload" required /><input type="file" ref={thumbnailInputRef} name="thumbnailUrl" onChange={handleFileChange} className="hidden" accept="image/*" /><Button type="button" variant="outline" onClick={() => thumbnailInputRef.current?.click()} className="h-12 px-4 border-2 border-gray-200 rounded-xl"><Upload className="w-4 h-4 mr-2" /> Upload</Button></div>
                   {formData.thumbnailUrl.startsWith('blob:') && <img src={formData.thumbnailUrl} alt="Thumbnail Preview" className="mt-4 rounded-lg max-h-40" />}
                 </div>
-                <div>
-                  <Label htmlFor="baseImageUrl" className="text-[#5d4037] font-medium flex items-center space-x-2 mb-3"><Image className="w-4 h-4" /><span>Base Image (optional)</span></Label>
-                  <div className="flex space-x-3"><Input id="baseImageUrl" name="baseImageUrl" value={formData.baseImageUrl} onChange={handleChange} className="h-12 border-2 border-gray-200 rounded-xl" placeholder="https://... or upload" /><input type="file" ref={baseImageInputRef} name="baseImageUrl" onChange={handleFileChange} className="hidden" accept="image/*" /><Button type="button" variant="outline" onClick={() => baseImageInputRef.current?.click()} className="h-12 px-4 border-2 border-gray-200 rounded-xl"><Upload className="w-4 h-4 mr-2" /> Upload</Button></div>
-                  {formData.baseImageUrl.startsWith('blob:') && <img src={formData.baseImageUrl} alt="Base Image Preview" className="mt-4 rounded-lg max-h-40" />}
-                </div>
+               
                 <div>
                   <Label htmlFor="targetCompletionDate" className="text-[#5d4037] font-medium flex items-center space-x-2 mb-3"><Calendar className="w-4 h-4" /><span>Target Completion Date</span></Label>
                   <Input id="targetCompletionDate" type="date" name="targetCompletionDate" value={formData.targetCompletionDate} onChange={handleChange} className="h-12 border-2 border-gray-200 rounded-xl" />
@@ -187,10 +171,10 @@ const CreateProjectForm: React.FC<CreateProjectFormProps> = ({ onProjectCreated,
               </div>
             </div>
 
-            <div className="flex justify-between items-center pt-8 border-t border-gray-200">
+            <div className="flex justify-between items-center pt-5 border-t border-gray-200">
               <Button type="button" variant="outline" onClick={handlePreviousStep} disabled={currentStep === 1} className="h-12 px-8 border-2 border-gray-200 rounded-xl disabled:opacity-50">Previous</Button>
               <div className="flex space-x-4">
-                {currentStep < 3 ? (
+                {currentStep < 2 ? (
                   <Button type="button" onClick={handleNextStep} className="h-12 px-8 bg-gradient-to-r from-[#d4af37] to-[#5d4037] text-white rounded-xl shadow-lg">Next</Button>
                 ) : (
                   <Button type="button" onClick={handleSubmit} disabled={isLoading} className="h-12 px-8 bg-gradient-to-r from-[#3e2723] to-[#5d4037] text-white rounded-xl shadow-lg disabled:opacity-70 disabled:cursor-not-allowed">
