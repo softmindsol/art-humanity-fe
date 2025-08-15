@@ -8,11 +8,11 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
- 
+
 } from "@/components/ui/dialog"
 import {
     selectCurrentBrush, selectCurrentCanvas, selectErrorForOperation, selectIsLoadingOperation, setBrushColor, setCanvasOffset, setZoomLevel, selectTimelapseUrl,
-   
+
     setBrushMode,
     setBrushSize,
     selectCanvasData,
@@ -26,7 +26,7 @@ const VIEWPORT_HEIGHT = 1024; // Fixed viewport height
 
 
 
-const TiledCanvas: React.FC = () => {
+const DemoCanvas: React.FC = () => {
     const dispatch = useDispatch();
 
     // --- REDUX STATE ---
@@ -82,7 +82,7 @@ const TiledCanvas: React.FC = () => {
         historyIndex,
         setHistoryIndex,
     } = useCanvasState();
-   
+
     const savedStrokes = useSelector(selectCanvasData);
 
     // useEffect(() => {
@@ -112,7 +112,7 @@ const TiledCanvas: React.FC = () => {
                         for (let x = Math.min(fromCoords.tileX, toCoords.tileX); x <= Math.max(fromCoords.tileX, toCoords.tileX); x++) {
                             const tile = getTile(x, y);
 
-                            
+
 
                             drawOnTile(tile, pathSegment.fromX - x * TILE_SIZE, pathSegment.fromY - y * TILE_SIZE, pathSegment.toX - x * TILE_SIZE, pathSegment.toY - y * TILE_SIZE);
                         }
@@ -294,39 +294,39 @@ const TiledCanvas: React.FC = () => {
 
 
 
-   const drawOnTile = (tile: any, fromX: any, fromY: any, toX: any, toY: any) => {
-    const ctx = tile.context;
+    const drawOnTile = (tile: any, fromX: any, fromY: any, toX: any, toY: any) => {
+        const ctx = tile.context;
 
-    // Common settings
-    ctx.lineWidth = brushState.size;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.beginPath();
-    ctx.moveTo(fromX, fromY);
-    ctx.lineTo(toX, toY);
+        // Common settings
+        ctx.lineWidth = brushState.size;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        ctx.moveTo(fromX, fromY);
+        ctx.lineTo(toX, toY);
 
-    if (brushState.mode === 'eraser') {
-       
-        // Step 1: Pehle, purani drawing ke PEECHE ek safed line draw karo.
-        // Isse jab aage se drawing mitegi, to peeche safed color dikhega.
-        ctx.globalCompositeOperation = 'destination-over';
-        ctx.strokeStyle = '#ffffff'; // Background color
-        ctx.stroke(); // Yahan stroke() call karna zaroori hai
+        if (brushState.mode === 'eraser') {
 
-        // Step 2: Ab, purani drawing ke UPAR se pixels ko mitao.
-        ctx.globalCompositeOperation = 'destination-out';
-        ctx.strokeStyle = 'rgba(0,0,0,1)'; // Koi bhi opaque color
-        ctx.stroke(); // Yahan dobara stroke() call karna zaroori hai
+            // Step 1: Pehle, purani drawing ke PEECHE ek safed line draw karo.
+            // Isse jab aage se drawing mitegi, to peeche safed color dikhega.
+            ctx.globalCompositeOperation = 'destination-over';
+            ctx.strokeStyle = '#ffffff'; // Background color
+            ctx.stroke(); // Yahan stroke() call karna zaroori hai
 
-    } else {
-        // Brush ka logic same rahega
-        ctx.globalCompositeOperation = 'source-over';
-        ctx.strokeStyle = `rgba(${brushState.color.r}, ${brushState.color.g}, ${brushState.color.b}, ${brushState.color.a})`;
-        ctx.stroke();
-    }
+            // Step 2: Ab, purani drawing ke UPAR se pixels ko mitao.
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.strokeStyle = 'rgba(0,0,0,1)'; // Koi bhi opaque color
+            ctx.stroke(); // Yahan dobara stroke() call karna zaroori hai
 
-    tile.isDirty = true;
-};
+        } else {
+            // Brush ka logic same rahega
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.strokeStyle = `rgba(${brushState.color.r}, ${brushState.color.g}, ${brushState.color.b}, ${brushState.color.a})`;
+            ctx.stroke();
+        }
+
+        tile.isDirty = true;
+    };
 
     const startDrawing = (e: React.MouseEvent) => {
         if (brushState.mode === 'move' || canvasState.zoomLevel < 1) return;
@@ -363,7 +363,7 @@ const TiledCanvas: React.FC = () => {
     };
 
 
-   
+
 
 
 
@@ -652,7 +652,7 @@ const TiledCanvas: React.FC = () => {
                     ref={viewportCanvasRef}
                     width={VIEWPORT_WIDTH}
                     height={VIEWPORT_HEIGHT}
-                      className=' w-[95%] md:w-[90%] md:h-[1024px]  xl:w-[1024px] xl:h-[1024px] relative'
+                    className=' w-[95%] md:w-[90%] md:h-[1024px]  xl:w-[1024px] xl:h-[1024px] relative'
                     style={{
                         // width: `${VIEWPORT_WIDTH}px`,
                         // height: `${VIEWPORT_HEIGHT}px`,
@@ -685,4 +685,4 @@ const TiledCanvas: React.FC = () => {
     );
 };
 
-export default TiledCanvas;
+export default DemoCanvas;

@@ -4,10 +4,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import TiledCanvas from '@/components/common/TiledCanvas';
+import TiledCanvas from '@/components/common/KonvaCanvas';
 import type { AppDispatch } from '@/redux/store';
 import { fetchProjectById } from '@/redux/action/project';
 import { selectCurrentProject, selectProjectsLoading, selectProjectsError, clearCurrentProject } from '@/redux/slice/project';
+import ProjectPage from '../projectPage';
 
 const TiledCanvasPage: React.FC = () => {
     const { projectId } = useParams<{ projectId: string }>();
@@ -52,24 +53,21 @@ const TiledCanvasPage: React.FC = () => {
 
     return (
         <div>
-            <div className=' p-4'>
-                <Button
-                    type="button"
-                    onClick={() => { navigate(-1);  }} // or: navigate('/projects')
-                    className=" sm:top-36 inline-flex items-center gap-2
+            <Button
+                type="button"
+                onClick={() => {navigate(-1)}} // or: navigate('/projects')
+                className="absolute left-10 top-20 sm:top-36 inline-flex items-center gap-2
                    rounded-xl border border-gray-200 bg-white/80 backdrop-blur
                    px-3 py-2 text-[#5d4037] hover:text-[#3e2723] shadow-sm hover:shadow
                    transition"
-                    aria-label="Go back"
-                >
-                    <ArrowLeft className="w-5 h-5" />
-                    <span className="hidden sm:inline">Back</span>
-                </Button>
-            </div>
-           
+                aria-label="Go back"
+            >
+                <ArrowLeft className="w-5 h-5" />
+                <span className="hidden sm:inline">Back</span>
+            </Button>
 
             {/* Canvas ko project se size/dimensions do (agar fields hain) */}
-            <TiledCanvas
+            <ProjectPage
                projectName={project.title}
                canvasId={project.canvasId}
                 projectId={project._id}

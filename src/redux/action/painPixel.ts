@@ -8,7 +8,7 @@ export const createStroke = createAsyncThunk(
   async (strokeData: any, thunkAPI) => {
     try {
       const response = await api.post(`/stroke`, strokeData);
-      console.log("hello")
+      console.log("hello");
       return response.data; // backend returns { success: true, data: {...} }
     } catch (error: any) {
       return thunkAPI.rejectWithValue(
@@ -18,12 +18,46 @@ export const createStroke = createAsyncThunk(
   }
 );
 
+export const createContribution = createAsyncThunk(
+  "paintPixel/createContribution",
+  // Payload ab ek object hoga: { projectId, strokes }
+  async (contributionData: { projectId: string; strokes: any[] }, thunkAPI) => {
+    try {
+      // Naya API endpoint: POST /api/contributions
+      const response = await api.post(`/contributions`, contributionData);
+      // Backend ab poora contribution object wapas bhejega
+      return response.data.data;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || "Failed to create contribution"
+      );
+    }
+  }
+);
+
+export const getContributionsByProject = createAsyncThunk(
+  "paintPixel/getContributionsByProject",
+  async ({ projectId }: { projectId: string }, thunkAPI) => {
+    try {
+      console.log(`Fetching contributions for projectId: ${projectId}`);
+      // Naya API endpoint: GET /api/projects/:projectId/contributions
+      const response = await api.get(`/contributions/project/${projectId}`);
+      // Backend se contributions ka array return hoga
+      return response.data.data;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || "Failed to fetch contributions"
+      );
+    }
+  }
+);
+
 export const generateTimelapseVideo = createAsyncThunk(
   "paintPixel/generateTimelapse",
-  async ({ sessionId }: { sessionId: string }, thunkAPI) => {
+  async ({ projectId }: { projectId: string }, thunkAPI) => {
     try {
       // API endpoint ko call karein. Response mein video ka URL aayega.
-      const response = await api.get(`/timelapse/${sessionId}`);
+      const response = await api.get(`/timelapse/${projectId}`); // URL badal jayega
       console.log("Timelapse generation response:", response.data);
       return response.data; // Yeh { success: true, videoUrl: '...' } return karega
     } catch (error: any) {
@@ -53,7 +87,9 @@ export const batchCreateStrokes = createAsyncThunk(
   "paintPixel/batchCreateStrokes",
   async (strokesData: any, thunkAPI) => {
     try {
-      const response = await api.post(`/strokes/batch`, { strokes: strokesData });
+      const response = await api.post(`/strokes/batch`, {
+        strokes: strokesData,
+      });
       return response.data;
     } catch (error: any) {
       return thunkAPI.rejectWithValue(
@@ -63,33 +99,13 @@ export const batchCreateStrokes = createAsyncThunk(
   }
 );
 
-// Get canvas data
-// export const getCanvasData = createAsyncThunk(
-//   "paintPixel/getCanvasData",
-//   async ({ sessionId, canvasResolution = 1, limit = 1000, offset = 0 }: any, thunkAPI) => {
-//     try {
-//       const params = new URLSearchParams({
-//         canvasResolution: canvasResolution.toString(),
-//         limit: limit.toString(),
-//         offset: offset.toString(),
-//       });
-//       const response = await api.get(`/canvas/${sessionId}?${params}`);
-//       return response.data;
-//     } catch (error: any) {
-//       return thunkAPI.rejectWithValue(
-//         error.response?.data?.message || "Failed to fetch canvas data"
-//       );
-//     }
-//   }
-// );
-
 // Clear canvas
 export const clearCanvas = createAsyncThunk(
   "paintPixel/clearCanvasAPI",
-  async ({ canvasId }: { canvasId: string }, thunkAPI) => {
+  async ({ projectId }: { projectId: string }, thunkAPI) => {
     try {
       // Call the new DELETE endpoint
-      const response = await api.delete(`/canvas/${canvasId}/clear`);
+      const response = await api.delete(`/canvas/${projectId}/clear`);
       return response.data; // Should return { success: true, ... }
     } catch (error: any) {
       return thunkAPI.rejectWithValue(
@@ -107,7 +123,9 @@ export const getTileData = createAsyncThunk(
       const params = new URLSearchParams({
         tileSize: tileSize.toString(),
       });
-      const response = await api.get(`${config?.endpoints?.GET_USER}/tile/${sessionId}/${tileX}/${tileY}?${params}`);
+      const response = await api.get(
+        `${config?.endpoints?.GET_USER}/tile/${sessionId}/${tileX}/${tileY}?${params}`
+      );
       return response.data;
     } catch (error: any) {
       return thunkAPI.rejectWithValue(
@@ -122,7 +140,9 @@ export const getCanvasStats = createAsyncThunk(
   "paintPixel/getCanvasStats",
   async (sessionId: any, thunkAPI) => {
     try {
-      const response = await api.get(`${config?.endpoints?.GET_USER}/stats/${sessionId}`);
+      const response = await api.get(
+        `${config?.endpoints?.GET_USER}/stats/${sessionId}`
+      );
       return response.data;
     } catch (error: any) {
       return thunkAPI.rejectWithValue(
@@ -138,7 +158,9 @@ export const exportCanvas = createAsyncThunk(
   async ({ sessionId, format = "json" }: any, thunkAPI) => {
     try {
       const params = new URLSearchParams({ format });
-      const response = await api.get(`${config?.endpoints?.GET_USER}/export/${sessionId}?${params}`);
+      const response = await api.get(
+        `${config?.endpoints?.GET_USER}/export/${sessionId}?${params}`
+      );
       return response.data;
     } catch (error: any) {
       return thunkAPI.rejectWithValue(
@@ -153,7 +175,10 @@ export const importCanvas = createAsyncThunk(
   "paintPixel/importCanvas",
   async ({ data, overwrite = false }: any, thunkAPI) => {
     try {
-      const response = await api.post(`${config?.endpoints?.GET_USER}/import`, { data, overwrite });
+      const response = await api.post(`${config?.endpoints?.GET_USER}/import`, {
+        data,
+        overwrite,
+      });
       return response.data;
     } catch (error: any) {
       return thunkAPI.rejectWithValue(

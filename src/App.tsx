@@ -15,27 +15,28 @@ import CreateProjectPage from './page/create-project';
 import ProtectedRoute from './routes/PrivateRoute';
 import { ProjectProvider } from './context/ProjectContext';
 import TiledCanvasPage from './page/TiledCanvasPage';
+import Demo from './page/Demo';
 function App() {
   return (
     <Router>
       <Header />
       <ProjectProvider>
-      <main>
-      <Routes>
-        <Route path="/" element={<HeroSection />} />
-        <Route path="/guideline" element={<GuidelinePage />} />
-          <Route path="/gallery" element={<ProtectedRoute><GalleryPage /></ProtectedRoute>} />
-          <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-          <Route path="/create-project" element={<CreateProjectPage />} />
+        <main>
+          <Routes>
+            <Route path="/" element={<HeroSection />} />
+            <Route path="/guideline" element={<GuidelinePage />} />
+            <Route path="/gallery" element={<ProtectedRoute><GalleryPage /></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+            <Route path="/create-project" element={<CreateProjectPage />} />
 
-        <Route path="/projects" element={<ProtectedRoute><ActiveProjects /></ProtectedRoute>} />
-        <Route path="/demo" element={<DemoCanvas />} />
-        <Route path='/verify-email/:token' element={<VerifyEmail/>}/>
-        <Route path="/reset-password/:token" element={<ResetPassword />} />
+            <Route path="/projects" element={<ProtectedRoute><ActiveProjects /></ProtectedRoute>} />
+            <Route path="/demo" element={<Demo />} />
+            <Route path='/verify-email/:token' element={<VerifyEmail />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
             <Route path="/project/:projectId" element={<TiledCanvasPage />} />
 
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
+            <Route path="*" element={<NotFoundPage />} />
+          </Routes>
         </main>
       </ProjectProvider>
       <Footer />

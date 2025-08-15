@@ -116,7 +116,7 @@ const Header = () => {
             </div>
           </div>
         </header>
-      </div>
+      </div> 
  
       {/* Modal renders conditionally */}
       {isAuthModalOpen && <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />}
