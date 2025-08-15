@@ -39,14 +39,14 @@ const ProjectPage = ({ projectName, projectId }: any) => {
 
     const dispatch = useDispatch<AppDispatch>();
     const savedStrokes = useSelector(selectCanvasData);
-    const isSaving = useSelector(selectIsLoadingOperation('createStroke'));
-    const saveError = useSelector(selectErrorForOperation('createStroke'));
+    const isSaving = useSelector(selectIsLoadingOperation('createContribution')); // Updated to new state
+    const saveError = useSelector(selectErrorForOperation('createContribution')); // Updated to new state
 
     const {
         tilesRef,
         isClearAlertOpen,
         setIsClearAlertOpen,
-        
+
     } = useCanvasState();
 
 
@@ -114,6 +114,8 @@ const ProjectPage = ({ projectName, projectId }: any) => {
         // tile.isDirty = true;
         // renderVisibleTiles();
     };
+
+
     useLayoutEffect(() => {
         const updateSize = () => {
             if (canvasContainerRef.current) {
@@ -182,8 +184,8 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                             </button>
 
                             <AlertDialog open={isClearAlertOpen} onOpenChange={setIsClearAlertOpen}>
-                             
-                             
+
+
                                 <AlertDialogTrigger asChild>
                                     <button
                                         className="bg-[#cd5c5c] text-white border-none text-[12px] md:text-[16px] px-2 py-2 md:px-4 md:py-2 rounded cursor-pointer"
@@ -252,22 +254,16 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                                     width={canvasSize.width}
                                     height={canvasSize.height}
                                     onStateChange={handleCanvasStateChange} // Callback function pass karein
+                                    selectedContributionId={selectedContributionId}
+                                    onContributionHover={handleContributionHover}
+                                    onContributionLeave={handleContributionLeave}
+                                    onContributionSelect={setSelectedContributionId}
 
                                 />
                             )}
 
                         </div>
-                        <ContributionSidebar
-                            contributions={savedStrokes} // TODO: Isay proper contribution objects mein badalna hoga
-                            selectedContributionId={selectedContributionId}
-                            onContributionSelect={setSelectedContributionId}
-                            canvasStats={canvasStats}
-                            infoBoxData={{
-                                strokeCount: savedStrokes.length,
-                                isSaving: isSaving,
-                                saveError: saveError
-                            }}
-                        />
+                      
                         <InfoBox
                             zoom={canvasStats.zoom}
                             worldPos={canvasStats.worldPos}
@@ -289,6 +285,17 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                     </div>
                 </div>
             </div>
+            <ContributionSidebar
+                contributions={savedStrokes} // TODO: Isay proper contribution objects mein badalna hoga
+                selectedContributionId={selectedContributionId}
+                onContributionSelect={setSelectedContributionId}
+                canvasStats={canvasStats}
+                infoBoxData={{
+                    strokeCount: savedStrokes.length,
+                    isSaving: isSaving,
+                    saveError: saveError
+                }}
+            />
         </div>
     );
 };
