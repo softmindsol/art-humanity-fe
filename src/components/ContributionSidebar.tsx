@@ -149,6 +149,7 @@ const ContributionSidebar = ({ projectId, contributions, selectedContributionId,
                             selectedContributionId={selectedContributionId}
                             onContributionSelect={onContributionSelect}
                             listItemRefs={listItemRefs}
+                            projectId={projectId}
                         />
 
 

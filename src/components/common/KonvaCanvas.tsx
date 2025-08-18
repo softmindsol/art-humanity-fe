@@ -193,7 +193,7 @@ const KonvaCanvas = ({ projectId, userId, width, height, onStateChange, selected
 
         // Naya thunk call karein
         dispatch(createContribution(contributionPayload));
-        dispatch(getContributionsByProject({ projectId, sortBy:"" })); // Contributions ko update karne ke liye
+        dispatch(getContributionsByProject({ projectId, sortBy: "newest" })).unwrap(); // Contributions ko update karne ke liye
 
         currentStrokePathRef.current = [];
     };

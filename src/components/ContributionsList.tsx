@@ -1,17 +1,20 @@
 
-import { deleteContribution, voteOnContribution } from '@/redux/action/contribution';
+import { deleteContribution, getContributionsByProject, voteOnContribution } from '@/redux/action/contribution';
 import type { AppDispatch, RootState } from '@/redux/store';
 import { ArrowBigUp, ArrowBigDown, Trash2 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { useDispatch } from 'react-redux';
 
-const ContributionsList = ({ contributions, selectedContributionId, onContributionSelect, listItemRefs }: any) => {
+const ContributionsList = ({ projectId,contributions, selectedContributionId, onContributionSelect, listItemRefs }: any) => {
     const dispatch = useDispatch<AppDispatch>(); // Dispatch function hasil karein
     const user = useSelector((state: RootState) => state?.auth?.user);
 
     const handleVote = (contributionId: any, voteType: any, userId: any) => {
         // Thunk ko zaroori data ke sath dispatch karein
-        dispatch(voteOnContribution({ contributionId, voteType, userId }));
+        dispatch(voteOnContribution({ contributionId, voteType, userId })).unwrap()
+                dispatch(getContributionsByProject({ projectId, sortBy:"newest" })); // Contributions ko update karne ke liye
+        
+
     };
 
     if (!contributions || contributions.length === 0) {
