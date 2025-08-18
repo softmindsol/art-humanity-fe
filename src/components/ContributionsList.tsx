@@ -39,8 +39,8 @@ const ContributionsList = ({ contributions, selectedContributionId, onContributi
                             <div className="w-20 h-20 bg-gray-200 rounded-md flex-shrink-0">
                                 {contrib.thumbnailUrl ? (
                                     <img
-                                        src={`${import.meta.env.VITE_BASE}${contrib.thumbnailUrl}`} // Poora URL banayein
-                                        alt={`Contribution by ${contrib.userId?.username}`}
+                                        src={`${import.meta.env.VITE_BASE}${contrib?.thumbnailUrl}`} // Poora URL banayein
+                                        alt={`Contribution by ${contrib?.userId?.username}`}
                                         className="w-full h-full object-cover rounded-md"
                                     />
                                 ) : (
