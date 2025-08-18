@@ -16,7 +16,7 @@ import {
     setBrushMode,
     setBrushSize,
     selectCanvasData,
-} from '@/redux/slice/paintPixel';
+} from '@/redux/slice/contribution';
 
 
 // --- CONSTANTS ---

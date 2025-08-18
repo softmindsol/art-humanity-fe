@@ -1,6 +1,6 @@
 // src/components/GridLayer.js
 
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Layer, Line } from 'react-konva';
 
 const TILE_SIZE = 512;

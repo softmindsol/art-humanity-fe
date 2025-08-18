@@ -12,7 +12,7 @@ import {
   REGISTER,
 } from "redux-persist";
 import storage from "redux-persist/lib/storage"; // uses localStorage by default
-import paintPixelReducer from '../slice/paintPixel'
+import paintPixelReducer from "../slice/contribution";
 import projectReducer from '../slice/project'; 
 
 // Combine your reducers (if you have more later)

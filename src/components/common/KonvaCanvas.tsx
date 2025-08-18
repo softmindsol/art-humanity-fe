@@ -4,23 +4,11 @@ import { useState, useEffect, useRef } from 'react';
 import { Stage, Layer, Line, Group } from 'react-konva';
 import { useSelector, useDispatch } from 'react-redux';
 import type { AppDispatch } from '@/redux/store';
-import { createContribution, createStroke, getCanvasData, getContributionsByProject } from '@/redux/action/painPixel';
-import { selectCurrentBrush, selectCanvasData } from '@/redux/slice/paintPixel';
+import { createContribution, getContributionsByProject } from '@/redux/action/contribution';
+import { selectCurrentBrush, selectCanvasData } from '@/redux/slice/contribution';
 import { v4 as uuidv4 } from 'uuid'; // Unique IDs banane ke liye (npm install uuid @types/uuid)
 
-interface KonvaCanvasProps {
-    projectId: string;
-    userId: string;
-    width: number;
-    height: number;
-    onStateChange: (state: { zoom?: number; worldPos?: { x: number; y: number } }) => void;
-    selectedContributionId: string | null;
-    onContributionHover: (contribution: any, pos: { x: number, y: number }) => void;
-    onContributionLeave: () => void;
-    onContributionSelect: (id: string) => void;
 
-
-}
 
 const KonvaCanvas = ({ projectId, userId, width, height, onStateChange, selectedContributionId, onContributionHover, onContributionLeave, onContributionSelect }: any) => {
     const dispatch = useDispatch<AppDispatch>();
@@ -36,7 +24,6 @@ const KonvaCanvas = ({ projectId, userId, width, height, onStateChange, selected
 
 
 
-    console.log("savedStrokes:", savedStrokes)
     // Data load karne ke liye
     useEffect(() => {
         if (projectId) {
@@ -45,7 +32,7 @@ const KonvaCanvas = ({ projectId, userId, width, height, onStateChange, selected
         }
     }, [projectId, dispatch]);
 
-   
+
     useEffect(() => {
         if (savedStrokes && savedStrokes.length > 0) {
             const loadedContributions = savedStrokes.map((contribution: any) => {
@@ -74,7 +61,11 @@ const KonvaCanvas = ({ projectId, userId, width, height, onStateChange, selected
                 // Step 4: Frontend ke liye 'contribution' object banayein
                 return {
                     id: contribution._id, // MongoDB se _id istemal karein
-                    userId: contribution.userId,
+                    userId: contribution?.userId,
+                    artist: {
+                        id: contribution.userId?._id,
+                        name: contribution.userId?.fullName || 'Unknown',
+                    },
                     lines: lines, // Yahan poora lines ka array aayega
                 };
             });
@@ -202,6 +193,7 @@ const KonvaCanvas = ({ projectId, userId, width, height, onStateChange, selected
 
         // Naya thunk call karein
         dispatch(createContribution(contributionPayload));
+        dispatch(getContributionsByProject({ projectId })); // Contributions ko update karne ke liye
 
         currentStrokePathRef.current = [];
     };

@@ -19,16 +19,14 @@ import {
 import { useCanvasState } from '@/hook/useCanvasState';
 import { useDispatch } from 'react-redux';
 import type { AppDispatch, RootState } from '@/redux/store';
-import { clearCanvas, generateTimelapseVideo, getContributionsByProject } from '@/redux/action/painPixel';
+import { clearCanvas, generateTimelapseVideo, getContributionsByProject } from '@/redux/action/contribution';
 import InfoBox from '@/components/toolbox/InfoBox';
 import { useSelector } from 'react-redux';
-import { clearCanvasData, selectCanvasData, selectErrorForOperation, selectIsLoadingOperation } from '@/redux/slice/paintPixel';
+import { clearCanvasData, selectCanvasData, selectErrorForOperation, selectIsLoadingOperation } from '@/redux/slice/contribution';
 import ContributionSidebar from '@/components/ContributionSidebar';
 
 
 const TILE_SIZE = 512; // Optimal tile size for performance
-const VIEWPORT_WIDTH = 1024; // Fixed viewport width
-const VIEWPORT_HEIGHT = 1024; // Fixed viewport height
 
 const ProjectPage = ({ projectName, projectId }: any) => {
     const user = useSelector((state: RootState) => state?.auth?.user);
@@ -36,6 +34,7 @@ const ProjectPage = ({ projectName, projectId }: any) => {
     const [canvasSize, setCanvasSize] = useState<any>({ width: 0, height: 0 });
     const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, text: '' });
     const [selectedContributionId, setSelectedContributionId] = useState(null);
+    const listItemRefs = useRef<any>({});
 
     const dispatch = useDispatch<AppDispatch>();
     const savedStrokes = useSelector(selectCanvasData);
@@ -77,14 +76,15 @@ const ProjectPage = ({ projectName, projectId }: any) => {
     };
     // --- NEW HANDLERS to pass down as props ---
     const handleContributionHover = (contribution: any, pos: any) => {
+        const artistName = contribution.userId?.fullName || 'Unknown Artist';
         setTooltip({
             visible: true,
             x: pos.x,
             y: pos.y,
-            text: `Contribution by: ${contribution.userId}`
+            text: `Contribution by: ${artistName}`
         });
+        // console.log("contribution:", contribution)
     };
-
     const handleContributionLeave = () => {
         setTooltip({ ...tooltip, visible: false });
     };
@@ -115,7 +115,15 @@ const ProjectPage = ({ projectName, projectId }: any) => {
         // renderVisibleTiles();
     };
 
-
+    useEffect(() => {
+        if (selectedContributionId && listItemRefs.current[selectedContributionId]) {
+            // Step 3: Agar selected ID hai, to us element par scroll karo.
+            listItemRefs.current[selectedContributionId].scrollIntoView({
+                behavior: 'smooth', // Smooth scrolling
+                block: 'center'    // Element ko screen ke center mein laao
+            }) ;
+        }
+    }, [selectedContributionId]); // Yeh effect sirf tab chalega jab selection badlega.
     useLayoutEffect(() => {
         const updateSize = () => {
             if (canvasContainerRef.current) {
@@ -286,6 +294,7 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                 </div>
             </div>
             <ContributionSidebar
+                projectId={projectId}
                 contributions={savedStrokes} // TODO: Isay proper contribution objects mein badalna hoga
                 selectedContributionId={selectedContributionId}
                 onContributionSelect={setSelectedContributionId}
@@ -295,6 +304,7 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                     isSaving: isSaving,
                     saveError: saveError
                 }}
+                listItemRefs={listItemRefs}
             />
         </div>
     );

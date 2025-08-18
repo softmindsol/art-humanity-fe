@@ -7,7 +7,6 @@ import NotFoundPage from './components/PageNotFound';
 import GuidelinePage from './page/guideline';
 import GalleryPage from './page/gallery';
 import ActiveProjects from './page/contribute/';
-import DemoCanvas from './page/Demo';
 import VerifyEmail from './page/VerifyEmail';
 import ResetPassword from './page/ResetPassword';
 import ProfilePage from './page/profile';

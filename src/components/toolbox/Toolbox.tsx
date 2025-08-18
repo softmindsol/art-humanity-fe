@@ -9,8 +9,8 @@ import {
     setBrushMode,
     setBrushSize,
     setBrushColor
-} from '@/redux/slice/paintPixel';
-import { selectCurrentBrush } from '@/redux/slice/paintPixel';
+} from '@/redux/slice/contribution';
+import { selectCurrentBrush } from '@/redux/slice/contribution';
 
 const Toolbox = () => {
     const dispatch = useDispatch();

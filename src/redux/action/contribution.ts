@@ -21,7 +21,10 @@ export const createStroke = createAsyncThunk(
 export const createContribution = createAsyncThunk(
   "paintPixel/createContribution",
   // Payload ab ek object hoga: { projectId, strokes }
-  async (contributionData: { projectId: string; strokes: any[] }, thunkAPI) => {
+  async (
+    contributionData: { projectId: string; strokes: any[]; userId:string },
+    thunkAPI
+  ) => {
     try {
       // Naya API endpoint: POST /api/contributions
       const response = await api.post(`/contributions`, contributionData);
@@ -37,17 +40,66 @@ export const createContribution = createAsyncThunk(
 
 export const getContributionsByProject = createAsyncThunk(
   "paintPixel/getContributionsByProject",
-  async ({ projectId }: { projectId: string }, thunkAPI) => {
+  // Step 1: Payload object ab 'sortBy' bhi accept karega.
+  async (
+    { projectId, sortBy }: { projectId: string; sortBy?: string },
+    thunkAPI
+  ) => {
     try {
-      console.log(`Fetching contributions for projectId: ${projectId}`);
-      // Naya API endpoint: GET /api/projects/:projectId/contributions
-      const response = await api.get(`/contributions/project/${projectId}`);
-      // Backend se contributions ka array return hoga
+      // Step 2: API call mein 'sortBy' parameter ko shamil karein.
+      let url = `/contributions/project/${projectId}`;
+      if (sortBy) {
+        url += `?sortBy=${sortBy}`;
+      }
+
+      const response = await api.get(url);
       return response.data.data;
     } catch (error: any) {
       return thunkAPI.rejectWithValue(
         error.response?.data?.message || "Failed to fetch contributions"
       );
+    }
+  }
+);
+
+
+// --- NAYA VOTE THUNK ---
+export const voteOnContribution = createAsyncThunk(
+  "paintPixel/voteOnContribution",
+  // Payload ab ek object hoga: { contributionId, voteType }
+  async (
+    {
+      contributionId,
+      voteType,
+      userId,
+    }: { contributionId: string; voteType: "up" | "down"; userId:string | null },
+    thunkAPI
+  ) => {
+    try {
+      // Naya API endpoint: POST /api/contributions/:id/vote
+      const response = await api.post(`/contributions/${contributionId}/vote`, {
+        voteType,
+        userId,
+      });
+
+      // Backend ab poora, updated contribution object wapas bhejega
+      return response.data.data;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || "Failed to register vote"
+      );
+    }
+  }
+);
+
+export const deleteContribution = createAsyncThunk(
+  "paintPixel/deleteContribution",
+  async ({ contributionId }: { contributionId: string }, thunkAPI) => {
+    try {
+      const response = await api.delete(`/contributions/${contributionId}`);
+      return response.data.data; // Yeh { contributionId: '...' } wapas bhejega
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error.response?.data?.message);
     }
   }
 );

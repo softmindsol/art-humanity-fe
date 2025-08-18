@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 const CreateProjectPage = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch<AppDispatch>();
-  const generateCanvasId = () => `canvas_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    const generateCanvasId = () => `canvas_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
     // Step 1: User ko Redux store se nikalein (Aapne yeh bilkul sahi kiya hai)
     const user = useSelector((state: RootState) => state?.auth?.user);
@@ -57,7 +57,7 @@ const CreateProjectPage = () => {
                    transition"
                 aria-label="Go back"
             >
-                <ArrowLeft  className="w-5 h-5" />
+                <ArrowLeft className="w-5 h-5" />
                 <span className="hidden sm:inline">Back</span>
             </Button>
             <div className="max-w-4xl mx-auto px-4">

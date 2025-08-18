@@ -4,7 +4,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import TiledCanvas from '@/components/common/KonvaCanvas';
 import type { AppDispatch } from '@/redux/store';
 import { fetchProjectById } from '@/redux/action/project';
 import { selectCurrentProject, selectProjectsLoading, selectProjectsError, clearCurrentProject } from '@/redux/slice/project';
