@@ -1,18 +1,20 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { createProject, fetchActiveProjects, fetchProjectById } from "../action/project";
+import { createProject, fetchActiveProjects, fetchProjectById, joinProject } from "../action/project";
 
-const initialState = {
+const initialState:any = {
   projects: [], // Saare projects ki list
   currentProject: null, // Jo project abhi khula hua hai
   loading: {
     creating: false,
     fetching: false,
     fetchingById: false,
+    joining: false, // Nayi loading state
   },
   error: {
     creating: null,
     fetching: null,
     fetchingById: null,
+    joining: null, // Nayi error state
   },
 };
 
@@ -69,6 +71,21 @@ const projectSlice = createSlice({
         state.loading.fetchingById = false;
         state.error.fetchingById = action.payload as any;
       });
+
+        builder
+          .addCase(joinProject.pending, (state) => {
+            state.loading.joining = true;
+            state.error.joining = null;
+          })
+          .addCase(joinProject.fulfilled, (state, action) => {
+            state.loading.joining = false;
+            // 'currentProject' ko backend se aane wale naye data se update karein
+            state.currentProject = action.payload;
+          })
+          .addCase(joinProject.rejected, (state, action) => {
+            state.loading.joining = false;
+            state.error.joining = action.payload as any;
+          });
   }, 
 });
 

@@ -25,6 +25,7 @@ interface User {
   fullName: string;
   token: string;
   avatar?: string | null;
+  role: string;
 }
 
 

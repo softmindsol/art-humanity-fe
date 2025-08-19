@@ -7,11 +7,12 @@ import {
     selectProjectsError
 } from '@/redux/slice/project';
 import { fetchActiveProjects } from '@/redux/action/project';
-import type { AppDispatch } from '@/redux/store';
+import type { AppDispatch, RootState } from '@/redux/store';
 import { getImageUrl } from '@/utils/publicUrl';
 
 const ActiveProjects: React.FC = () => {
-    const dispatch = useDispatch<AppDispatch>();
+        const user = useSelector((state: RootState) => state?.auth?.user);
+        const dispatch = useDispatch<AppDispatch>();
 
     // Redux store se data nikalein
     const projects = useSelector(selectAllProjects);
@@ -46,7 +47,7 @@ const ActiveProjects: React.FC = () => {
                 <h2>Active Projects</h2>
                 <p style={{ color: '#8d6e63' }}>Enter a project, or sign up to contribute!</p>
             </section>
-            <section className='flex items-center justify-center'>
+         { user?.role==='admin' &&  (<section className='flex items-center justify-center'>
                 <div>
                     <Link
                         to="/create-project"
@@ -55,8 +56,8 @@ const ActiveProjects: React.FC = () => {
                         Create a New Project
                     </Link>
                 </div>
-            </section>
-
+            </section>)
+}
             <section className="projects-grid mt-5">
                 {/* Step 2: Conditional Rendering */}
                 {isLoading && <LoadingSpinner />}

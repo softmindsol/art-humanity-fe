@@ -36,7 +36,7 @@ const TiledCanvasPage: React.FC = () => {
             <div className="flex flex-col items-center justify-center mt-14">
                 <h2 className="text-2xl mb-2">Error</h2>
                 <p className="text-red-600">{error}</p>
-                <Button className="mt-6" onClick={() => navigate('/projects')}>Go back to Project List</Button>
+                <Button className="mt-6 " onClick={() => navigate('/projects')}>Go back to Project List</Button>
             </div>
         );
     }
@@ -45,7 +45,7 @@ const TiledCanvasPage: React.FC = () => {
         return (
             <div className="flex flex-col items-center justify-center mt-14">
                 <h2 className="text-2xl">Project not found!</h2>
-                <Button className="mt-6" onClick={() => navigate('/projects')}>Go back to Project List</Button>
+                <Button className="mt-6 cursor-pointer" onClick={() => navigate('/projects')}>Go back to Project List</Button>
             </div>
         );
     }
@@ -58,7 +58,7 @@ const TiledCanvasPage: React.FC = () => {
                 className="absolute left-10 top-20 sm:top-36 inline-flex items-center gap-2
                    rounded-xl border border-gray-200 bg-white/80 backdrop-blur
                    px-3 py-2 text-[#5d4037] hover:text-[#3e2723] shadow-sm hover:shadow
-                   transition"
+                   transition cursor-pointer"
                 aria-label="Go back"
             >
                 <ArrowLeft className="w-5 h-5" />

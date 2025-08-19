@@ -14,6 +14,7 @@ const config = {
     PROJECT_CREATE: "/projects/create",
     FETCH_ACTIVE_PROJECT: "/projects",
     FETCH_PROJECT_BY_ID: "/projects",
+    JOIN_AS_CONTRIBUTOR: "/projects",
   },
 };
 
