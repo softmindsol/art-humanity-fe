@@ -17,32 +17,42 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { useCanvasState } from '@/hook/useCanvasState';
-import { useDispatch } from 'react-redux';
-import type { AppDispatch, RootState } from '@/redux/store';
+import type { RootState } from '@/redux/store';
 import { clearCanvas, generateTimelapseVideo, getContributionsByProject } from '@/redux/action/contribution';
 import InfoBox from '@/components/toolbox/InfoBox';
 import { useSelector } from 'react-redux';
-import { clearCanvasData, selectCanvasData, selectErrorForOperation, selectIsLoadingOperation } from '@/redux/slice/contribution';
+import { clearCanvasData, selectCanvasData, selectErrorForOperation, selectIsLoadingOperation, selectTimelapseUrl } from '@/redux/slice/contribution';
 import ContributionSidebar from '@/components/ContributionSidebar';
 import { joinProject } from '@/redux/action/project';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { toast } from 'sonner';
+import useAuth from '@/hook/useAuth';
+import useAppDispatch from '@/hook/useDispatch';
+import { openAuthModal } from '@/redux/slice/opeModal';
 
- 
+
 const TILE_SIZE = 512; // Optimal tile size for performance
 
 const ProjectPage = ({ projectName, projectId }: any) => {
-    const user = useSelector((state: RootState) => state?.auth?.user);
-    const navigate = useNavigate(); // For redirecting
-    const dispatch = useDispatch<AppDispatch>();
+    const { user } = useAuth();
+    const dispatch = useAppDispatch();
     const canvasContainerRef = useRef<any>(null);
     const [canvasSize, setCanvasSize] = useState<any>({ width: 0, height: 0 });
     const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, text: '' });
     const [selectedContributionId, setSelectedContributionId] = useState(null);
+    const [isGeneratingTimelapse, setIsGeneratingTimelapse] = useState(false);
     const listItemRefs = useRef<any>({});
-    const { currentProject, loading } = useSelector((state:RootState) => state?.projects);
+    const { currentProject, loading } = useSelector((state: RootState) => state?.projects);
     const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
+    const [loginDialogDismissed, setLoginDialogDismissed] = useState(false);
+
+    const [isTimelapseOpen, setIsTimelapseOpen] = useState(false);
+
+    // --- REDUX STATE for Timelapse ---
+    const timelapseUrl = useSelector(selectTimelapseUrl);
+    const isGenerating = useSelector(selectIsLoadingOperation('generateTimelapse'));
+    const generationError = useSelector(selectErrorForOperation('generateTimelapse'));
     const savedStrokes = useSelector(selectCanvasData);
     const isSaving = useSelector(selectIsLoadingOperation('createContribution')); // Updated to new state
     const saveError = useSelector(selectErrorForOperation('createContribution')); // Updated to new state
@@ -64,11 +74,15 @@ const ProjectPage = ({ projectName, projectId }: any) => {
 
     const handleGenerateTimelapse = () => {
         if (!projectId) {
-            alert("Session ID is not available.");
+            toast.error("Project ID is not available.");
             return;
         }
-        console.log(`Requesting timelapse for session: ${projectId}`);
-        dispatch(generateTimelapseVideo({ projectId }) as any);
+
+        setIsGeneratingTimelapse(true)
+        dispatch(generateTimelapseVideo({ projectId })).unwrap().finally(() => {
+            setIsGeneratingTimelapse(false);
+            setIsTimelapseOpen(true);
+        }) as any;
     };
     const handleClearCanvas = () => {
         dispatch(clearCanvas({ projectId }));
@@ -121,7 +135,7 @@ const ProjectPage = ({ projectName, projectId }: any) => {
         // renderVisibleTiles();
     };
 
-    const showLoginDialog = !!currentProject && !user;
+    const showLoginDialog = !!currentProject && !user && !loginDialogDismissed;
     const showJoinDialog = isJoinDialogOpen && !showLoginDialog;
 
     const isCurrentUserAContributor = useMemo(() => {
@@ -131,10 +145,14 @@ const ProjectPage = ({ projectName, projectId }: any) => {
         return currentProject.contributors.includes(user?.id);
     }, [currentProject, user]);
 
-       const handleJoin = () => {
-        dispatch(joinProject({projectId,userId:user?.id}));
+    const handleJoin = () => {
+        dispatch(joinProject({ projectId, userId: user?.id }));
     };
-
+    const handleGuestCanvasInteraction = () => {
+        console.log("A guest is trying to draw. Opening login modal.");
+        // Login dialog ko dobara 'un-dismiss' kar dein taake woh nazar aaye
+        setLoginDialogDismissed(false);
+    };
     useEffect(() => {
         // Automatically open the dialog if the user is logged in but not a contributor
         // and the project data has loaded.
@@ -145,6 +163,11 @@ const ProjectPage = ({ projectName, projectId }: any) => {
         }
     }, [currentProject, user, isCurrentUserAContributor]);
 
+    useEffect(() => {
+        if (isTimelapseOpen) {
+            dispatch(generateTimelapseVideo({ projectId }));
+        }
+    }, [isTimelapseOpen, projectId, dispatch]);
 
     useEffect(() => {
         if (selectedContributionId && listItemRefs.current[selectedContributionId]) {
@@ -152,10 +175,10 @@ const ProjectPage = ({ projectName, projectId }: any) => {
             listItemRefs.current[selectedContributionId].scrollIntoView({
                 behavior: 'smooth', // Smooth scrolling
                 block: 'center'    // Element ko screen ke center mein laao
-            }) ;
+            });
         }
     }, [selectedContributionId]); // Yeh effect sirf tab chalega jab selection badlega.
-  
+
     useLayoutEffect(() => {
         const updateSize = () => {
             if (canvasContainerRef.current) {
@@ -224,12 +247,12 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                             </button> */}
 
                             <button
-                                // onClick={handleGenerateTimelapse}
-                                // disabled={isGeneratingTimelapse}
+                                onClick={handleGenerateTimelapse}
+                                disabled={isGeneratingTimelapse}
                                 className="bg-[#003366] text-white border-none text-[12px] md:text-[16px] px-2 py-2 md:px-4 md:py-2  rounded cursor-pointer flex items-center gap-2 disabled:opacity-50"
                             >
                                 <Film size={16} />
-                                {false ? 'Generating...' : 'Create Timelapse'}
+                                {isGeneratingTimelapse ? 'Generating...' : 'Create Timelapse'}
                             </button>
                             <AlertDialog open={isClearAlertOpen} onOpenChange={setIsClearAlertOpen}>
 
@@ -280,13 +303,13 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                                 <Grid size={16} />
                                 {true ? 'Hide Grid' : 'Show Grid'}
                             </button> */}
-                          
+
                         </div>
                         {/* Canvas Container (Aapki CSS classes ke sath) */}
-                     
+
                         <div className='text-[1rem]  bg-[#F5F5DC] text-[#5D4037] px-4 py-4 rounded-[5px] shadow-md mt-4 mb-6'>
                             <p>Use the mouse wheel to zoom, right-click to pan, and left click to draw when zoomed in to at least 100%. Drag the drawings tools and canvas info boxes to wherever you like. Use the scale reference on the right and bottom sides of the viewport to keep scale while drawing.</p>
-                     </div>
+                        </div>
                         <div className="canvas-count w-full ">
                             <div className="stat-item">
                                 <span className="stat-label">Total Contributors:</span>
@@ -317,12 +340,14 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                                     onContributionHover={handleContributionHover}
                                     onContributionLeave={handleContributionLeave}
                                     onContributionSelect={setSelectedContributionId}
+                                    onGuestInteraction={handleGuestCanvasInteraction}
+
 
                                 />
                             )}
 
                         </div>
-                      
+
                         <InfoBox
                             zoom={canvasStats.zoom}
                             worldPos={canvasStats.worldPos}
@@ -371,7 +396,11 @@ const ProjectPage = ({ projectName, projectId }: any) => {
             </Dialog>
 
             {/* --- "LOGIN TO CONTRIBUTE" DIALOG --- */}
-            <Dialog open={showLoginDialog}>
+            <Dialog open={showLoginDialog} onOpenChange={(isOpen) => {
+                if (!isOpen) {
+                    setLoginDialogDismissed(true); // Agar dialog band ho, to usay dismiss mark kar dein
+                }
+            }}>
                 <DialogContent className="bg-[#5d4037] border-2 border-[#3e2723] text-white font-[Georgia, serif]">
                     <DialogHeader>
                         <DialogTitle className="text-2xl !text-white text-center">Want to Contribute?</DialogTitle>
@@ -380,16 +409,21 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
+                        {/* DialogClose ab "Stay as Guest" ka kaam karega */}
                         <DialogClose asChild>
                             <Button variant="outline" className="cursor-pointer">Stay as Guest</Button>
                         </DialogClose>
-                        <Button onClick={() => navigate('/login')} className="cursor-pointer border-white bg-[#8b795e] text-white hover:bg-[#a1887f]">
+                        <Button onClick={() =>{ 
+                            dispatch(openAuthModal());
+                            setLoginDialogDismissed(true)
+                        }} className="cursor-pointer border-white bg-[#8b795e] text-white hover:bg-[#a1887f] disabled:opacity-50"
+>
                             Login or Sign Up
                         </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-           
+
 
             <ContributionSidebar
                 projectId={projectId}
@@ -403,7 +437,49 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                     saveError: saveError
                 }}
                 listItemRefs={listItemRefs}
+                onGuestVoteAttempt={handleGuestCanvasInteraction}
+
             />
+            <Dialog open={isTimelapseOpen} onOpenChange={setIsTimelapseOpen}>
+                <DialogContent className="bg-[#5d4037] border-2 border-[#3e2723] text-white font-[Georgia, serif] max-w-3xl">
+                    <DialogHeader>
+                        <DialogTitle className="text-2xl !text-white text-center">Project Timelapse</DialogTitle>
+                    </DialogHeader>
+
+                    <div className="min-h-[400px] flex justify-center items-center p-4">
+                        {/* Case 1: Loading State */}
+                        {isGenerating && (
+                            <div className="text-center">
+                                <div className="w-12 h-12 border-4 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                                <p className="text-lg">Generating your timelapse...</p>
+                                <p className="text-sm text-gray-400">This might take a moment.</p>
+                            </div>
+                        )}
+
+                        {/* Case 2: Error State */}
+                        {!isGenerating && generationError && (
+                            <div className="text-center text-red-400">
+                                <h3 className="text-xl font-bold mb-2">Error!</h3>
+                                <p>Failed to generate the timelapse.</p>
+                                <p className="text-xs text-gray-500 mt-1">{generationError}</p>
+                            </div>
+                        )}
+
+                        {/* Case 3: Success State (Video Ready) */}
+                        {!isGenerating && timelapseUrl && (
+                            <video
+                                key={timelapseUrl} // Key ensures the video re-renders if the URL changes
+                                src={`${import.meta.env.VITE_BASE}${timelapseUrl}`}
+                                controls
+                                autoPlay
+                                className="w-full max-h-[70vh] rounded-lg"
+                            >
+                                Your browser does not support the video tag.
+                            </video>
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };

@@ -1,18 +1,18 @@
 // src/pages/TiledCanvasPage.tsx
 import React, { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import type { AppDispatch } from '@/redux/store';
 import { fetchProjectById } from '@/redux/action/project';
 import { selectCurrentProject, selectProjectsLoading, selectProjectsError, clearCurrentProject } from '@/redux/slice/project';
 import ProjectPage from '../projectPage';
+import useAppDispatch from '@/hook/useDispatch';
 
 const TiledCanvasPage: React.FC = () => {
     const { projectId } = useParams<{ projectId: string }>();
     const navigate = useNavigate();
-    const dispatch = useDispatch<AppDispatch>();
+    const dispatch = useAppDispatch();
 
     const project = useSelector(selectCurrentProject);
     const loading = useSelector(selectProjectsLoading).fetchingById;

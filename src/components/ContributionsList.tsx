@@ -1,18 +1,23 @@
 
+import useAuth from '@/hook/useAuth';
+import useAppDispatch from '@/hook/useDispatch';
 import { deleteContribution, getContributionsByProject, voteOnContribution } from '@/redux/action/contribution';
-import type { AppDispatch, RootState } from '@/redux/store';
 import { ArrowBigUp, ArrowBigDown, Trash2 } from 'lucide-react';
-import { useSelector } from 'react-redux';
-import { useDispatch } from 'react-redux';
 
-const ContributionsList = ({ projectId,contributions, selectedContributionId, onContributionSelect, listItemRefs }: any) => {
-    const dispatch = useDispatch<AppDispatch>(); // Dispatch function hasil karein
-    const user = useSelector((state: RootState) => state?.auth?.user);
+
+const ContributionsList = ({ projectId, contributions, selectedContributionId, onContributionSelect, listItemRefs, onGuestVoteAttempt }: any) => {
+    const dispatch = useAppDispatch();
+    const { user } = useAuth();
 
     const handleVote = (contributionId: any, voteType: any, userId: any) => {
+        if (!user) {
+            // Step 2: Agar nahi, to parent ko khabar dein aur function rok dein
+            onGuestVoteAttempt();
+            return;
+        }
         // Thunk ko zaroori data ke sath dispatch karein
         dispatch(voteOnContribution({ contributionId, voteType, userId })).unwrap()
-                dispatch(getContributionsByProject({ projectId, sortBy:"newest" })); // Contributions ko update karne ke liye
+        dispatch(getContributionsByProject({ projectId, sortBy:"newest" })); // Contributions ko update karne ke liye
         
 
     };
@@ -86,7 +91,7 @@ const ContributionsList = ({ projectId,contributions, selectedContributionId, on
                                         <button className="text-gray-500 hover:text-blue-600"><MessageSquare size={18} /></button>
                                         <span className="font-semibold text-blue-600">1</span>
                                     </div> */}
-                                    {true && (
+                                    {user?.role ==='admin' && (
                                         <button
                                             onClick={() => dispatch(deleteContribution({ contributionId: contrib._id }))}
                                             className="text-gray-500 hover:text-red-700 ml-auto cursor-pointer"

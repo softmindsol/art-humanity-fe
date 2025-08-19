@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import AuthModal from '../modal/AuthModal';
 import { useSelector } from 'react-redux';
@@ -6,10 +6,11 @@ import { getUserById, logoutUser } from '@/redux/action/auth';
 import type { RootState } from '@/redux/store';
 import useAppDispatch from '@/hook/useDispatch';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '../ui/dropdown-menu';
+import { openAuthModal, closeAuthModal, selectIsAuthModalOpen } from '@/redux/slice/opeModal';
 
 const Header = () => {
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const dispatch = useAppDispatch();
+  const isAuthModalOpen = useSelector(selectIsAuthModalOpen);
+    const dispatch = useAppDispatch();
   const { user, profile } = useSelector((state: RootState) => state.auth);
 
   const handleLogout = () => {
@@ -48,11 +49,13 @@ const Header = () => {
               <ul>
                 <li><NavLink to="/guideline">Guideline</NavLink></li>
                 {
-                  user!=null &&   <li><NavLink to="/gallery">Gallery</NavLink></li>
+                  // user!=null &&   
+                  <li><NavLink to="/gallery">Gallery</NavLink></li>
                   
                 }
                 {
-                  user != null && <li><NavLink to="/projects">Contribute</NavLink></li>
+                  // user != null && 
+                  <li><NavLink to="/projects">Contribute</NavLink></li>
 
                 }
                
@@ -108,7 +111,7 @@ const Header = () => {
                 <button
                   id="sign-in-btn" 
                   className="btn-auth"
-                  onClick={() => setIsAuthModalOpen(true)}
+                    onClick={() => dispatch(openAuthModal())}
                 >
                   Sign In
                 </button>
@@ -119,7 +122,7 @@ const Header = () => {
       </div> 
  
       {/* Modal renders conditionally */}
-      {isAuthModalOpen && <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />}
+      {isAuthModalOpen && <AuthModal isOpen={isAuthModalOpen} onClose={() => dispatch(closeAuthModal())} />}
     </>
   );
 };

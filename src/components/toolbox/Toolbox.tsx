@@ -1,7 +1,7 @@
 // src/components/Toolbox.js
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { Brush, Eraser, Move } from 'lucide-react';
 
 // Apne Redux slice se actions aur selectors import karein
@@ -11,9 +11,10 @@ import {
     setBrushColor
 } from '@/redux/slice/contribution';
 import { selectCurrentBrush } from '@/redux/slice/contribution';
+import useAppDispatch from '@/hook/useDispatch';
 
 const Toolbox = () => {
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
     const brushState = useSelector(selectCurrentBrush);
 
     // --- DRAGGING LOGIC STATE & REFS ---

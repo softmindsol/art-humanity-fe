@@ -2,19 +2,18 @@
 import { useEffect, useMemo, useState } from 'react';
 import ContributionsList from './ContributionsList';
 import { getContributionsByProject } from '@/redux/action/contribution';
-import type { AppDispatch, RootState } from '@/redux/store';
-import { useDispatch } from 'react-redux';
-import { useSelector } from 'react-redux';
+import useAuth from '@/hook/useAuth';
+import useAppDispatch from '@/hook/useDispatch';
 
 
 const SIDEBAR_WIDTH = 350; // Sidebar ki width ko ek variable mein rakhein
 
-const ContributionSidebar = ({ projectId, contributions, selectedContributionId, onContributionSelect, listItemRefs }: any) => {
+const ContributionSidebar = ({ projectId, contributions, selectedContributionId, onContributionSelect, listItemRefs, onGuestVoteAttempt }: any) => {
     const [isOpen, setIsOpen] = useState(false); // Sidebar ki open/close state
     const [activeTab, setActiveTab] = useState('project'); // 'project' ya 'my'
     const [filter, setFilter] = useState('newest'); // Default filter
-    const dispatch = useDispatch<AppDispatch>(); // Dispatch function hasil karein
-    const user = useSelector((state: RootState) => state?.auth?.user);
+    const dispatch = useAppDispatch();
+    const { user } = useAuth();
     const currentUserId = user?.id; // Current user ID
 
     const displayedContributions = useMemo(() => {
@@ -105,17 +104,17 @@ const ContributionSidebar = ({ projectId, contributions, selectedContributionId,
                         <p className="text-sm text-gray-600 mb-4">
                             If a contribution receives over 50% downvotes from all project contributors it will be rejected and permanently deleted from the canvas...
                         </p>
-                        <div className="flex items-center gap-4 mb-4">
+                        <div className="flex items-center  gap-8 mb-4">
                             <label htmlFor="filter" className="font-semibold text-gray-700">
                                 Filter By:
                             </label>
 
-                            <div className="relative w-[230px]">
+                            <div className="relative w-[200px]">
                                 <select
                                     id="filter"
                                     value={filter}
                                     onChange={(e) => setFilter(e.target.value)}
-                                    className="block w-full appearance-none p-2 pr-8 border border-gray-300 rounded-md"
+                                    className="block w-full appearance-none text-[14px] p-2 pr-8 border border-gray-300 rounded-md"
                                 >
                                     <option value="newest">Newest First</option>
                                     <option value="oldest">Oldest First</option>
@@ -150,6 +149,8 @@ const ContributionSidebar = ({ projectId, contributions, selectedContributionId,
                             onContributionSelect={onContributionSelect}
                             listItemRefs={listItemRefs}
                             projectId={projectId}
+                            onGuestVoteAttempt={onGuestVoteAttempt}
+
                         />
 
 

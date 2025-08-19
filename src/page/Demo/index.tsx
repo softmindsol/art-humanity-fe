@@ -2,7 +2,7 @@ import React, { useEffect, useCallback } from 'react';
 import { Brush, Eraser, Move, Grid, Undo, Redo } from 'lucide-react'; // Grid icon imported
 import { useCanvasState } from '@/hook/useCanvasState';
 import type { Position, Tile } from '@/types/canvas';
-import { useDispatch, useSelector } from 'react-redux';
+import {  useSelector } from 'react-redux';
 import {
     Dialog,
     DialogContent,
@@ -17,6 +17,7 @@ import {
     setBrushSize,
     selectCanvasData,
 } from '@/redux/slice/contribution';
+import useAppDispatch from '@/hook/useDispatch';
 
 
 // --- CONSTANTS ---
@@ -27,7 +28,7 @@ const VIEWPORT_HEIGHT = 1024; // Fixed viewport height
 
 
 const DemoCanvas: React.FC = () => {
-    const dispatch = useDispatch();
+    const dispatch = useAppDispatch();
 
     // --- REDUX STATE ---
     // Get state directly from the Redux store

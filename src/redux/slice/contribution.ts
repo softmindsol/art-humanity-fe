@@ -79,7 +79,6 @@ const paintPixelSlice = createSlice({
   },
 
   extraReducers: (builder) => {
-    // --- NAYE AUR ZAROORI REDUCERS ---
 
     // Create Contribution
     builder

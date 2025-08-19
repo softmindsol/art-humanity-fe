@@ -1,19 +1,20 @@
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
+import {  useSelector } from 'react-redux';
 import {
     selectAllProjects,
     selectProjectsLoading,
     selectProjectsError
 } from '@/redux/slice/project';
 import { fetchActiveProjects } from '@/redux/action/project';
-import type { AppDispatch, RootState } from '@/redux/store';
 import { getImageUrl } from '@/utils/publicUrl';
+import useAppDispatch from '@/hook/useDispatch';
+import useAuth from '@/hook/useAuth';
 
 const ActiveProjects: React.FC = () => {
-        const user = useSelector((state: RootState) => state?.auth?.user);
-        const dispatch = useDispatch<AppDispatch>();
-
+       const { user } = useAuth();
+       const dispatch = useAppDispatch();
+    
     // Redux store se data nikalein
     const projects = useSelector(selectAllProjects);
     const isLoading = useSelector(selectProjectsLoading).fetching;

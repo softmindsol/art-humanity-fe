@@ -1,16 +1,15 @@
 import { useEffect, useState, } from "react";
 import { Navigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
-import { useSelector } from "react-redux";
 import api from "@/api/api";
-import type { RootState } from "@/redux/store";
+import useAuth from "@/hook/useAuth";
 
 interface PublicRouteProps {
   children: any;
 }
 
 const PublicRoute: React.FC<PublicRouteProps> = ({ children }) => {
-  const user = useSelector((state: RootState) => state?.auth?.user);
+  const { user } = useAuth();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
