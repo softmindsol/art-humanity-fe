@@ -104,7 +104,7 @@ const ActiveProjects: React.FC = () => {
                                 </div>
                             </div>
                             {/* Link ko dynamic banayein taaki woh sahi canvas page par jaye */}
-                            <Link to={`/project/${project._id}`} className="btn-contribute !text-white">
+                            <Link to={`/project/${project._id}`} className="btn-contribute !text-black !bg-[#d4af37] hover:!bg-[#b38f2c]">
                                 Enter Project
                             </Link> 
                         </div>
