@@ -3,7 +3,7 @@
 import Toolbox from '@/components/toolbox/Toolbox';
 import { useState, useRef, useLayoutEffect, useEffect, useMemo } from 'react';
 import KonvaCanvas from '../../components/common/KonvaCanvas';
-import { Grid, Film } from 'lucide-react'; // Grid icon imported
+import {  Film } from 'lucide-react'; // Grid icon imported
 
 import {
     AlertDialog,
@@ -246,15 +246,15 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                                 Load Image
                             </button> */}
 
-                            <button
+                           { user?.role=='admin' && <button
                                 onClick={handleGenerateTimelapse}
                                 disabled={isGeneratingTimelapse}
                                 className="bg-[#003366] text-white border-none text-[12px] md:text-[16px] px-2 py-2 md:px-4 md:py-2  rounded cursor-pointer flex items-center gap-2 disabled:opacity-50"
                             >
                                 <Film size={16} />
                                 {isGeneratingTimelapse ? 'Generating...' : 'Create Timelapse'}
-                            </button>
-                            <AlertDialog open={isClearAlertOpen} onOpenChange={setIsClearAlertOpen}>
+                            </button>}
+                            {user?.role == 'admin' &&  <AlertDialog open={isClearAlertOpen} onOpenChange={setIsClearAlertOpen}>
 
 
                                 <AlertDialogTrigger asChild>
@@ -293,7 +293,7 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                                         </AlertDialogAction>
                                     </AlertDialogFooter>
                                 </AlertDialogContent>
-                            </AlertDialog>
+                            </AlertDialog>}
 
                             {/* <button
                                 // onClick={() => setShowGrid(!showGrid)}
