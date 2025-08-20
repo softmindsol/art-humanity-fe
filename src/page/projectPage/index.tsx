@@ -47,15 +47,10 @@ const ProjectPage = ({ projectName, projectId }: any) => {
     const { currentProject, loading } = useSelector((state: RootState) => state?.projects);
     const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
     const [loginDialogDismissed, setLoginDialogDismissed] = useState(false);
-
     // --- NAYI LOGIC: Read-only mode ko check karein ---
     const [searchParams] = useSearchParams();
     const isReadOnly = searchParams.get('view') === 'gallery';
-
-    console.log("currentProject:", currentProject?.stats?.contributorCount)
-
     const [isTimelapseOpen, setIsTimelapseOpen] = useState(false);
-
     // --- REDUX STATE for Timelapse ---
     const timelapseUrl = useSelector(selectTimelapseUrl);
     const isGenerating = useSelector(selectIsLoadingOperation('generateTimelapse'));
@@ -70,22 +65,16 @@ const ProjectPage = ({ projectName, projectId }: any) => {
         setIsClearAlertOpen,
     } = useCanvasState();
 
-
     const [canvasStats, setCanvasStats] = useState({
         zoom: 1,
         worldPos: { x: 0, y: 0 },
     });
-
-
-   
-
 
     const handleGenerateTimelapse = () => {
         if (!projectId) {
             toast.error("Project ID is not available.");
             return;
         }
-
         setIsGeneratingTimelapse(true)
         dispatch(generateTimelapseVideo({ projectId })).unwrap().finally(() => {
             setIsGeneratingTimelapse(false);
@@ -117,8 +106,7 @@ const ProjectPage = ({ projectName, projectId }: any) => {
         setTooltip({ ...tooltip, visible: false });
     };
 
-    // Yeh function KonvaCanvas se state receive karega
-
+  
 
     const handleCanvasStateChange = (newState: any) => {
         setCanvasStats(prev => ({ ...prev, ...newState }));

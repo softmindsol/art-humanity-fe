@@ -32,9 +32,9 @@ const ContributionsList = ({
 
     const handleDelete = (e: any, contributionId: any) => {
         e.stopPropagation();
-        if (confirm('Are you sure you want to delete this contribution?')) {
+        // if (confirm('Are you sure you want to delete this contribution?')) {
             dispatch(deleteContribution({ contributionId }));
-        }
+        // }
     };
 
     if (!contributions || contributions.length === 0) {

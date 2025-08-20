@@ -12,13 +12,9 @@ import useAppDispatch from '@/hook/useDispatch';
 
 const GalleryPage: React.FC = () => {
     const dispatch = useAppDispatch();
-
-    // Redux store se gallery ka data nikalein
     const projects = useSelector(selectGalleryProjects);
     const isLoading = useSelector(selectProjectsLoading).fetchingGallery;
     const error = useSelector(selectProjectsError).fetchingGallery;
-
-    console.log('Gallery Projects:', projects, 'Loading:', isLoading, 'Error:', error);
   
     useEffect(() => {
         console.log("useEffect is running, dispatching fetchGalleryProjects..."); // <-- YEH LINE BHI ADD KAREIN
