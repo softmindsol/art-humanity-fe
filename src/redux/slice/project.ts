@@ -1,19 +1,28 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { createProject, fetchActiveProjects, fetchProjectById, joinProject } from "../action/project";
+import {
+  createProject,
+  fetchActiveProjects,
+  fetchProjectById,
+  joinProject,
+  updateProjectStatus,
+} from "../action/project";
 
-const initialState:any = {
+const initialState: any = {
   projects: [], // Saare projects ki list
   currentProject: null, // Jo project abhi khula hua hai
   loading: {
     creating: false,
     fetching: false,
     fetchingById: false,
+    updatingStatus: false,
+
     joining: false, // Nayi loading state
   },
   error: {
     creating: null,
     fetching: null,
     fetchingById: null,
+    updatingStatus: null,
     joining: null, // Nayi error state
   },
 };
@@ -33,9 +42,9 @@ const projectSlice = createSlice({
         state.loading.creating = true;
         state.error.creating = null;
       })
-      .addCase(createProject.fulfilled, (state:any, action) => {
+      .addCase(createProject.fulfilled, (state: any, action) => {
         state.loading.creating = false;
-        state.projects.push(action.payload) ;
+        state.projects.push(action.payload);
       })
       .addCase(createProject.rejected, (state, action) => {
         state.loading.creating = false;
@@ -72,20 +81,41 @@ const projectSlice = createSlice({
         state.error.fetchingById = action.payload as any;
       });
 
-        builder
-          .addCase(joinProject.pending, (state) => {
-            state.loading.joining = true;
-            state.error.joining = null;
-          })
-          .addCase(joinProject.fulfilled, (state, action) => {
-            state.loading.joining = false;
-            // 'currentProject' ko backend se aane wale naye data se update karein
-            state.currentProject = action.payload;
-          })
-          .addCase(joinProject.rejected, (state, action) => {
-            state.loading.joining = false;
-            state.error.joining = action.payload as any;
-          });
+    builder
+      .addCase(joinProject.pending, (state) => {
+        state.loading.joining = true;
+        state.error.joining = null;
+      })
+      .addCase(joinProject.fulfilled, (state, action) => {
+        state.loading.joining = false;
+        // 'currentProject' ko backend se aane wale naye data se update karein
+        state.currentProject = action.payload;
+      })
+      .addCase(joinProject.rejected, (state, action) => {
+        state.loading.joining = false;
+        state.error.joining = action.payload as any;
+      });
+    // --- NEW CASES FOR UPDATING STATUS ---
+    builder
+      .addCase(updateProjectStatus.pending, (state) => {
+        state.loading.updatingStatus = true;
+        state.error.updatingStatus = null;
+      })
+      .addCase(updateProjectStatus.fulfilled, (state, action) => {
+        state.loading.updatingStatus = false;
+        const updatedProject = action.payload;
+        // Find the project in the list and update it
+        const index = state.projects.findIndex(
+          (p: any) => p._id === updatedProject._id
+        );
+        if (index !== -1) {
+          state.projects[index] = updatedProject;
+        }
+      })
+      .addCase(updateProjectStatus.rejected, (state, action) => {
+        state.loading.updatingStatus = false;
+        state.error.updatingStatus = action.payload as any;
+      });
   }, 
 });
 

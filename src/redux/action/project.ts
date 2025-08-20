@@ -6,6 +6,7 @@ import { config } from "@/utils/endpoints";
 export const createProject = createAsyncThunk(
   "projects/create",
   async (projectData: any, { rejectWithValue }) => {
+    console.log("projectData:", projectData);
     try {
       // Aapke route `/create` ko call karega
       const response = await api.post(
@@ -42,12 +43,10 @@ export const fetchActiveProjects = createAsyncThunk(
 // Ek project ID se laane ke liye
 export const fetchProjectById = createAsyncThunk(
   "projects/fetchById",
-  async (projectId: string, { rejectWithValue }) => {
+  async (canvasId: string, { rejectWithValue }) => {
     try {
-     
-        
       const response = await api.get(
-        `${config?.endpoints?.FETCH_PROJECT_BY_ID}/${projectId}`
+        `${config?.endpoints?.FETCH_PROJECT_BY_ID}/${canvasId}`
       );
       return response.data.data;
     } catch (error: any) {
@@ -77,6 +76,18 @@ export const joinProject = createAsyncThunk(
       return rejectWithValue(
         error.response.data.message || "Failed to join project"
       );
+    }
+  }
+);
+
+export const updateProjectStatus = createAsyncThunk(
+  "projects/updateStatus",
+  async ({ projectId, statusUpdate }: { projectId: string; statusUpdate: { isPaused?: boolean; isClosed?: boolean } }, { rejectWithValue }) => {
+    try {
+      const response = await api.patch(`/projects/${projectId}/status`, statusUpdate);
+      return response.data.data; // Return the updated project object
+    } catch (error: any) {
+      return rejectWithValue(error.response.data.message || "Failed to update project status");
     }
   }
 );

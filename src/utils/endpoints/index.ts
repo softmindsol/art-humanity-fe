@@ -12,7 +12,7 @@ const config = {
     GOOGLE_AUTH: "/auth/firebase-login",
     LOGOUT_AUTH: "/auth/logout",
     PROJECT_CREATE: "/projects/create",
-    FETCH_ACTIVE_PROJECT: "/projects",
+    FETCH_ACTIVE_PROJECT: "/projects/all-active-project",
     FETCH_PROJECT_BY_ID: "/projects",
     JOIN_AS_CONTRIBUTOR: "/projects",
   },

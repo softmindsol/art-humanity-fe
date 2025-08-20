@@ -32,7 +32,7 @@ function App() {
             <Route path="/demo" element={<Demo />} />
             <Route path='/verify-email/:token' element={<VerifyEmail />} />
             <Route path="/reset-password/:token" element={<ResetPassword />} />
-            <Route path="/project/:projectId" element={<TiledCanvasPage />} />
+            <Route path="/project/:canvasId" element={<TiledCanvasPage />} />
 
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
