@@ -137,7 +137,7 @@ const Toolbox = () => {
 
             {/* Color Picker */}
             <div>
-                <label className="text-sm font-bold text-[#8b795e] mb-2 block">Color</label>
+                <label className="text-sm font-bold !text-[#212121] mb-2 block">Color</label>
                 <div
                     className="relative w-[150px] h-[150px] mx-auto rounded-full cursor-pointer border-2 border-gray-300"
                     style={{ background: 'conic-gradient(red, yellow, lime, cyan, blue, magenta, red)' }}
@@ -157,7 +157,7 @@ const Toolbox = () => {
 
             {/* Brush Size Slider */}
             <div>
-                <label className="text-sm font-bold text-gray-700 mb-2 block">Brush Size: {brushState.size}px</label>
+                <label className="text-sm font-bold !text-[#212121] mb-2 block">Brush Size: {brushState.size}px</label>
                 <input
                     type="range"
                     min="1"

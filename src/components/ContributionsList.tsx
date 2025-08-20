@@ -1,25 +1,40 @@
-
 import useAuth from '@/hook/useAuth';
 import useAppDispatch from '@/hook/useDispatch';
-import { deleteContribution, getContributionsByProject, voteOnContribution } from '@/redux/action/contribution';
-import { ArrowBigUp, ArrowBigDown, Trash2 } from 'lucide-react';
+import { deleteContribution, voteOnContribution } from '@/redux/action/contribution';
+import { Trash2 } from 'lucide-react';
 
+// Helper to format date
+const formatDate = (dateString: any) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { month: '2-digit', day: '2-digit', year: 'numeric' });
+};
 
-const ContributionsList = ({ projectId, contributions, selectedContributionId, onContributionSelect, listItemRefs, onGuestVoteAttempt }: any) => {
+const ContributionsList = ({
+    projectId,
+    contributions,
+    selectedContributionId,
+    onContributionSelect,
+    listItemRefs,
+    onGuestVoteAttempt
+}: any) => {
     const dispatch = useAppDispatch();
     const { user } = useAuth();
 
-    const handleVote = (contributionId: any, voteType: any, userId: any) => {
+    const handleVote = (e: any, contributionId: any, voteType: any) => {
+        e.stopPropagation();
         if (!user) {
-            // Step 2: Agar nahi, to parent ko khabar dein aur function rok dein
             onGuestVoteAttempt();
             return;
         }
-        // Thunk ko zaroori data ke sath dispatch karein
-        dispatch(voteOnContribution({ contributionId, voteType, userId })).unwrap()
-        dispatch(getContributionsByProject({ projectId, sortBy:"newest" })); // Contributions ko update karne ke liye
-        
+        dispatch(voteOnContribution({ contributionId, voteType, userId: user?.id }));
+    };
 
+    const handleDelete = (e: any, contributionId: any) => {
+        e.stopPropagation();
+        if (confirm('Are you sure you want to delete this contribution?')) {
+            dispatch(deleteContribution({ contributionId }));
+        }
     };
 
     if (!contributions || contributions.length === 0) {
@@ -27,10 +42,14 @@ const ContributionsList = ({ projectId, contributions, selectedContributionId, o
     }
 
     return (
-        <ul className="space-y-4">
+        <ul className="space-y-4 font-serif">
             {contributions?.map((contrib: any) => {
                 const isSelected = contrib?._id === selectedContributionId;
                 const artistName = contrib.userId?.fullName || 'Unknown Artist';
+                const totalVotes = (contrib.upvotes || 0) + (contrib.downvotes || 0);
+                const downvotePercentage = totalVotes === 0 ? 0 : ((contrib.downvotes || 0) / totalVotes) * 100;
+                const pixelCount = contrib.strokes?.reduce((total: any, stroke: any) => total + (stroke.strokePath?.length || 0), 0) || 0;
+
                 return (
                     <li
                         key={contrib?._id}
@@ -39,69 +58,61 @@ const ContributionsList = ({ projectId, contributions, selectedContributionId, o
                                 listItemRefs.current[contrib._id] = el;
                             }
                         }}
-                        className={`bg-white p-3 rounded-lg border-2 transition-all ${isSelected ? 'border-blue-500 shadow-md' : 'border-transparent hover:border-gray-400'}`}
+                        className={`bg-white rounded-lg border transition-all shadow-sm p-2 cursor-pointer ${isSelected ? 'border-[#a1887f] shadow-lg' : 'border-gray-200 hover:border-[#d7ccc8]'
+                            }`}
                         onClick={() => onContributionSelect(contrib._id)}
                     >
-                        <div className="flex gap-3">
-                            {/* Thumbnail Placeholder */}
-                            <div className="w-20 h-20 bg-gray-200 rounded-md flex-shrink-0">
-                                {contrib.thumbnailUrl ? (
-                                    <img
-                                        src={`${import.meta.env.VITE_BASE}${contrib?.thumbnailUrl}`} // Poora URL banayein
-                                        alt={`Contribution by ${contrib?.userId?.username}`}
-                                        className="w-full h-full object-cover rounded-md"
-                                    />
-                                ) : (
-                                    // Agar thumbnail na ho to placeholder dikhayein
-                                    <div className="w-full h-full bg-gray-300 rounded-md"></div>
-                                )}
-                            </div>
+                        {/* Header */}
+                        <div className="flex justify-between items-center px-2 py-4 bg-[#f8f0e3] rounded-t-md border-b border-gray-300">
+                            <span className="text-[11.7px] text-[#5d4037]">Pixels: {pixelCount}</span>
+                            <span className="text-[13px] font-semibold text-[#3e2723]">By: {artistName}</span>
+                        </div>
 
-                            <div className="flex-grow">
-                                <p className="font-bold text-gray-800">By: {artistName}</p>
-                                <p className="text-xs text-gray-500">ID: {contrib?._id}</p>
-
-                                {/* Vote and Comment Section */}
-                                <div className="flex items-center gap-4 mt-2">
-                                    <div className="flex items-center gap-1">
-                                        <button
-                                            onClick={() => handleVote(contrib._id, 'up', user?.id)}
-                                            className="text-gray-500 hover:text-green-600 cursor-pointer"
-                                        >
-                                            <ArrowBigUp size={20} />
-                                        </button>
-                                        <span className="font-semibold text-green-600">
-                                            {contrib.upvotes || 0}
-                                        </span>
-                                    </div>
-                                    {/* Downvote */}
-                                    <div className="flex items-center gap-1">
-                                        <button
-                                            onClick={() => handleVote(contrib._id, 'down', user?.id)}
-                                            className="text-gray-500 hover:text-red-600 cursor-pointer"
-                                        >
-                                            <ArrowBigDown size={20} />
-                                        </button>
-                                        <span className="font-semibold text-red-600">
-                                            {contrib.downvotes || 0}
-                                        </span>
-                                    </div>
-                                    {/* Comments */}
-                                    {/* <div className="flex items-center gap-1">
-                                        <button className="text-gray-500 hover:text-blue-600"><MessageSquare size={18} /></button>
-                                        <span className="font-semibold text-blue-600">1</span>
-                                    </div> */}
-                                    {user?.role ==='admin' && (
-                                        <button
-                                            onClick={() => dispatch(deleteContribution({ contributionId: contrib._id }))}
-                                            className="text-gray-500 hover:text-red-700 ml-auto cursor-pointer"
-                                            title="Admin: Delete Contribution"
-                                        >
-                                            <Trash2 size={18} />
-                                        </button>
-                                    )}
+                        {/* Thumbnail */}
+                        <div className="h-40 bg-gray-200 flex items-center justify-center p-2">
+                            {contrib.thumbnailUrl ? (
+                                <img
+                                    src={`${import.meta.env.VITE_BASE}${contrib?.thumbnailUrl}`}
+                                    alt={`Contribution by ${artistName}`}
+                                    className="max-w-full max-h-full object-contain"
+                                />
+                            ) : (
+                                <div className="text-gray-400">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                        <polyline points="17 8 12 3 7 8" />
+                                        <line x1="12" x2="12" y1="3" y2="15" />
+                                    </svg>
                                 </div>
+                            )}
+                        </div>
+
+                        {/* Dates */}
+                        <div className="flex justify-between items-center p-2 bg-[#f8f0e3] border-y border-gray-300">
+                            <span className="text-[11px] text-[#654321]">Created: {formatDate(contrib.createdAt)}</span>
+                            <span className="text-[11px] text-[#654321]">Modified: {formatDate(contrib.updatedAt)}</span>
+                        </div>
+
+                        {/* Voting and Actions */}
+                        <div className="flex justify-between items-center bg-[#f8f0e3] p-1 rounded-[2px] mt-2">
+                            <div className="flex items-center justify-center gap-3 w-full">
+                                <button onClick={(e) => handleVote(e, contrib._id, 'up')} className="flex text-[14px] items-center gap-1 text-[#5d4037] cursor-pointer">
+                                    ▲ <span className="font-bold">{contrib.upvotes || 0}</span>
+                                </button>
+                                <button onClick={(e) => handleVote(e, contrib._id, 'down')} className="flex text-[14px] items-center gap-1 text-[#f44336] cursor-pointer">
+                                    ▼ <span className="font-bold">{contrib.downvotes || 0}</span>
+                                    <span className=" text-[#654321] font-semibold">({downvotePercentage.toFixed(1)}%)</span>
+                                </button>
                             </div>
+                            {user?.role === 'admin' && (
+                                <button
+                                    onClick={(e) => handleDelete(e, contrib._id)}
+                                    className="text-[#654321] cursor-pointer hover:text-[#f44336]"
+                                    title="Admin: Delete Contribution"
+                                >
+                                    <Trash2 size={18} />
+                                </button>
+                            )}
                         </div>
                     </li>
                 );

@@ -99,7 +99,7 @@ const ActiveProjects: React.FC = () => {
             {user?.role === 'admin' && (
                 <section className='flex items-center justify-center my-6'>
                     <Link to="/create-project">
-                        <Button className="bg-[#d29000] hover:bg-[#b38f2c] text-white font-bold py-2 px-4 rounded shadow-lg">
+                        <Button className="bg-[#d29000] cursor-pointer hover:bg-[#b38f2c] text-white font-bold py-2 px-4 rounded shadow-lg !border !border-[#5d4037]">
                             Create a New Project
                         </Button>
                     </Link>
@@ -134,18 +134,18 @@ const ActiveProjects: React.FC = () => {
                                 </div>
                             </div>
                             <div className="project-info">
-                                <h3>{project.title}</h3>
+                                <h3 className='!text-[#5d4037]'>{project.title}</h3>
                                 <div className="project-stats">
                                     <div className="stat">
-                                        <span className="stat-value">{project.contributors?.length || 0}</span>
-                                        <span className="stat-label">Contributors</span>
+                                        <span className="stat-value !text-[#8d6e63] !text-[12.8px]">{project.contributors?.length || 0}</span>
+                                        <span className="stat-label !text-[#8d6e63]">Contributors</span>
                                     </div>
                                     <div className="stat">
-                                        <span className="stat-value">{project.stats?.pixelCount || 0}</span>
-                                        <span className="stat-label">Pixels Painted</span>
+                                        <span className="stat-value !text-[#8d6e63] !text-[12.8px]">{project.stats?.pixelCount || 0}</span>
+                                        <span className="stat-label !text-[#8d6e63]">Pixels Painted</span>
                                     </div>
                                 </div>
-                                <Link to={`/project/${project?.canvasId}`} className="btn-contribute !text-black !bg-[#d4af37] hover:!bg-[#b38f2c]">
+                                <Link to={`/project/${project?.canvasId}`} className="btn-contribute !text-black !bg-[#d4af37] hover:!bg-[#b38f2c] !border !border-[#5d4037]">
                                     Enter Project
                                 </Link>
 
@@ -153,7 +153,7 @@ const ActiveProjects: React.FC = () => {
                                 {user?.role === 'admin' && (
                                     <div className="mt-4 pt-4 border-t border-gray-200 ">
                                         <div className="flex items-center justify-between space-x-2">
-                                            <p className="text-xs text-gray-500  !p-0 !m-0">Admin Actions:</p>
+                                            <p className="text-xs !text-[#8d6e63]  !p-0 !m-0">Admin Actions:</p>
 
                                             <div className="flex items-center space-x-2">
                                                 {project.isPaused ? (

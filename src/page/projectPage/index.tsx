@@ -52,6 +52,7 @@ const ProjectPage = ({ projectName, projectId }: any) => {
     const [searchParams] = useSearchParams();
     const isReadOnly = searchParams.get('view') === 'gallery';
 
+    console.log("currentProject:", currentProject?.stats?.contributorCount)
 
     const [isTimelapseOpen, setIsTimelapseOpen] = useState(false);
 
@@ -230,8 +231,8 @@ const ProjectPage = ({ projectName, projectId }: any) => {
 
                 {/* Yahan aapka page header aur "Back" button aa sakta hai */}
                 <div className="mb-4 text-center">
-                    <h1 className="text-[44px] font-serif text-[#3E2723]">{projectName}</h1>
-                    <p className="text-[#8D6E63] italic text-[19px]">{currentProject?.description}</p>
+                    <h1 className="text-[44.8px] font-serif text-[#3E2723]">{projectName}</h1>
+                    <p className="text-[#8D6E63] italic text-[19.2px]">{currentProject?.description}</p>
                 </div>
 
                 {/* Main Content Area */}
@@ -320,16 +321,16 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                         </div>
                         <div className="canvas-count w-full ">
                             <div className="stat-item">
-                                <span className="stat-label">Total Contributors:</span>
-                                <span className="stat-value " id="contributor-count">0</span>
+                                <span className="stat-label  !text-[14.4px]">Total Contributors:</span>
+                                <span className="stat-value  !text-[14.4px]" id="contributor-count">{currentProject?.stats?.contributorCount}</span>
                             </div>
                             <div className="stat-item">
-                                <span className="stat-label">Pixels Painted:</span>
-                                <span className="stat-value" id="pixel-count">0/104,857,600</span>
+                                <span className="stat-label !text-[14.4px]" >Pixels Painted:</span>
+                                <span className="stat-value !text-[14.4px]" id="pixel-count">0/104,857,600</span>
                             </div>
                             <div className="stat-item">
-                                <span className="stat-label">Canvas Size:</span>
-                                <span className="stat-value">10240px by 10240px</span>
+                                <span className="stat-label !text-[14.4px]">Canvas Size:</span>
+                                <span className="stat-value !text-[14.4px]">10240px by 10240px</span>
                             </div>
                         </div>
                         <div

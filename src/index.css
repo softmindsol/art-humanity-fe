@@ -1586,12 +1586,12 @@ header{
 .stat-value {
   font-weight: 600;
   font-size: 1.1rem;
-  color: #333;
+  color: #212121;
 }
 
 .stat-label {
   font-size: 0.8rem;
-  color: #888;
+  color: #212121;
 }
 .btn-contribute, .btn-notify, .btn-view {
     display: block;

@@ -65,7 +65,7 @@ const ContributionSidebar = ({ projectId, contributions, selectedContributionId,
 
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className="absolute top-1/2 -translate-y-1/2 bg-[#5d4e37] text-white py-2 px-5 rounded-l-lg shadow-lg cursor-pointer z-50"
+                className="absolute top-1/2 -translate-y-1/2 !bg-[#654321] !text-[17px] text-white py-2 px-8 rounded-l-md shadow-lg cursor-pointer z-50"
                 style={{
                     right: '100%', // Yeh button ko panel ke bilkul bahar (left side) rakhega
                     writingMode: 'vertical-rl',
@@ -86,13 +86,13 @@ const ContributionSidebar = ({ projectId, contributions, selectedContributionId,
                     <div className="flex ">
                         <button
                             onClick={() => setActiveTab('my')}
-                            className={`flex-1 py-4 px-6 text-lg cursor-pointer ${activeTab === 'my' ? 'border-b-2 font-bold text-[#5d4e37]' : 'text-[#654321]'}`}
+                            className={`flex-1 py-4 px-6 text-[19.2px] cursor-pointer ${activeTab === 'my' ? 'border-b-2 font-bold text-[#5d4e37]' : 'text-[#654321]'}`}
                         >
                             My Contributions
                         </button>
                         <button
                             onClick={() => setActiveTab('project')}
-                            className={`flex-1 p-4 text-lg cursor-pointer ${activeTab === 'project' ? 'border-b-2  font-bold text-[#5d4e37]' : 'text-[#654321]'}`}
+                            className={`flex-1 p-4 text-[19.2px] cursor-pointer ${activeTab === 'project' ? 'border-b-2  font-bold text-[#5d4e37]' : 'text-[#654321]'}`}
                         >
                             Project Contributions
                         </button>
@@ -101,11 +101,11 @@ const ContributionSidebar = ({ projectId, contributions, selectedContributionId,
                     <div className="p-4 flex-grow overflow-y-auto">
 
 
-                        <p className="text-sm text-gray-600 mb-4">
+                        <p className="text-[14.4px] italic text-[#654321] mb-4">
                             If a contribution receives over 50% downvotes from all project contributors it will be rejected and permanently deleted from the canvas...
                         </p>
                         <div className="flex items-center  gap-8 mb-4">
-                            <label htmlFor="filter" className="font-semibold text-gray-700">
+                            <label htmlFor="filter" className="!font-semibold text-[#654321]">
                                 Filter By:
                             </label>
 
@@ -114,7 +114,7 @@ const ContributionSidebar = ({ projectId, contributions, selectedContributionId,
                                     id="filter"
                                     value={filter}
                                     onChange={(e) => setFilter(e.target.value)}
-                                    className="block w-full appearance-none text-[14px] p-2 pr-8 border border-gray-300 rounded-md"
+                                    className="block w-full appearance-none text-[14px] p-2 pr-8 border-[2px] border-[#654321] text-[#654321] rounded-md"
                                 >
                                     <option value="newest">Newest First</option>
                                     <option value="oldest">Oldest First</option>
