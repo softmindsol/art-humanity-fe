@@ -64,6 +64,8 @@ const ActiveProjects: React.FC = () => {
                 projectId: dialogState.projectId,
                 statusUpdate: dialogState.statusUpdate,
             }));
+            dispatch(fetchActiveProjects());
+
         }
         // Dialog ko band karein
         setDialogState({ isOpen: false, projectId: null, statusUpdate: null, actionText: '' });
