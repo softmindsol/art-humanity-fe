@@ -84,10 +84,29 @@ export const updateProjectStatus = createAsyncThunk(
   "projects/updateStatus",
   async ({ projectId, statusUpdate }: { projectId: string; statusUpdate: { isPaused?: boolean; isClosed?: boolean } }, { rejectWithValue }) => {
     try {
-      const response = await api.patch(`/projects/${projectId}/status`, statusUpdate);
+      const response = await api.patch(`${config?.endpoints?.FETCH_PROJECT_BY_ID}/${projectId}/status`, statusUpdate);
       return response.data.data; // Return the updated project object
     } catch (error: any) {
       return rejectWithValue(error.response.data.message || "Failed to update project status");
+    }
+  }
+);
+
+export const fetchGalleryProjects = createAsyncThunk(
+  "projects/fetchGallery",
+  async (_, { rejectWithValue }) => {
+    try {
+      // Naya API endpoint: GET /api/projects/view/gallery
+      const response = await api.get(
+        `${config?.endpoints?.FETCH_PROJECT_BY_ID}/view/gallery`
+      );
+
+      console.log("response.data.data:", response.data.data);
+      return response.data.data;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response.data.message || "Failed to fetch gallery projects"
+      );
     }
   }
 );

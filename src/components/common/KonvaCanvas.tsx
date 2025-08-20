@@ -8,10 +8,11 @@ import { selectCurrentBrush, selectCanvasData } from '@/redux/slice/contribution
 import { v4 as uuidv4 } from 'uuid'; // Unique IDs banane ke liye (npm install uuid @types/uuid)
 import useAppDispatch from '@/hook/useDispatch';
 import useAuth from '@/hook/useAuth';
+import { toast } from 'sonner';
 
 
 
-const KonvaCanvas = ({ projectId, userId, width, height, onStateChange, selectedContributionId, onContributionHover, onContributionLeave, onContributionSelect, onGuestInteraction }: any) => {
+const KonvaCanvas = ({ projectId, userId, width, height, onStateChange, selectedContributionId, onContributionHover, onContributionLeave, onContributionSelect, onGuestInteraction, isReadOnly, isContributor }: any) => {
     const dispatch = useAppDispatch();
     const brushState = useSelector(selectCurrentBrush);
     const savedStrokes = useSelector(selectCanvasData);
@@ -124,9 +125,18 @@ const {user}=useAuth()
 
     // --- DRAWING HANDLERS (Updated for Contributions) ---
     const handleMouseDown = (e: any) => {
+        if (isReadOnly) {
+            return; // Agar read-only hai, to kuch bhi na karo.
+        }
         if (!user) {
             // Step 2: Agar nahi, to parent ko khabar dein aur function rok dein
             onGuestInteraction();
+            return;
+        }
+
+        if (!isContributor) {
+            // Agar nahi, to kuch nahi karna. User sirf dekh sakta hai.
+            toast.warning("User is not a contributor for this project. Drawing disabled.");
             return;
         }
         if (brushState.mode === 'move' || e.target !== e.target.getStage()) return;

@@ -5,7 +5,6 @@ import Footer from './components/common/Footer';
 import HeroSection from './components/hero-section/home-page-hero-section';
 import NotFoundPage from './components/PageNotFound';
 import GuidelinePage from './page/guideline';
-import GalleryPage from './page/gallery';
 import ActiveProjects from './page/contribute/';
 import VerifyEmail from './page/VerifyEmail';
 import ResetPassword from './page/ResetPassword';
@@ -15,6 +14,7 @@ import ProtectedRoute from './routes/PrivateRoute';
 import { ProjectProvider } from './context/ProjectContext';
 import TiledCanvasPage from './page/TiledCanvasPage';
 import Demo from './page/Demo';
+import GalleryPage from './page/gallery';
 function App() {
   return (
     <Router>

@@ -30,6 +30,7 @@ import { toast } from 'sonner';
 import useAuth from '@/hook/useAuth';
 import useAppDispatch from '@/hook/useDispatch';
 import { openAuthModal } from '@/redux/slice/opeModal';
+import { useSearchParams } from 'react-router-dom';
 
 
 const TILE_SIZE = 512; // Optimal tile size for performance
@@ -47,6 +48,11 @@ const ProjectPage = ({ projectName, projectId }: any) => {
     const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
     const [loginDialogDismissed, setLoginDialogDismissed] = useState(false);
 
+    // --- NAYI LOGIC: Read-only mode ko check karein ---
+    const [searchParams] = useSearchParams();
+    const isReadOnly = searchParams.get('view') === 'gallery';
+
+
     const [isTimelapseOpen, setIsTimelapseOpen] = useState(false);
 
     // --- REDUX STATE for Timelapse ---
@@ -61,7 +67,6 @@ const ProjectPage = ({ projectName, projectId }: any) => {
         tilesRef,
         isClearAlertOpen,
         setIsClearAlertOpen,
-
     } = useCanvasState();
 
 
@@ -70,6 +75,8 @@ const ProjectPage = ({ projectName, projectId }: any) => {
         worldPos: { x: 0, y: 0 },
     });
 
+
+   
 
 
     const handleGenerateTimelapse = () => {
@@ -231,7 +238,8 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                 <div className="flex flex-col md:flex-row gap-6">
 
                     {/* Left Column: Toolbox */}
-                    <Toolbox />
+                    {!isReadOnly && <Toolbox />}
+
 
                     {/* Right Column: Canvas & Actions */}
                     <div className="flex-1 flex flex-col items-center ">
@@ -341,7 +349,9 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                                     onContributionLeave={handleContributionLeave}
                                     onContributionSelect={setSelectedContributionId}
                                     onGuestInteraction={handleGuestCanvasInteraction}
+                                    isContributor={isCurrentUserAContributor}
 
+                                    isReadOnly={isReadOnly} // Naya prop pass karein
 
                                 />
                             )}
@@ -438,6 +448,7 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                 }}
                 listItemRefs={listItemRefs}
                 onGuestVoteAttempt={handleGuestCanvasInteraction}
+                isReadOnly={isReadOnly} // Naya prop pass karein
 
             />
             <Dialog open={isTimelapseOpen} onOpenChange={setIsTimelapseOpen}>

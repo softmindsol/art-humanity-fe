@@ -2,6 +2,7 @@ import { createSlice } from "@reduxjs/toolkit";
 import {
   createProject,
   fetchActiveProjects,
+  fetchGalleryProjects,
   fetchProjectById,
   joinProject,
   updateProjectStatus,
@@ -9,12 +10,15 @@ import {
 
 const initialState: any = {
   projects: [], // Saare projects ki list
+  galleryProjects: [], // Yeh Gallery ke liye hai
+
   currentProject: null, // Jo project abhi khula hua hai
   loading: {
     creating: false,
     fetching: false,
     fetchingById: false,
     updatingStatus: false,
+    fetchingGallery: false, // Nayi loading state
 
     joining: false, // Nayi loading state
   },
@@ -24,6 +28,7 @@ const initialState: any = {
     fetchingById: null,
     updatingStatus: null,
     joining: null, // Nayi error state
+    fetchingGallery: null, // Nayi loading state
   },
 };
 
@@ -116,16 +121,30 @@ const projectSlice = createSlice({
         state.loading.updatingStatus = false;
         state.error.updatingStatus = action.payload as any;
       });
+      builder
+        .addCase(fetchGalleryProjects.pending, (state) => {
+          state.loading.fetchingGallery = true;
+          state.error.fetchingGallery = null;
+        })
+        .addCase(fetchGalleryProjects.fulfilled, (state, action) => {
+          state.loading.fetchingGallery = false;
+          state.galleryProjects = action.payload; // Nayi state ko update karein
+        })
+        .addCase(fetchGalleryProjects.rejected, (state, action) => {
+          state.loading.fetchingGallery = false;
+          state.error.fetchingGallery = action.payload as any;
+        });
   }, 
-});
+}); 
 
 export const { clearCurrentProject } = projectSlice.actions;
 
 // Selectors
-export const selectAllProjects = (state: any) => state.projects.projects;
+export const selectAllProjects = (state: any) => state?.projects?.projects;
 export const selectCurrentProject = (state: any) =>
-  state.projects.currentProject;
-export const selectProjectsLoading = (state: any) => state.projects.loading;
-export const selectProjectsError = (state: any) => state.projects.error;
+  state?.projects?.currentProject;
+export const selectProjectsLoading = (state: any) => state?.projects?.loading;
+export const selectProjectsError = (state: any) => state?.projects?.error;
+export const selectGalleryProjects = (state: any) => state?.projects?.galleryProjects;
 
 export default projectSlice.reducer;
