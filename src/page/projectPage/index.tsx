@@ -112,24 +112,24 @@ const ProjectPage = ({ projectName, projectId }: any) => {
         setCanvasStats(prev => ({ ...prev, ...newState }));
     };
 
-    const loadReferenceImage = () => {
-        // const tile = getTile(0, 0);
-        // const ctx = tile.context;
-        // ctx.save();
-        // const scale = 0.5, offsetX = 60, offsetY = 80;
-        // ctx.fillStyle = '#8B4513';
-        // ctx.fillRect(100 * scale + offsetX, 150 * scale + offsetY, 80 * scale, 60 * scale);
-        // ctx.fillStyle = '#CD5C5C';
-        // ctx.beginPath();
-        // ctx.moveTo(90 * scale + offsetX, 150 * scale + offsetY);
-        // ctx.lineTo(140 * scale + offsetX, 120 * scale + offsetY);
-        // ctx.lineTo(190 * scale + offsetX, 150 * scale + offsetY);
-        // ctx.closePath();
-        // ctx.fill();
-        // ctx.restore();
-        // tile.isDirty = true;
-        // renderVisibleTiles();
-    };
+    // const loadReferenceImage = () => {
+    //     // const tile = getTile(0, 0);
+    //     // const ctx = tile.context;
+    //     // ctx.save();
+    //     // const scale = 0.5, offsetX = 60, offsetY = 80;
+    //     // ctx.fillStyle = '#8B4513';
+    //     // ctx.fillRect(100 * scale + offsetX, 150 * scale + offsetY, 80 * scale, 60 * scale);
+    //     // ctx.fillStyle = '#CD5C5C';
+    //     // ctx.beginPath();
+    //     // ctx.moveTo(90 * scale + offsetX, 150 * scale + offsetY);
+    //     // ctx.lineTo(140 * scale + offsetX, 120 * scale + offsetY);
+    //     // ctx.lineTo(190 * scale + offsetX, 150 * scale + offsetY);
+    //     // ctx.closePath();
+    //     // ctx.fill();
+    //     // ctx.restore();
+    //     // tile.isDirty = true;
+    //     // renderVisibleTiles();
+    // };
 
     const showLoginDialog = !!currentProject && !user && !loginDialogDismissed;
     const showJoinDialog = isJoinDialogOpen && !showLoginDialog;
@@ -219,8 +219,8 @@ const ProjectPage = ({ projectName, projectId }: any) => {
 
                 {/* Yahan aapka page header aur "Back" button aa sakta hai */}
                 <div className="mb-4 text-center">
-                    <h1 className="text-[44.8px] font-serif text-[#3E2723]">{projectName}</h1>
-                    <p className="text-[#8D6E63] italic text-[19.2px]">{currentProject?.description}</p>
+                    <h1 className="text-[28px] lg:text-[44.8px] font-serif text-[#3E2723]">{projectName}</h1>
+                    <p className="text-[#8D6E63] italic lg:text-[19.2px]">{currentProject?.description}</p>
                 </div>
 
                 {/* Main Content Area */}
@@ -304,10 +304,10 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                         </div>
                         {/* Canvas Container (Aapki CSS classes ke sath) */}
 
-                        <div className='text-[1rem]  bg-[#F5F5DC] text-[#5D4037] px-4 py-4 rounded-[5px] shadow-md mt-4 mb-6'>
-                            <p>Use the mouse wheel to zoom, right-click to pan, and left click to draw when zoomed in to at least 100%. Drag the drawings tools and canvas info boxes to wherever you like. Use the scale reference on the right and bottom sides of the viewport to keep scale while drawing.</p>
+                        <div className='text-[1rem] w-[90%] xl:w-full bg-[#F5F5DC] text-[#5D4037] px-4 py-4 rounded-[5px] shadow-md mt-4 mb-6'>
+                            <p>Use the mouse wheel to zoom, right-click to pan, and left click to draw when zoomed in to at least 100%. <span className=''>Drag the drawings tools and canvas info boxes to wherever you like. Use the scale reference on the right and bottom sides of the viewport to keep scale while drawing.</span> </p>
                         </div>
-                        <div className="canvas-count w-full ">
+                        <div className="canvas-count  w-[90%]  xl:w-full ">
                             <div className="stat-item">
                                 <span className="stat-label  !text-[14.4px]">Total Contributors:</span>
                                 <span className="stat-value  !text-[14.4px]" id="contributor-count">{currentProject?.stats?.contributorCount}</span>
@@ -321,9 +321,11 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                                 <span className="stat-value !text-[14.4px]">10240px by 10240px</span>
                             </div>
                         </div>
+                        
+                        {/* <div className='w-full h-full min-w-[1024px] min-h-[1024px] bg-white relative overflow-hidden'> */}
                         <div
                             ref={canvasContainerRef}
-                            className='w-[95%] md:w-[90%] h-[600px] mt-10 md:h-[800px] xl:w-[1024px] xl:h-[1024px] relative bg-white'
+                        className=' h-full w-[95%] lg:w-[1024px] min-h-[1024px] mt-6 bg-white relative overflow-hidden' 
                             style={{ border: '4px solid #4d2d2d' }}
                         >
                             {canvasSize.width > 0 && (
@@ -346,7 +348,7 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                             )}
 
                         </div>
-
+                        {/* </div> */}
                         <InfoBox
                             zoom={canvasStats.zoom}
                             worldPos={canvasStats.worldPos}

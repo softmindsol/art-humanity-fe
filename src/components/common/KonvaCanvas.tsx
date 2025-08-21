@@ -164,6 +164,8 @@ const {user}=useAuth()
 
         // Step 2: Naye contribution ko state mein add karein
         setContributions((prev: any) => [...prev, newContribution]);
+        // dispatch(getContributionsByProject({ projectId, sortBy: '' }));
+
     };
 
     const handleDrawingMove = (e: any) => {
@@ -226,8 +228,6 @@ const {user}=useAuth()
             draggable={brushState.mode === 'move'}
             style={{ cursor: brushState.mode === 'move' ? 'grab' : 'crosshair' }}
         >
-
-
             <Layer>
                 {contributions.map((contribution: any) => {
                     const isSelected = contribution.id === selectedContributionId;

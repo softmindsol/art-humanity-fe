@@ -18,6 +18,7 @@ import {
     selectCanvasData,
 } from '@/redux/slice/contribution';
 import useAppDispatch from '@/hook/useDispatch';
+import Toolbox from '@/components/toolbox/Toolbox';
 
 
 // --- CONSTANTS ---
@@ -364,10 +365,6 @@ const DemoCanvas: React.FC = () => {
     };
 
 
-
-
-
-
     // --- PAN AND ZOOM HANDLERS ---
     const handleWheel = (e: React.WheelEvent) => {
         e.preventDefault();
@@ -422,7 +419,6 @@ const DemoCanvas: React.FC = () => {
     };
 
     // --- TOOLBOX DRAG LOGIC ---
-    const startToolboxDrag = (e: React.MouseEvent) => { e.stopPropagation(); setIsDraggingToolbox(true); setToolboxStart({ x: e.clientX - toolboxPos.x, y: e.clientY - toolboxPos.y }); };
     const dragToolbox = useCallback((e: MouseEvent) => { if (isDraggingToolbox) setToolboxPos({ x: e.clientX - toolboxStart.x, y: e.clientY - toolboxStart.y }); }, [isDraggingToolbox, toolboxStart]);
     const stopToolboxDrag = useCallback(() => setIsDraggingToolbox(false), []);
 
@@ -454,10 +450,6 @@ const DemoCanvas: React.FC = () => {
     if (!brushState || !canvasState) {
         return <div>Loading Canvas...</div>;
     }
-
-    // Ab jab humein pata hai ke brushState maujood hai, to hum is variable ko safely bana sakte hain.
-    const currentColorString = `rgba(${brushState.color.r}, ${brushState.color.g}, ${brushState.color.b}, ${brushState.color.a})`;
-
 
     return (
         <div className='h-[100vh] md:h-[155vh] lg:!h-[145vh] xl:!h-[145vh] 2xl:h-[135vh]' style={{ fontFamily: 'Georgia, serif', overflow: 'auto', position: 'relative' }}>
@@ -501,153 +493,8 @@ const DemoCanvas: React.FC = () => {
                 </div>
             </div>
 
-            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                <DialogContent className="max-w-4xl bg-[#5d4037] border-gray-700 text-white">
-                    <DialogHeader>
-                        <DialogTitle >
-                            <p className='text-white'> Project Timelapse</p>
-                        </DialogTitle>
-                    </DialogHeader>
-
-                    <div className="p-4 min-h-[300px] flex items-center justify-center">
-
-                        {/* CASE 1: Loading State */}
-                        {isGeneratingTimelapse && (
-                            <div className="text-center">
-                                <div className="w-12 h-12 border-4 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                                <p className="text-blue-300">Generating your timelapse video...</p>
-                                <p className="text-sm text-gray-400">This might take a few moments.</p>
-                            </div>
-                        )}
-
-                        {/* CASE 2: Error State */}
-                        {timelapseError && !isGeneratingTimelapse && (
-                            <div className="text-center text-red-400">
-                                <h3 className="text-xl font-bold mb-2">Error!</h3>
-                                <p>Failed to generate the timelapse.</p>
-                                <p className="text-xs text-gray-500 mt-1">{timelapseError}</p>
-                            </div>
-                        )}
-
-                        {/* CASE 3: Success State (Video Ready) */}
-                        {timelapseUrl && !isGeneratingTimelapse && (
-                            <video
-                                key={timelapseUrl} // Key add karne se URL change hone par video re-render hoti hai
-                                src={`${import.meta.env.VITE_BASE}${timelapseUrl}`}
-                                controls
-                                autoPlay
-                                className="w-full max-h-[70vh] rounded-lg"
-                            >
-                                Your browser does not support the video tag.
-                            </video>
-                        )}
-                    </div>
-                </DialogContent>
-            </Dialog>
-
-            <div
-                className="absolute bg-white border border-[#8b795e] rounded-lg p-4 min-w-[210px] shadow-lg z-[1000] select-none"
-                style={{ left: toolboxPos.x, top: toolboxPos.y }}
-            >
-                {/* Header */}
-                <div className="flex justify-between items-center mb-4 pb-2 border-b border-gray-300">
-                    <h3 className="text-[#5d4e37] text-sm font-semibold m-0">Tools</h3>
-                    <div
-                        onMouseDown={startToolboxDrag}
-                        className="cursor-grab p-1 text-[#8b795e]"
-                        title="Drag Toolbox"
-                    >
-                        ⋮⋮
-                    </div>
-                </div>
-
-                {/* Undo / Redo */}
-                <div className="flex gap-2 justify-end mb-2">
-                    <button
-                        onClick={handleUndo}
-                        disabled={historyIndex <= 0}
-                        title="Undo (Ctrl+Z)"
-                        className={`p-1 border border-[#8b795e] rounded text-[#8b795e] ${historyIndex <= 0 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#f9f4f2]'
-                            }`}
-                    >
-                        <Undo size={16} />
-                    </button>
-                    <button
-                        onClick={handleRedo}
-                        disabled={historyIndex >= history.length - 1}
-                        title="Redo (Ctrl+Y)"
-                        className={`p-1 border border-[#8b795e] rounded text-[#8b795e] ${historyIndex >= history.length - 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#f9f4f2]'
-                            }`}
-                    >
-                        <Redo size={16} />
-                    </button>
-                </div>
-
-                {/* Brush / Eraser / Move */}
-                <div className="flex gap-2 mb-5">
-                    {(['brush', 'eraser', 'move'] as const).map((mode) => {
-                        const Icon = mode === 'brush' ? Brush : mode === 'eraser' ? Eraser : Move;
-                        const isActive = brushState.mode === mode;
-                        return (
-                            <button
-                                key={mode}
-                                // Use dispatch to update the Redux store
-                                onClick={() => dispatch(setBrushMode(mode))}
-                                title={mode.charAt(0).toUpperCase() + mode.slice(1)}
-                                className={`flex-1 p-2 border border-[#8b795e] rounded flex justify-center ${isActive ? 'bg-[#8b795e] text-white' : 'bg-transparent text-[#8b795e]'}`}
-                            >
-                                <Icon size={16} />
-                            </button>
-                        );
-                    })}
-                </div>
-
-                {/* Color Picker Label */}
-                <label className="text-sm font-bold text-[#5d4e37] mb-2 block">Color</label>
-
-                {/* Color Wheel */}
-                <div
-                    className="relative w-[120px] h-[120px] mx-auto rounded-full cursor-pointer mb-3"
-                    style={{
-                        background:
-                            'conic-gradient(hsl(0,100%,50%),hsl(60,100%,50%),hsl(120,100%,50%),hsl(180,100%,50%),hsl(240,100%,50%),hsl(300,100%,50%),hsl(360,100%,50%))',
-                    }}
-                    onClick={(e) => {
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        const angle = Math.atan2(
-                            e.clientY - (rect.top + rect.height / 2),
-                            e.clientX - (rect.left + rect.width / 2)
-                        );
-                        setHue(((angle * 180) / Math.PI + 360) % 360);
-                    }}
-                >
-                    <div
-                        className="absolute w-[30px] h-[30px] rounded-full border-4 border-white shadow"
-                        style={{
-                            top: '50%',
-                            left: '50%',
-                            transform: 'translate(-50%, -50%)',
-                            backgroundColor: currentColorString,
-                        }}
-                    />
-                </div>
-
-                {/* Brush Size Slider */}
-                {/* ** THE FIX FOR BRUSH SIZE IS HERE ** */}
-                <div className="mb-4 mt-4">
-                    <label>Brush Size: {brushState.size}px</label>
-                    <input
-                        type="range"
-                        min="1"
-                        max="50"
-                        value={brushState.size}
-                        // Use dispatch to update the Redux store
-                        onChange={(e) => dispatch(setBrushSize(Number(e.target.value)))}
-                        className="w-full"
-                    />
-                </div>
-            </div>
-
+          <Toolbox/>
+            
             <div ref={containerRef} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 'calc(100vh - 150px)' }}>
                 <canvas
                     ref={viewportCanvasRef}

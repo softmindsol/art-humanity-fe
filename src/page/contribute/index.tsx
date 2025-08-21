@@ -42,7 +42,6 @@ const ActiveProjects: React.FC = () => {
         statusUpdate: null,
         actionText: '',
     });
-    console.log("ActiveProjects - Projects:", projects);
     useEffect(() => {
         dispatch(fetchActiveProjects());
     }, [dispatch]);
@@ -88,6 +87,7 @@ const ActiveProjects: React.FC = () => {
         );
     }
 
+    console.log("projects:", projects)
     return (
         <div id="projects-content" className="projects-content">
             <section className="projects-header page-header">
@@ -130,14 +130,14 @@ const ActiveProjects: React.FC = () => {
                                     <div className="progress-bar">
                                         <div className="progress-fill" style={{ width: `${project.stats?.percentComplete || 0}%` }}></div>
                                     </div>
-                                    <div className="progress-text">{project.stats?.percentComplete || 0}% Complete</div>
+                                    <div className="progress-text">{project.stats?.percentComplete?.toFixed(2) || 0}% Complete</div>
                                 </div>
                             </div>
                             <div className="project-info">
                                 <h3 className='!text-[#5d4037]'>{project.title}</h3>
                                 <div className="project-stats">
                                     <div className="stat">
-                                        <span className="stat-value !text-[#8d6e63] !text-[12.8px]">{project.contributors?.length || 0}</span>
+                                        <span className="stat-value !text-[#8d6e63] !text-[12.8px]">{project.stats?.contributorCount || 0}</span>
                                         <span className="stat-label !text-[#8d6e63]">Contributors</span>
                                     </div>
                                     <div className="stat">
