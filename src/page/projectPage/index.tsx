@@ -31,14 +31,27 @@ import useAuth from '@/hook/useAuth';
 import useAppDispatch from '@/hook/useDispatch';
 import { openAuthModal } from '@/redux/slice/opeModal';
 import { useSearchParams } from 'react-router-dom';
+import { io } from 'socket.io-client'; // Socket client import karein
+import { addContributionFromSocket } from '@/redux/slice/contribution'; // Naya action import karein
 
 
 const TILE_SIZE = 512; // Optimal tile size for performance
 
+interface CursorData {
+    position: {
+        x: number;
+        y: number;
+    };
+    user?: {
+        name?: string;
+        color?: string;
+    };
+}
 const ProjectPage = ({ projectName, projectId }: any) => {
     const { user } = useAuth();
     const dispatch = useAppDispatch();
     const canvasContainerRef = useRef<any>(null);
+    const [socket, setSocket] = useState<any>(null); // (1) Socket object ke liye state banayein
     const [canvasSize, setCanvasSize] = useState<any>({ width: 0, height: 0 });
     const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, text: '' });
     const [selectedContributionId, setSelectedContributionId] = useState(null);
@@ -58,6 +71,7 @@ const ProjectPage = ({ projectName, projectId }: any) => {
     const savedStrokes = useSelector(selectCanvasData);
     const isSaving = useSelector(selectIsLoadingOperation('createContribution')); // Updated to new state
     const saveError = useSelector(selectErrorForOperation('createContribution')); // Updated to new state
+    const [cursors, setCursors] = useState({}); // (1) Sab cursors ki state ke liye naya state
 
     const {
         tilesRef,
@@ -212,6 +226,53 @@ const ProjectPage = ({ projectName, projectId }: any) => {
             // }
         }
     }, [projectId, dispatch]);
+   
+   
+    useEffect(() => {
+        if (!projectId) return;
+
+        const newSocket = io(import.meta.env.VITE_BASE);
+        setSocket(newSocket);
+
+        newSocket.emit('join_project', projectId);
+
+        // --- MOJOODA LISTENER ---
+        newSocket.on('drawing_received', (newContribution) => {
+            // YEH CONSOLE.LOG CHECK KAREIN
+            console.log('Received new contribution via socket on other client:', newContribution);
+            dispatch(addContributionFromSocket(newContribution));
+        });
+
+        // --- NAYE LISTENER ADD KAREIN ---
+
+        // (2) Jab doosre user ka cursor move ho
+        newSocket.on('cursor_update', (data) => {
+            const { socketId, user, position } = data;
+            // Naye cursor data ko state mein add/update karein
+            setCursors(prevCursors => ({
+                ...prevCursors,
+                [socketId]: { user, position }
+            }));
+        });
+
+        // (3) Jab koi user chala jaye
+        newSocket.on('user_left', (socketId) => {
+            // Us user ke cursor ko state se hata dein
+            setCursors((prevCursors:any) => {
+                const newCursors = { ...prevCursors };
+                delete newCursors[socketId];
+                return newCursors;
+            });
+        });
+
+        return () => {
+            newSocket.disconnect();
+        };
+
+    }, [projectId, dispatch]);
+
+
+    console.log("Rendering cursors:", cursors);
     return (
         // Design ke mutabiq page ka background color
         <div className=" min-h-screen p-4 sm:p-6 lg:p-8">
@@ -330,6 +391,7 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                         >
                             {canvasSize.width > 0 && (
                                 <KonvaCanvas
+                                    socket={socket} // Naya prop
                                     projectId={projectId}
                                     userId={user?.id}
                                     width={canvasSize.width}
@@ -346,7 +408,28 @@ const ProjectPage = ({ projectName, projectId }: any) => {
 
                                 />
                             )}
-
+                            {Object.entries(cursors as Record<string, CursorData>).map(([socketId, data]) => (
+                                <div
+                                    key={socketId}
+                                    className="absolute z-50 pointer-events-none"
+                                    style={{
+                                        left: `${data.position.x}px`,
+                                        top: `${data.position.y}px`,
+                                        transition: 'left 0.1s linear, top 0.1s linear' // Thori si smoothness ke liye
+                                    }}
+                                >
+                                    {/* Aap yahan custom cursor icon istemal kar sakte hain */}
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ color: data.user?.color || 'blue' }}>
+                                        <path d="M4 4l7.071 17.071-1.414 1.414-4.243-4.243-1.414-1.414L4 4z" fill="currentColor" />
+                                    </svg>
+                                    <span
+                                        className="bg-black text-white text-xs px-2 py-1 rounded"
+                                        style={{ backgroundColor: data.user?.color || 'blue', marginLeft: '5px' }}
+                                    >
+                                        {data.user?.name || 'Guest'}
+                                    </span>
+                                </div>
+                            ))}
                         </div>
                         {/* </div> */}
                         <InfoBox

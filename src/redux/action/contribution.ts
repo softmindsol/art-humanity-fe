@@ -33,7 +33,7 @@ export const createContribution = createAsyncThunk(
     } catch (error: any) {
       return thunkAPI.rejectWithValue(
         error.response?.data?.message || "Failed to create contribution"
-      );
+      ); 
     }
   }
 );

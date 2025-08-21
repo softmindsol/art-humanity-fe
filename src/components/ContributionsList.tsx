@@ -40,7 +40,6 @@ const ContributionsList = ({
     if (!contributions || contributions.length === 0) {
         return <div className="p-4 text-center text-gray-500">No project contributions</div>;
     }
-console.log("Rendering ContributionsList with contributions:", contributions);
     return (
         <ul className="space-y-4 font-serif">
             {contributions?.map((contrib: any) => {

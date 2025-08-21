@@ -12,7 +12,8 @@ import { toast } from 'sonner';
 
 
 
-const KonvaCanvas = ({ projectId, userId, width, height, onStateChange, selectedContributionId, onContributionHover, onContributionLeave, onContributionSelect, onGuestInteraction, isReadOnly, isContributor }: any) => {
+const KonvaCanvas = ({
+    projectId, userId, width, height, onStateChange, selectedContributionId, onContributionHover, onContributionLeave, onContributionSelect, onGuestInteraction, isReadOnly, isContributor, socket }: any) => {
     const dispatch = useAppDispatch();
     const brushState = useSelector(selectCurrentBrush);
     const savedStrokes = useSelector(selectCanvasData);
@@ -23,6 +24,7 @@ const {user}=useAuth()
     // Refs
     const currentStrokePathRef = useRef<any>([]); // Backend ke liye
     const activeContributionIdRef = useRef(null); // Mojooda drawing session ko track karne ke liye
+    const lastEmitTimeRef = useRef(0); // Throttling ke liye ref
 
 
 
@@ -115,6 +117,19 @@ const {user}=useAuth()
         // Parent ko mouse position update karein
         onStateChange({ worldPos: pos });
 
+        const now = Date.now();
+        // Har 50ms se pehle event na bhejein
+        if (socket && now - lastEmitTimeRef.current > 50) {
+            lastEmitTimeRef.current = now;
+            socket.emit('cursor_move', {
+                projectId: projectId,
+                user: {
+                    name: user?.fullName,
+                    color: '#' + (Math.random() * 0xFFFFFF << 0).toString(16), // Ek random color de dein, ya user profile se lein
+                },
+                position: pos
+            });
+        }
         // Agar drawing ho rahi hai to drawing logic chalayein
         if (isDrawing) {
             handleDrawingMove(e); // Iska naam change kar diya hai taake confusion na ho
@@ -164,7 +179,7 @@ const {user}=useAuth()
 
         // Step 2: Naye contribution ko state mein add karein
         setContributions((prev: any) => [...prev, newContribution]);
-        // dispatch(getContributionsByProject({ projectId, sortBy: '' }));
+       
 
     };
 
@@ -190,7 +205,7 @@ const {user}=useAuth()
         currentStrokePathRef.current.push({ fromX: lastPoint.x, fromY: lastPoint.y, toX: point.x, toY: point.y });
     };
 
-    const handleMouseUp = () => {
+    const handleMouseUp = async() => {
         if (!isDrawing) return;
         setIsDrawing(false);
         activeContributionIdRef.current = null; // Active session khatm karein
@@ -210,8 +225,20 @@ const {user}=useAuth()
         };
 
         // Naya thunk call karein
-        dispatch(createContribution(contributionPayload));
-        dispatch(getContributionsByProject({ projectId, sortBy: "" })).unwrap(); // Contributions ko update karne ke liye
+        const savedContributionResult = await dispatch(createContribution(contributionPayload)).unwrap();
+
+        if (socket && savedContributionResult) {
+            // YAHAN CONSOLE.LOG LAGAYEIN
+            console.log("Emitting 'new_drawing' from frontend with data:", {
+                projectId: projectId,
+                contribution: savedContributionResult,
+            });
+
+            socket.emit('new_drawing', {
+                projectId: projectId,
+                contribution: savedContributionResult,
+            });
+        }
 
         currentStrokePathRef.current = [];
     };

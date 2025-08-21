@@ -70,6 +70,36 @@ const paintPixelSlice = createSlice({
     setCanvasOffset: (state, action) => {
       state.currentCanvas.offset = action.payload;
     },
+    addContributionFromSocket: (state: any, action) => {
+      const newContribution = action.payload;
+      // Pehle check karein ke kahin yeh contribution (apni ya kisi aur ki) pehle se to nahi aa gayi
+      // Yeh double entries se bachayega
+      const exists = state.canvasData.some(
+        (c: any) => c._id === newContribution._id
+      );
+      if (!exists) {
+        state.canvasData.push(newContribution);
+      }
+    },
+    updateVoteFromSocket: (state: any, action) => {
+      const { wasDeleted, contributionId, ...updatedContribution } =
+        action.payload;
+
+      if (wasDeleted) {
+        // Agar contribution delete ho gayi hai, to usay state se nikaal dein
+        state.canvasData = state.canvasData.filter(
+          (c: any) => c._id !== contributionId
+        );
+      } else {
+        // Warna, us contribution ko dhoond kar update karein
+        const index = state.canvasData.findIndex(
+          (c: any) => c._id === updatedContribution._id
+        );
+        if (index !== -1) {
+          state.canvasData[index] = updatedContribution;
+        }
+      }
+    },
     clearTimelapseUrl: (state) => {
       state.timelapseVideoUrl = null;
     },
@@ -79,7 +109,6 @@ const paintPixelSlice = createSlice({
   },
 
   extraReducers: (builder) => {
-
     // Create Contribution
     builder
       .addCase(createContribution.pending, (state) => {
@@ -110,57 +139,57 @@ const paintPixelSlice = createSlice({
         state.error.getContributions = action.payload as any;
       });
 
-       builder
-         .addCase(deleteContribution.pending, (state:any) => {
-            state.loading.getContributions = false;
-            // state.error.getContributions = action.payload as any;
-         })
-         .addCase(deleteContribution.fulfilled, (state, action) => {
-           state.loading.deleteContribution = false;
-           const { contributionId } = action.payload;
-           // canvasData array se deleted contribution ko nikaal dein
-           state.canvasData = state.canvasData.filter(
-             (contrib: any) => contrib._id !== contributionId
-           );
-         })
-         .addCase(deleteContribution.rejected, (state, action) => {
-          state.loading.getContributions = false;
-          state.error.getContributions = action.payload as any;
-         });
+    builder
+      .addCase(deleteContribution.pending, (state: any) => {
+        state.loading.getContributions = false;
+        // state.error.getContributions = action.payload as any;
+      })
+      .addCase(deleteContribution.fulfilled, (state, action) => {
+        state.loading.deleteContribution = false;
+        const { contributionId } = action.payload;
+        // canvasData array se deleted contribution ko nikaal dein
+        state.canvasData = state.canvasData.filter(
+          (contrib: any) => contrib._id !== contributionId
+        );
+      })
+      .addCase(deleteContribution.rejected, (state, action) => {
+        state.loading.getContributions = false;
+        state.error.getContributions = action.payload as any;
+      });
 
-        builder
-          .addCase(voteOnContribution.pending, (state) => {
-            state.loading.voteOnContribution = true;
-            state.error.voteOnContribution = null;
-          })
-          .addCase(voteOnContribution.fulfilled, (state: any, action) => {
-            state.loading.voteOnContribution = false;
+    builder
+      .addCase(voteOnContribution.pending, (state) => {
+        state.loading.voteOnContribution = true;
+        state.error.voteOnContribution = null;
+      })
+      .addCase(voteOnContribution.fulfilled, (state: any, action) => {
+        state.loading.voteOnContribution = false;
 
-            const responseData = action.payload;
+        const responseData = action.payload;
 
-            // --- NAYI LOGIC YAHAN HAI ---
-            // Check karein ke kya contribution delete ho gaya tha
-            if (responseData.wasDeleted) {
-              // Agar haan, to usay `canvasData` array se nikaal dein
-              state.canvasData = state.canvasData.filter(
-                (contrib: any) => contrib._id !== responseData.contributionId
-              );
-            }
-            // Agar delete nahi hua, to purani logic istemal karein
-            else {
-              const updatedContribution = responseData;
-              const index = state.canvasData.findIndex(
-                (contrib: any) => contrib._id === updatedContribution._id
-              );
-              if (index !== -1) {
-                state.canvasData[index] = updatedContribution;
-              }
-            }
-          })
-          .addCase(voteOnContribution.rejected, (state, action) => {
-            state.loading.voteOnContribution = false;
-            state.error.voteOnContribution = action.payload as any;
-          });
+        // --- NAYI LOGIC YAHAN HAI ---
+        // Check karein ke kya contribution delete ho gaya tha
+        if (responseData.wasDeleted) {
+          // Agar haan, to usay `canvasData` array se nikaal dein
+          state.canvasData = state.canvasData.filter(
+            (contrib: any) => contrib._id !== responseData.contributionId
+          );
+        }
+        // Agar delete nahi hua, to purani logic istemal karein
+        else {
+          const updatedContribution = responseData;
+          const index = state.canvasData.findIndex(
+            (contrib: any) => contrib._id === updatedContribution._id
+          );
+          if (index !== -1) {
+            state.canvasData[index] = updatedContribution;
+          }
+        }
+      })
+      .addCase(voteOnContribution.rejected, (state, action) => {
+        state.loading.voteOnContribution = false;
+        state.error.voteOnContribution = action.payload as any;
+      });
 
     // Generate Timelapse
     builder
@@ -206,6 +235,8 @@ export const {
   setCanvasOffset,
   clearTimelapseUrl,
   clearCanvasData,
+  addContributionFromSocket,
+  updateVoteFromSocket,
 } = paintPixelSlice.actions;
 
 // Selectors
