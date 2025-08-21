@@ -318,7 +318,7 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                             </div>
                             <div className="stat-item">
                                 <span className="stat-label !text-[14.4px]">Canvas Size:</span>
-                                <span className="stat-value !text-[14.4px]">10240px by 10240px</span>
+                                <span className="stat-value !text-[14.4px]">1040px by 1040px</span>
                             </div>
                         </div>
                         
