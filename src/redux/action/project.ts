@@ -101,7 +101,6 @@ export const fetchGalleryProjects = createAsyncThunk(
         `${config?.endpoints?.FETCH_PROJECT_BY_ID}/view/gallery`
       );
 
-      console.log("response.data.data:", response.data.data);
       return response.data.data;
     } catch (error: any) {
       return rejectWithValue(
