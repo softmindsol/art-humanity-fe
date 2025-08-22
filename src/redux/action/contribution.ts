@@ -37,6 +37,20 @@ export const createContribution = createAsyncThunk(
     }
   }
 );
+
+export const batchCreateContributions = createAsyncThunk(
+  "paintPixel/batchCreateContributions",
+  async (batchData: { projectId: string; contributions: any[] }, thunkAPI) => {
+    try {
+      const response = await api.post(`/contributions/batch`, batchData);
+      return response.data.data; // Backend se save hue contributions ka array aayega
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(
+        error.response?.data?.message || "Failed to batch create contributions"
+      );
+    }
+  }
+);
  
 export const getContributionsByProject = createAsyncThunk(
   "paintPixel/getContributionsByProject",

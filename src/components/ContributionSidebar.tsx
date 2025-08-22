@@ -1,5 +1,5 @@
 
-import { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import ContributionsList from './ContributionsList';
 import { getContributionsByProject } from '@/redux/action/contribution';
 import useAuth from '@/hook/useAuth';
@@ -161,4 +161,4 @@ const ContributionSidebar = ({ projectId, contributions, selectedContributionId,
     );
 };
 
-export default ContributionSidebar;
+export default React.memo(ContributionSidebar);

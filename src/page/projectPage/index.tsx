@@ -1,7 +1,7 @@
 // src/pages/ProjectPage.js
 
 import Toolbox from '@/components/toolbox/Toolbox';
-import { useState, useRef, useLayoutEffect, useEffect, useMemo } from 'react';
+import { useState, useRef, useLayoutEffect, useEffect, useMemo, useCallback } from 'react';
 import KonvaCanvas from '../../components/common/KonvaCanvas';
 import {  Film } from 'lucide-react'; // Grid icon imported
 
@@ -106,43 +106,41 @@ const ProjectPage = ({ projectName, projectId }: any) => {
 
     };
     // --- NEW HANDLERS to pass down as props ---
-    const handleContributionHover = (contribution: any, pos: any) => {
+
+    const handleContributionHover = useCallback((contribution:any, pos:any) => {
         const artistName = contribution.userId?.fullName || 'Unknown Artist';
-        setTooltip({
-            visible: true,
-            x: pos.x,
-            y: pos.y,
-            text: `Contribution by: ${artistName}`
-        });
-        // console.log("contribution:", contribution)
-    };
-    const handleContributionLeave = () => {
-        setTooltip({ ...tooltip, visible: false });
-    };
+        setTooltip({ visible: true, x: pos.x, y: pos.y, text: `Contribution by: ${artistName}` });
+    }, []); // tooltip state ko direct set kar rahe hain, isliye dependency ki zaroorat nahi
+
+    const handleContributionLeave = useCallback(() => {
+        setTooltip(prev => ({ ...prev, visible: false }));
+    }, []);
 
   
 
-    const handleCanvasStateChange = (newState: any) => {
+    const handleCanvasStateChange = useCallback((newState:any) => {
         setCanvasStats(prev => ({ ...prev, ...newState }));
-    };
+
+    }, []); // Empty dependency array, yeh function kabhi nahi badlega
+
 
     // const loadReferenceImage = () => {
-    //     // const tile = getTile(0, 0);
-    //     // const ctx = tile.context;
-    //     // ctx.save();
-    //     // const scale = 0.5, offsetX = 60, offsetY = 80;
-    //     // ctx.fillStyle = '#8B4513';
-    //     // ctx.fillRect(100 * scale + offsetX, 150 * scale + offsetY, 80 * scale, 60 * scale);
-    //     // ctx.fillStyle = '#CD5C5C';
-    //     // ctx.beginPath();
-    //     // ctx.moveTo(90 * scale + offsetX, 150 * scale + offsetY);
-    //     // ctx.lineTo(140 * scale + offsetX, 120 * scale + offsetY);
-    //     // ctx.lineTo(190 * scale + offsetX, 150 * scale + offsetY);
-    //     // ctx.closePath();
-    //     // ctx.fill();
-    //     // ctx.restore();
-    //     // tile.isDirty = true;
-    //     // renderVisibleTiles();
+        // const tile = getTile(0, 0);
+        // const ctx = tile.context;
+        // ctx.save();
+        // const scale = 0.5, offsetX = 60, offsetY = 80;
+        // ctx.fillStyle = '#8B4513';
+        // ctx.fillRect(100 * scale + offsetX, 150 * scale + offsetY, 80 * scale, 60 * scale);
+        // ctx.fillStyle = '#CD5C5C';
+        // ctx.beginPath();
+        // ctx.moveTo(90 * scale + offsetX, 150 * scale + offsetY);
+        // ctx.lineTo(140 * scale + offsetX, 120 * scale + offsetY);
+        // ctx.lineTo(190 * scale + offsetX, 150 * scale + offsetY);
+        // ctx.closePath();
+        // ctx.fill();
+        // ctx.restore();
+        // tile.isDirty = true;
+        // renderVisibleTiles();
     // };
 
     const showLoginDialog = !!currentProject && !user && !loginDialogDismissed;
@@ -158,11 +156,20 @@ const ProjectPage = ({ projectName, projectId }: any) => {
     const handleJoin = () => {
         dispatch(joinProject({ projectId, userId: user?.id }));
     };
-    const handleGuestCanvasInteraction = () => {
+    const handleGuestCanvasInteraction = useCallback(() => {
         console.log("A guest is trying to draw. Opening login modal.");
-        // Login dialog ko dobara 'un-dismiss' kar dein taake woh nazar aaye
         setLoginDialogDismissed(false);
-    };
+        dispatch(openAuthModal()); // Auth modal ke liye
+    }, [dispatch]);
+
+    // --- OPTIMIZATION 2: Objects ko useMemo se wrap karein ---
+    const infoBoxData = useMemo(() => ({
+        strokeCount: savedStrokes.length,
+        isSaving: isSaving,
+        saveError: saveError
+    }), [savedStrokes.length, isSaving, saveError]);
+
+
     useEffect(() => {
         // Automatically open the dialog if the user is logged in but not a contributor
         // and the project data has loaded.

@@ -2,6 +2,7 @@ import useAuth from '@/hook/useAuth';
 import useAppDispatch from '@/hook/useDispatch';
 import { deleteContribution, voteOnContribution } from '@/redux/action/contribution';
 import { Trash2 } from 'lucide-react';
+import React from 'react';
 
 // Helper to format date
 const formatDate = (dateString: any) => {
@@ -33,7 +34,7 @@ const ContributionsList = ({
     const handleDelete = (e: any, contributionId: any) => {
         e.stopPropagation();
         // if (confirm('Are you sure you want to delete this contribution?')) {
-            dispatch(deleteContribution({ contributionId }));
+        dispatch(deleteContribution({ contributionId }));
         // }
     };
 
@@ -44,11 +45,16 @@ const ContributionsList = ({
         <ul className="space-y-4 font-serif">
             {contributions?.map((contrib: any) => {
                 const isSelected = contrib?._id === selectedContributionId;
-                const artistName = contrib.userId?.fullName || 'Unknown Artist';
+                const artistName = contrib.userId?.fullName || 'Artist';
                 const totalVotes = (contrib.upvotes || 0) + (contrib.downvotes || 0);
                 const downvotePercentage = totalVotes === 0 ? 0 : ((contrib.downvotes || 0) / totalVotes) * 100;
-                const pixelCount = contrib.strokes?.reduce((total: any, stroke: any) => total + (stroke.strokePath?.length || 0), 0) || 0;
-
+                const pixelCount = (contrib.strokes || [])
+                    .reduce((total: number, stroke: any) => {
+                        if (stroke && stroke.strokePath) {
+                            return total + (stroke.strokePath.length || 0);
+                        }
+                        return total;
+                    }, 0);
                 return (
                     <li
                         key={contrib?._id}
@@ -120,4 +126,4 @@ const ContributionsList = ({
     );
 };
 
-export default ContributionsList;
+export default React.memo(ContributionsList);

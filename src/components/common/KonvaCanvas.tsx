@@ -1,14 +1,12 @@
-// src/components/KonvaCanvas.js
-
-import { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Stage, Layer, Line, Group } from 'react-konva';
 import { useSelector } from 'react-redux';
-import { createContribution, getContributionsByProject } from '@/redux/action/contribution';
-import { selectCurrentBrush, selectCanvasData } from '@/redux/slice/contribution';
-import { v4 as uuidv4 } from 'uuid'; // Unique IDs banane ke liye (npm install uuid @types/uuid)
+import {  getContributionsByProject, batchCreateContributions } from '@/redux/action/contribution';
+import { selectCurrentBrush, selectCanvasData, addMultipleContributionsOptimistically } from '@/redux/slice/contribution';
 import useAppDispatch from '@/hook/useDispatch';
 import useAuth from '@/hook/useAuth';
 import { toast } from 'sonner';
+import { transformContributionForKonva } from '@/utils/transformContributionForKonva';
 
 
 
@@ -17,15 +15,19 @@ const KonvaCanvas = ({
     const dispatch = useAppDispatch();
     const brushState = useSelector(selectCurrentBrush);
     const savedStrokes = useSelector(selectCanvasData);
-const {user}=useAuth()
+    const { user } = useAuth()
     const [isDrawing, setIsDrawing] = useState(false);
     const [contributions, setContributions] = useState<any>([]);
     const [stageState, setStageState] = useState({ scale: 1, x: 0, y: 0 });
     // Refs
     const currentStrokePathRef = useRef<any>([]); // Backend ke liye
-    const activeContributionIdRef = useRef(null); // Mojooda drawing session ko track karne ke liye
-    const lastEmitTimeRef = useRef(0); // Throttling ke liye ref
+    const lastEmitTimeRef = useRef<any>(0); // Throttling ke liye ref
+    // (1) Strokes ko jama karne ke liye ek ref banayein
+    const strokeQueueRef = useRef<any>([]);
+    const [activeLine, setActiveLine] = useState<any>({ points: [] }); // Smooth drawing ke liye
 
+    // (2) Timer ke liye ek ref banayein
+    const batchTimerRef = useRef<any>(null)
 
 
     // Data load karne ke liye
@@ -36,49 +38,37 @@ const {user}=useAuth()
         }
     }, [projectId, dispatch]);
 
+   
+    const sendBatchToServer = useCallback(() => {
+        if (strokeQueueRef.current.length > 0) {
+            // (FIX 2) Ab queue mein pehle se hi poora data hai,
+            // to humein naya object banane ki zaroorat nahi.
+            const contributionsToSend = [...strokeQueueRef.current];
+            strokeQueueRef.current = []; // Foran queue saaf karein
 
+            console.log(`Sending batch with ${contributionsToSend.length} contributions.`);
+
+            dispatch(batchCreateContributions({ projectId, contributions: contributionsToSend }))
+                .unwrap()
+                .then((savedContributions) => {
+                    savedContributions.forEach((contribution:any) => {
+                        if (socket) {
+                            socket.emit('new_drawing', { projectId, contribution });
+                        }
+                    });
+                })
+                .catch(err => console.error("Batch creation failed:", err));
+        }
+    }, [dispatch, projectId, socket]);
     useEffect(() => {
         if (savedStrokes && savedStrokes.length > 0) {
-            const loadedContributions = savedStrokes.map((contribution: any) => {
-
-                // Step 1: Har contribution ke andar uske 'strokes' array par map karein
-                const lines = contribution.strokes.map((stroke: any) => {
-
-                    // Step 2: Har stroke ke 'strokePath' ko Konva ke 'points' format mein badlein
-                    const points = stroke.strokePath.reduce((acc: any, pathSegment: any) => {
-                        if (acc.length === 0) {
-                            return [pathSegment.fromX, pathSegment.fromY, pathSegment.toX, pathSegment.toY];
-                        }
-                        return [...acc, pathSegment.toX, pathSegment.toY];
-                    }, []);
-
-                    // Step 3: Frontend ke liye 'line' object banayein
-                    // Ab `stroke.color`, `stroke.brushSize` bilkul sahi kaam karega
-                    return {
-                        tool: stroke.mode,
-                        stroke: `rgba(${stroke.color.r}, ${stroke.color.g}, ${stroke.color.b}, ${stroke.color.a || 1})`,
-                        strokeWidth: stroke.brushSize,
-                        points: points,
-                    };
-                });
-
-                // Step 4: Frontend ke liye 'contribution' object banayein
-                return {
-                    id: contribution._id, // MongoDB se _id istemal karein
-                    userId: contribution?.userId,
-                    artist: {
-                        id: contribution.userId?._id,
-                        name: contribution.userId?.fullName || 'Unknown',
-                    },
-                    lines: lines, // Yahan poora lines ka array aayega
-                };
-            });
+            // Data ko process karne ke liye seedha helper function istemal karein
+            const loadedContributions = savedStrokes.map(transformContributionForKonva);
             setContributions(loadedContributions);
         } else {
             setContributions([]);
         }
     }, [savedStrokes]);
-
 
 
 
@@ -160,91 +150,94 @@ const {user}=useAuth()
         const pos = e.target.getStage().getPointerPosition();
         currentStrokePathRef.current = [];
 
-        // Step 1: Ek naya contribution banayein
-        const newContributionId = uuidv4();
-        activeContributionIdRef.current = newContributionId as any;
-
-        const newContribution = {
-            id: newContributionId,
-            userId: userId, // Mojooda user ki ID
-            lines: [
-                { // Is contribution ki pehli line
-                    tool: brushState.mode,
-                    stroke: `rgba(${brushState.color.r}, ${brushState.color.g}, ${brushState.color.b}, ${brushState.color.a || 1})`,
-                    strokeWidth: brushState.size,
-                    points: [pos.x, pos.y],
-                }
-            ]
-        };
-
-        // Step 2: Naye contribution ko state mein add karein
-        setContributions((prev: any) => [...prev, newContribution]);
-       
+        // Active line ko shuru karein
+        setActiveLine({
+            points: [pos.x, pos.y],
+            tool: brushState.mode,
+            stroke: `rgba(${brushState.color.r}, ${brushState.color.g}, ${brushState.color.b}, ${brushState.color.a || 1})`,
+            strokeWidth: brushState.size,
+        });
 
     };
 
     const handleDrawingMove = (e: any) => {
         if (!isDrawing) return;
-
         const stage = e.target.getStage();
         const point = stage.getPointerPosition();
 
-        // Step 1: Active contribution ko dhoondein
-        const activeContrib = contributions.find((c: any) => c.id === activeContributionIdRef.current);
-        if (!activeContrib) return;
+        const currentPoints = activeLine.points;
+        setActiveLine((prev:any) => ({ ...prev, points: [...prev.points, point.x, point.y] }));
 
-        // Step 2: Uski aakhri line ko update karein
-        let lastLine = activeContrib.lines[activeContrib.lines.length - 1];
-        lastLine.points = lastLine.points.concat([point.x, point.y]);
+        // === YAHAN PAR FIX HAI ===
+        // Sirf tab path data save karein jab line mein kam se kam 2 points (ek segment) ho
+        if (currentPoints.length >= 2) {
+            const lastPoint = { x: currentPoints[currentPoints.length - 2], y: currentPoints[currentPoints.length - 1] };
+            currentStrokePathRef.current.push({ fromX: lastPoint.x, fromY: lastPoint.y, toX: point.x, toY: point.y });
+        }
+    }
 
-        // Step 3: State ko immutably update karein
-        setContributions((prev: any) => [...prev]); // Simple way to force re-render
-
-        // Backend ke liye path data banayein (yeh waisa hi rahega)
-        const lastPoint = { x: lastLine.points[lastLine.points.length - 4], y: lastLine.points[lastLine.points.length - 3] };
-        currentStrokePathRef.current.push({ fromX: lastPoint.x, fromY: lastPoint.y, toX: point.x, toY: point.y });
-    };
-
-    const handleMouseUp = async() => {
-        if (!isDrawing) return;
+    const handleMouseUp = () => {
+        if (!isDrawing || currentStrokePathRef.current.length === 0) {
+            setIsDrawing(false);
+            return;
+        }
         setIsDrawing(false);
-        activeContributionIdRef.current = null; // Active session khatm karein
-        if (currentStrokePathRef.current.length === 0) return;
 
-        const contributionPayload = {
+        const tempId = `temp_${Date.now()}_${Math.random()}`;
+
+        // === STEP 1: Object for IMMEDIATE UI UPDATE (Optimistic) ===
+        // Ismein `_id` hai taake React isay key ke tor par istemal kar sake.
+        const optimisticContribution: any = {
+            _id: tempId,
             projectId: projectId,
-            strokes: [
-                {
-                    strokePath: currentStrokePathRef.current,
-                    brushSize: brushState.size,
-                    color: brushState.color,
-                    mode: brushState.mode
-                }
-            ],
-            userId
+            userId: { _id: user?.id, fullName: user?.fullName },
+            strokes: [{
+                strokePath: [...currentStrokePathRef.current],
+                brushSize: brushState.size,
+                color: brushState.color,
+                mode: brushState.mode
+            }],
+            upvotes: 0, downvotes: 0, createdAt: new Date().toISOString(),
         };
 
-        // Naya thunk call karein
-        const savedContributionResult = await dispatch(createContribution(contributionPayload)).unwrap();
+        // Foran UI update karein
+        dispatch(addMultipleContributionsOptimistically([optimisticContribution]));
 
-        if (socket && savedContributionResult) {
-            // YAHAN CONSOLE.LOG LAGAYEIN
-            console.log("Emitting 'new_drawing' from frontend with data:", {
-                projectId: projectId,
-                contribution: savedContributionResult,
-            });
+        // === STEP 2: Object for BACKEND ===
+        // Ismein `_id` nahi hai. Mongoose isay khud banayega.
+        // Lekin ismein `tempId` hai taake Redux baad mein isay pehchan sake.
+        const backendContribution = {
+            tempId: tempId,
+            projectId: projectId,
+            userId: userId,
+            strokes: optimisticContribution.strokes,
+        };
 
-            socket.emit('new_drawing', {
-                projectId: projectId,
-                contribution: savedContributionResult,
-            });
-        }
+        // Backend wala object queue mein daalein
+        strokeQueueRef.current.push(backendContribution);
 
+        // Timer reset karein
+        if (batchTimerRef.current) clearTimeout(batchTimerRef.current);
+        batchTimerRef.current = setTimeout(sendBatchToServer, 3000);
+
+        // Active line aur path ko reset karein
+        setActiveLine({ points: [] });
         currentStrokePathRef.current = [];
     };
+    
+    useEffect(() => {
+        return () => {
+            sendBatchToServer(); // Send any remaining strokes on cleanup
+            if (batchTimerRef.current) {
+                clearTimeout(batchTimerRef.current);
+            }
+        };
+    }, [sendBatchToServer]);
+    const { scale, ...restStage } = stageState as any;
 
     return (
         <Stage
+            {...restStage}
             width={width} height={height}
             onWheel={handleWheel}
             onMouseDown={handleMouseDown}
@@ -256,11 +249,13 @@ const {user}=useAuth()
             style={{ cursor: brushState.mode === 'move' ? 'grab' : 'crosshair' }}
         >
             <Layer>
-                {contributions.map((contribution: any) => {
+                {savedStrokes.map((contribution: any) => {
+                    const konvaData = transformContributionForKonva(contribution);
+                    if (!konvaData.id) return null;
                     const isSelected = contribution.id === selectedContributionId;
                     return (
                         <Group
-                            key={contribution.id}
+                            key={konvaData.id}
                             onMouseEnter={(e: any) => {
                                 onContributionHover(contribution, e.target.getStage().getPointerPosition());
                                 const stage = e.target.getStage() as any;
@@ -279,26 +274,25 @@ const {user}=useAuth()
                             shadowBlur={isSelected ? 15 : 0}
                             shadowOpacity={isSelected ? 0.9 : 0}
                         >
-                            {contribution.lines.map((line: any, i: any) => (
-                                <Line
-                                    key={i}
-                                    points={line.points}
-                                    stroke={line.stroke}
-                                    strokeWidth={line.strokeWidth}
-                                    tension={0.5}
-                                    lineCap="round"
-                                    lineJoin="round"
-                                    globalCompositeOperation={
-                                        line.tool === 'eraser' ? 'destination-out' : 'source-over'
-                                    }
-                                />
-                            ))}
+                            {konvaData.lines.map((line: any, i: any) => <Line key={i} {...line} tension={0.5} lineCap="round" lineJoin="round" perfectDrawEnabled={false} />)}
                         </Group>
                     )
                 })}
+                {isDrawing && (
+                    <Line
+                        points={activeLine.points}
+                        stroke={activeLine.stroke}
+                        strokeWidth={activeLine.strokeWidth}
+                        tension={0.5}
+                        lineCap="round"
+                        lineJoin="round"
+                        globalCompositeOperation={activeLine.tool === 'eraser' ? 'destination-out' : 'source-over'}
+                        perfectDrawEnabled={false}
+                    />
+                )}
             </Layer>
         </Stage>
     );
 };
 
-export default KonvaCanvas;
+export default React.memo(KonvaCanvas);

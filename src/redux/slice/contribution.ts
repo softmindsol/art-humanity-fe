@@ -9,7 +9,9 @@ import {
   clearCanvas,
   voteOnContribution,
   deleteContribution,
+  batchCreateContributions,
 } from "../action/contribution";
+import { toast } from "sonner";
 
 // Naya, saaf suthra initialState
 const initialState = {
@@ -70,17 +72,7 @@ const paintPixelSlice = createSlice({
     setCanvasOffset: (state, action) => {
       state.currentCanvas.offset = action.payload;
     },
-    addContributionFromSocket: (state: any, action) => {
-      const newContribution = action.payload;
-      // Pehle check karein ke kahin yeh contribution (apni ya kisi aur ki) pehle se to nahi aa gayi
-      // Yeh double entries se bachayega
-      const exists = state.canvasData.some(
-        (c: any) => c._id === newContribution._id
-      );
-      if (!exists) {
-        state.canvasData.push(newContribution);
-      }
-    },
+   
     updateVoteFromSocket: (state: any, action) => {
       const { wasDeleted, contributionId, ...updatedContribution } =
         action.payload;
@@ -100,29 +92,71 @@ const paintPixelSlice = createSlice({
         }
       }
     },
+    // Yeh reducer socket se anay wale data ke liye hai
+    addContributionFromSocket: (state: any, action) => {
+      const newContribution = action.payload;
+      const exists = state.canvasData.some(
+        (c: any) => c._id === newContribution._id
+      );
+      if (!exists) {
+        state.canvasData.push(newContribution);
+      }
+    },
     clearTimelapseUrl: (state) => {
       state.timelapseVideoUrl = null;
     },
     clearCanvasData: (state) => {
       state.canvasData = [];
     },
+    addMultipleContributionsOptimistically: (state: any, action) => {
+      // action.payload mein temporary contributions ka poora array aayega
+      state.canvasData.push(...action.payload);
+    },
   },
 
   extraReducers: (builder) => {
     // Create Contribution
     builder
-      .addCase(createContribution.pending, (state) => {
-        state.loading.createContribution = true;
-        state.error.createContribution = null;
-      })
-      .addCase(createContribution.fulfilled, (state: any, action) => {
-        state.loading.createContribution = false;
-        state.canvasData.push(action.payload);
-      })
-      .addCase(createContribution.rejected, (state, action) => {
-        state.loading.createContribution = false;
-        state.error.createContribution = action.payload as any;
-      });
+      builder
+        .addCase(batchCreateContributions.pending, (state, action) => {
+          state.loading.createContribution = true;
+          state.error.createContribution = null;
+          // Pending mein hum state ko nahi chherenge, kyunke optimistic data pehle se mojood hai
+        })
+        .addCase(batchCreateContributions.fulfilled, (state: any, action) => {
+          state.loading.createContribution = false;
+          const savedContributions = action.payload; // Server se anay wala asli data ka array
+          const tempContributions = action.meta.arg.contributions; // Humne jo temporary data bheja tha
+
+          // Agar server se response nahi aaya to kuch na karein
+          if (!savedContributions || !tempContributions) return;
+
+          console.log("Replacing temp contributions with final ones.");
+
+          // Har temporary contribution ko uske asli data se replace karein
+          tempContributions.forEach((tempContrib, index) => {
+            const finalContrib = savedContributions[index];
+            if (finalContrib) {
+              const tempId = tempContrib.tempId;
+              const stateIndex = state.canvasData.findIndex(
+                (c: any) => c._id === tempId
+              );
+              if (stateIndex !== -1) {
+                // Sirf us ek object ko replace karein, poore array ko nahi
+                state.canvasData[stateIndex] = finalContrib;
+              }
+            }
+          });
+        })
+        .addCase(batchCreateContributions.rejected, (state: any, action) => {
+          // Agar batch fail ho jaye, to is batch ki tamam temporary contributions ko UI se hata dein
+          const tempContributions = action.meta.arg.contributions;
+          const tempIds = tempContributions.map((c) => c.tempId);
+          state.canvasData = state.canvasData.filter(
+            (c: any) => !tempIds.includes(c._id)
+          );
+          toast.error("Some drawings could not be saved.");
+        });
 
     // Get Contributions By Project
     builder
@@ -235,8 +269,10 @@ export const {
   setCanvasOffset,
   clearTimelapseUrl,
   clearCanvasData,
-  addContributionFromSocket,
   updateVoteFromSocket,
+  addContributionFromSocket,
+
+  addMultipleContributionsOptimistically, // Isay export karein
 } = paintPixelSlice.actions;
 
 // Selectors
