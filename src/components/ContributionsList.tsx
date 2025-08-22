@@ -12,7 +12,7 @@ const formatDate = (dateString: any) => {
 };
 
 const ContributionsList = ({
-    projectId,
+    
     contributions,
     selectedContributionId,
     onContributionSelect,

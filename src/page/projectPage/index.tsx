@@ -162,13 +162,7 @@ const ProjectPage = ({ projectName, projectId }: any) => {
         dispatch(openAuthModal()); // Auth modal ke liye
     }, [dispatch]);
 
-    // --- OPTIMIZATION 2: Objects ko useMemo se wrap karein ---
-    const infoBoxData = useMemo(() => ({
-        strokeCount: savedStrokes.length,
-        isSaving: isSaving,
-        saveError: saveError
-    }), [savedStrokes.length, isSaving, saveError]);
-
+  
 
     useEffect(() => {
         // Automatically open the dialog if the user is logged in but not a contributor

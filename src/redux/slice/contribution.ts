@@ -3,7 +3,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 // Naye aur zaroori thunks ko import karein
 import {
-  createContribution,
   getContributionsByProject,
   generateTimelapseVideo,
   clearCanvas,
@@ -118,7 +117,7 @@ const paintPixelSlice = createSlice({
     // Create Contribution
     builder
       builder
-        .addCase(batchCreateContributions.pending, (state, action) => {
+        .addCase(batchCreateContributions.pending, (state, _) => {
           state.loading.createContribution = true;
           state.error.createContribution = null;
           // Pending mein hum state ko nahi chherenge, kyunke optimistic data pehle se mojood hai
