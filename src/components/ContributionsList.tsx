@@ -77,7 +77,7 @@ const ContributionsList = ({
                         <div className="h-40 bg-gray-200 flex items-center justify-center p-2">
                             {contrib.thumbnailUrl ? (
                                 <img
-                                    src={`${import.meta.env.VITE_BASE}${contrib?.thumbnailUrl}`}
+                                    src={contrib.thumbnailUrl}
                                     alt={`Contribution by ${artistName}`}
                                     className="max-w-full max-h-full object-contain"
                                 />

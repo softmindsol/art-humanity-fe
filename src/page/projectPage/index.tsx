@@ -21,7 +21,7 @@ import type { RootState } from '@/redux/store';
 import { clearCanvas, generateTimelapseVideo, getContributionsByProject } from '@/redux/action/contribution';
 import InfoBox from '@/components/toolbox/InfoBox';
 import { useSelector } from 'react-redux';
-import { clearCanvasData, selectCanvasData, selectErrorForOperation, selectIsLoadingOperation, selectTimelapseUrl } from '@/redux/slice/contribution';
+import { clearCanvasData, clearTimelapseUrl, selectCanvasData, selectErrorForOperation, selectIsLoadingOperation, selectTimelapseUrl } from '@/redux/slice/contribution';
 import ContributionSidebar from '@/components/ContributionSidebar';
 import { joinProject } from '@/redux/action/project';
 import { Button } from '@/components/ui/button';
@@ -73,6 +73,22 @@ const ProjectPage = ({ projectName, projectId }: any) => {
     const saveError = useSelector(selectErrorForOperation('createContribution')); // Updated to new state
     const [cursors, setCursors] = useState({}); // (1) Sab cursors ki state ke liye naya state
 
+    const handleGenerateTimelapse = () => {
+        if (!projectId) {
+            toast.error("Project ID is not available.");
+            return;
+        }
+        setIsTimelapseOpen(true); // Modal kholein
+        dispatch(generateTimelapseVideo({ projectId }));
+    };
+
+    // Modal band hone par Redux state saaf karein
+    const handleModalClose = (isOpen:any) => {
+        if (!isOpen) {
+            dispatch(clearTimelapseUrl());
+        }
+        setIsTimelapseOpen(isOpen);
+    };
     const {
         tilesRef,
         isClearAlertOpen,
@@ -84,17 +100,7 @@ const ProjectPage = ({ projectName, projectId }: any) => {
         worldPos: { x: 0, y: 0 },
     });
 
-    const handleGenerateTimelapse = () => {
-        if (!projectId) {
-            toast.error("Project ID is not available.");
-            return;
-        }
-        setIsGeneratingTimelapse(true)
-        dispatch(generateTimelapseVideo({ projectId })).unwrap().finally(() => {
-            setIsGeneratingTimelapse(false);
-            setIsTimelapseOpen(true);
-        }) as any;
-    };
+   
     const handleClearCanvas = () => {
         dispatch(clearCanvas({ projectId }));
         tilesRef.current.forEach((tile: any) => {
@@ -526,7 +532,7 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                 isReadOnly={isReadOnly} // Naya prop pass karein
 
             />
-            <Dialog open={isTimelapseOpen} onOpenChange={setIsTimelapseOpen}>
+            <Dialog open={isTimelapseOpen} onOpenChange={handleModalClose}>
                 <DialogContent className="bg-[#5d4037] border-2 border-[#3e2723] text-white font-[Georgia, serif] max-w-3xl">
                     <DialogHeader>
                         <DialogTitle className="text-2xl !text-white text-center">Project Timelapse</DialogTitle>
@@ -554,8 +560,8 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                         {/* Case 3: Success State (Video Ready) */}
                         {!isGenerating && timelapseUrl && (
                             <video
-                                key={timelapseUrl} // Key ensures the video re-renders if the URL changes
-                                src={`${import.meta.env.VITE_BASE}${timelapseUrl}`}
+                                key={`${timelapseUrl}?t=${new Date().getTime()}`}
+                                src={`${import.meta.env.VITE_BASE}${timelapseUrl}?t=${new Date().getTime()}`}
                                 controls
                                 autoPlay
                                 className="w-full max-h-[70vh] rounded-lg"

@@ -244,19 +244,18 @@ const paintPixelSlice = createSlice({
       .addCase(generateTimelapseVideo.pending, (state) => {
         state.loading.generateTimelapse = true;
         state.error.generateTimelapse = null;
-        state.timelapseVideoUrl = null;
+        state.timelapseVideoUrl = null; // Purana URL saaf karein
       })
       .addCase(generateTimelapseVideo.fulfilled, (state, action) => {
         state.loading.generateTimelapse = false;
-        if (action.payload.success) {
-          state.timelapseVideoUrl = action.payload.videoUrl;
-        }
+        // action.payload mein { videoUrl: '...' } aayega
+        state.timelapseVideoUrl = action.payload.videoUrl;
       })
       .addCase(generateTimelapseVideo.rejected, (state, action) => {
         state.loading.generateTimelapse = false;
         state.error.generateTimelapse = action.payload as any;
       });
-
+  
     // Clear Canvas
     builder
       .addCase(clearCanvas.pending, (state) => {
