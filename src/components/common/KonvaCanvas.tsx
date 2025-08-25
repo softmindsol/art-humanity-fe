@@ -234,7 +234,6 @@ const KonvaCanvas = ({
         };
     }, [sendBatchToServer]);
     const { scale, ...restStage } = stageState as any;
-
     return (
         <Stage
             {...restStage}
@@ -249,7 +248,7 @@ const KonvaCanvas = ({
             style={{ cursor: brushState.mode === 'move' ? 'grab' : 'crosshair' }}
         >
             <Layer>
-                {savedStrokes.map((contribution: any) => {
+                {savedStrokes?.map((contribution: any) => {
                     const konvaData = transformContributionForKonva(contribution);
                     if (!konvaData.id) return null;
                     const isSelected = contribution.id === selectedContributionId;
