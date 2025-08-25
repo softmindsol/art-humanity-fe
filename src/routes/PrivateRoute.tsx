@@ -9,7 +9,7 @@ interface ProtectedRouteProps {
     children: any;
     allowedRoles?: string[];
     requiredPath?: string; // ✅ new
-
+ 
 }
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);

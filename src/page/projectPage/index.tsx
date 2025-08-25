@@ -55,7 +55,7 @@ const ProjectPage = ({ projectName, projectId }: any) => {
     const [canvasSize, setCanvasSize] = useState<any>({ width: 0, height: 0 });
     const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, text: '' });
     const [selectedContributionId, setSelectedContributionId] = useState(null);
-    const [isGeneratingTimelapse, setIsGeneratingTimelapse] = useState(false);
+    const [isGeneratingTimelapse, _] = useState(false);
     const listItemRefs = useRef<any>({});
     const { currentProject, loading } = useSelector((state: RootState) => state?.projects);
     const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
