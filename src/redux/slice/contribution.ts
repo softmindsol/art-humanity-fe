@@ -29,7 +29,11 @@ const initialState = {
     zoomLevel: 1,
     offset: { x: 0, y: 0 },
   },
-
+  pagination: {
+    currentPage: 0,
+    totalPages: 1,
+    totalContributions: 0,
+  },
   // Nayi, simplified loading states
   loading: {
     createContribution: false,
@@ -165,7 +169,18 @@ const paintPixelSlice = createSlice({
       })
       .addCase(getContributionsByProject.fulfilled, (state, action) => {
         state.loading.getContributions = false;
-        state.canvasData = action.payload;
+        const { contributions, currentPage, totalPages, totalContributions } =
+          action.payload;
+
+        if (currentPage === 1) {
+          // Agar yeh pehla page hai, to purana data saaf kar dein
+          state.canvasData = contributions;
+        } else {
+          // Agar yeh agla page hai, to naye data ko purane ke saath mila dein
+          state.canvasData = [...state.canvasData, ...contributions] as any;
+        }
+        // Pagination info update karein
+        state.pagination = { currentPage, totalPages, totalContributions };
       })
       .addCase(getContributionsByProject.rejected, (state, action) => {
         state.loading.getContributions = false;
@@ -285,5 +300,6 @@ export const selectErrorForOperation = (operation: any) => (state: any) =>
   state.paintPixel.error[operation];
 export const selectTimelapseUrl = (state: any) =>
   state.paintPixel.timelapseVideoUrl;
+export const selectPaginationInfo = (state: any) => state.paintPixel.pagination;
 
 export default paintPixelSlice.reducer;

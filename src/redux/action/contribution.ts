@@ -54,17 +54,39 @@ export const batchCreateContributions = createAsyncThunk(
  
 export const getContributionsByProject = createAsyncThunk(
   "paintPixel/getContributionsByProject",
-  // Step 1: Payload object ab 'sortBy' bhi accept karega.
+  // (1) Payload ke types mein `userId` ko (optional string ke tor par) add karein
   async (
-    { projectId, sortBy }: { projectId: string; sortBy?: string },
+    {
+      projectId,
+      sortBy,
+      page,
+      limit,
+      userId,
+    }: {
+      projectId: string;
+      sortBy?: string;
+      page?: number;
+      limit?: number;
+      userId?: string;
+    },
     thunkAPI
   ) => {
     try {
-      // Step 2: API call mein 'sortBy' parameter ko shamil karein.
+      const params = new URLSearchParams();
+console.log("userId in thunk:", userId); // Debugging ke liye
+      if (sortBy) params.append("sortBy", sortBy);
+      if (page) params.append("page", page.toString());
+      if (limit) params.append("limit", limit.toString());
+      // (2) Agar userId mojood hai, to usay bhi query parameters mein shamil karein
+      if (userId) params.append("userId", userId);
+
+      const queryString = params.toString();
       let url = `/contributions/project/${projectId}`;
-      if (sortBy) {
-        url += `?sortBy=${sortBy}`;
+      if (queryString) {
+        url += `?${queryString}`;
       }
+
+      console.log(`Fetching contributions with URL: ${url}`); // Debugging ke liye
 
       const response = await api.get(url);
       return response.data.data;
@@ -75,7 +97,6 @@ export const getContributionsByProject = createAsyncThunk(
     }
   }
 );
-
 
 // --- NAYA VOTE THUNK ---
 export const voteOnContribution = createAsyncThunk(

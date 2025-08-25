@@ -1,59 +1,76 @@
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import ContributionsList from './ContributionsList';
 import { getContributionsByProject } from '@/redux/action/contribution';
 import useAuth from '@/hook/useAuth';
 import useAppDispatch from '@/hook/useDispatch';
+import { clearCanvasData, selectCanvasData, selectIsLoadingOperation, selectPaginationInfo } from '@/redux/slice/contribution';
+import { useSelector } from 'react-redux';
 
 
 const SIDEBAR_WIDTH = 350; // Sidebar ki width ko ek variable mein rakhein
 
-const ContributionSidebar = ({ projectId, contributions, selectedContributionId, onContributionSelect, listItemRefs, onGuestVoteAttempt }: any) => {
-    const [isOpen, setIsOpen] = useState(false); // Sidebar ki open/close state
-    const [activeTab, setActiveTab] = useState('project'); // 'project' ya 'my'
-    const [filter, setFilter] = useState('newest'); // Default filter
+const ContributionSidebar = ({ projectId, selectedContributionId, onContributionSelect, listItemRefs, onGuestVoteAttempt }: any) => {
     const dispatch = useAppDispatch();
     const { user } = useAuth();
-    const currentUserId = user?.id; // Current user ID
 
-    const displayedContributions = useMemo(() => {
-        // Hamesha ek nayi copy par kaam karein taake original data mehfooz rahe
-        let processedContributions = [...(contributions || [])];
+    // States
+    const [isOpen, setIsOpen] = useState(false);
+    const [activeTab, setActiveTab] = useState('project');
+    const [filter, setFilter] = useState('newest');
 
-        // Step 2: Active tab ke hisab se list ko filter karein
-        if (activeTab === 'my' && currentUserId) {
-            processedContributions = processedContributions.filter(
-                (contrib: any) => contrib.userId?._id === currentUserId
-            );
-        }
+    // Redux Selectors
+    const contributions = useSelector(selectCanvasData);
+    const { currentPage, totalPages } = useSelector(selectPaginationInfo);
+    const isLoading = useSelector(selectIsLoadingOperation('getContributions'));
 
-        // Note: Sorting ab backend se ho rahi hai, isliye yahan dobara sort karne ki zaroorat nahi.
-        // Agar aap frontend par sorting karna chahein, to woh logic yahan aayegi.
+    // Refs
+    const listContainerRef = useRef<HTMLDivElement>(null);
 
-        return processedContributions;
-
-    }, [contributions, activeTab, currentUserId]); // Jab yeh cheezein badlengi, to list re-calculate hogi
-    // --- NEW useEffect for triggering data refetch on filter change ---
+    // === MASTER useEffect for Data Fetching ===
+    // Yeh useEffect ab filter, projectId, aur activeTab teeno par chalega.
     useEffect(() => {
-        // Yeh effect tab chalega jab component load hoga, ya jab 'filter' ya 'projectId' badlega.
         if (projectId) {
-            console.log(`Refetching contributions for project ${projectId} with filter: ${filter}`);
-            // Naye 'sortBy' parameter ke sath thunk ko dispatch karein
-            dispatch(getContributionsByProject({ projectId, sortBy: filter }));
+            console.log(`Fetching data for Tab: ${activeTab}, Filter: ${filter}`);
+
+            // (1) Pehle purana data saaf karein
+            dispatch(clearCanvasData());
+
+            // (2) Naye parameters ke saath pehla page fetch karein
+            dispatch(getContributionsByProject({
+                projectId,
+                sortBy: filter,
+                page: 1,
+                // Agar 'my' tab active hai to userId bhejein
+                userId: activeTab === 'my' ? user?.id : undefined
+            }));
         }
-    }, [filter, projectId, dispatch]); // Dependency array
+    }, [filter, projectId, activeTab, user?.id, dispatch]); // activeTab ko dependency mein add karna sab se zaroori hai
 
+    // Infinite Scroll Logic
+    const handleScroll = useCallback(() => {
+        const container = listContainerRef.current;
+        if (container) {
+            const { scrollTop, scrollHeight, clientHeight } = container;
+            const isNearBottom = scrollTop + clientHeight >= scrollHeight - 300;
 
+            if (isNearBottom && !isLoading && currentPage < totalPages) {
+                const nextPage = currentPage + 1;
+                dispatch(getContributionsByProject({
+                    projectId,
+                    sortBy: filter,
+                    page: nextPage,
+                    userId: activeTab === 'my' ? user?.id : undefined
+                }));
+            }
+        }
+    }, [isLoading, currentPage, totalPages, projectId, filter, activeTab, user?.id, dispatch]);
+
+    // Sidebar open/close effect
     useEffect(() => {
-        // Action: Jab sidebar khulta hai
-        if (isOpen) {
-            document.body.style.overflow = 'hidden';
-        }
-
-        return () => {
-            document.body.style.overflow = 'auto'; // Scrolling ko wapas normal kar dein
-        };
-    }, [isOpen]); // Dependency array: Yeh effect sirf tab chalega jab `isOpen` ki value badlegi.
+        if (isOpen) document.body.style.overflow = 'hidden';
+        return () => { document.body.style.overflow = 'auto'; };
+    }, [isOpen]);
     return (
         <div className={`fixed  top-0 right-0 h-screen z-40 flex items-center  `}
             style={{
@@ -98,7 +115,7 @@ const ContributionSidebar = ({ projectId, contributions, selectedContributionId,
                         </button>
                     </div>
 
-                    <div className="p-4 flex-grow overflow-y-auto">
+                    <div ref={listContainerRef} onScroll={handleScroll} className="p-4 flex-grow overflow-y-auto">
 
 
                         <p className="text-[14.4px] italic text-[#654321] mb-4">
@@ -144,7 +161,7 @@ const ContributionSidebar = ({ projectId, contributions, selectedContributionId,
 
 
                         <ContributionsList
-                            contributions={displayedContributions}
+                            contributions={contributions}
                             selectedContributionId={selectedContributionId}
                             onContributionSelect={onContributionSelect}
                             listItemRefs={listItemRefs}
@@ -152,11 +169,18 @@ const ContributionSidebar = ({ projectId, contributions, selectedContributionId,
                             onGuestVoteAttempt={onGuestVoteAttempt}
 
                         />
+                        {/* Loading Indicator */}
+                        {isLoading && <div className="text-center p-4">Loading more contributions...</div>}
 
+                        {/* No More Data Message */}
+                        {!isLoading && contributions.length > 0 && currentPage >= totalPages && (
+                            <div className="text-center p-4 text-gray-500">No more contributions to load.</div>
+                        )}
 
                     </div>
 
-                </div>}
+                </div>
+                }
         </div>
     );
 };

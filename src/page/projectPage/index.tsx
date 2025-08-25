@@ -376,7 +376,7 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                             </div>
                             <div className="stat-item">
                                 <span className="stat-label !text-[14.4px]" >Pixels Painted:</span>
-                                <span className="stat-value !text-[14.4px]" id="pixel-count">0/104,857,600</span>
+                                <span className="stat-value !text-[14.4px]" id="pixel-count">{currentProject?.stats?.pixelCount}/104,857,600</span>
                             </div>
                             <div className="stat-item">
                                 <span className="stat-label !text-[14.4px]">Canvas Size:</span>

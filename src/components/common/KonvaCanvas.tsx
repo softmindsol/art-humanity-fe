@@ -17,7 +17,7 @@ const KonvaCanvas = ({
     const savedStrokes = useSelector(selectCanvasData);
     const { user } = useAuth()
     const [isDrawing, setIsDrawing] = useState(false);
-    const [contributions, setContributions] = useState<any>([]);
+    const [_, setContributions] = useState<any>([]);
     const [stageState, setStageState] = useState({ scale: 1, x: 0, y: 0 });
     // Refs
     const currentStrokePathRef = useRef<any>([]); // Backend ke liye
