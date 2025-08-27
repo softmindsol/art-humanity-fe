@@ -33,12 +33,12 @@ api.interceptors.response.use(
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
-      !originalRequest.url?.includes("/auth/refresh-token")
+      !originalRequest.url?.includes("/refresh-token")
     ) {
       originalRequest._retry = true;
 
       try {
-        const refreshResponse = await api.get("/auth/refresh-token", {
+        const refreshResponse = await api.get("/refresh-token", {
           withCredentials: true,
         });
 
