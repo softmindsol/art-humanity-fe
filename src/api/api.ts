@@ -48,7 +48,7 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshError) {
         console.error("🔴 Refresh token failed");
-        window.location.href = "/";
+        window.location.href = "/login";
         return Promise.reject(refreshError);
       }
     }
