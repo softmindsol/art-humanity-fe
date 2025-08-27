@@ -3,7 +3,7 @@
 import Toolbox from '@/components/toolbox/Toolbox';
 import { useState, useRef, useLayoutEffect, useEffect, useMemo, useCallback } from 'react';
 import KonvaCanvas from '../../components/common/KonvaCanvas';
-import {  Film } from 'lucide-react'; // Grid icon imported
+import { Film } from 'lucide-react'; // Grid icon imported
 
 import {
     AlertDialog,
@@ -17,10 +17,8 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { useCanvasState } from '@/hook/useCanvasState';
-import type { RootState } from '@/redux/store';
 import { clearCanvas, generateTimelapseVideo, getContributionsByProject } from '@/redux/action/contribution';
 import InfoBox from '@/components/toolbox/InfoBox';
-import { useSelector } from 'react-redux';
 import { clearCanvasData, clearTimelapseUrl, selectCanvasData, selectErrorForOperation, selectIsLoadingOperation, selectTimelapseUrl } from '@/redux/slice/contribution';
 import ContributionSidebar from '@/components/ContributionSidebar';
 import { joinProject } from '@/redux/action/project';
@@ -30,9 +28,11 @@ import { toast } from 'sonner';
 import useAuth from '@/hook/useAuth';
 import useAppDispatch from '@/hook/useDispatch';
 import { openAuthModal } from '@/redux/slice/opeModal';
-import { useSearchParams } from 'react-router-dom';
 import { io } from 'socket.io-client'; // Socket client import karein
 import { addContributionFromSocket } from '@/redux/slice/contribution'; // Naya action import karein
+import { useSelector } from 'react-redux';
+import { selectCurrentProject } from '@/redux/slice/project';
+import type { RootState } from '@/redux/store';
 
 
 const TILE_SIZE = 512; // Optimal tile size for performance
@@ -50,28 +50,33 @@ interface CursorData {
 const ProjectPage = ({ projectName, projectId }: any) => {
     const { user } = useAuth();
     const dispatch = useAppDispatch();
-    const canvasContainerRef = useRef<any>(null);
-    const [socket, setSocket] = useState<any>(null); // (1) Socket object ke liye state banayein
-    const [canvasSize, setCanvasSize] = useState<any>({ width: 0, height: 0 });
-    const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, text: '' });
+
+    // --- STATES ---
+    const [socket, setSocket] = useState<any>(null);
+    const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [selectedContributionId, setSelectedContributionId] = useState(null);
-    const [isGeneratingTimelapse, _] = useState(false);
-    const listItemRefs = useRef<any>({});
-    const { currentProject, loading } = useSelector((state: RootState) => state?.projects);
     const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
     const [loginDialogDismissed, setLoginDialogDismissed] = useState(false);
-    // --- NAYI LOGIC: Read-only mode ko check karein ---
-    const [searchParams] = useSearchParams();
-    const isReadOnly = searchParams.get('view') === 'gallery';
     const [isTimelapseOpen, setIsTimelapseOpen] = useState(false);
-    // --- REDUX STATE for Timelapse ---
+    const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, text: '' });
+    const [isGeneratingTimelapse, _] = useState(false);
+    const contributions = useSelector(selectCanvasData);
+    const { loading } = useSelector((state: RootState) => state.projects);
+    // --- REFS ---
+    const canvasContainerRef = useRef<any>(null);
+    const listItemRefs = useRef<any>({});
+    const [cursors, setCursors] = useState<Record<string, any>>({});
+
+    // --- REDUX SELECTORS ---
+    const currentProject = useSelector(selectCurrentProject);
     const timelapseUrl = useSelector(selectTimelapseUrl);
     const isGenerating = useSelector(selectIsLoadingOperation('generateTimelapse'));
     const generationError = useSelector(selectErrorForOperation('generateTimelapse'));
+    const isReadOnly = useMemo(() => new URLSearchParams(window.location.search).get('view') === 'gallery', []);
     const savedStrokes = useSelector(selectCanvasData);
-    const isSaving = useSelector(selectIsLoadingOperation('createContribution')); // Updated to new state
-    const saveError = useSelector(selectErrorForOperation('createContribution')); // Updated to new state
-    const [cursors, setCursors] = useState({}); // (1) Sab cursors ki state ke liye naya state
+    const isSaving = useSelector(selectIsLoadingOperation("createContribution"));
+    const saveError = useSelector(selectErrorForOperation("createContribution"));
 
     const handleGenerateTimelapse = () => {
         if (!projectId) {
@@ -83,7 +88,7 @@ const ProjectPage = ({ projectName, projectId }: any) => {
     };
 
     // Modal band hone par Redux state saaf karein
-    const handleModalClose = (isOpen:any) => {
+    const handleModalClose = (isOpen: any) => {
         if (!isOpen) {
             dispatch(clearTimelapseUrl());
         }
@@ -100,7 +105,20 @@ const ProjectPage = ({ projectName, projectId }: any) => {
         worldPos: { x: 0, y: 0 },
     });
 
-   
+
+    // Canvas se click handle karne wala function
+    const handleCanvasClick = (contributionId: any) => {
+        console.log(`Canvas clicked. Setting selected ID to: ${contributionId}`);
+        setSelectedContributionId(contributionId);
+    };
+
+
+
+    const handleSidebarContributionSelect = useCallback((contributionId: any) => {
+        setSelectedContributionId(contributionId);
+        // Sidebar pehle se khula hai, usay dobara kholne ki zaroorat nahi
+    }, []);
+
     const handleClearCanvas = () => {
         dispatch(clearCanvas({ projectId }));
         tilesRef.current.forEach((tile: any) => {
@@ -113,7 +131,7 @@ const ProjectPage = ({ projectName, projectId }: any) => {
     };
     // --- NEW HANDLERS to pass down as props ---
 
-    const handleContributionHover = useCallback((contribution:any, pos:any) => {
+    const handleContributionHover = useCallback((contribution: any, pos: any) => {
         const artistName = contribution.userId?.fullName || 'Unknown Artist';
         setTooltip({ visible: true, x: pos.x, y: pos.y, text: `Contribution by: ${artistName}` });
     }, []); // tooltip state ko direct set kar rahe hain, isliye dependency ki zaroorat nahi
@@ -122,31 +140,31 @@ const ProjectPage = ({ projectName, projectId }: any) => {
         setTooltip(prev => ({ ...prev, visible: false }));
     }, []);
 
-  
 
-    const handleCanvasStateChange = useCallback((newState:any) => {
+
+    const handleCanvasStateChange = useCallback((newState: any) => {
         setCanvasStats(prev => ({ ...prev, ...newState }));
 
     }, []); // Empty dependency array, yeh function kabhi nahi badlega
 
 
     // const loadReferenceImage = () => {
-        // const tile = getTile(0, 0);
-        // const ctx = tile.context;
-        // ctx.save();
-        // const scale = 0.5, offsetX = 60, offsetY = 80;
-        // ctx.fillStyle = '#8B4513';
-        // ctx.fillRect(100 * scale + offsetX, 150 * scale + offsetY, 80 * scale, 60 * scale);
-        // ctx.fillStyle = '#CD5C5C';
-        // ctx.beginPath();
-        // ctx.moveTo(90 * scale + offsetX, 150 * scale + offsetY);
-        // ctx.lineTo(140 * scale + offsetX, 120 * scale + offsetY);
-        // ctx.lineTo(190 * scale + offsetX, 150 * scale + offsetY);
-        // ctx.closePath();
-        // ctx.fill();
-        // ctx.restore();
-        // tile.isDirty = true;
-        // renderVisibleTiles();
+    // const tile = getTile(0, 0);
+    // const ctx = tile.context;
+    // ctx.save();
+    // const scale = 0.5, offsetX = 60, offsetY = 80;
+    // ctx.fillStyle = '#8B4513';
+    // ctx.fillRect(100 * scale + offsetX, 150 * scale + offsetY, 80 * scale, 60 * scale);
+    // ctx.fillStyle = '#CD5C5C';
+    // ctx.beginPath();
+    // ctx.moveTo(90 * scale + offsetX, 150 * scale + offsetY);
+    // ctx.lineTo(140 * scale + offsetX, 120 * scale + offsetY);
+    // ctx.lineTo(190 * scale + offsetX, 150 * scale + offsetY);
+    // ctx.closePath();
+    // ctx.fill();
+    // ctx.restore();
+    // tile.isDirty = true;
+    // renderVisibleTiles();
     // };
 
     const showLoginDialog = !!currentProject && !user && !loginDialogDismissed;
@@ -156,11 +174,22 @@ const ProjectPage = ({ projectName, projectId }: any) => {
         if (!user || !currentProject?.contributors) {
             return false;
         }
-        return currentProject.contributors.includes(user?.id);
+
+        return currentProject.contributors.some((contributor: any) => {
+            if (typeof contributor === "string") {
+                return contributor === user.id;
+            }
+            if (typeof contributor === "object" && contributor?._id) {
+                return contributor._id === user.id;
+            }
+            return false;
+        });
     }, [currentProject, user]);
 
+
     const handleJoin = () => {
-        dispatch(joinProject({ projectId, userId: user?.id }));
+        dispatch(joinProject({ projectId, userId: user?.id })).unwrap()
+        toast.success("You have joined the project! You can now contribute.");
     };
     const handleGuestCanvasInteraction = useCallback(() => {
         console.log("A guest is trying to draw. Opening login modal.");
@@ -168,14 +197,13 @@ const ProjectPage = ({ projectName, projectId }: any) => {
         dispatch(openAuthModal()); // Auth modal ke liye
     }, [dispatch]);
 
-  
+
 
     useEffect(() => {
-        // Automatically open the dialog if the user is logged in but not a contributor
-        // and the project data has loaded.
         if (currentProject && user && !isCurrentUserAContributor) {
             setIsJoinDialogOpen(true);
-        } else {
+        }
+        if (isCurrentUserAContributor) {
             setIsJoinDialogOpen(false);
         }
     }, [currentProject, user, isCurrentUserAContributor]);
@@ -233,12 +261,17 @@ const ProjectPage = ({ projectName, projectId }: any) => {
             // }
         }
     }, [projectId, dispatch]);
-   
-   
+
+
     useEffect(() => {
         if (!projectId) return;
 
-        const newSocket = io(import.meta.env.VITE_BASE);
+        const newSocket = io(import.meta.env.VITE_BASE, {
+            // Connection ke waqt query parameters mein userId bhejein
+            query: {
+                userId: user?.id
+            }
+        });
         setSocket(newSocket);
 
         newSocket.emit('join_project', projectId);
@@ -249,8 +282,6 @@ const ProjectPage = ({ projectName, projectId }: any) => {
             console.log('Received new contribution via socket on other client:', newContribution);
             dispatch(addContributionFromSocket(newContribution));
         });
-
-        // --- NAYE LISTENER ADD KAREIN ---
 
         // (2) Jab doosre user ka cursor move ho
         newSocket.on('cursor_update', (data) => {
@@ -265,7 +296,7 @@ const ProjectPage = ({ projectName, projectId }: any) => {
         // (3) Jab koi user chala jaye
         newSocket.on('user_left', (socketId) => {
             // Us user ke cursor ko state se hata dein
-            setCursors((prevCursors:any) => {
+            setCursors((prevCursors: any) => {
                 const newCursors = { ...prevCursors };
                 delete newCursors[socketId];
                 return newCursors;
@@ -276,10 +307,30 @@ const ProjectPage = ({ projectName, projectId }: any) => {
             newSocket.disconnect();
         };
 
-    }, [projectId, dispatch]);
+    }, [projectId, user, dispatch]);
 
+    // === "SCROLL TO VIEW" ki LOGIC BHI YAHAN HAI ===
+    useEffect(() => {
+        // Yeh effect sirf tab chalega jab selection badlega
+        if (selectedContributionId) {
+            // (1) Sidebar ko kholein
+            setIsSidebarOpen(true);
 
-    console.log("Rendering cursors:", cursors);
+            // (2) Scroll karein
+            const timer = setTimeout(() => {
+                const element = listItemRefs.current[selectedContributionId];
+                if (element) {
+                    console.log(`ProjectPage useEffect: Scrolling to ${selectedContributionId}`);
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                } else {
+                    console.warn(`ProjectPage useEffect: Element for ${selectedContributionId} not found.`);
+                }
+            }, 300); // Animation ke liye delay
+
+            return () => clearTimeout(timer);
+        }
+    }, [selectedContributionId]);
+    // console.log("Rendering cursors:", cursors);
     return (
         // Design ke mutabiq page ka background color
         <div className=" min-h-screen p-4 sm:p-6 lg:p-8">
@@ -311,7 +362,7 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                                 Load Image
                             </button> */}
 
-                           { user?.role=='admin' && <button
+                            {user?.role == 'admin' && <button
                                 onClick={handleGenerateTimelapse}
                                 disabled={isGeneratingTimelapse}
                                 className="bg-[#003366] text-white border-none text-[12px] md:text-[16px] px-2 py-2 md:px-4 md:py-2  rounded cursor-pointer flex items-center gap-2 disabled:opacity-50"
@@ -319,7 +370,7 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                                 <Film size={16} />
                                 {isGeneratingTimelapse ? 'Generating...' : 'Create Timelapse'}
                             </button>}
-                            {user?.role == 'admin' &&  <AlertDialog open={isClearAlertOpen} onOpenChange={setIsClearAlertOpen}>
+                            {user?.role == 'admin' && <AlertDialog open={isClearAlertOpen} onOpenChange={setIsClearAlertOpen}>
 
 
                                 <AlertDialogTrigger asChild>
@@ -389,11 +440,11 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                                 <span className="stat-value !text-[14.4px]">1024px by 1024px</span>
                             </div>
                         </div>
-                        
+
                         {/* <div className='w-full h-full min-w-[1024px] min-h-[1024px] bg-white relative overflow-hidden'> */}
                         <div
                             ref={canvasContainerRef}
-                        className=' h-full w-[95%] lg:w-[1024px] min-h-[1024px] mt-6 bg-white relative overflow-hidden' 
+                            className=' h-full w-[95%] lg:w-[1024px] min-h-[1024px] mt-6 bg-white relative overflow-hidden'
                             style={{ border: '4px solid #4d2d2d' }}
                         >
                             {canvasSize.width > 0 && (
@@ -407,9 +458,12 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                                     selectedContributionId={selectedContributionId}
                                     onContributionHover={handleContributionHover}
                                     onContributionLeave={handleContributionLeave}
-                                    onContributionSelect={setSelectedContributionId}
+                                    // onContributionSelect={setSelectedContributionId}
+                                    onContributionSelect={handleCanvasClick}
+
                                     onGuestInteraction={handleGuestCanvasInteraction}
                                     isContributor={isCurrentUserAContributor}
+                                    // onContributionSelect={handleCanvasContributionSelect} 
 
                                     isReadOnly={isReadOnly} // Naya prop pass karein
 
@@ -504,11 +558,11 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                         <DialogClose asChild>
                             <Button variant="outline" className="cursor-pointer">Stay as Guest</Button>
                         </DialogClose>
-                        <Button onClick={() =>{ 
+                        <Button onClick={() => {
                             dispatch(openAuthModal());
                             setLoginDialogDismissed(true)
                         }} className="cursor-pointer border-white bg-[#8b795e] text-white hover:bg-[#a1887f] disabled:opacity-50"
->
+                        >
                             Login or Sign Up
                         </Button>
                     </DialogFooter>
@@ -518,18 +572,22 @@ const ProjectPage = ({ projectName, projectId }: any) => {
 
             <ContributionSidebar
                 projectId={projectId}
-                contributions={savedStrokes} // TODO: Isay proper contribution objects mein badalna hoga
+                contributions={contributions} // TODO: Isay proper contribution objects mein badalna hoga
                 selectedContributionId={selectedContributionId}
-                onContributionSelect={setSelectedContributionId}
+                // onContributionSelect={setSelectedContributionId}
                 canvasStats={canvasStats}
                 infoBoxData={{
                     strokeCount: savedStrokes.length,
                     isSaving: isSaving,
                     saveError: saveError
                 }}
+                isOpen={isSidebarOpen}
+                setIsOpen={setIsSidebarOpen}
                 listItemRefs={listItemRefs}
                 onGuestVoteAttempt={handleGuestCanvasInteraction}
                 isReadOnly={isReadOnly} // Naya prop pass karein
+                onContributionSelect={handleSidebarContributionSelect} // Sidebar ko apna alag function dein
+
 
             />
             <Dialog open={isTimelapseOpen} onOpenChange={handleModalClose}>

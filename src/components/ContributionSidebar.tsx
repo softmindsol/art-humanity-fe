@@ -6,16 +6,17 @@ import useAuth from '@/hook/useAuth';
 import useAppDispatch from '@/hook/useDispatch';
 import { clearCanvasData, selectCanvasData, selectIsLoadingOperation, selectPaginationInfo } from '@/redux/slice/contribution';
 import { useSelector } from 'react-redux';
+import ContributorsPanel from './ContributorsPanel';
 
 
 const SIDEBAR_WIDTH = 350; // Sidebar ki width ko ek variable mein rakhein
 
-const ContributionSidebar = ({ projectId, selectedContributionId, onContributionSelect, listItemRefs, onGuestVoteAttempt }: any) => {
+const ContributionSidebar = ({ projectId, selectedContributionId, onContributionSelect, listItemRefs, onGuestVoteAttempt, isOpen, setIsOpen }: any) => {
     const dispatch = useAppDispatch();
     const { user } = useAuth();
+    const { currentProject } = useSelector((state:any) => state.projects); // Project ka data hasil karein
 
     // States
-    const [isOpen, setIsOpen] = useState(false);
     const [activeTab, setActiveTab] = useState('project');
     const [filter, setFilter] = useState('newest');
 
@@ -23,7 +24,7 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
     const contributions = useSelector(selectCanvasData);
     const { currentPage, totalPages } = useSelector(selectPaginationInfo);
     const isLoading = useSelector(selectIsLoadingOperation('getContributions'));
-
+    const isAdmin = user?.id === currentProject?.ownerId; // Check karein ke kya user admin hai
     // Refs
     const listContainerRef = useRef<HTMLDivElement>(null);
 
@@ -66,6 +67,20 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
         }
     }, [isLoading, currentPage, totalPages, projectId, filter, activeTab, user?.id, dispatch]);
 
+    useEffect(() => {
+        // Yeh effect tab chalega jab selection badlega ya sidebar khulega
+        if (isOpen && selectedContributionId && listItemRefs.current[selectedContributionId]) {
+            console.log(`Scrolling to contribution: ${selectedContributionId}`);
+            // Foran scroll karne ke bajaye, thora sa delay dein taake sidebar ki animation poori ho jaye
+            setTimeout(() => {
+                listItemRefs.current[selectedContributionId].scrollIntoView({
+                    behavior: 'smooth', // Aahista se scroll karega
+                    block: 'center'    // Item ko screen ke center mein layega
+                });
+            }, 300); // 300ms ka delay (sidebar ki transition speed se match karein)
+        }
+    }, [selectedContributionId, isOpen, listItemRefs]);
+
     // Sidebar open/close effect
     useEffect(() => {
         if (isOpen) document.body.style.overflow = 'hidden';
@@ -92,7 +107,7 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
                 Contributions
             </button>
 
-            {/* --- Main Sidebar Panel --- */}
+        
             {
                 <div
                     className={`w-[350px] h-screen bg-[#f8f0e3] border-l-4 border-[#5d4e37] shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'
@@ -109,10 +124,11 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
                         </button>
                         <button
                             onClick={() => setActiveTab('project')}
-                            className={`flex-1 p-4 text-[19.2px] cursor-pointer ${activeTab === 'project' ? 'border-b-2  font-bold text-[#5d4e37]' : 'text-[#654321]'}`}
+                            className={`flex p-4 text-[19.2px] cursor-pointer ${activeTab === 'project' ? 'border-b-2  font-bold text-[#5d4e37]' : 'text-[#654321]'}`}
                         >
                             Project Contributions
                         </button>
+                    
                     </div>
 
                     <div ref={listContainerRef} onScroll={handleScroll} className="p-4 flex-grow overflow-y-auto">
@@ -158,16 +174,17 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
                             </div>
                         </div>
 
+                        {isAdmin && <ContributorsPanel projectId={projectId} />}
 
-
-                        <ContributionsList
+                        
+                             <ContributionsList
                             contributions={contributions}
                             selectedContributionId={selectedContributionId}
                             onContributionSelect={onContributionSelect}
                             listItemRefs={listItemRefs}
                             projectId={projectId}
                             onGuestVoteAttempt={onGuestVoteAttempt}
-
+                                                      
                         />
                         {/* Loading Indicator */}
                         {isLoading && <div className="text-center p-4">Loading more contributions...</div>}

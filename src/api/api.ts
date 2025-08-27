@@ -33,12 +33,12 @@ api.interceptors.response.use(
     if (
       error.response?.status === 401 &&
       !originalRequest._retry &&
-      !originalRequest.url?.includes("/refresh-token")
+      !originalRequest.url?.includes("/auth/refresh-token")
     ) {
       originalRequest._retry = true;
 
       try {
-        const refreshResponse = await api.get("/refresh-token", {
+        const refreshResponse = await api.get("/auth/refresh-token", {
           withCredentials: true,
         });
 
@@ -48,7 +48,7 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshError) {
         console.error("🔴 Refresh token failed");
-        window.location.href = "/login";
+        window.location.href = "/";
         return Promise.reject(refreshError);
       }
     }

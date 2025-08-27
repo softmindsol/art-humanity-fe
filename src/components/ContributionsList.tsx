@@ -2,7 +2,7 @@ import useAuth from '@/hook/useAuth';
 import useAppDispatch from '@/hook/useDispatch';
 import { deleteContribution, voteOnContribution } from '@/redux/action/contribution';
 import { Trash2 } from 'lucide-react';
-import React from 'react';
+import React, { useEffect } from 'react';
 
 // Helper to format date
 const formatDate = (dateString: any) => {
@@ -37,6 +37,24 @@ const ContributionsList = ({
         dispatch(deleteContribution({ contributionId }));
         // }
     };
+
+    useEffect(() => {
+        // Yeh effect tab chalega jab selection badlega
+        if (selectedContributionId && listItemRefs.current[selectedContributionId]) {
+            console.log(`Scrolling to card: ${selectedContributionId}`);
+
+            // Thora sa delay dein taake DOM update ho jaye
+            setTimeout(() => {
+                const element = listItemRefs.current[selectedContributionId];
+                if (element) {
+                    element.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center'
+                    });
+                }
+            }, 100); // 100ms ka chota sa delay
+        }
+    }, [selectedContributionId, listItemRefs]);
 
     if (!contributions || contributions.length === 0) {
         return <div className="p-4 text-center text-gray-500">No project contributions</div>;

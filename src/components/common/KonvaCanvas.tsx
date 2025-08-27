@@ -267,7 +267,9 @@ const KonvaCanvas = ({
                                 stage.container().style.cursor = brushState.mode === 'move' ? 'grab' : 'crosshair';
                             }}
                             onClick={() => {
-                                onContributionSelect(contribution.id);
+                                console.log(`Konva Group Clicked. ID: ${konvaData.id}`); // Debugging ke liye
+
+                                onContributionSelect(konvaData.id);
                             }}
                             shadowColor="rgba(0, 102, 255, 0.8)"
                             shadowBlur={isSelected ? 15 : 0}

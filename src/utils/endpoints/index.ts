@@ -15,6 +15,11 @@ const config = {
     FETCH_ACTIVE_PROJECT: "/projects/all-active-project",
     FETCH_PROJECT_BY_ID: "/projects",
     JOIN_AS_CONTRIBUTOR: "/projects",
+    LEAVE_PROJECT: "/projects",
+    FETCH_CONTRIBUTORS: "/projects",
+    REMOVE_CONTRIBUTOR: "/projects",
+    GET_NOTIFICATIONS: "/notifications/all",
+    MARK_NOTIFICATIONS_AS_READ: "/notifications/mark-as-read",
   },
 };
 

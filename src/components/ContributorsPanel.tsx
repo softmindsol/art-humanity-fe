@@ -1,0 +1,188 @@
+import { useEffect, useMemo, useState } from "react";
+import { useSelector } from "react-redux";
+import { toast } from "sonner";
+import { X, Users2, Loader2, Mail, User as UserIcon, ChevronDown } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuTrigger,
+    DropdownMenuSeparator,
+    DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+
+import useAppDispatch from "@/hook/useDispatch";
+import useAuth from "@/hook/useAuth";
+import type { RootState } from "@/redux/store";
+import { fetchContributors, removeContributor } from "@/redux/action/project";
+import { selectProjectContributors } from "@/redux/slice/project";
+
+type Props = { projectId: string };
+
+export default function ContributorsDropdown({ projectId }: Props) {
+    const dispatch = useAppDispatch();
+    const { user } = useAuth();
+
+    const contributors = useSelector(selectProjectContributors) as Array<{
+        _id?: string;
+        fullName?: string;
+        email?: string;
+    }> | string[];
+
+    const isLoading = useSelector((state: RootState) => state.projects.loading.contributors);
+    const [confirmUser, setConfirmUser] = useState<{ id: string; name: string } | null>(null);
+
+    useEffect(() => {
+        if (projectId) dispatch(fetchContributors(projectId));
+    }, [projectId, dispatch]);
+
+    // Normalize: support both ["id"] and [{_id, fullName, email}]
+    const normalized = useMemo(
+        () =>
+            (contributors || []).map((c: any) =>
+                typeof c === "string"
+                    ? { id: c, name: c, email: "" }
+                    : { id: c._id ?? "", name: c.fullName ?? "Unknown", email: c.email ?? "" }
+            ),
+        [contributors]
+    );
+
+    const count = normalized.length;
+
+    const handleRemove = async (id: string, name: string) => {
+        try {
+            await dispatch(
+                removeContributor({
+                    projectId,
+                    userIdToRemove: id,
+                    userId: user?.id,
+                })
+            ).unwrap();
+            toast.success(`${name} has been removed.`);
+        } catch (err: any) {
+            toast.error(`Failed to remove contributor: ${err?.message || "Unknown error"}`);
+        } finally {
+            setConfirmUser(null);
+        }
+    };
+
+    return (
+        <div className="flex items-center gap-2 mb-5">
+            <DropdownMenu >
+                <span className="!font-semibold text-[#654321]"> Contributors:</span> <DropdownMenuTrigger asChild >
+                    <Button variant="outline" size="sm" className="gap-2">
+                        <Users2 className="h-4 w-4" />
+                        Contributors
+                        <span className="rounded bg-muted px-2 py-0.5 text-xs">{count}</span>
+                        <ChevronDown className="h-4 w-4 opacity-70" />
+                    </Button>
+                </DropdownMenuTrigger>
+
+                <DropdownMenuContent className="bg-[#f8f0e3] w-80 border-2 border-[#f8f0e3] text-[#] font-[Georgia, serif]" align="start" sideOffset={8}>
+                    {/* <DropdownMenuLabel className="text-sm">Project Contributors</DropdownMenuLabel> */}
+                    <DropdownMenuSeparator />
+
+                    {isLoading ? (
+                        <div className="flex items-center gap-2 p-4 text-sm text-muted-foreground">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            Loading contributors…
+                        </div>
+                    ) : (
+                        <Command shouldFilter={false}>
+                            <CommandInput placeholder="Search contributors…" />
+                            {normalized.length === 0 ? (
+                                <CommandEmpty className="py-8 text-muted-foreground">No contributors yet.</CommandEmpty>
+                            ) : (
+                                <CommandGroup className="p-0">
+                                    <ScrollArea className="max-h-72">
+                                        {normalized.map((c) => {
+                                            const isSelf = c.id && user?.id && c.id === user.id;
+                                            return (
+                                                <CommandItem
+                                                    key={c.id || c.name}
+                                                    className="flex w-full items-center justify-between gap-2 px-3 py-2"
+                                                // optional: onSelect={() => ...}
+                                                >
+                                                    <div className="flex min-w-0 items-center gap-3">
+                                                        <Avatar className="h-7 w-7">
+                                                            <AvatarFallback className="text-xs">
+                                                                {initials(c.name)}
+                                                            </AvatarFallback>
+                                                        </Avatar>
+                                                        <div className="min-w-0">
+                                                            <div className="truncate text-sm font-medium">{c.name}</div>
+                                                            <div className="flex items-center gap-1 truncate text-xs text-muted-foreground">
+                                                                <Mail className="h-3.5 w-3.5" />
+                                                                <span className="truncate">{c.email || "—"}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8 text-destructive hover:text-destructive cursor-pointer"
+                                                        disabled={!c.id || isSelf}
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            if (c.id) setConfirmUser({ id: c.id, name: c.name });
+                                                        }}
+                                                        title={isSelf ? "You can't remove yourself" : `Remove ${c.name}`}
+                                                    >
+                                                        <X className="h-4 w-4" />
+                                                    </Button>
+                                                </CommandItem>
+                                            );
+                                        })}
+                                    </ScrollArea>
+                                </CommandGroup>
+                            )}
+                        </Command>
+                    )}
+                </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Confirm Remove Dialog */}
+            <AlertDialog open={!!confirmUser} onOpenChange={(o) => !o && setConfirmUser(null)}>
+                <AlertDialogContent className="bg-[#5d4037] border-2 border-[#3e2723] text-white font-[Georgia, serif]">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-2xl !text-white text-center">Remove contributor?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will remove <strong>{confirmUser?.name}</strong> from the project. They will no longer be able to contribute.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel className="cursor-pointer">Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            className="cursor-pointer border-white bg-[#8b795e] text-white hover:bg-[#a1887f] disabled:opacity-50"
+                            onClick={() => confirmUser && handleRemove(confirmUser.id, confirmUser.name)}
+                        >
+                            Yes, remove
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </div>
+    );
+}
+
+function initials(name?: string) {
+    if (!name) return "U?";
+    const parts = name.trim().split(/\s+/);
+    if (parts.length === 1) return parts[0]!.slice(0, 2).toUpperCase();
+    return (parts[0]![0] + parts[parts.length - 1]![0]).toUpperCase();
+}

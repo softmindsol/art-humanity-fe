@@ -15,9 +15,11 @@ import { ProjectProvider } from './context/ProjectContext';
 import TiledCanvasPage from './page/TiledCanvasPage';
 import Demo from './page/Demo';
 import GalleryPage from './page/gallery';
+import { SocketProvider } from './context/SocketContext';
 function App() {
   return (
     <Router>
+      <SocketProvider>
       <Header />
       <ProjectProvider>
         <main>
@@ -39,6 +41,7 @@ function App() {
         </main>
       </ProjectProvider>
       <Footer />
+      </SocketProvider>
     </Router>
   );
 }

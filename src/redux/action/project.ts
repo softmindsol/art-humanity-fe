@@ -1,4 +1,4 @@
-import {  createAsyncThunk } from "@reduxjs/toolkit";
+import { createAsyncThunk } from "@reduxjs/toolkit";
 import api from "@/api/api"; // Maan rahe hain ke aapke paas ek configured axios instance hai
 import { config } from "@/utils/endpoints";
 
@@ -35,7 +35,7 @@ export const fetchActiveProjects = createAsyncThunk(
     } catch (error: any) {
       return rejectWithValue(
         error.response.data.message || "Failed to fetch projects"
-      ); 
+      );
     }
   }
 );
@@ -60,7 +60,7 @@ export const fetchProjectById = createAsyncThunk(
 export const joinProject = createAsyncThunk(
   "projects/joinProject",
   async (
-    { projectId,userId }: { projectId: string; userId: string | undefined },
+    { projectId, userId }: { projectId: string; userId: string | undefined },
     { rejectWithValue }
   ) => {
     try {
@@ -82,12 +82,26 @@ export const joinProject = createAsyncThunk(
 
 export const updateProjectStatus = createAsyncThunk(
   "projects/updateStatus",
-  async ({ projectId, statusUpdate }: { projectId: string; statusUpdate: { isPaused?: boolean; isClosed?: boolean } }, { rejectWithValue }) => {
+  async (
+    {
+      projectId,
+      statusUpdate,
+    }: {
+      projectId: string;
+      statusUpdate: { isPaused?: boolean; isClosed?: boolean };
+    },
+    { rejectWithValue }
+  ) => {
     try {
-      const response = await api.patch(`${config?.endpoints?.FETCH_PROJECT_BY_ID}/${projectId}/status`, statusUpdate);
+      const response = await api.patch(
+        `${config?.endpoints?.FETCH_PROJECT_BY_ID}/${projectId}/status`,
+        statusUpdate
+      );
       return response.data.data; // Return the updated project object
     } catch (error: any) {
-      return rejectWithValue(error.response.data.message || "Failed to update project status");
+      return rejectWithValue(
+        error.response.data.message || "Failed to update project status"
+      );
     }
   }
 );
@@ -106,6 +120,49 @@ export const fetchGalleryProjects = createAsyncThunk(
       return rejectWithValue(
         error.response.data.message || "Failed to fetch gallery projects"
       );
+    }
+  }
+);
+
+export const fetchContributors = createAsyncThunk(
+  "projects/fetchContributors",
+  async (projectId: string, thunkAPI) => {
+    try {
+      const response = await api.get(`/projects/${projectId}/contributors`);
+      return response.data.data;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error.response?.data?.message);
+    }
+  }
+);
+
+// Contributor ko remove karne ke liye
+export const removeContributor = createAsyncThunk(
+  "projects/removeContributor",
+  async (
+    {
+      projectId,
+      userIdToRemove,
+      userId,
+    }: { projectId: string; userIdToRemove: string; userId: any },
+    thunkAPI
+  ) => {
+    try {
+
+      console.log("userId:", userId);
+      // NOTE: Humne backend route `PATCH /projects/contributors/remove` banaya tha.
+      await api.patch(
+        `${config?.endpoints?.REMOVE_CONTRIBUTOR}/remove-contributor`,
+        {
+          projectId,
+          userIdToRemove,
+          userId,
+        }
+      );
+      // Hum sirf remove kiye gaye user ki ID wapas bhejenge taake slice usay state se nikaal sake
+      return userIdToRemove;
+    } catch (error: any) {
+      return thunkAPI.rejectWithValue(error.response?.data?.message);
     }
   }
 );

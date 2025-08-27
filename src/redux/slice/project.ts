@@ -2,18 +2,23 @@ import { createSlice } from "@reduxjs/toolkit";
 import {
   createProject,
   fetchActiveProjects,
+  fetchContributors,
   fetchGalleryProjects,
   fetchProjectById,
   joinProject,
+  removeContributor,
   updateProjectStatus,
 } from "../action/project";
 
 const initialState: any = {
   projects: [], // Saare projects ki list
   galleryProjects: [], // Yeh Gallery ke liye hai
-
   currentProject: null, // Jo project abhi khula hua hai
+  currentProjectContributors: [],
+
   loading: {
+    fetchingContributors: false,
+    removingContributor: false,
     creating: false,
     fetching: false,
     fetchingById: false,
@@ -29,6 +34,8 @@ const initialState: any = {
     updatingStatus: null,
     joining: null, // Nayi error state
     fetchingGallery: null, // Nayi loading state
+    fetchingContributors: null,
+    removingContributor: null,
   },
 };
 
@@ -85,7 +92,7 @@ const projectSlice = createSlice({
         state.loading.fetchingById = false;
         state.error.fetchingById = action.payload as any;
       });
-
+ 
     builder
       .addCase(joinProject.pending, (state) => {
         state.loading.joining = true;
@@ -93,8 +100,14 @@ const projectSlice = createSlice({
       })
       .addCase(joinProject.fulfilled, (state, action) => {
         state.loading.joining = false;
-        // 'currentProject' ko backend se aane wale naye data se update karein
-        state.currentProject = action.payload;
+        const updatedProjectFromServer = action.payload;
+
+        console.log("updatedProjectFromServer:", updatedProjectFromServer);
+
+        if (state.currentProject?._id === updatedProjectFromServer._id) {
+          // Hum poora object nayi value se replace kar rahe hain
+          state.currentProject = updatedProjectFromServer;
+        }
       })
       .addCase(joinProject.rejected, (state, action) => {
         state.loading.joining = false;
@@ -121,19 +134,62 @@ const projectSlice = createSlice({
         state.loading.updatingStatus = false;
         state.error.updatingStatus = action.payload as any;
       });
-      builder
-        .addCase(fetchGalleryProjects.pending, (state) => {
-          state.loading.fetchingGallery = true;
-          state.error.fetchingGallery = null;
-        })
-        .addCase(fetchGalleryProjects.fulfilled, (state, action) => {
-          state.loading.fetchingGallery = false;
-          state.galleryProjects = action.payload; // Nayi state ko update karein
-        })
-        .addCase(fetchGalleryProjects.rejected, (state, action) => {
-          state.loading.fetchingGallery = false;
-          state.error.fetchingGallery = action.payload as any;
-        });
+    builder
+      .addCase(fetchGalleryProjects.pending, (state) => {
+        state.loading.fetchingGallery = true;
+        state.error.fetchingGallery = null;
+      })
+      .addCase(fetchGalleryProjects.fulfilled, (state, action) => {
+        state.loading.fetchingGallery = false;
+        state.galleryProjects = action.payload; // Nayi state ko update karein
+      })
+      .addCase(fetchGalleryProjects.rejected, (state, action) => {
+        state.loading.fetchingGallery = false;
+        state.error.fetchingGallery = action.payload as any;
+      });
+
+    // === FETCH CONTRIBUTORS ke liye extraReducers ADD KAREIN ===
+    builder
+      .addCase(fetchContributors.pending, (state) => {
+        state.loading.fetchingContributors = true;
+        state.error.fetchingContributors = null;
+      })
+      .addCase(fetchContributors.fulfilled, (state, action) => {
+        state.loading.fetchingContributors = false;
+        console.log(" action.payload:",  action.payload);
+        state.currentProjectContributors = action.payload;
+      })
+      .addCase(fetchContributors.rejected, (state, action) => {
+        state.loading.fetchingContributors = false;
+        state.error.fetchingContributors = action.payload as any;
+      });
+
+    // === REMOVE CONTRIBUTOR ke liye extraReducers ADD KAREIN ===
+    builder
+      .addCase(removeContributor.pending, (state) => {
+        state.loading.removingContributor = true;
+        state.error.removingContributor = null;
+      })
+      .addCase(removeContributor.fulfilled, (state, action) => {
+        state.loading.removingContributor = false;
+        const userIdToRemove = action.payload;
+        // Contributor ko mojooda list se filter karke nikaal dein
+        state.currentProjectContributors =
+          state.currentProjectContributors.filter(
+            (c: any) => c._id !== userIdToRemove
+          );
+        // `currentProject.contributors` array se bhi nikaalna zaroori ho sakta hai agar aap usay istemal kar rahe hain
+        if (state.currentProject && state.currentProject.contributors) {
+          state.currentProject.contributors =
+            state.currentProject.contributors.filter(
+              (id:any) => id !== userIdToRemove
+            );
+        }
+      })
+      .addCase(removeContributor.rejected, (state, action) => {
+        state.loading.removingContributor = false;
+        state.error.removingContributor = action.payload as any;
+      });
   }, 
 }); 
 
@@ -146,5 +202,6 @@ export const selectCurrentProject = (state: any) =>
 export const selectProjectsLoading = (state: any) => state?.projects?.loading;
 export const selectProjectsError = (state: any) => state?.projects?.error;
 export const selectGalleryProjects = (state: any) => state?.projects?.galleryProjects;
-
+export const selectProjectContributors = (state: any) => state.projects.currentProjectContributors;
+export const selectContributorsLoading = (state: any) => state.projects.loading.fetchingContributors;
 export default projectSlice.reducer;
