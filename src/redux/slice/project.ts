@@ -1,5 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import {
+  addContributors,
   createProject,
   fetchActiveProjects,
   fetchContributors,
@@ -156,13 +157,41 @@ const projectSlice = createSlice({
       })
       .addCase(fetchContributors.fulfilled, (state, action) => {
         state.loading.fetchingContributors = false;
-        console.log(" action.payload:",  action.payload);
         state.currentProjectContributors = action.payload;
       })
       .addCase(fetchContributors.rejected, (state, action) => {
         state.loading.fetchingContributors = false;
         state.error.fetchingContributors = action.payload as any;
       });
+
+       builder
+
+         .addCase(addContributors.pending, (state) => {
+           state.loading.addingContributors = true;
+         })
+         .addCase(addContributors.fulfilled, (state, action) => {
+           state.loading.addingContributors = false;
+
+           // action.payload mein ab poora updated project object hai
+           const updatedProject = action.payload;
+
+           // --- YEH HAI ASAL FIX ---
+           // Safety check: Yaqeeni banayein ke state mein jo project hai, wahi update ho raha hai
+           if (
+             state.currentProject &&
+             state.currentProject._id === updatedProject._id
+           ) {
+             // 1. currentProject ko nayi value se replace karein
+             state.currentProject = updatedProject;
+
+             // 2. currentProjectContributors ko bhi isi naye data se update karein
+             state.currentProjectContributors = updatedProject.contributors;
+           }
+         })
+         .addCase(addContributors.rejected, (state, action) => {
+           state.loading.addingContributors = false;
+           state.error.addingContributors = action.payload as any;
+         });
 
     // === REMOVE CONTRIBUTOR ke liye extraReducers ADD KAREIN ===
     builder
@@ -172,18 +201,33 @@ const projectSlice = createSlice({
       })
       .addCase(removeContributor.fulfilled, (state, action) => {
         state.loading.removingContributor = false;
-        const userIdToRemove = action.payload;
-        // Contributor ko mojooda list se filter karke nikaal dein
-        state.currentProjectContributors =
-          state.currentProjectContributors.filter(
-            (c: any) => c._id !== userIdToRemove
-          );
-        // `currentProject.contributors` array se bhi nikaalna zaroori ho sakta hai agar aap usay istemal kar rahe hain
+
+        // --- YEH HAI ASAL FIX ---
+        // action.payload ab { userIdToRemove: 'some_id' } jaisa object hai
+        const { userIdToRemove }:any = action.payload;
+
+        console.log(`[Reducer] Attempting to remove user: ${userIdToRemove}`); // Debugging ke liye
+
+        // 1. Pehli list (jo objects ka array hai) ko update karein
+        if (state.currentProjectContributors) {
+          state.currentProjectContributors =
+            state.currentProjectContributors.filter(
+              (contributor: any) => contributor._id !== userIdToRemove
+            );
+        }
+
+        // 2. Doosri list (jo sirf IDs ka array ho sakti hai) ko bhi update karein
+        //    Yeh data consistency ke liye bohat zaroori hai!
         if (state.currentProject && state.currentProject.contributors) {
           state.currentProject.contributors =
-            state.currentProject.contributors.filter(
-              (id:any) => id !== userIdToRemove
-            );
+            state.currentProject.contributors.filter((contributorOrId: any) => {
+              // Check karein ke array mein object hai ya sirf ID
+              const id =
+                typeof contributorOrId === "string"
+                  ? contributorOrId
+                  : contributorOrId._id;
+              return id !== userIdToRemove;
+            });
         }
       })
       .addCase(removeContributor.rejected, (state, action) => {

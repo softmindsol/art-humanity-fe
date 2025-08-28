@@ -7,6 +7,7 @@ import useAppDispatch from '@/hook/useDispatch';
 import { clearCanvasData, selectCanvasData, selectIsLoadingOperation, selectPaginationInfo } from '@/redux/slice/contribution';
 import { useSelector } from 'react-redux';
 import ContributorsPanel from './ContributorsPanel';
+import { AddContributorModal } from './modal/AddContributorModal';
 
 
 const SIDEBAR_WIDTH = 350; // Sidebar ki width ko ek variable mein rakhein
@@ -14,8 +15,9 @@ const SIDEBAR_WIDTH = 350; // Sidebar ki width ko ek variable mein rakhein
 const ContributionSidebar = ({ projectId, selectedContributionId, onContributionSelect, listItemRefs, onGuestVoteAttempt, isOpen, setIsOpen }: any) => {
     const dispatch = useAppDispatch();
     const { user } = useAuth();
-    const { currentProject } = useSelector((state:any) => state.projects); // Project ka data hasil karein
-
+    const { currentProject } = useSelector((state: any) => state.projects); // Project ka data hasil karein
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [loading, setLoading] = useState(false)
     // States
     const [activeTab, setActiveTab] = useState('project');
     const [filter, setFilter] = useState('newest');
@@ -81,6 +83,7 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
         }
     }, [selectedContributionId, isOpen, listItemRefs]);
 
+
     // Sidebar open/close effect
     useEffect(() => {
         if (isOpen) document.body.style.overflow = 'hidden';
@@ -107,7 +110,7 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
                 Contributions
             </button>
 
-        
+
             {
                 <div
                     className={`w-[350px] h-screen bg-[#f8f0e3] border-l-4 border-[#5d4e37] shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'
@@ -128,16 +131,28 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
                         >
                             Project Contributions
                         </button>
-                    
+
                     </div>
 
                     <div ref={listContainerRef} onScroll={handleScroll} className="p-4 flex-grow overflow-y-auto">
-
-
                         <p className="text-[14.4px] italic text-[#654321] mb-4">
                             If a contribution receives over 50% downvotes from all project contributors it will be rejected and permanently deleted from the canvas...
                         </p>
-                        <div className="flex items-center  gap-8 mb-4">
+
+
+                        {isModalOpen && (
+                            <AddContributorModal
+                                projectId={currentProject?._id}
+                                currentContributors={currentProject?.contributors || []}
+                                onClose={() => setIsModalOpen(false)}
+                                ownerId={currentProject?.ownerId}
+                                currentProject={currentProject}
+                                loading={loading}
+                                setLoading={setLoading}
+                            />
+                        )}
+
+                        {activeTab !== 'my' && <div className="flex items-center  gap-8 mb-4">
                             <label htmlFor="filter" className="!font-semibold text-[#654321]">
                                 Filter By:
                             </label>
@@ -173,18 +188,27 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
                                 </div>
                             </div>
                         </div>
+                        }
+                        {isAdmin && <ContributorsPanel currentProject={currentProject} loading={loading}
+                            setLoading={setLoading} />}
+                        <div className='flex items-center justify-center mb-4'>
+                            {
+                                activeTab === 'my' && <button onClick={() => setIsModalOpen(true)} className="btn-primary  text-sm">
+                                    + Add Contributor
+                                </button>
+                            }
 
-                        {isAdmin && <ContributorsPanel projectId={projectId} />}
+                        </div>
 
-                        
-                             <ContributionsList
+                        <ContributionsList
                             contributions={contributions}
                             selectedContributionId={selectedContributionId}
                             onContributionSelect={onContributionSelect}
                             listItemRefs={listItemRefs}
                             projectId={projectId}
                             onGuestVoteAttempt={onGuestVoteAttempt}
-                                                      
+                            loading={loading} setLoading={setLoading}
+
                         />
                         {/* Loading Indicator */}
                         {isLoading && <div className="text-center p-4">Loading more contributions...</div>}
@@ -197,7 +221,7 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
                     </div>
 
                 </div>
-                }
+            }
         </div>
     );
 };

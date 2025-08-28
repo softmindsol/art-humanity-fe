@@ -20,6 +20,20 @@ export const registerUser = createAsyncThunk(
   }
 );
 
+export const fetchAllRegisteredUsers = createAsyncThunk(
+  "users/fetchAll",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.get(
+        `${config.endpoints.GET_USER}/get-all-users`
+      );
+      return response.data.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response.data.message);
+    }
+  }
+);
+
 export const verifyEmail = createAsyncThunk(
   "user/verifyEmail",
   async ({ token }: { token: string | undefined }, thunkAPI) => {

@@ -126,12 +126,40 @@ export const fetchGalleryProjects = createAsyncThunk(
 
 export const fetchContributors = createAsyncThunk(
   "projects/fetchContributors",
-  async (projectId: string, thunkAPI) => {
+  async ({projectId}:{projectId: string}, thunkAPI) => {
     try {
       const response = await api.get(`/projects/${projectId}/contributors`);
       return response.data.data;
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error.response?.data?.message);
+    }
+  }
+);
+
+
+interface AddContributorsArgs {
+  projectId: string;
+  userIdsToAdd: string[];
+  ownerId:string
+}
+
+export const addContributors = createAsyncThunk(
+  "project/addContributors",
+  async (
+    { projectId, userIdsToAdd, ownerId }: AddContributorsArgs,
+    { rejectWithValue }
+  ) => {
+    try {
+      const response = await api.post(
+        `${config.endpoints.JOIN_AS_CONTRIBUTOR}/${projectId}/contributors`,
+        {
+          userIdsToAdd,
+          ownerId,
+        }
+      );
+      return response.data.data; // Updated contributors list return karein
+    } catch (error: any) {
+      return rejectWithValue(error.response.data.message);
     }
   }
 );
@@ -149,18 +177,17 @@ export const removeContributor = createAsyncThunk(
   ) => {
     try {
 
-      console.log("userId:", userId);
       // NOTE: Humne backend route `PATCH /projects/contributors/remove` banaya tha.
-      await api.patch(
-        `${config?.endpoints?.REMOVE_CONTRIBUTOR}/remove-contributor`,
-        {
-          projectId,
-          userIdToRemove,
-          userId,
-        }
-      );
+       const response = await api.patch(
+         `${config?.endpoints?.REMOVE_CONTRIBUTOR}/remove-contributor`,
+         {
+           projectId,
+           userIdToRemove,
+           userId,
+         }
+       );
       // Hum sirf remove kiye gaye user ki ID wapas bhejenge taake slice usay state se nikaal sake
-      return userIdToRemove;
+      return response.data.data; 
     } catch (error: any) {
       return thunkAPI.rejectWithValue(error.response?.data?.message);
     }

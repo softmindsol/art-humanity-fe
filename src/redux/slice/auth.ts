@@ -8,6 +8,7 @@ import {
   refreshToken,
   googleLogin,
   getUserById,
+  fetchAllRegisteredUsers,
 } from "../action/auth";
 
 
@@ -37,10 +38,12 @@ interface initialStateType {
   googleLoading: boolean;
   error: string | null;
   successMessage: string | null;
+  allUsers: any[]; // ✅ New: store all registered users
 }
 
 
 const initialState: initialStateType = {
+  allUsers: [],
   user: null,
   googleAuthUser: null,
   profile: null, // ✅ New: store profile data
@@ -75,6 +78,18 @@ const authSlice = createSlice({
         state.error = action.payload.message;
       })
 
+      // Fetch All Users
+      .addCase(fetchAllRegisteredUsers.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchAllRegisteredUsers.fulfilled, (state, action) => {
+        state.loading = false;
+        state.allUsers = action.payload;
+      })
+      .addCase(fetchAllRegisteredUsers.rejected, (state, action: any) => {
+        state.loading = false;
+        state.error = action.payload.message;
+      })
       //   // Verify
       //   .addCase(verifyEmail.fulfilled, (state, action) => {
       //     state.successMessage = action.payload.message;

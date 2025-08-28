@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
-import { X, Users2, Loader2, Mail, User as UserIcon, ChevronDown } from "lucide-react";
+import { X, Users2, Loader2, Mail, ChevronDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -9,14 +9,12 @@ import {
     DropdownMenuContent,
     DropdownMenuTrigger,
     DropdownMenuSeparator,
-    DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
     AlertDialog,
-    AlertDialogAction,
+ 
     AlertDialogCancel,
     AlertDialogContent,
     AlertDialogDescription,
@@ -31,9 +29,8 @@ import type { RootState } from "@/redux/store";
 import { fetchContributors, removeContributor } from "@/redux/action/project";
 import { selectProjectContributors } from "@/redux/slice/project";
 
-type Props = { projectId: string };
 
-export default function ContributorsDropdown({ projectId }: Props) {
+export default function ContributorsDropdown({ currentProject, loading, setLoading }: any) {
     const dispatch = useAppDispatch();
     const { user } = useAuth();
 
@@ -47,8 +44,8 @@ export default function ContributorsDropdown({ projectId }: Props) {
     const [confirmUser, setConfirmUser] = useState<{ id: string; name: string } | null>(null);
 
     useEffect(() => {
-        if (projectId) dispatch(fetchContributors(projectId));
-    }, [projectId, dispatch]);
+        if (currentProject?._id) dispatch(fetchContributors({ projectId: currentProject?._id }));
+    }, [currentProject?._id, dispatch]);
 
     // Normalize: support both ["id"] and [{_id, fullName, email}]
     const normalized = useMemo(
@@ -65,25 +62,38 @@ export default function ContributorsDropdown({ projectId }: Props) {
 
     const handleRemove = async (id: string, name: string) => {
         try {
+            setLoading(true)
             await dispatch(
                 removeContributor({
-                    projectId,
+                    projectId: currentProject?._id,
                     userIdToRemove: id,
                     userId: user?.id,
                 })
             ).unwrap();
+            
             toast.success(`${name} has been removed.`);
         } catch (err: any) {
             toast.error(`Failed to remove contributor: ${err?.message || "Unknown error"}`);
         } finally {
             setConfirmUser(null);
+            setLoading(false)
         }
     };
 
+    // Exclude the project owner from the list of contributors
+    const ownerId = currentProject?.ownerId;
+
+    const filteredUsers = useMemo(
+        () =>
+            (normalized || []).filter((user: any) => user.id !== ownerId), // Exclude owner from contributors
+        [normalized, ownerId]
+    );
+
     return (
         <div className="flex items-center gap-2 mb-5">
-            <DropdownMenu >
-                <span className="!font-semibold text-[#654321]"> Contributors:</span> <DropdownMenuTrigger asChild >
+            <DropdownMenu>
+                <span className="!font-semibold text-[#654321]">Contributors:</span>
+                <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" className="gap-2">
                         <Users2 className="h-4 w-4" />
                         Contributors
@@ -92,8 +102,11 @@ export default function ContributorsDropdown({ projectId }: Props) {
                     </Button>
                 </DropdownMenuTrigger>
 
-                <DropdownMenuContent className="bg-[#f8f0e3] w-80 border-2 border-[#f8f0e3] text-[#] font-[Georgia, serif]" align="start" sideOffset={8}>
-                    {/* <DropdownMenuLabel className="text-sm">Project Contributors</DropdownMenuLabel> */}
+                <DropdownMenuContent
+                    className="bg-[#f8f0e3] w-80 border-2 border-[#f8f0e3] text-[#] font-[Georgia, serif]"
+                    align="start"
+                    sideOffset={8}
+                >
                     <DropdownMenuSeparator />
 
                     {isLoading ? (
@@ -104,19 +117,16 @@ export default function ContributorsDropdown({ projectId }: Props) {
                     ) : (
                         <Command shouldFilter={false}>
                             <CommandInput placeholder="Search contributors…" />
-                            {normalized.length === 0 ? (
+                            {filteredUsers.length === 0 ? (
                                 <CommandEmpty className="py-8 text-muted-foreground">No contributors yet.</CommandEmpty>
                             ) : (
                                 <CommandGroup className="p-0">
-                                    <ScrollArea className="max-h-72">
-                                        {normalized.map((c) => {
+                                    <div className="overflow-y-auto max-h-64">
+                                        {/* The list of contributors will scroll when the height exceeds max-h-72 */}
+                                        {filteredUsers.map((c) => {
                                             const isSelf = c.id && user?.id && c.id === user.id;
                                             return (
-                                                <CommandItem
-                                                    key={c.id || c.name}
-                                                    className="flex w-full items-center justify-between gap-2 px-3 py-2"
-                                                // optional: onSelect={() => ...}
-                                                >
+                                                <CommandItem key={c.id || c.name} className="flex w-full items-center justify-between gap-2 px-3 py-2">
                                                     <div className="flex min-w-0 items-center gap-3">
                                                         <Avatar className="h-7 w-7">
                                                             <AvatarFallback className="text-xs">
@@ -148,7 +158,7 @@ export default function ContributorsDropdown({ projectId }: Props) {
                                                 </CommandItem>
                                             );
                                         })}
-                                    </ScrollArea>
+                                    </div>
                                 </CommandGroup>
                             )}
                         </Command>
@@ -167,12 +177,13 @@ export default function ContributorsDropdown({ projectId }: Props) {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel className="cursor-pointer">Cancel</AlertDialogCancel>
-                        <AlertDialogAction
+                        <Button
                             className="cursor-pointer border-white bg-[#8b795e] text-white hover:bg-[#a1887f] disabled:opacity-50"
                             onClick={() => confirmUser && handleRemove(confirmUser.id, confirmUser.name)}
+                            disabled={loading}
                         >
-                            Yes, remove
-                        </AlertDialogAction>
+                            {loading ? "Removing..." : 'Yes, remove'}
+                        </Button>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
@@ -186,3 +197,5 @@ function initials(name?: string) {
     if (parts.length === 1) return parts[0]!.slice(0, 2).toUpperCase();
     return (parts[0]![0] + parts[parts.length - 1]![0]).toUpperCase();
 }
+
+
