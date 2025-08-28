@@ -92,12 +92,15 @@ export default function ContributorsDropdown({ currentProject, loading, setLoadi
     return (
         <div className="flex items-center gap-2 mb-5">
             <DropdownMenu>
-                <span className="!font-semibold text-[#654321]">Contributors:</span>
+                {/* <span className="!font-semibold text-[#654321]">Contributors:</span> */}
                 <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="gap-2">
-                        <Users2 className="h-4 w-4" />
-                        Contributors
-                        <span className="rounded bg-muted px-2 py-0.5 text-xs">{count}</span>
+                    <Button variant="outline" size="sm" className="flex items-center justify-between gap-2 w-full">
+                        <div className="flex items-center gap-2">
+                            <Users2 className="h-8 w-12" />
+                            <span className="text-[16px]">Contributors</span>
+                            <span className="rounded bg-muted  py-0.5 text-sm">({count})</span>
+                        </div>
+                       
                         <ChevronDown className="h-4 w-4 opacity-70" />
                     </Button>
                 </DropdownMenuTrigger>
@@ -118,7 +121,7 @@ export default function ContributorsDropdown({ currentProject, loading, setLoadi
                         <Command shouldFilter={false}>
                             <CommandInput placeholder="Search contributors…" />
                             {filteredUsers.length === 0 ? (
-                                <CommandEmpty className="py-8 text-muted-foreground">No contributors yet.</CommandEmpty>
+                                <CommandEmpty className="py-8 text-muted-foreground text-center">No contributors yet.</CommandEmpty>
                             ) : (
                                 <CommandGroup className="p-0">
                                     <div className="overflow-y-auto max-h-64">

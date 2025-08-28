@@ -8,6 +8,7 @@ import { getUserById, updateUser } from "@/redux/action/auth";
 import useAppDispatch from "@/hook/useDispatch";
 import { toast } from "sonner";
 import { Eye, EyeOff } from "lucide-react";
+import '../../style/profile.css';
 
 const ProfilePage = () => {
     const { profile } = useSelector((state: RootState) => state.auth);
@@ -23,6 +24,7 @@ const ProfilePage = () => {
         newPassword: "",
         confirmPassword: "",
     });
+
     const isChanged =
         formData.fullName !== (profile?.fullName || "") ||
         formData.newPassword !== "" ||
@@ -88,88 +90,138 @@ const ProfilePage = () => {
             });
     };
 
+    // Get the first letter of fullName for fallback
+    const avatarContent = formData.profileImage
+        ? URL.createObjectURL(formData.profileImage)
+        : profile?.avatar || (profile?.fullName ? profile.fullName.charAt(0).toUpperCase() : '');
+
     return (
-        <div className="max-w-md mx-auto mt-12 p-8 bg-[#fef9f4] border border-[#d4af37] rounded-2xl shadow-lg">
-            <h2 className="text-2xl font-serif text-[#5d4037] mb-6">Update Profile</h2>
+        <div className="container">
+            <main>
+                <section className="profile-header">
+                    <h2>My Profile</h2>
+                    <p>Manage your account</p>
+                </section>
+                <section className="profile-content">
+                    <div className="profile-sidebar">
+                        <div className="profile-avatar-container">
+                            <div id="profile-avatar" className="profile-avatar">
+                                {/* Fallback to letter if no profile image */}
+                                {formData.profileImage || profile?.avatar ? (
+                                    <img
+                                        src={avatarContent}
+                                        alt="Profile Avatar"
+                                        className="profile-avatar-image"
+                                    />
+                                ) : (
+                                    <div className="profile-avatar-fallback">
+                                        {/* Display first letter of fullName */}
+                                        {profile?.fullName ? profile.fullName.charAt(0).toUpperCase() : 'A'}
+                                    </div>
+                                )}
+                            </div>
+                            <button
+                                id="change-avatar-btn"
+                                className="btn-secondary"
+                                onClick={() => document.getElementById('file-input')?.click()}
+                            >
+                                Change Avatar
+                            </button>
+                            <input
+                                type="file"
+                                id="file-input"
+                                name="profileImage"
+                                accept="image/*"
+                                style={{ display: 'none' }}
+                                onChange={handleChange}
+                            />
+                        </div>
+                    </div>
 
-            <div className="mb-4">
-                <Label className="text-[#5d4037] mb-1">Full Name</Label>
-                <Input
-                    name="fullName"
-                    value={formData.fullName}
-                    onChange={handleChange}
-                    className="bg-[#f9f4ec] border border-[#d4af37] rounded focus:ring-2 focus:ring-[#d4af37]"
-                />
-            </div>
+                    <div className="profile-details">
+                        <div className="profile-section">
+                            <h3>Account Information</h3>
+                            <form id="profile-form" onSubmit={(e) => { e.preventDefault(); handleUpdate(); }}>
+                                <div className="form-group">
+                                    <label htmlFor="profile-display-name">Display Name</label>
+                                    <input
+                                        type="text"
+                                        id="profile-display-name"
+                                        name="fullName"
+                                        value={formData.fullName}
+                                        onChange={handleChange}
+                                        required
+                                    />
+                                </div>
 
-            <div className="mb-4">
-                <Label className="text-[#5d4037] mb-1">Email</Label>
-                <Input
-                    value={formData.email}
-                    disabled
-                    className="bg-[#f9f4ec] border border-[#d4af37] text-gray-500 cursor-not-allowed"
-                />
-            </div>
+                                <div className="form-group">
+                                    <label htmlFor="profile-email">Email</label>
+                                    <div className="input-with-button">
+                                        <input
+                                            type="email"
+                                            id="profile-email"
+                                            name="email"
+                                            value={formData.email}
+                                            onChange={handleChange}
+                                            disabled
+                                        />
+                                        {/* <button
+                                            type="button"
+                                            id="change-email-btn"
+                                            className="btn-secondary"
+                                            onClick={() => alert('Email change functionality here')}
+                                        >
+                                            Change Email
+                                        </button> */}
+                                    </div>
+                                </div>
 
-            <div className="mb-4">
-                <Label className="text-[#5d4037] mb-1">Profile Picture</Label>
-                <Input
-                    type="file"
-                    accept="image/*"
-                    name="profileImage"
-                    onChange={handleChange}
-                    className="border-none bg-transparent p-0 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:bg-[#d4af37] file:text-[#5d4037] file:font-semibold hover:file:bg-[#c8a230]"
-                />
-                {formData.profileImage && (
-                    <p className="text-sm text-[#5d4037] mt-1">Selected: {formData.profileImage.name}</p>
-                )}
-            </div>
+                                <div className="form-group">
+                                    <label htmlFor="profile-password">Password</label>
+                                    <div className="input-with-button">
+                                        <input
+                                            type={showPassword ? "text" : "password"}
+                                            id="profile-password"
+                                            value={formData.newPassword}
+                                            onChange={handleChange}
+                                            name="newPassword"
+                                            placeholder="Enter new password"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="btn-secondary "
+                                        >
+                                            {showPassword ? <EyeOff /> : <Eye />}
+                                        </button>
+                                    </div>
+                                    <div className="input-with-button">
+                                        <input
+                                            type={showConfirmPassword ? "text" : "password"}
+                                            id="profile-confirm-password"
+                                            value={formData.confirmPassword}
+                                            onChange={handleChange}
+                                            name="confirmPassword"
+                                            placeholder="Confirm new password"
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                            className="btn-secondary"
+                                        >
+                                            {showConfirmPassword ? <EyeOff /> : <Eye />}
+                                        </button>
+                                    </div>
+                                </div>
 
-            <div className="mb-4 relative">
-                <Label className="text-[#5d4037] mb-1">New Password</Label>
-                <Input
-                    type={showPassword ? "text" : "password"}
-                    name="newPassword"
-                    value={formData.newPassword}
-                    onChange={handleChange}
-                    className="bg-[#f9f4ec] border border-[#d4af37] rounded focus:ring-2 focus:ring-[#d4af37] pr-10"
-                />
-                <div
-                    onClick={() => setShowPassword((prev) => !prev)}
-                    className="absolute top-7 right-3 cursor-pointer text-[#5d4037]"
-                >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </div>
-            </div>
-
-
-            <div className="mb-6 relative">
-                <Label className="text-[#5d4037] mb-1">Confirm Password</Label>
-                <Input
-                    type={showConfirmPassword ? "text" : "password"}
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    className="bg-[#f9f4ec] border border-[#d4af37] rounded focus:ring-2 focus:ring-[#d4af37] pr-10"
-                />
-                <div
-                    onClick={() => setShowConfirmPassword((prev) => !prev)}
-                    className="absolute top-7 right-3 cursor-pointer text-[#5d4037]"
-                >
-                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                </div>
-            </div>
-
-            <Button
-                onClick={handleUpdate}
-                className="w-full bg-[#5d4037] cursor-pointer hover:bg-[#7b5c52] text-white font-semibold mb-3 rounded shadow disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={loader || !isChanged}
-            >
-                {` Update Profile${loader ? "..." : ""}`}
-            </Button>
-
-
-          
+                                <button type="submit" className="btn-profile" disabled={!isChanged || loader}>
+                                    {loader ? "Saving..." : "Save Changes"}
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </section>
+            </main>
         </div>
     );
 };
