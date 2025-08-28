@@ -341,7 +341,7 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                     <h1 className="text-[28px] lg:text-[44.8px] font-serif text-[#3E2723]">{projectName}</h1>
                     <p className="text-[#8D6E63] italic lg:text-[19.2px]">{currentProject?.description}</p>
                 </div>
-
+ 
                 {/* Main Content Area */}
                 <div className="flex flex-col md:flex-row gap-6">
 

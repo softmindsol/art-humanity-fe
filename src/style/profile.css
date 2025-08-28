@@ -90,7 +90,7 @@
     border: 1px solid var(--accent-dark);
 }
 
-.stat-item {
+/* .stat-item {
     margin-bottom: 1rem;
     padding-bottom: 1rem;
     border-bottom: 1px solid var(--accent);
@@ -100,9 +100,9 @@
     margin-bottom: 0;
     padding-bottom: 0;
     border-bottom: none;
-}
+} */
 
-.stat-label {
+/* .stat-label {
     display: block;
     color: var(--primary);
     font-size: 0.9rem;
@@ -114,7 +114,7 @@
     color: var(--primary-dark);
     font-size: 1.5rem;
     font-weight: 600;
-}
+} */
 
 .profile-section {
     background-color: var(--cream);

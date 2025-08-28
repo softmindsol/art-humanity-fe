@@ -845,6 +845,7 @@ header{
 .canvas-count {
   display: flex;
   justify-content: center;
+  align-items: center;
   font-size: 0.9rem;
   color: var(--primary-dark);
   margin:1rem 0;

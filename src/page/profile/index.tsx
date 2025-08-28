@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+
 import { useSelector } from "react-redux";
 import type { RootState } from "@/redux/store";
 import { getUserById, updateUser } from "@/redux/action/auth";
