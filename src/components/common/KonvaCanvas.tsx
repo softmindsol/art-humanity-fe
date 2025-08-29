@@ -28,7 +28,7 @@ const KonvaCanvas = ({
 
     // (2) Timer ke liye ek ref banayein
     const batchTimerRef = useRef<any>(null)
-
+ 
 
     // Data load karne ke liye
     useEffect(() => {

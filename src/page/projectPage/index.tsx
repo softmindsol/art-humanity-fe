@@ -94,6 +94,8 @@ const ProjectPage = ({ projectName, projectId }: any) => {
         }
         setIsTimelapseOpen(isOpen);
     };
+
+
     const {
         tilesRef,
         isClearAlertOpen,
@@ -132,7 +134,7 @@ const ProjectPage = ({ projectName, projectId }: any) => {
     // --- NEW HANDLERS to pass down as props ---
 
     const handleContributionHover = useCallback((contribution: any, pos: any) => {
-        const artistName = contribution.userId?.fullName || 'Unknown Artist';
+        const artistName = contribution.userId?.fullName || ' Artist';
         setTooltip({ visible: true, x: pos.x, y: pos.y, text: `Contribution by: ${artistName}` });
     }, []); // tooltip state ko direct set kar rahe hain, isliye dependency ki zaroorat nahi
 

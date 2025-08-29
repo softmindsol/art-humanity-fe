@@ -1,5 +1,3 @@
-// src/pages/ActiveProjects.js
-
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -18,7 +16,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { fetchActiveProjects, updateProjectStatus } from '@/redux/action/project'; // updateProjectStatus ko import karein
+import { fetchActiveProjects, updateProjectStatus } from '@/redux/action/project';
 import { getImageUrl } from '@/utils/publicUrl';
 import useAppDispatch from '@/hook/useDispatch';
 import useAuth from '@/hook/useAuth';
@@ -87,7 +85,6 @@ const ActiveProjects: React.FC = () => {
         );
     }
 
-    console.log("projects:", projects)
     return (
         <div id="projects-content" className="projects-content">
             <section className="projects-header page-header">
@@ -113,94 +110,110 @@ const ActiveProjects: React.FC = () => {
                         {user?.role === 'admin' && <p className="text-gray-400">You can create the first one from the Admin Dashboard.</p>}
                     </div>
                 ) : (
-                    projects.map((project: any) => (
-                        <div key={project._id} className="project-card active">
-                            <div className="project-image relative">
-                                <img
-                                    src={getImageUrl(project.thumbnailUrl) || 'https://via.placeholder.com/400x250'}
-                                    alt={project.title}
-                                />
-                                {/* Project status badge */}
-                                {project.isPaused && (
-                                    <div className="absolute top-2 right-2">
-                                        <Badge variant="destructive" className="text-sm">Paused</Badge>
-                                    </div>
-                                )}
-                                <div className="project-progress">
-                                    <div className="progress-bar">
-                                        <div className="progress-fill" style={{ width: `${project.stats?.percentComplete || 0}%` }}></div>
-                                    </div>
-                                    <div className="progress-text">{project.stats?.percentComplete?.toFixed(2) || 0}% Complete</div>
-                                </div>
-                            </div>
-                            <div className="project-info">
-                                <h3 className='!text-[#5d4037]'>{project.title}</h3>
-                                <div className="project-stats">
-                                    <div className="stat">
-                                        <span className="stat-value !text-[#8d6e63] !text-[12.8px]">{project.stats?.contributorCount || 0}</span>
-                                        <span className="stat-label !text-[#8d6e63]">Contributors</span>
-                                    </div>
-                                    <div className="stat">
-                                        <span className="stat-value !text-[#8d6e63] !text-[12.8px]">{project.stats?.pixelCount || 0}</span>
-                                        <span className="stat-label !text-[#8d6e63]">Pixels Painted</span>
+                    projects.map((project: any) => {
+                        const isProjectPaused = project.isPaused;
+
+                        return (
+                            <div key={project._id} className="project-card active">
+                                <div className="project-image relative">
+                                    <img
+                                        src={getImageUrl(project.thumbnailUrl) || 'https://via.placeholder.com/400x250'}
+                                        alt={project.title}
+                                    />
+                                    {/* Project status badge */}
+                                    {project.isPaused && (
+                                        <div className="absolute top-2 right-2">
+                                            <Badge variant="destructive" className="text-sm">Paused</Badge>
+                                        </div>
+                                    )}
+                                    <div className="project-progress">
+                                        <div className="progress-bar">
+                                            <div className="progress-fill" style={{ width: `${project.stats?.percentComplete || 0}%` }}></div>
+                                        </div>
+                                        <div className="progress-text">{project.stats?.percentComplete?.toFixed(2) || 0}% Complete</div>
                                     </div>
                                 </div>
-                                <Link to={`/project/${project?.canvasId}`} className="btn-contribute !text-black !bg-[#d4af37] hover:!bg-[#b38f2c] !border !border-[#5d4037]">
-                                    Enter Project
-                                </Link>
-
-                                {/* --- ADMIN ACTION BUTTONS --- */}
-                                {user?.role === 'admin' && (
-                                    <div className="mt-4 pt-4 border-t border-gray-200 ">
-                                        <div className="flex items-center justify-between space-x-2">
-                                            <p className="text-xs !text-[#8d6e63]  !p-0 !m-0">Admin Actions:</p>
-
-                                            <div className="flex items-center space-x-2">
-                                                {project.isPaused ? (
-                                                    <Button
-                                                        className="cursor-pointer"
-                                                        variant="outline"
-                                                        size="icon"
-                                                        title="Resume Project"
-                                                        onClick={() =>
-                                                            openConfirmationDialog(project._id, { isPaused: false }, 'Resume')
-                                                        }
-                                                    >
-                                                        <Play className="h-4 w-4" />
-                                                    </Button>
-                                                ) : (
-                                                    <Button
-                                                        className="cursor-pointer"
-                                                        variant="outline"
-                                                        size="icon"
-                                                        title="Pause Project"
-                                                        onClick={() =>
-                                                            openConfirmationDialog(project._id, { isPaused: true }, 'Pause')
-                                                        }
-                                                    >
-                                                        <Pause className="h-4 w-4" />
-                                                    </Button>
-                                                )}
-
-                                                <Button
-                                                    className="cursor-pointer bg-red-100 hover:bg-red-200 text-red-600 border border-red-200"
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    title="Close Project"
-                                                    onClick={() =>
-                                                        openConfirmationDialog(project._id, { isClosed: true }, 'Close')
-                                                    }
-                                                >
-                                                    <XCircle className="h-4 w-4" />
-                                                </Button>
-                                            </div>
+                                <div className="project-info">
+                                    <h3 className='!text-[#5d4037]'>{project.title}</h3>
+                                    <div className="project-stats">
+                                        <div className="stat">
+                                            <span className="stat-value !text-[#8d6e63] !text-[12.8px]">{project.stats?.contributorCount || 0}</span>
+                                            <span className="stat-label !text-[#8d6e63]">Contributors</span>
+                                        </div>
+                                        <div className="stat">
+                                            <span className="stat-value !text-[#8d6e63] !text-[12.8px]">{project.stats?.pixelCount || 0}</span>
+                                            <span className="stat-label !text-[#8d6e63]">Pixels Painted</span>
                                         </div>
                                     </div>
-                                )}
+                                    <Link
+                                        // Step 1: Agar project paused hai, to usay kahin bhi na le kar jao
+                                        to={isProjectPaused ? "#" : `/project/${project?.canvasId}`}
 
+                                        // Step 2: Kuch aisi CSS classes lagayein jo disabled jaisa look dein
+                                        className={`btn-contribute !text-black !bg-[#d4af37] ${isProjectPaused ? 'opacity-50 cursor-not-allowed' : 'hover:!bg-[#b38f2c]'}`}
+
+                                        // Step 3: Event ko cancel karein taake link kaam na kare
+                                        onClick={(e) => { if (isProjectPaused) e.preventDefault(); }}
+
+                                        // title se user ko wajah batayein
+                                        title={isProjectPaused ? "This project is currently paused" : "Enter Project"}
+                                    >
+                                        {/* Text bhi badalna ek acha option hai */}
+                                        {isProjectPaused ? "Project Paused" : "Enter Project"}
+                                    </Link>
+                                    {/* --- ADMIN ACTION BUTTONS --- */}
+                                    {user?.role === 'admin' && (
+                                        <div className="mt-4 pt-4 border-t border-gray-200 ">
+                                            <div className="flex items-center justify-between space-x-2">
+                                                <p className="text-xs !text-[#8d6e63]  !p-0 !m-0">Admin Actions:</p>
+
+                                                <div className="flex items-center space-x-2">
+                                                    {project.isPaused ? (
+                                                        <Button
+                                                            className="cursor-pointer"
+                                                            variant="outline"
+                                                            size="icon"
+                                                            title="Resume Project"
+                                                            onClick={() =>
+                                                                openConfirmationDialog(project._id, { isPaused: false }, 'Resume')
+                                                            }
+                                                        >
+                                                            <Play className="h-4 w-4" />
+                                                        </Button>
+                                                    ) : (
+                                                        <Button
+                                                            className="cursor-pointer"
+                                                            variant="outline"
+                                                            size="icon"
+                                                            title="Pause Project"
+                                                            onClick={() =>
+                                                                openConfirmationDialog(project._id, { isPaused: true }, 'Pause')
+                                                            }
+                                                        >
+                                                            <Pause className="h-4 w-4" />
+                                                        </Button>
+                                                    )}
+
+                                                    <Button
+                                                        className="cursor-pointer bg-red-100 hover:bg-red-200 text-red-600 border border-red-200"
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        title="Close Project"
+                                                        onClick={() =>
+                                                            openConfirmationDialog(project._id, { isClosed: true }, 'Close')
+                                                        }
+                                                    >
+                                                        <XCircle className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                </div>
                             </div>
-                        </div>
-                    ))
+                        )
+                    })
                 )}
             </section>
             <AlertDialog open={dialogState.isOpen} onOpenChange={(isOpen) => setDialogState({ ...dialogState, isOpen })}>
