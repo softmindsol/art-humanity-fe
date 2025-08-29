@@ -4,7 +4,8 @@ import { useSelector } from 'react-redux';
 import {
     selectAllProjects,
     selectProjectsLoading,
-    selectProjectsError
+    selectProjectsError,
+    selectProjectPagination
 } from '@/redux/slice/project';
 import {
     AlertDialog,
@@ -25,6 +26,10 @@ import useAuth from '@/hook/useAuth';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Play, Pause, XCircle } from 'lucide-react'; // Icons
+import { useDebounce } from '@/hook/useDebounce';
+import { SearchBar } from '@/components/common/SearchBar';
+import { ProjectStatusFilter } from '@/components/common/ProjectStatusFilter';
+import { Pagination } from '@/components/common/Pagination';
 
 const ActiveProjects: React.FC = () => {
     const { user } = useAuth();
@@ -32,17 +37,33 @@ const ActiveProjects: React.FC = () => {
 
     const projects = useSelector(selectAllProjects);
     const isLoading = useSelector(selectProjectsLoading).fetching;
-    const error = useSelector(selectProjectsError).fetching;
-    // --- NEW STATE for Confirmation Dialog ---
+    const {  totalPages } = useSelector(selectProjectPagination);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'paused'>('all');
+    const [searchTerm, setSearchTerm] = useState('');
+    
     const [dialogState, setDialogState] = useState<any>({
         isOpen: false,
         projectId: null,
         statusUpdate: null,
         actionText: '',
     });
+    const debouncedSearchTerm = useDebounce(searchTerm, 500); // 500ms ka delay
+    const error = useSelector(selectProjectsError).fetching;
+
+    // --- Data Fetch Karne ke liye Master useEffect ---
     useEffect(() => {
-        dispatch(fetchActiveProjects());
-    }, [dispatch]);
+        // Jab bhi page, filter, ya (debounced) search term badlega, yeh effect chalega
+        // inside useEffect that fetches
+        dispatch(fetchActiveProjects({
+            page: currentPage,
+            limit: 9,                // keep consistent
+            status: statusFilter,
+            search: debouncedSearchTerm
+        }));
+    }, [currentPage, statusFilter, debouncedSearchTerm, dispatch]);   
+ 
+ 
 
     // Naya handler jo sirf dialog ko kholega
     const openConfirmationDialog = (projectId: string, statusUpdate: object, actionText: string) => {
@@ -61,7 +82,13 @@ const ActiveProjects: React.FC = () => {
                 projectId: dialogState.projectId,
                 statusUpdate: dialogState.statusUpdate,
             }));
-            dispatch(fetchActiveProjects());
+            // inside useEffect that fetches
+            dispatch(fetchActiveProjects({
+                page: currentPage,
+                limit: 9,                // keep consistent
+                status: statusFilter,
+                search: debouncedSearchTerm
+            }));
 
         }
         // Dialog ko band karein
@@ -102,6 +129,12 @@ const ActiveProjects: React.FC = () => {
                     </Link>
                 </section>
             )}
+
+            {/* --- Filter aur Search Bar --- */}
+            <div className="flex flex-col md:flex-row items-center justify-center gap-4 mb-8 w-full ">
+                <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+                <ProjectStatusFilter statusFilter={statusFilter} setStatusFilter={setStatusFilter} />
+            </div>
 
             <section className="projects-grid mt-5">
                 {projects.length === 0 ? (
@@ -216,6 +249,14 @@ const ActiveProjects: React.FC = () => {
                     })
                 )}
             </section>
+
+            <div className="mt-8">
+                <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                />
+            </div>
             <AlertDialog open={dialogState.isOpen} onOpenChange={(isOpen) => setDialogState({ ...dialogState, isOpen })}>
                 <AlertDialogContent className="bg-[#5d4037] border-2 border-[#3e2723] text-white font-[Georgia, serif]">
                     <AlertDialogHeader>

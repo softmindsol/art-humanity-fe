@@ -3,6 +3,7 @@ import useAppDispatch from '@/hook/useDispatch';
 import { deleteContribution, voteOnContribution } from '@/redux/action/contribution';
 import { Trash2 } from 'lucide-react';
 import React, { useEffect } from 'react';
+import { toast } from 'sonner';
 
 // Helper to format date
 const formatDate = (dateString: any) => {
@@ -22,13 +23,28 @@ const ContributionsList = ({
     const dispatch = useAppDispatch();
     const { user } = useAuth();
 
-    const handleVote = (e: any, contributionId: any, voteType: any) => {
+    const handleVote = async (e: any, contributionId: any, voteType: any) => {
         e.stopPropagation();
+
         if (!user) {
             onGuestVoteAttempt();
             return;
         }
-        dispatch(voteOnContribution({ contributionId, voteType, userId: user?.id }));
+
+        try {
+            // Dispatch vote action
+            await dispatch(voteOnContribution({ contributionId, voteType, userId: user?.id })).unwrap();
+
+            // Toast on success
+            toast.success(
+                voteType === 'up'
+                    ? 'You upvoted this contribution.'
+                    : 'You downvoted this contribution.'
+            );
+        } catch (err: any) {
+            console.error('Voting failed:', err);
+            toast.error('Failed to register your vote. Please try again.');
+        }
     };
 
     const handleDelete = (e: any, contributionId: any) => {

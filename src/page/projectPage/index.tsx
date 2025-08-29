@@ -189,10 +189,24 @@ const ProjectPage = ({ projectName, projectId }: any) => {
     }, [currentProject, user]);
 
 
-    const handleJoin = () => {
-        dispatch(joinProject({ projectId, userId: user?.id })).unwrap()
-        toast.success("You have joined the project! You can now contribute.");
+    const handleJoin = async () => {
+        try {
+            if (!user?.id) {
+                toast.error("User ID is missing.");
+                return;
+            }
+
+            await dispatch(joinProject({ projectId, userId: user.id })).unwrap();
+
+            toast.success("You have joined the project! You can now contribute.");
+        } catch (error: any) {
+            console.error("Failed to join project:", error);
+            // If your backend sends message in error.response.data.message or error.message
+            const msg = error || "Failed to join the project. Please try again.";
+            toast.error(msg);
+        }
     };
+
     const handleGuestCanvasInteraction = useCallback(() => {
         console.log("A guest is trying to draw. Opening login modal.");
         setLoginDialogDismissed(false);

@@ -10,13 +10,22 @@ import {
   removeContributor,
   updateProjectStatus,
 } from "../action/project";
+import type { RootState } from "../store";
 
 const initialState: any = {
   projects: [], // Saare projects ki list
   galleryProjects: [], // Yeh Gallery ke liye hai
   currentProject: null, // Jo project abhi khula hua hai
   currentProjectContributors: [],
-
+  pagination: {
+    currentPage: 1,
+    totalPages: 1,
+    totalProjects: 0,
+  },
+  filters: {
+    status: "all", // 'all', 'active', 'paused'
+    search: "", // Search query
+  },
   loading: {
     fetchingContributors: false,
     removingContributor: false,
@@ -44,6 +53,21 @@ const projectSlice = createSlice({
   name: "projects",
   initialState,
   reducers: {
+    // Yeh reducer pagination ke page ko change karega
+    setCurrentPage: (state, action) => {
+      state.pagination.currentPage = action.payload;
+    },
+    // Yeh reducer status filter ko change karega
+    setStatusFilter: (state, action) => {
+      state.filters.status = action.payload;
+      state.pagination.currentPage = 1; // Filter badalne par hamesha pehle page par wapas jao
+    },
+    // Yeh reducer search term ko change karega
+    setSearchTerm: (state, action) => {
+      state.filters.search = action.payload;
+      state.pagination.currentPage = 1; // Search karne par bhi pehle page par wapas jao
+    },
+
     clearCurrentProject: (state) => {
       state.currentProject = null;
     },
@@ -72,11 +96,14 @@ const projectSlice = createSlice({
       })
       .addCase(fetchActiveProjects.fulfilled, (state, action) => {
         state.loading.fetching = false;
-        state.projects = action.payload;
+        state.projects = action?.payload?.projects;
+        state.pagination.currentPage = action?.payload?.currentPage;
+        state.pagination.totalPages = action?.payload?.totalPages;
+        state.pagination.totalProjects = action?.payload?.totalProjects;
       })
       .addCase(fetchActiveProjects.rejected, (state, action) => {
         state.loading.fetching = false;
-        state.error.fetching = action.payload as any;
+        state.error.fetching = action?.payload as any;
       });
 
     // Fetch Project By ID
@@ -93,7 +120,7 @@ const projectSlice = createSlice({
         state.loading.fetchingById = false;
         state.error.fetchingById = action.payload as any;
       });
- 
+
     builder
       .addCase(joinProject.pending, (state) => {
         state.loading.joining = true;
@@ -102,8 +129,6 @@ const projectSlice = createSlice({
       .addCase(joinProject.fulfilled, (state, action) => {
         state.loading.joining = false;
         const updatedProjectFromServer = action.payload;
-
-        console.log("updatedProjectFromServer:", updatedProjectFromServer);
 
         if (state.currentProject?._id === updatedProjectFromServer._id) {
           // Hum poora object nayi value se replace kar rahe hain
@@ -164,34 +189,34 @@ const projectSlice = createSlice({
         state.error.fetchingContributors = action.payload as any;
       });
 
-       builder
+    builder
 
-         .addCase(addContributors.pending, (state) => {
-           state.loading.addingContributors = true;
-         })
-         .addCase(addContributors.fulfilled, (state, action) => {
-           state.loading.addingContributors = false;
+      .addCase(addContributors.pending, (state) => {
+        state.loading.addingContributors = true;
+      })
+      .addCase(addContributors.fulfilled, (state, action) => {
+        state.loading.addingContributors = false;
 
-           // action.payload mein ab poora updated project object hai
-           const updatedProject = action.payload;
+        // action.payload mein ab poora updated project object hai
+        const updatedProject = action.payload;
 
-           // --- YEH HAI ASAL FIX ---
-           // Safety check: Yaqeeni banayein ke state mein jo project hai, wahi update ho raha hai
-           if (
-             state.currentProject &&
-             state.currentProject._id === updatedProject._id
-           ) {
-             // 1. currentProject ko nayi value se replace karein
-             state.currentProject = updatedProject;
+        // --- YEH HAI ASAL FIX ---
+        // Safety check: Yaqeeni banayein ke state mein jo project hai, wahi update ho raha hai
+        if (
+          state.currentProject &&
+          state.currentProject._id === updatedProject._id
+        ) {
+          // 1. currentProject ko nayi value se replace karein
+          state.currentProject = updatedProject;
 
-             // 2. currentProjectContributors ko bhi isi naye data se update karein
-             state.currentProjectContributors = updatedProject.contributors;
-           }
-         })
-         .addCase(addContributors.rejected, (state, action) => {
-           state.loading.addingContributors = false;
-           state.error.addingContributors = action.payload as any;
-         });
+          // 2. currentProjectContributors ko bhi isi naye data se update karein
+          state.currentProjectContributors = updatedProject.contributors;
+        }
+      })
+      .addCase(addContributors.rejected, (state, action) => {
+        state.loading.addingContributors = false;
+        state.error.addingContributors = action.payload as any;
+      });
 
     // === REMOVE CONTRIBUTOR ke liye extraReducers ADD KAREIN ===
     builder
@@ -204,7 +229,7 @@ const projectSlice = createSlice({
 
         // --- YEH HAI ASAL FIX ---
         // action.payload ab { userIdToRemove: 'some_id' } jaisa object hai
-        const { userIdToRemove }:any = action.payload;
+        const { userIdToRemove }: any = action.payload;
 
         console.log(`[Reducer] Attempting to remove user: ${userIdToRemove}`); // Debugging ke liye
 
@@ -234,18 +259,26 @@ const projectSlice = createSlice({
         state.loading.removingContributor = false;
         state.error.removingContributor = action.payload as any;
       });
-  }, 
+  },
 }); 
 
-export const { clearCurrentProject } = projectSlice.actions;
+export const { clearCurrentProject, setCurrentPage, setStatusFilter, setSearchTerm } =
+  projectSlice.actions;
 
 // Selectors
-export const selectAllProjects = (state: any) => state?.projects?.projects;
-export const selectCurrentProject = (state: any) =>
+export const selectAllProjects = (state: RootState) => state?.projects?.projects;
+export const selectCurrentProject = (state: RootState) =>
   state?.projects?.currentProject;
-export const selectProjectsLoading = (state: any) => state?.projects?.loading;
-export const selectProjectsError = (state: any) => state?.projects?.error;
-export const selectGalleryProjects = (state: any) => state?.projects?.galleryProjects;
-export const selectProjectContributors = (state: any) => state.projects.currentProjectContributors;
-export const selectContributorsLoading = (state: any) => state.projects.loading.fetchingContributors;
+export const selectProjectsLoading = (state: RootState) => state?.projects?.loading;
+export const selectProjectsError = (state: RootState) => state?.projects?.error;
+export const selectGalleryProjects = (state: RootState) =>
+  state?.projects?.galleryProjects;
+export const selectProjectContributors = (state: RootState) =>
+  state.projects.currentProjectContributors;
+export const selectContributorsLoading = (state: RootState) =>
+  state.projects.loading.fetchingContributors;
+export const selectProjectPagination = (state: RootState) => state.projects.pagination;
+export const selectProjectFilters = (state: RootState) =>
+  state.projects.filters;
+
 export default projectSlice.reducer;

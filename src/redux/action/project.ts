@@ -22,15 +22,33 @@ export const createProject = createAsyncThunk(
   }
 );
 
+interface FetchActiveProjectsArgs {
+  page?: number;
+  limit?: number;
+  status?: "active" | "paused" | "all";
+  search?: string;
+}
+
+
 // Saare active projects laane ke liye
 export const fetchActiveProjects = createAsyncThunk(
   "projects/fetchAll",
-  async (_, { rejectWithValue }) => {
+  async (args: FetchActiveProjectsArgs = {}, { rejectWithValue }) => {
     try {
+      const params = new URLSearchParams();
+      if (args.page) params.append("page", args.page.toString());
+      if (args.limit) params.append("limit", args.limit.toString());
+      if (args.status && args.status !== "all") params.append("status", args.status);
+      if (args.search) params.append("search", args.search);
       // Aapke route `/` ko call karega
-      const response = await api.get(
-        `${config?.endpoints?.FETCH_ACTIVE_PROJECT}`
-      );
+      const response = await api.get(config.endpoints.FETCH_ACTIVE_PROJECT, {
+        params: {
+          page: args.page,
+          limit: args.limit,
+          status: args.status === "all" ? undefined : args.status,
+          search: args.search || undefined,
+        },
+      });
       return response.data.data;
     } catch (error: any) {
       return rejectWithValue(
