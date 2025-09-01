@@ -57,9 +57,17 @@ const KonvaCanvas = ({
                         }
                     });
                 })
-                .catch(err => console.error("Batch creation failed:", err));
+                .catch(err => {
+                    const errorMessage = err || "Could not save your drawing. Please try again.";
+
+                    toast.error(errorMessage);
+
+                    console.error("Batch creation failed:", err)});
         }
     }, [dispatch, projectId, socket]);
+   
+   
+   
     useEffect(() => {
         if (savedStrokes && savedStrokes.length > 0) {
             // Data ko process karne ke liye seedha helper function istemal karein
@@ -234,6 +242,7 @@ const KonvaCanvas = ({
         };
     }, [sendBatchToServer]);
     const { scale, ...restStage } = stageState as any;
+
     return (
         <Stage
             {...restStage}

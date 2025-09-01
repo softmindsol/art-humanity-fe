@@ -158,7 +158,7 @@ const paintPixelSlice = createSlice({
           state.canvasData = state.canvasData.filter(
             (c: any) => !tempIds.includes(c._id)
           );
-          toast.error("Some drawings could not be saved.");
+          // toast.error("Some drawings could not be saved.");
         });
 
     // Get Contributions By Project
