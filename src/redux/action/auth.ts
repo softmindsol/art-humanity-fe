@@ -85,6 +85,25 @@ export const updateUser = createAsyncThunk(
   }
 );
 
+type Req = { userId: string; newEmail: string; currentPassword: string };
+
+export const requestEmailChange = createAsyncThunk(
+  "auth/requestEmailChange",
+  async (payload: Req, { rejectWithValue }) => {
+    try {
+      const { data } = await api.post(
+        `${config?.endpoints?.CHANGE_EMAIL}`,
+        payload
+      );
+      return data;
+    } catch (err: any) {
+      return rejectWithValue(
+        err?.response?.data || { message: "Request failed" }
+      );
+    }
+  }
+);
+
 export const refreshToken = createAsyncThunk(
   "user/refreshToken",
   async (_, thunkAPI) => {

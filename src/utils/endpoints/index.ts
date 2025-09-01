@@ -4,6 +4,7 @@ const config = {
     LOGIN: "/auth/login",
     UPDATE_USER: "/auth/update-profile",
     CHANGE_PASSWORD: "/auth/change-password",
+    CHANGE_EMAIL: "/auth/change-email",
     GET_USER: "/auth",
     REGISTER: "/auth/register",
     VERIFY_EMAIL: "/auth/verify-email",

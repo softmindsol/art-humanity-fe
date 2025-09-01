@@ -1,16 +1,15 @@
 import { createSlice } from "@reduxjs/toolkit";
 import {
   registerUser,
-  //   verifyEmail,
   loginUser,
-  //   logoutUser,
-  //   getUser,
   refreshToken,
   googleLogin,
   getUserById,
   fetchAllRegisteredUsers,
+  // NEW:
+  requestEmailChange,
+  updateUser,
 } from "../action/auth";
-
 
 interface Profile {
   id: string;
@@ -20,6 +19,7 @@ interface Profile {
   createdAt: string;
   avatar: string | null;
 }
+
 interface User {
   id: string;
   email: string;
@@ -29,28 +29,32 @@ interface User {
   role: string;
 }
 
-
 interface initialStateType {
   user: User | null;
-  profile: Profile | null; // ✅ New: store profile data
+  profile: Profile | null;
   loading: boolean;
   googleAuthUser: [] | null;
   googleLoading: boolean;
   error: string | null;
   successMessage: string | null;
-  allUsers: any[]; // ✅ New: store all registered users
+  allUsers: any[];
+  // NEW flags
+  emailChangeLoading: boolean;
+  profileUpdateLoading: boolean;
 }
-
 
 const initialState: initialStateType = {
   allUsers: [],
   user: null,
   googleAuthUser: null,
-  profile: null, // ✅ New: store profile data
+  profile: null,
   loading: false,
   googleLoading: false,
   error: null,
   successMessage: null,
+  // NEW
+  emailChangeLoading: false,
+  profileUpdateLoading: false,
 };
 
 const authSlice = createSlice({
@@ -59,6 +63,9 @@ const authSlice = createSlice({
   reducers: {
     resetAuthState: (state) => {
       state.loading = false;
+      state.googleLoading = false;
+      state.emailChangeLoading = false;
+      state.profileUpdateLoading = false;
       state.error = null;
       state.successMessage = null;
     },
@@ -68,81 +75,137 @@ const authSlice = createSlice({
       // Register
       .addCase(registerUser.pending, (state) => {
         state.loading = true;
+        state.error = null;
+        state.successMessage = null;
       })
-      .addCase(registerUser.fulfilled, (state, action) => {
+      .addCase(registerUser.fulfilled, (state, action: any) => {
         state.loading = false;
-        state.successMessage = action.payload.message;
+        state.successMessage =
+          action.payload?.message ?? "Registered successfully";
       })
       .addCase(registerUser.rejected, (state, action: any) => {
         state.loading = false;
-        state.error = action.payload.message;
+        state.error = action.payload?.message ?? "Registration failed";
       })
 
       // Fetch All Users
       .addCase(fetchAllRegisteredUsers.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
-      .addCase(fetchAllRegisteredUsers.fulfilled, (state, action) => {
+      .addCase(fetchAllRegisteredUsers.fulfilled, (state, action: any) => {
         state.loading = false;
         state.allUsers = action.payload;
       })
       .addCase(fetchAllRegisteredUsers.rejected, (state, action: any) => {
         state.loading = false;
-        state.error = action.payload.message;
+        state.error = action.payload?.message ?? "Failed to fetch users";
       })
-      //   // Verify
-      //   .addCase(verifyEmail.fulfilled, (state, action) => {
-      //     state.successMessage = action.payload.message;
-      //   })
 
       // Login
-      .addCase(loginUser.fulfilled, (state, action) => {
-        state.user = action.payload.data;
+      .addCase(loginUser.fulfilled, (state, action: any) => {
+        state.user = action.payload?.data ?? action.payload;
         state.successMessage = "Login successful";
+        state.error = null;
       })
       .addCase(loginUser.rejected, (state, action: any) => {
-        state.error = action.payload.message;
+        state.error = action.payload?.message ?? "Login failed";
       })
-
-      // Logout
-      //   .addCase(logoutUser.fulfilled, (state) => {
-      //     state.user = null;
-      //     state.successMessage = "Logout successful";
-      //   })
-
-      // Get user
-      //   .addCase(getUser.fulfilled, (state, action) => {
-      //     state.user = action.payload.data;
-      //   })
 
       // Refresh token
       .addCase(refreshToken.fulfilled, (state) => {
         state.successMessage = "Token refreshed";
       })
 
+      // Google login
       .addCase(googleLogin.pending, (state) => {
         state.googleLoading = true;
         state.error = null;
       })
-      .addCase(googleLogin.fulfilled, (state, action) => {
+      .addCase(googleLogin.fulfilled, (state, action: any) => {
         state.googleLoading = false;
         state.user = action.payload;
       })
-      .addCase(googleLogin.rejected, (state: any, action) => {
+      .addCase(googleLogin.rejected, (state, action: any) => {
         state.googleLoading = false;
-        state.error = action.payload;
+        state.error = action.payload ?? "Google login failed";
       })
+
+      // Get profile by id
       .addCase(getUserById.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(getUserById.fulfilled, (state, action) => {
+      .addCase(getUserById.fulfilled, (state, action: any) => {
         state.profile = action.payload;
         state.loading = false;
       })
-      .addCase(getUserById.rejected, (state, action) => {
+      .addCase(getUserById.rejected, (state, action: any) => {
         state.loading = false;
         state.error = action.payload as string;
+      })
+
+      // >>> NEW: Request Email Change
+      .addCase(requestEmailChange.pending, (state) => {
+        state.emailChangeLoading = true;
+        state.error = null;
+        state.successMessage = null;
+      })
+      .addCase(requestEmailChange.fulfilled, (state, action: any) => {
+        state.emailChangeLoading = false;
+        state.successMessage =
+          action.payload?.message ??
+          "Email change requested. Check your new email for verification.";
+        // Optimistically reflect changes in profile
+        if (state.profile && action.meta && action.meta.arg) {
+          const { newEmail } = action.meta.arg as { newEmail: string };
+          state.profile.email = newEmail;
+          state.profile.isVerified = false; // server set false; reflect in UI
+        }
+      })
+      .addCase(requestEmailChange.rejected, (state, action: any) => {
+        state.emailChangeLoading = false;
+        state.error =
+          action.payload?.message ?? "Failed to request email change";
+      })
+
+      // >>> NEW: Update profile (name/password/avatar)
+      .addCase(updateUser.pending, (state) => {
+        state.profileUpdateLoading = true;
+        state.error = null;
+        state.successMessage = null;
+      })
+      .addCase(updateUser.fulfilled, (state, action: any) => {
+        state.profileUpdateLoading = false;
+        state.successMessage =
+          action.payload?.message ?? "Profile updated successfully";
+        const updated = action.payload?.data;
+        // keep state in sync if API returns the updated user
+        if (updated) {
+          // Only overwrite known fields to avoid losing local shape
+          state.profile = {
+            id: updated._id || updated.id || state.profile?.id || "",
+            email: updated.email ?? state.profile?.email ?? "",
+            fullName: updated.fullName ?? state.profile?.fullName ?? "",
+            isVerified:
+              typeof updated.isVerified === "boolean"
+                ? updated.isVerified
+                : state.profile?.isVerified ?? false,
+            createdAt: updated.createdAt ?? state.profile?.createdAt ?? "",
+            avatar: updated.avatar ?? state.profile?.avatar ?? null,
+          };
+        }
+        // also, if `user` is present (logged-in header info), keep name/avatar aligned
+        if (state.user && updated) {
+          state.user.fullName = updated.fullName ?? state.user.fullName;
+          if (typeof updated.avatar !== "undefined") {
+            state.user.avatar = updated.avatar;
+          }
+        }
+      })
+      .addCase(updateUser.rejected, (state, action: any) => {
+        state.profileUpdateLoading = false;
+        state.error = action.payload?.message ?? "Failed to update profile";
       });
   },
 });
