@@ -83,7 +83,7 @@ const AdminDashboard = () => {
         {/* Header with Back Button */}
         <header className="flex items-center justify-between mb-6">
           <h1 className="text-4xl font-bold text-[#5d4037]">Admin Dashboard</h1>
-          <Button variant="outline" onClick={() => navigate(-1)} className="bg-white/50 border-[#bcaaa4] hover:bg-white cursor-pointer">
+          <Button variant="outline" onClick={() => navigate('/projects')} className="bg-white/50 border-[#bcaaa4] hover:bg-white cursor-pointer text-[#3e2723]">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>

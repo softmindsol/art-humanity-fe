@@ -139,8 +139,8 @@ const ActiveProjects: React.FC = () => {
             <section className="projects-grid mt-5">
                 {projects.length === 0 ? (
                     <div className="text-center w-full py-20 col-span-full">
-                        <h3 className="text-2xl text-gray-500">No active projects found.</h3>
-                        {user?.role === 'admin' && <p className="text-gray-400">You can create the first one from the Admin Dashboard.</p>}
+                        <h3 className="text-2xl !text-[#5d4037]">No active projects found.</h3>
+                        {user?.role === 'admin' && <p className="!text-[#5d4037]">You can create the first one from the Admin Dashboard.</p>}
                     </div>
                 ) : (
                     projects.map((project: any) => {
