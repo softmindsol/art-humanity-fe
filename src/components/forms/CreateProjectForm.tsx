@@ -1,79 +1,67 @@
-// src/pages/AdminDashboard.js
-
-import React, { useState } from 'react';
-import { useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
-import { createProject } from '@/redux/action/project';
+import React, { useState } from "react";
+import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { createProject } from "@/redux/action/project";
+import  useAppDispatch  from "@/hook/useDispatch";
+import { toast } from "sonner";
+import useAuth from "@/hook/useAuth";
 
 // ShadCN UI & Icons
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Sparkles, Loader2 } from 'lucide-react'; // Icons
-import useAppDispatch from '@/hook/useDispatch';
-import { toast } from 'sonner';
-import useAuth from '@/hook/useAuth';
+import { ArrowLeft, Sparkles, Loader2 } from "lucide-react"; // Icons
+
+// Formik and Yup for validation
+import { Formik, Form, Field, ErrorMessage } from "formik";
+import * as Yup from "yup";
 
 const AdminDashboard = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { user } = useAuth()
+  const { user } = useAuth();
   const { loading, error } = useSelector((state: any) => state.projects);
 
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    canvasId: '',
-    width: 1024,
-    height: 1024,
-    userId: user?.id || '', // Automatically set user ID from auth context
-  });
+  // Form state and thumbnail file state
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    // Automatically create a URL-friendly canvasId from the title
-    if (e.target.name === 'title') {
-      const canvasId = e.target.value
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-') // Replace non-alphanumeric with hyphen
-        .replace(/^-+|-+$/g, '');   // Remove leading/trailing hyphens
-      setFormData({ ...formData, title: e.target.value, canvasId: canvasId });
-    } else {
-      setFormData({ ...formData, [e.target.name]: e.target.value });
-    }
-  };
+  // Validation Schema for Formik (using Yup)
+  const validationSchema = Yup.object({
+    title: Yup.string().required("Project title is required"),
+    description: Yup.string().required("Description is required"),
+    canvasId: Yup.string().required("Canvas ID is required"),
+    width: Yup.number().required("Width is required").min(1, "Width must be a positive number"),
+    height: Yup.number().required("Height is required").min(1, "Height must be a positive number"),
+    thumbnail: Yup.mixed().required("Thumbnail image is required").test("fileType", "Invalid file type", (value:any) => {
+      return value && (value.type === "image/jpeg" || value.type === "image/png");
+    }),
+  });
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setThumbnailFile(e.target.files[0]);
-    }
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
+  // Form submission handler
+  const handleSubmit = async (values: any) => {
     const projectFormData = new FormData();
-    projectFormData.append('title', formData.title);
-    projectFormData.append('description', formData.description);
-    projectFormData.append('canvasId', formData.canvasId);
-    projectFormData.append('width', String(formData.width));
-    projectFormData.append('height', String(formData.height));
-    projectFormData.append('userId', String(formData.userId));
+    projectFormData.append("title", values.title);
+    projectFormData.append("description", values.description);
+    projectFormData.append("canvasId", values.canvasId);
+    projectFormData.append("width", String(values.width));
+    projectFormData.append("height", String(values.height));
+    projectFormData.append("userId", String(user?.id));
 
     if (thumbnailFile) {
-      projectFormData.append('thumbnail', thumbnailFile);
+      projectFormData.append("thumbnail", thumbnailFile);
     }
-    const resultAction = await dispatch(createProject( projectFormData));
+
+    const resultAction = await dispatch(createProject(projectFormData));
 
     if (createProject.fulfilled.match(resultAction)) {
       const newProject = resultAction.payload;
-      toast.success('Project created successfully!');
+      toast.success("Project created successfully!");
       navigate(`/project/${newProject.canvasId}`); // Navigate with canvasId for a clean URL
     } else {
-      toast.error('Failed to create project. Please try again.');
-      console.error('Failed to create project:', resultAction.error.message);
+      // toast.error("Failed to create project. Please try again.");
+      console.error("Failed to create project:", resultAction.error.message);
     }
   };
 
@@ -83,7 +71,7 @@ const AdminDashboard = () => {
         {/* Header with Back Button */}
         <header className="flex items-center justify-between mb-6">
           <h1 className="text-4xl font-bold text-[#5d4037]">Admin Dashboard</h1>
-          <Button variant="outline" onClick={() => navigate('/projects')} className="bg-white/50 border-[#bcaaa4] hover:bg-white cursor-pointer text-[#3e2723]">
+          <Button variant="outline" onClick={() => navigate("/projects")} className="bg-white/50 border-[#bcaaa4] hover:bg-white cursor-pointer text-[#3e2723]">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back
           </Button>
@@ -100,57 +88,138 @@ const AdminDashboard = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Title */}
-              <div className="space-y-2">
-                <Label htmlFor="title" className="text-lg font-medium text-[#5d4037]">Project Title <span className="text-red-500">*</span></Label>
-                <Input id="title" name="title" value={formData.title} onChange={handleChange} required placeholder="e.g., Spring Community Mural" className="h-12" />
-              </div>
+            {/* Formik form */}
+            <Formik
+              initialValues={{
+                title: "",
+                description: "",
+                canvasId: "",
+                width: 1024,
+                height: 1024,
+                userId: user?.id || "",
+              }}
+              validationSchema={validationSchema}
+              onSubmit={handleSubmit}
+              enableReinitialize
+            >
+              {({ setFieldValue, values }) => {
+                // Automatically sync canvasId with title
+                const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+                  const title = e.target.value;
+                  setFieldValue("title", title);
+                  setFieldValue("canvasId", title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""));
+                };
 
-              {/* Description */}
-              <div className="space-y-2">
-                <Label htmlFor="description" className="text-lg font-medium text-[#5d4037]">Description</Label>
-                <Textarea id="description" name="description" value={formData.description} onChange={handleChange} rows={4} placeholder="A short description of the project's theme..." />
-              </div>
+                return (
+                  <Form className="space-y-6">
+                    {/* Title */}
+                    <div className="space-y-2">
+                      <Label htmlFor="title" className="text-lg font-medium text-[#5d4037]">Project Title <span className="text-red-500">*</span></Label>
+                      <Field
+                        id="title"
+                        name="title"
+                        value={values.title}
+                        onChange={handleTitleChange}  // Automatically update canvasId
+                        placeholder="e.g., Spring Community Mural"
+                        className="h-12"
+                        as={Input}
+                      />
+                      <ErrorMessage name="title" component="div" className="text-red-500 text-sm" />
+                    </div>
 
-              {/* Canvas ID */}
-              <div className="space-y-2">
-                <Label htmlFor="canvasId" className="text-lg font-medium text-[#5d4037]">Canvas ID (Unique URL) <span className="text-red-500">*</span></Label>
-                <Input id="canvasId" name="canvasId" value={formData.canvasId} onChange={handleChange} required placeholder="auto-generated-from-title" />
-              </div>
+                    {/* Description */}
+                    <div className="space-y-2">
+                      <Label htmlFor="description" className="text-lg font-medium text-[#5d4037]">Description</Label>
+                      <Field
+                        id="description"
+                        name="description"
+                        as={Textarea}
+                        placeholder="A short description of the project's theme..."
+                        rows={4}
+                      />
+                      <ErrorMessage name="description" component="div" className="text-red-500 text-sm" />
+                    </div>
 
-              {/* Dimensions */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="width" className="font-medium text-[#5d4037]">Width (px)</Label>
-                  <Input id="width" name="width" type="number" value={formData.width} onChange={handleChange} required />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="height" className="font-medium text-[#5d4037]">Height (px)</Label>
-                  <Input id="height" name="height" type="number" value={formData.height} onChange={handleChange} required />
-                </div>
-              </div>
+                    {/* Canvas ID */}
+                    <div className="space-y-2">
+                      <Label htmlFor="canvasId" className="text-lg font-medium text-[#5d4037]">Canvas ID (Unique URL) <span className="text-red-500">*</span></Label>
+                      <Field
+                        id="canvasId"
+                        name="canvasId"
+                        value={values.canvasId}
+                        placeholder="auto-generated-from-title"
+                        className="h-12"
+                        as={Input}
+                        disabled
+                      />
+                      <ErrorMessage name="canvasId" component="div" className="text-red-500 text-sm" />
+                    </div>
 
-              {/* Thumbnail Upload */}
-              <div className="space-y-2">
-                <Label htmlFor="thumbnail" className="text-lg font-medium text-[#5d4037]">Thumbnail Image <span className="text-red-500">*</span></Label>
-                <Input id="thumbnail" name="thumbnail" type="file" onChange={handleFileChange} required accept="image/png, image/jpeg" />
-                {thumbnailFile && <p className="text-sm text-gray-500 mt-2">Selected: {thumbnailFile.name}</p>}
-              </div>
+                    {/* Dimensions */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="width" className="font-medium text-[#5d4037]">Width (px)</Label>
+                        <Field
+                          id="width"
+                          name="width"
+                          type="number"
+                          value={values.width}
+                          placeholder="Width"
+                          className="h-12"
+                          as={Input}
+                        />
+                        <ErrorMessage name="width" component="div" className="text-red-500 text-sm" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="height" className="font-medium text-[#5d4037]">Height (px)</Label>
+                        <Field
+                          id="height"
+                          name="height"
+                          type="number"
+                          value={values.height}
+                          placeholder="Height"
+                          className="h-12"
+                          as={Input}
+                        />
+                        <ErrorMessage name="height" component="div" className="text-red-500 text-sm" />
+                      </div>
+                    </div>
 
-              <Button type="submit" disabled={loading.creating} className="w-full h-12 text-lg cursor-pointer text-white bg-[#5d4037] hover:bg-[#4e342e]">
-                {loading.creating ? (
-                  <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    Creating...
-                  </>
-                ) : (
-                  'Create Project'
-                )}
-              </Button>
+                    {/* Thumbnail Upload */}
+                    <div className="space-y-2">
+                      <Label htmlFor="thumbnail" className="text-lg font-medium text-[#5d4037]">Thumbnail Image <span className="text-red-500">*</span></Label>
+                      <input
+                        id="thumbnail"
+                        name="thumbnail"
+                        type="file"
+                        onChange={(e) => {
+                          if (e.target.files) {
+                            setThumbnailFile(e.target.files[0]);
+                            setFieldValue("thumbnail", e.target.files[0]);
+                          }
+                        }}
+                        className="h-12"
+                      />
+                      <ErrorMessage name="thumbnail" component="div" className="text-red-500 text-sm" />
+                      {thumbnailFile && <p className="text-sm text-gray-500 mt-2">Selected: {thumbnailFile.name}</p>}
+                    </div>
 
-              {error.creating && <p className="text-sm text-red-600 text-center font-semibold">{error.creating}</p>}
-            </form>
+                    <Button type="submit" disabled={loading.creating} className="w-full h-12 text-lg cursor-pointer text-white bg-[#5d4037] hover:bg-[#4e342e]">
+                      {loading.creating ? (
+                        <>
+                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                          Creating...
+                        </>
+                      ) : (
+                        "Create Project"
+                      )}
+                    </Button>
+
+                    {error.creating && <p className="text-sm text-red-600 text-center font-semibold">{error.creating}</p>}
+                  </Form>
+                );
+              }}
+            </Formik>
           </CardContent>
         </Card>
       </div>

@@ -7,7 +7,7 @@ import useAppDispatch from '@/hook/useDispatch';
 import { clearCanvasData, selectCanvasData, selectIsLoadingOperation, selectPaginationInfo } from '@/redux/slice/contribution';
 import { useSelector } from 'react-redux';
 import ContributorsPanel from './ContributorsPanel';
-import { AddContributorModal } from './modal/AddContributorModal';
+import { AddContributorModal } from '../modal/AddContributorModal';
 
 
 const SIDEBAR_WIDTH = 350; // Sidebar ki width ko ek variable mein rakhein

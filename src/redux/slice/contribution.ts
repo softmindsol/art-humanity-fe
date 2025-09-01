@@ -75,7 +75,7 @@ const paintPixelSlice = createSlice({
     setCanvasOffset: (state, action) => {
       state.currentCanvas.offset = action.payload;
     },
-   
+
     updateVoteFromSocket: (state: any, action) => {
       const { wasDeleted, contributionId, ...updatedContribution } =
         action.payload;
@@ -115,77 +115,65 @@ const paintPixelSlice = createSlice({
       // action.payload mein temporary contributions ka poora array aayega
       state.canvasData.push(...action.payload);
     },
+    removeOptimisticContributions: (state, action) => {
+      const tempIdsToRemove = new Set(action.payload);
+      state.canvasData = state.canvasData.filter(
+        (c:any) => !tempIdsToRemove.has(c._id)
+      );
+    },
   },
 
   extraReducers: (builder) => {
     // Create Contribution
-    builder
-      builder
-        .addCase(batchCreateContributions.pending, (state, _) => {
-          state.loading.createContribution = true;
-          state.error.createContribution = null;
-          // Pending mein hum state ko nahi chherenge, kyunke optimistic data pehle se mojood hai
-        })
-        .addCase(batchCreateContributions.fulfilled, (state: any, action) => {
-          state.loading.createContribution = false;
-          const savedContributions = action.payload; // Server se anay wala asli data ka array
-          const tempContributions = action.meta.arg.contributions; // Humne jo temporary data bheja tha
+   builder
 
-          // Agar server se response nahi aaya to kuch na karein
-          if (!savedContributions || !tempContributions) return;
+     .addCase(getContributionsByProject.pending, (state) => {
+       state.loading.getContributions = true;
+       state.error.getContributions = null;
+     })
+     .addCase(getContributionsByProject.fulfilled, (state: any, action:any) => {
+       const { contributions, currentPage, totalPages, totalContributions } =  action.payload;
 
-          console.log("Replacing temp contributions with final ones.");
+       // Check if it's the first page or subsequent pages, and update the canvasData accordingly
+       if (currentPage === 1) {
+         state.canvasData = contributions; // Reset the data for the first page
+       } else {
+         state.canvasData = [...state.canvasData, ...contributions]; // Append for next pages
+       }
 
-          // Har temporary contribution ko uske asli data se replace karein
-          tempContributions.forEach((tempContrib, index) => {
-            const finalContrib = savedContributions[index];
-            if (finalContrib) {
-              const tempId = tempContrib.tempId;
-              const stateIndex = state.canvasData.findIndex(
-                (c: any) => c._id === tempId
-              );
-              if (stateIndex !== -1) {
-                // Sirf us ek object ko replace karein, poore array ko nahi
-                state.canvasData[stateIndex] = finalContrib;
-              }
-            }
-          });
-        })
-        .addCase(batchCreateContributions.rejected, (state: any, action) => {
-          // Agar batch fail ho jaye, to is batch ki tamam temporary contributions ko UI se hata dein
-          const tempContributions = action.meta.arg.contributions;
-          const tempIds = tempContributions.map((c) => c.tempId);
-          state.canvasData = state.canvasData.filter(
-            (c: any) => !tempIds.includes(c._id)
-          );
-          // toast.error("Some drawings could not be saved.");
-        });
+       // Update pagination information
+       state.pagination = { currentPage, totalPages, totalContributions };
 
-    // Get Contributions By Project
-    builder
-      .addCase(getContributionsByProject.pending, (state) => {
-        state.loading.getContributions = true;
-        state.error.getContributions = null;
-      })
-      .addCase(getContributionsByProject.fulfilled, (state, action) => {
-        state.loading.getContributions = false;
-        const { contributions, currentPage, totalPages, totalContributions } =
-          action.payload;
+       state.loading.getContributions = false;
+     })
+     .addCase(getContributionsByProject.rejected, (state, action) => {
+       state.loading.getContributions = false;
+       state.error.getContributions = action.payload as any;
+     })
 
-        if (currentPage === 1) {
-          // Agar yeh pehla page hai, to purana data saaf kar dein
-          state.canvasData = contributions;
-        } else {
-          // Agar yeh agla page hai, to naye data ko purane ke saath mila dein
-          state.canvasData = [...state.canvasData, ...contributions] as any;
-        }
-        // Pagination info update karein
-        state.pagination = { currentPage, totalPages, totalContributions };
-      })
-      .addCase(getContributionsByProject.rejected, (state, action) => {
-        state.loading.getContributions = false;
-        state.error.getContributions = action.payload as any;
-      });
+     // --- THIS IS THE FIX ---
+     .addCase(batchCreateContributions.fulfilled, (state: any, action: any) => {
+       const savedContributions = action.payload; // These are the real contributions from the server
+
+       // 1. Find and remove the temporary optimistic updates
+       const tempIds = new Set(savedContributions.map((c: any) => c.tempId));
+       state.canvasData = state.canvasData.filter(
+         (c: any) => !tempIds.has(c._id)
+       );
+
+       // 2. Add the final, saved contributions from the server
+       state.canvasData.push(...savedContributions);
+     })
+     .addCase(batchCreateContributions.rejected, (state, action: any) => {
+       // If the batch fails (e.g., contribution limit reached),
+       // we should roll back the optimistic update.
+       const failedTempIds = new Set(
+         action.meta.arg.contributions.map((c: any) => c.tempId)
+       );
+       state.canvasData = state.canvasData.filter(
+         (c: any) => !failedTempIds.has(c._id)
+       );
+     });
 
     builder
       .addCase(deleteContribution.pending, (state: any) => {
@@ -255,7 +243,7 @@ const paintPixelSlice = createSlice({
         state.loading.generateTimelapse = false;
         state.error.generateTimelapse = action.payload as any;
       });
-  
+
     // Clear Canvas
     builder
       .addCase(clearCanvas.pending, (state) => {

@@ -20,7 +20,7 @@ import { useCanvasState } from '@/hook/useCanvasState';
 import { clearCanvas, generateTimelapseVideo, getContributionsByProject } from '@/redux/action/contribution';
 import InfoBox from '@/components/toolbox/InfoBox';
 import { clearCanvasData, clearTimelapseUrl, selectCanvasData, selectErrorForOperation, selectIsLoadingOperation, selectTimelapseUrl } from '@/redux/slice/contribution';
-import ContributionSidebar from '@/components/ContributionSidebar';
+import ContributionSidebar from '@/components/canvas/ContributionSidebar';
 import { joinProject } from '@/redux/action/project';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
