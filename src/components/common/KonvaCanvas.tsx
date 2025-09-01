@@ -106,6 +106,18 @@ const KonvaCanvas = ({
             }
         });
     }, [savedStrokes, width, height, memoizedTransformContributionForKonva]);
+
+    useEffect(() => {
+        // Yeh effect har baar chalta hai jab "bakedImage" update hoti hai.
+        // Iska matlab hai ke canvas ki "baking" mukammal ho chuki hai.
+
+        // Agar hum is waqt drawing nahi kar rahe, to iska matlab hai ke
+        // pichli 'activeLine' ab baked image ka hissa ban chuki hai,
+        // isliye ab usay screen se hatana safe hai.
+        if (!isDrawing) {
+            setActiveLine({ points: [] });
+        }
+    }, [bakedImage, isDrawing]); // bakedImage par depend karna zaroori ha
     // --- Data Fetching ---
     useEffect(() => {
         if (projectId) {
@@ -250,7 +262,8 @@ const KonvaCanvas = ({
                 strokePath: [...currentStrokePathRef.current], brushSize: brushState.size,
                 color: brushState.color, mode: brushState.mode
             }],
-            // ... baaki optimistic data ...
+            upvotes: 0, downvotes: 0, createdAt: new Date().toISOString(),
+
         };
         dispatch(addMultipleContributionsOptimistically([optimisticContribution]));
 
@@ -262,7 +275,7 @@ const KonvaCanvas = ({
         if (batchTimerRef.current) clearTimeout(batchTimerRef.current);
         batchTimerRef.current = setTimeout(sendBatchToServer, 3000);
 
-        setActiveLine({ points: [] });
+        // setActiveLine({ points: [] });
         currentStrokePathRef.current = [];
     };
 
