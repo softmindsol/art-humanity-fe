@@ -75,6 +75,10 @@ const paintPixelSlice = createSlice({
     setCanvasOffset: (state, action) => {
       state.currentCanvas.offset = action.payload;
     },
+    setCurrentBrush: (state, action) => {
+      // mode: 'brush', 'eraser', ya 'line' ho sakta hai
+      state.currentBrush = { ...state.currentBrush, ...action.payload };
+    },
 
     updateVoteFromSocket: (state: any, action) => {
       const { wasDeleted, contributionId, ...updatedContribution } =
@@ -118,62 +122,69 @@ const paintPixelSlice = createSlice({
     removeOptimisticContributions: (state, action) => {
       const tempIdsToRemove = new Set(action.payload);
       state.canvasData = state.canvasData.filter(
-        (c:any) => !tempIdsToRemove.has(c._id)
+        (c: any) => !tempIdsToRemove.has(c._id)
       );
     },
   },
 
   extraReducers: (builder) => {
     // Create Contribution
-   builder
+    builder
 
-     .addCase(getContributionsByProject.pending, (state) => {
-       state.loading.getContributions = true;
-       state.error.getContributions = null;
-     })
-     .addCase(getContributionsByProject.fulfilled, (state: any, action:any) => {
-       const { contributions, currentPage, totalPages, totalContributions } =  action.payload;
+      .addCase(getContributionsByProject.pending, (state) => {
+        state.loading.getContributions = true;
+        state.error.getContributions = null;
+      })
+      .addCase(
+        getContributionsByProject.fulfilled,
+        (state: any, action: any) => {
+          const { contributions, currentPage, totalPages, totalContributions } =
+            action.payload;
 
-       // Check if it's the first page or subsequent pages, and update the canvasData accordingly
-       if (currentPage === 1) {
-         state.canvasData = contributions; // Reset the data for the first page
-       } else {
-         state.canvasData = [...state.canvasData, ...contributions]; // Append for next pages
-       }
+          // Check if it's the first page or subsequent pages, and update the canvasData accordingly
+          if (currentPage === 1) {
+            state.canvasData = contributions; // Reset the data for the first page
+          } else {
+            state.canvasData = [...state.canvasData, ...contributions]; // Append for next pages
+          }
 
-       // Update pagination information
-       state.pagination = { currentPage, totalPages, totalContributions };
+          // Update pagination information
+          state.pagination = { currentPage, totalPages, totalContributions };
 
-       state.loading.getContributions = false;
-     })
-     .addCase(getContributionsByProject.rejected, (state, action) => {
-       state.loading.getContributions = false;
-       state.error.getContributions = action.payload as any;
-     })
+          state.loading.getContributions = false;
+        }
+      )
+      .addCase(getContributionsByProject.rejected, (state, action) => {
+        state.loading.getContributions = false;
+        state.error.getContributions = action.payload as any;
+      })
 
-     // --- THIS IS THE FIX ---
-     .addCase(batchCreateContributions.fulfilled, (state: any, action: any) => {
-       const savedContributions = action.payload; // These are the real contributions from the server
+      // --- THIS IS THE FIX ---
+      .addCase(
+        batchCreateContributions.fulfilled,
+        (state: any, action: any) => {
+          const savedContributions = action.payload; // These are the real contributions from the server
 
-       // 1. Find and remove the temporary optimistic updates
-       const tempIds = new Set(savedContributions.map((c: any) => c.tempId));
-       state.canvasData = state.canvasData.filter(
-         (c: any) => !tempIds.has(c._id)
-       );
+          // 1. Find and remove the temporary optimistic updates
+          const tempIds = new Set(savedContributions.map((c: any) => c.tempId));
+          state.canvasData = state.canvasData.filter(
+            (c: any) => !tempIds.has(c._id)
+          );
 
-       // 2. Add the final, saved contributions from the server
-       state.canvasData.push(...savedContributions);
-     })
-     .addCase(batchCreateContributions.rejected, (state, action: any) => {
-       // If the batch fails (e.g., contribution limit reached),
-       // we should roll back the optimistic update.
-       const failedTempIds = new Set(
-         action.meta.arg.contributions.map((c: any) => c.tempId)
-       );
-       state.canvasData = state.canvasData.filter(
-         (c: any) => !failedTempIds.has(c._id)
-       );
-     });
+          // 2. Add the final, saved contributions from the server
+          state.canvasData.push(...savedContributions);
+        }
+      )
+      .addCase(batchCreateContributions.rejected, (state, action: any) => {
+        // If the batch fails (e.g., contribution limit reached),
+        // we should roll back the optimistic update.
+        const failedTempIds = new Set(
+          action.meta.arg.contributions.map((c: any) => c.tempId)
+        );
+        state.canvasData = state.canvasData.filter(
+          (c: any) => !failedTempIds.has(c._id)
+        );
+      });
 
     builder
       .addCase(deleteContribution.pending, (state: any) => {
@@ -272,7 +283,7 @@ export const {
   clearCanvasData,
   updateVoteFromSocket,
   addContributionFromSocket,
-
+  setCurrentBrush,
   addMultipleContributionsOptimistically, // Isay export karein
 } = paintPixelSlice.actions;
 

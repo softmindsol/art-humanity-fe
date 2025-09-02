@@ -42,6 +42,7 @@ const KonvaCanvas = ({
     const [stageState, setStageState] = useState({ scale: 1, x: 0, y: 0 });
     const [activeLine, setActiveLine] = useState<any>({ points: [] });
     const [bakedImage, setBakedImage] = useState<HTMLImageElement | null>(null);
+    const lineStartPointRef = useRef<{ x: number; y: number } | null>(null);
 
     // --- Refs ---
     const currentStrokePathRef = useRef<any[]>([]);
@@ -52,6 +53,8 @@ const KonvaCanvas = ({
     const memoizedTransformContributionForKonva = useCallback((contribution: any) => {
         return transformContributionForKonva(contribution);
     }, []); // Transform function ko memoize karein
+
+
 
     useEffect(() => {
         if (!savedStrokes || width === 0 || height === 0) {
@@ -188,7 +191,6 @@ const KonvaCanvas = ({
         }
     }, [dispatch, projectId, socket]);
 
-    // --- Ye tamam handlers ab 'e' (event object) se stage hasil karte hain ---
 
     const handleWheel = (e: any) => {
         e.evt.preventDefault();
@@ -222,15 +224,38 @@ const KonvaCanvas = ({
         if (brushState.mode === 'move') return;
 
         setIsDrawing(true);
+
+
         const stage = e.target.getStage();
         const pos = stage.getPointerPosition();
-        currentStrokePathRef.current = [];
-        setActiveLine({
-            points: [pos.x, pos.y],
-            tool: brushState.mode,
-            stroke: `rgba(${brushState.color.r}, ${brushState.color.g}, ${brushState.color.b}, ${brushState.color.a || 1})`,
-            strokeWidth: brushState.size,
-        });
+        // Brush/Eraser (Freehand)
+        if (brushState.mode === 'brush' || brushState.mode === 'eraser') {
+            setIsDrawing(true);
+            currentStrokePathRef.current = [];
+            setActiveLine({
+                points: [pos.x, pos.y],
+                tool: brushState.mode,
+                stroke: `rgba(...)`,
+                strokeWidth: brushState.size,
+            });
+        }
+
+        // --- NAYA LOGIC FOR STRAIGHT LINE ---
+        if (brushState.mode === 'line') {
+            setIsDrawing(true);
+            // 1. Line ka start point save karein
+            lineStartPointRef.current = pos;
+            // 2. activeLine ko shuru karein (start aur end point abhi same hain)
+            setActiveLine({
+                points: [pos.x, pos.y, pos.x, pos.y],
+                tool: 'brush', // Straight line hamesha 'brush' mode mein draw hogi
+                stroke: `rgba(...)`,
+                strokeWidth: brushState.size,
+            });
+        }
+
+
+
     };
 
     const handleMouseMove = (e: any) => {
@@ -240,12 +265,24 @@ const KonvaCanvas = ({
         if (!isDrawing) return;
 
         const point = stage.getPointerPosition();
-        const lastPoints = activeLine.points;
-        setActiveLine((prev: any) => ({ ...prev, points: [...prev.points, point.x, point.y] }));
 
-        if (lastPoints.length >= 2) {
-            const lastPoint = { x: lastPoints[lastPoints.length - 2], y: lastPoints[lastPoints.length - 1] };
-            currentStrokePathRef.current.push({ fromX: lastPoint.x, fromY: lastPoint.y, toX: point.x, toY: point.y });
+        if (brushState.mode === 'brush' || brushState.mode === 'eraser') {
+            const lastPoints = activeLine.points;
+            setActiveLine((prev: any) => ({ ...prev, points: [...prev.points, point.x, point.y] }));
+
+            if (lastPoints.length >= 2) {
+                const lastPoint = { x: lastPoints[lastPoints.length - 2], y: lastPoints[lastPoints.length - 1] };
+                currentStrokePathRef.current.push({ fromX: lastPoint.x, fromY: lastPoint.y, toX: point.x, toY: point.y });
+            }
+        }
+        // --- NAYA LOGIC FOR STRAIGHT LINE PREVIEW ---
+        if (brushState.mode === 'line' && lineStartPointRef.current) {
+            const startPoint = lineStartPointRef.current;
+            // Line ko update karein: start point se current mouse position tak
+            setActiveLine((prev: any) => ({
+                ...prev,
+                points: [startPoint.x, startPoint.y, point.x, point.y]
+            }));
         }
     };
 
@@ -253,6 +290,20 @@ const KonvaCanvas = ({
         if (!isDrawing) return;
         setIsDrawing(false);
 
+        // --- NAYA LOGIC FOR SAVING STRAIGHT LINE ---
+        if (brushState.mode === 'line' && lineStartPointRef.current) {
+            const startPoint = lineStartPointRef.current;
+            const endPoint = activeLine.points.slice(2); // Get the last two points [x2, y2]
+
+            // Straight line sirf ek hi segment hota hai
+            currentStrokePathRef.current = [{
+                fromX: startPoint.x,
+                fromY: startPoint.y,
+                toX: endPoint[0],
+                toY: endPoint[1],
+            }];
+            lineStartPointRef.current = null; // Ref ko reset karein
+        }
         if (currentStrokePathRef.current.length === 0) return;
 
         const tempId = `temp_${Date.now()}`;
@@ -275,7 +326,7 @@ const KonvaCanvas = ({
         if (batchTimerRef.current) clearTimeout(batchTimerRef.current);
         batchTimerRef.current = setTimeout(sendBatchToServer, 3000);
 
-        // setActiveLine({ points: [] });
+        setActiveLine({ points: [] });
         currentStrokePathRef.current = [];
     };
 
@@ -300,7 +351,8 @@ const KonvaCanvas = ({
                         points={activeLine.points}
                         stroke={activeLine.stroke}
                         strokeWidth={activeLine.strokeWidth}
-                        tension={0.5} lineCap="round" lineJoin="round"
+                        tension={brushState.mode === 'line' ? 0 : 0.5}
+                        lineCap="round" lineJoin="round"
                         globalCompositeOperation={activeLine.tool === 'eraser' ? 'destination-out' : 'source-over'}
                         listening={false}
                     />
@@ -310,7 +362,7 @@ const KonvaCanvas = ({
             <Layer listening={false}>
                 {highlightedLines.map((line: any, i: number) => (
                     <Line key={`highlight-${i}`} {...line} shadowColor="rgba(0, 102, 255, 0.8)" shadowBlur={15} shadowOpacity={0.9}
- />
+                    />
                 ))}
             </Layer>
 

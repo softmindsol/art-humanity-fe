@@ -2,13 +2,14 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
-import { Brush, Eraser, Move } from 'lucide-react';
+import { Brush, Eraser, Move, Minus } from 'lucide-react';
 
 // Apne Redux slice se actions aur selectors import karein
 import {
     setBrushMode,
     setBrushSize,
-    setBrushColor
+    setBrushColor,
+    setCurrentBrush
 } from '@/redux/slice/contribution';
 import { selectCurrentBrush } from '@/redux/slice/contribution';
 import useAppDispatch from '@/hook/useDispatch';
@@ -91,7 +92,7 @@ const Toolbox = () => {
     const currentColorString = `rgba(${brushState.color.r}, ${brushState.color.g}, ${brushState.color.b}, ${brushState.color.a})`;
 
 
-    
+
     return (
         <div
             className="absolute top-56 z-50 bg-white border border-[#8b795e] rounded-lg p-4 w-[250px] shadow-lg flex flex-col gap-4 select-none"
@@ -119,13 +120,22 @@ const Toolbox = () => {
 
             {/* Brush / Eraser / Move */}
             <div className="flex gap-2">
-                {(['brush', 'eraser', 'move'] as const).map((mode) => {
-                    const Icon = mode === 'brush' ? Brush : mode === 'eraser' ? Eraser : Move;
+                {/* Hum 'move' ko alag handle karenge kyunke woh drawing tool nahi hai */}
+                {(['brush', 'eraser', 'line'] as const).map((mode) => {
+                    const Icon = {
+                        brush: Brush,
+                        eraser: Eraser,
+                        line: Minus
+                    }[mode];
+
+                    // 'brushState.mode' se compare karein
                     const isActive = brushState.mode === mode;
+
                     return (
                         <button
                             key={mode}
-                            onClick={() => dispatch(setBrushMode(mode))}
+                            // setCurrentBrush action ko object ke saath dispatch karein
+                            onClick={() => dispatch(setCurrentBrush({ mode }))}
                             title={mode.charAt(0).toUpperCase() + mode.slice(1)}
                             className={`flex-1 p-2 border border-[#8b795e] rounded flex justify-center transition-colors ${isActive ? 'bg-[#8b795e] text-white' : 'bg-white text-[#8b795e] hover:bg-gray-200'}`}
                         >
@@ -133,7 +143,17 @@ const Toolbox = () => {
                         </button>
                     );
                 })}
+
+                {/* 'Move' tool ke liye alag button */}
+                <button
+                    onClick={() => dispatch(setCurrentBrush({ mode: 'move' }))}
+                    title="Move"
+                    className={`flex-1 p-2 border border-[#8b795e] rounded flex justify-center transition-colors ${brushState.mode === 'move' ? 'bg-[#8b795e] text-white' : 'bg-white text-[#8b795e] hover:bg-gray-200'}`}
+                >
+                    <Move size={18} />
+                </button>
             </div>
+
 
             {/* Color Picker */}
             <div>
