@@ -460,14 +460,14 @@ const DemoCanvas: React.FC = () => {
                 <div className="flex justify-center gap-3">
                     <button
                         onClick={loadReferenceImage}
-                        className="bg-[#8b795e] text-white border-none px-4 py-2 rounded cursor-pointer"
+                        className="bg-[#8b795e] text-[14px] lg:text-[16px] text-white border-none px-4 py-2 rounded cursor-pointer"
                     >
                         Load Image
                     </button>
 
                     <button
                         onClick={handleClearCanvas}
-                        className="bg-[#cd5c5c] text-white border-none px-4 py-2 rounded cursor-pointer"
+                        className="bg-[#cd5c5c] text-white text-[14px] lg:text-[16px] border-none px-4 py-2 rounded cursor-pointer"
                     >
                         Clear Canvas
                     </button>
@@ -475,7 +475,7 @@ const DemoCanvas: React.FC = () => {
                     <button
                         onClick={() => setShowGrid(!showGrid)}
                         className={`${showGrid ? 'bg-[#5d4037]' : 'bg-[#8b795e]'
-                            } text-white border-none px-4 py-2 rounded cursor-pointer flex items-center gap-2`}
+                            } text-white border-none px-4 py-2 text-[14px] lg:text-[16px] rounded cursor-pointer flex items-center gap-2`}
                     >
                         <Grid size={16} />
                         {showGrid ? 'Hide Grid' : 'Show Grid'}
