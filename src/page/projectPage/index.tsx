@@ -516,6 +516,8 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                             strokeCount={savedStrokes?.length || 0}
                             isSaving={isSaving}
                             saveError={saveError}
+                            boundaryRef={mainContentRef} // <-- YEH PROP ADD KAREIN
+
                         />
                         {tooltip.visible && (
                             <div

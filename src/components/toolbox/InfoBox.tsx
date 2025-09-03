@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { GripVertical } from 'lucide-react'; // Handle ke liye icon
 import { selectCanvasData } from '@/redux/slice/contribution';
 import { useSelector } from 'react-redux';
@@ -9,39 +9,68 @@ interface InfoBoxProps {
     strokeCount: number;
     isSaving: boolean;
     saveError: string | null;
+    boundaryRef: React.RefObject<HTMLDivElement>; // Boundary ref prop add karein
 }
 
-const InfoBox = ({ zoom, worldPos, strokeCount, isSaving, saveError }: InfoBoxProps) => {
+const InfoBox = ({ zoom, worldPos, strokeCount, isSaving, saveError, boundaryRef }: InfoBoxProps) => {
     // --- DRAGGING LOGIC STATE & REFS ---
     const [position, setPosition] = useState({ x: window.innerWidth - 220, y: window.innerHeight - 150 }); // Shuruaati position right-bottom corner ke qareeb
     const [isDragging, setIsDragging] = useState(false);
     const dragOffsetRef = useRef({ x: 0, y: 0 }); // Mouse aur box ke kone ka faasla
     const savedStrokes = useSelector(selectCanvasData);
+    const infoBoxRef = useRef<HTMLDivElement>(null); // InfoBox ka apna ref
 
-    // --- DRAGGING EVENT HANDLERS ---
-    const handleDragMouseDown = useCallback((e: React.MouseEvent) => {
-        setIsDragging(true);
-        // Box ke kone se mouse ka faasla calculate karke save karein
-        dragOffsetRef.current = {
-            x: e.clientX - position.x,
-            y: e.clientY - position.y
-        };
-        e.preventDefault(); // Drag karte waqt text selection ko rokein
-    }, [position]);
+   
 
     const savedStrokeCount = useMemo(() =>
         savedStrokes.filter((c: any) => c && c._id && !c._id.startsWith('temp_')).length
         , [savedStrokes]);
 
-    // Global event listeners ko manage karne ke liye useEffect
+    useEffect(() => {
+        if (boundaryRef.current && infoBoxRef.current) {
+            const boundaryRect = boundaryRef.current.getBoundingClientRect();
+            const infoBoxRect = infoBoxRef.current.getBoundingClientRect();
+            // Toolbox ko parent ke andar, bottom-right mein rakhein
+            setPosition({
+                x: boundaryRect.width - infoBoxRect.width - 20, // 20px from right
+                y: boundaryRect.height - infoBoxRect.height - 20, // 20px from bottom
+            });
+        }
+    }, [boundaryRef]);
+
+
+    const handleDragMouseDown = useCallback((e: React.MouseEvent) => {
+        if (!infoBoxRef.current) return;
+        const infoBoxRect = infoBoxRef.current.getBoundingClientRect();
+
+        setIsDragging(true);
+        dragOffsetRef.current = {
+            x: e.clientX - infoBoxRect.left,
+            y: e.clientY - infoBoxRect.top,
+        };
+        e.preventDefault();
+    }, []);
+
     useEffect(() => {
         const handleDragMouseMove = (e: MouseEvent) => {
-            if (!isDragging) return;
-            // Nayi position set karein
-            setPosition({
-                x: e.clientX - dragOffsetRef.current.x,
-                y: e.clientY - dragOffsetRef.current.y,
-            });
+            if (!isDragging || !boundaryRef.current || !infoBoxRef.current) return;
+
+            const boundaryRect = boundaryRef.current.getBoundingClientRect();
+            const infoBoxRect = infoBoxRef.current.getBoundingClientRect();
+
+            let newX_viewport = e.clientX - dragOffsetRef.current.x;
+            let newY_viewport = e.clientY - dragOffsetRef.current.y;
+
+            let newX = newX_viewport - boundaryRect.left;
+            let newY = newY_viewport - boundaryRect.top;
+
+            // Boundary checks
+            newX = Math.max(0, newX);
+            newY = Math.max(0, newY);
+            newX = Math.min(newX, boundaryRect.width - infoBoxRect.width);
+            newY = Math.min(newY, boundaryRect.height - infoBoxRect.height);
+
+            setPosition({ x: newX, y: newY });
         };
 
         const handleDragMouseUp = () => {
@@ -49,20 +78,20 @@ const InfoBox = ({ zoom, worldPos, strokeCount, isSaving, saveError }: InfoBoxPr
         };
 
         if (isDragging) {
-            window.addEventListener('mousemove', handleDragMouseMove);
-            window.addEventListener('mouseup', handleDragMouseUp);
+            document.addEventListener('mousemove', handleDragMouseMove);
+            document.addEventListener('mouseup', handleDragMouseUp);
         }
 
-        // Cleanup: Component unmount hone par ya dragging rukne par listeners hatayein
         return () => {
-            window.removeEventListener('mousemove', handleDragMouseMove);
-            window.removeEventListener('mouseup', handleDragMouseUp);
+            document.removeEventListener('mousemove', handleDragMouseMove);
+            document.removeEventListener('mouseup', handleDragMouseUp);
         };
-    }, [isDragging]);
-
+    }, [isDragging, boundaryRef]);
 
     return (
         <div
+            ref={infoBoxRef}
+
             className="absolute bg-white/90 p-3 rounded-lg text-base text-[#5d4e37] border border-[#3e2723] shadow-lg w-[200px] select-none"
             style={{
                 left: `${position.x}px`,

@@ -49,6 +49,10 @@ const KonvaCanvas = ({
     const strokeQueueRef = useRef<any[]>([]);
     const batchTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+    // --- zoom in/out limit --- 
+    const MAX_ZOOM = 32;
+    const MIN_ZOOM = 0.1;
+
 
     const memoizedTransformContributionForKonva = useCallback((contribution: any) => {
         return transformContributionForKonva(contribution);
@@ -195,19 +199,27 @@ const KonvaCanvas = ({
     const handleWheel = (e: any) => {
         e.evt.preventDefault();
         const stage = e.target.getStage();
-        // ... baaki ka wheel logic bilkul waisa hi rahega ...
         const scaleBy = 1.05;
         const oldScale = stage.scaleX();
+
         const mousePointTo = {
             x: (stage.getPointerPosition().x - stage.x()) / oldScale,
             y: (stage.getPointerPosition().y - stage.y()) / oldScale,
         };
-        const newScale = e.evt.deltaY > 0 ? oldScale / scaleBy : oldScale * scaleBy;
+
+        let newScale = e.evt.deltaY > 0 ? oldScale / scaleBy : oldScale * scaleBy;
+
+        // --- YEH NAYI LOGIC HAI ---
+        // Math.max yeh yaqeeni banata hai ke scale MIN_ZOOM se neeche na jaye.
+        // Math.min yeh yaqeeni banata hai ke scale MAX_ZOOM se upar na jaye.
+        newScale = Math.max(MIN_ZOOM, Math.min(newScale, MAX_ZOOM));
+
         const newState = {
             scale: newScale,
             x: stage.getPointerPosition().x - mousePointTo.x * newScale,
             y: stage.getPointerPosition().y - mousePointTo.y * newScale,
         };
+
         setStageState(newState);
         onStateChange({ zoom: newState.scale });
     };
@@ -232,10 +244,14 @@ const KonvaCanvas = ({
         if (brushState.mode === 'brush' || brushState.mode === 'eraser') {
             setIsDrawing(true);
             currentStrokePathRef.current = [];
+            // Redux se anay wale color object ko CSS ke rgba string mein convert karein
+            const { r, g, b, a } = brushState.color;
+            const colorString = `rgba(${r}, ${g}, ${b}, ${a})`;
+
             setActiveLine({
                 points: [pos.x, pos.y],
                 tool: brushState.mode,
-                stroke: `rgba(...)`,
+                stroke: colorString, // <--- AB YEH SAHI DYNAMIC COLOR ISTEMAL KAREGA
                 strokeWidth: brushState.size,
             });
         }
