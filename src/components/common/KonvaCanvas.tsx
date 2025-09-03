@@ -196,34 +196,33 @@ const KonvaCanvas = ({
     }, [dispatch, projectId, socket]);
 
 
-    const handleWheel = (e: any) => {
-        e.evt.preventDefault();
-        const stage = e.target.getStage();
-        const scaleBy = 1.05;
-        const oldScale = stage.scaleX();
-
-        const mousePointTo = {
-            x: (stage.getPointerPosition().x - stage.x()) / oldScale,
-            y: (stage.getPointerPosition().y - stage.y()) / oldScale,
-        };
-
-        let newScale = e.evt.deltaY > 0 ? oldScale / scaleBy : oldScale * scaleBy;
-
-        // --- YEH NAYI LOGIC HAI ---
-        // Math.max yeh yaqeeni banata hai ke scale MIN_ZOOM se neeche na jaye.
-        // Math.min yeh yaqeeni banata hai ke scale MAX_ZOOM se upar na jaye.
-        newScale = Math.max(MIN_ZOOM, Math.min(newScale, MAX_ZOOM));
-
-        const newState = {
-            scale: newScale,
-            x: stage.getPointerPosition().x - mousePointTo.x * newScale,
-            y: stage.getPointerPosition().y - mousePointTo.y * newScale,
-        };
-
-        setStageState(newState);
-        onStateChange({ zoom: newState.scale });
+   const handleWheel = (e: any) => {
+    e.evt.preventDefault();
+    const stage = e.target.getStage();
+    const scaleBy = 1.05;
+    const oldScale = stage.scaleX();
+    
+    const mousePointTo = {
+        x: (stage.getPointerPosition().x - stage.x()) / oldScale,
+        y: (stage.getPointerPosition().y - stage.y()) / oldScale,
     };
 
+    let newScale = e.evt.deltaY > 0 ? oldScale / scaleBy : oldScale * scaleBy;
+
+    // --- YEH NAYI LOGIC HAI ---
+    // Math.max yeh yaqeeni banata hai ke scale MIN_ZOOM se neeche na jaye.
+    // Math.min yeh yaqeeni banata hai ke scale MAX_ZOOM se upar na jaye.
+    newScale = Math.max(MIN_ZOOM, Math.min(newScale, MAX_ZOOM));
+    
+    const newState = {
+        scale: newScale,
+        x: stage.getPointerPosition().x - mousePointTo.x * newScale,
+        y: stage.getPointerPosition().y - mousePointTo.y * newScale,
+    };
+
+    setStageState(newState);
+    onStateChange({ zoom: newState.scale });
+};
     const handleMouseDown = (e: any) => {
         if (isReadOnly || !user) {
             if (!user) onGuestInteraction();

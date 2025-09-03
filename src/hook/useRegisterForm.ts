@@ -42,10 +42,19 @@ export const useRegisterForm = ({onClose}:any) => {
       errs.fullName = "Name is required";
     } else if (/ {2,}/.test(formData.fullName)) {
       errs.fullName = "Name cannot contain multiple consecutive spaces";
+    } else if (!/^[a-zA-Z0-9\s]+$/.test(formData.fullName)) {
+      // <-- Sirf letters, numbers, aur spaces allow karega
+      errs.fullName = "Display Name can only contain letters and numbers";
+    } else if (formData.fullName.length < 3) {
+      errs.fullName = "Display Name must be at least 3 characters";
     }
+
 
     if (!formData.email.trim()) {
       errs.email = "Email is required";
+    } else if (!/^[\w.%+-]+@[\w.-]+\.(com|org|net|io)$/i.test(formData.email)) {
+      // <-- Aapka custom TLD check
+      errs.email = "Email is invalid or must end with .com, .org, .net, or .io";
     }
 
     if (!formData.password) {

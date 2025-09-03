@@ -20,7 +20,7 @@ const InfoBox = ({ zoom, worldPos, strokeCount, isSaving, saveError, boundaryRef
     const savedStrokes = useSelector(selectCanvasData);
     const infoBoxRef = useRef<HTMLDivElement>(null); // InfoBox ka apna ref
 
-   
+
 
     const savedStrokeCount = useMemo(() =>
         savedStrokes.filter((c: any) => c && c._id && !c._id.startsWith('temp_')).length
