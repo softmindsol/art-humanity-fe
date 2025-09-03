@@ -35,9 +35,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         loginErrors,
         loginLoading,
         handleGoogleLogin
-      
 
-    } = useRegisterForm({onClose});
+
+    } = useRegisterForm({ onClose });
 
 
 
@@ -84,6 +84,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                                 name="email"
                                 value={loginData.email}
                                 onChange={handleLoginChange}
+                                placeholder="Enter your email"
+
                                 required
                             />
                             {loginErrors.email && <p className="error text-red-500">{loginErrors.email}</p>}
@@ -94,6 +96,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                                 type={showSigninPassword ? 'text' : 'password'}
                                 name="password"
                                 value={loginData.password}
+                                placeholder="Enter your password"
+
                                 onChange={handleLoginChange}
                                 required
                             />
@@ -127,15 +131,17 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                     </form>
 
                 ) : (
-                    <form className="auth-form" >
+                    <form className="auth-form h-[450px] !overflow-y-auto" >
                         <div className="form-group">
                             <label>Display Name</label>
-                            <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} />
+                            <input type="text" name="fullName" placeholder="Enter your fullName"
+                                value={formData.fullName} onChange={handleChange} />
                             {errors.fullName && <p className="error text-red-500">{errors.fullName}</p>}
                         </div>
                         <div className="form-group">
                             <label>Email</label>
-                            <input type="email" name="email" value={formData.email} onChange={handleChange} />
+                            <input type="email" name="email" placeholder="Enter your email"
+                                value={formData.email} onChange={handleChange} />
                             {errors.email && <p className="error text-red-500">{errors.email}</p>}
                         </div>
                         <div className="form-group relative">
@@ -143,6 +149,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                             <input
                                 type={showPassword ? 'text' : 'password'}
                                 name="password"
+                                placeholder="Enter your password"
+
                                 value={formData.password}
                                 onChange={handleChange}
                             />
@@ -159,6 +167,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                             <input
                                 type={showConfirmPassword ? 'text' : 'password'}
                                 name="confirmPassword"
+                                placeholder="Enter your confirm password"
+
                                 value={formData.confirmPassword}
                                 onChange={handleChange}
                             />

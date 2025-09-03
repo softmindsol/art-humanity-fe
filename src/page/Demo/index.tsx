@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useRef } from 'react';
 import { Brush, Eraser, Move, Grid, Undo, Redo } from 'lucide-react'; // Grid icon imported
 import { useCanvasState } from '@/hook/useCanvasState';
 import type { Position, Tile } from '@/types/canvas';
@@ -35,11 +35,9 @@ const DemoCanvas: React.FC = () => {
     // Get state directly from the Redux store
     const brushState = useSelector(selectCurrentBrush);
     const canvasState = useSelector(selectCurrentCanvas);
-    const isSaving = useSelector(selectIsLoadingOperation('createStroke'));
-    const saveError = useSelector(selectErrorForOperation('createStroke'));
     const timelapseUrl = useSelector(selectTimelapseUrl);
-    const isGeneratingTimelapse = useSelector(selectIsLoadingOperation('generateTimelapse'));
-    const timelapseError = useSelector(selectErrorForOperation('generateTimelapse'));
+    const mainContentRef = useRef<HTMLDivElement>(null);
+
     const {
         isModalOpen, setIsModalOpen,
         // Refs
@@ -452,7 +450,7 @@ const DemoCanvas: React.FC = () => {
     }
 
     return (
-        <div className='h-[100vh] md:h-[155vh] lg:!h-[145vh] xl:!h-[145vh] 2xl:h-[135vh]' style={{ fontFamily: 'Georgia, serif', overflow: 'auto', position: 'relative' }}>
+        <div ref={mainContentRef} className='h-[100vh] md:h-[155vh] lg:!h-[145vh] xl:!h-[145vh] 2xl:h-[135vh]' style={{ fontFamily: 'Georgia, serif', overflow: 'auto', position: 'relative' }}>
             <div className=" md:mb-[190px] 3xl:mb-[150px] px-5 py-2 text-center">
                 <h1 className="text-2xl md:text-[40px] text-[#5d4e37] mb-1 font-normal">Demo Canvas</h1>
                 <p className="text-[#8b795e] italic mb-2">
@@ -493,7 +491,7 @@ const DemoCanvas: React.FC = () => {
                 </div>
             </div>
 
-          <Toolbox/>
+          
             
             <div ref={containerRef} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 'calc(100vh - 150px)' }}>
                 <canvas
@@ -520,14 +518,7 @@ const DemoCanvas: React.FC = () => {
                 />
             </div>
 
-            <div className="absolute bottom-16 right-10 bg-white/90 p-3 rounded-lg text-base text-[#5d4e37] border border-[#3e2723]">
-                <div>Zoom: {Math.round(canvasState.zoomLevel * 100)}%</div>
-                <div>World Pos: ({mousePos.x}, {mousePos.y})</div>
-                <div>Tiles: {totalTiles}</div>
-                <div>Strokes: {allStrokes.length}</div>
-                {isSaving && <div className="text-orange-500">Saving...</div>}
-                {saveError && <div className="text-[#cd5c5c]">{saveError}</div>}
-            </div>
+            <Toolbox boundaryRef={mainContentRef} />
 
         </div>
     );

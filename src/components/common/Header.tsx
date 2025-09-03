@@ -81,7 +81,7 @@ const Header = () => {
     if (unreadCount > 0) {
       console.log("Marking all notifications as read via button click...");
       dispatch(markNotificationsAsRead({ userId: user?.id }));
-      
+
     }
   };
 
@@ -92,12 +92,25 @@ const Header = () => {
     // Agar notification pehle se 'read' nahi hai, to hi API call bhejein
     if (!notification.isRead) {
       console.log(`Marking notification ${notification._id} as read...`);
-      dispatch(markSingleNotificationRead({ notificationId:notification._id,userId: user?.id }));
-            dispatch(fetchNotifications({ userId: user?.id }));
+      dispatch(markSingleNotificationRead({ notificationId: notification._id, userId: user?.id }));
+      dispatch(fetchNotifications({ userId: user?.id }));
 
     }
   };
 
+  useEffect(()=>{
+    if (isAuthModalOpen){
+      document.body.style.overflow='hidden'
+    }
+    else {
+      document.body.style.overflow = 'auto'
+    }
+
+    return ()=>{
+      document.body.style.overflow = 'auto'
+    }
+
+  }, [isAuthModalOpen])
   useEffect(() => {
     if (user && user.id) {
       dispatch(getUserById(user.id));
@@ -134,13 +147,13 @@ const Header = () => {
 
 
                 <li><NavLink to="/demo">Demo</NavLink></li>
-                <li>
-                  <div ref={notificationRef} className="mt-3">
+                {user?.id && <li>
+                  <div ref={notificationRef} className=" mt-2 md:mt-3">
                     <button
                       onClick={handleBellClick}
                       className="text-gray-600 hover:text-gray-800 transition-colors cursor-pointer"
                     >
-                      <Bell size={24} />
+                      <Bell size={24} className='' />
                       {unreadCount > 0 && (
                         <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs text-white">
                           {unreadCount}
@@ -173,7 +186,7 @@ const Header = () => {
                                 className={`p-2 rounded-md text-sm ${!notif.isRead ? 'bg-[#f1e6da] font-semibold' : 'text-gray-600'} mb-2`}
                               >
                                 <Link to={`/project/${notif.project?.canvasId}`} onClick={() => handleNotificationClick(notif)}
->
+                                >
                                   {notif.message}
                                   <div className='text-xs text-gray-500 mt-1'>{new Date(notif.createdAt).toLocaleString()}</div>
                                 </Link>
@@ -186,7 +199,7 @@ const Header = () => {
                       </div>
                     )}
                   </div>
-                </li>
+                </li>}
               </ul>
             </nav>
 

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import {
-    selectGalleryProjects, 
+    selectGalleryProjects,
     selectProjectsLoading,
     selectProjectsError
 } from '@/redux/slice/project';
@@ -18,7 +18,7 @@ const GalleryPage: React.FC = () => {
     const projects = useSelector(selectGalleryProjects);
     const isLoading = useSelector(selectProjectsLoading).fetchingGallery;
     const error = useSelector(selectProjectsError).fetchingGallery;
-  
+
     useEffect(() => {
         console.log("useEffect is running, dispatching fetchGalleryProjects..."); // <-- YEH LINE BHI ADD KAREIN
 
@@ -63,9 +63,11 @@ const GalleryPage: React.FC = () => {
         }
     };
     if (isLoading) {
-        return <div className="text-center py-20">Loading Gallery...</div>;
+        return <div className="flex justify-center items-center bg-red-300 h-full w-full py-20">
+            <div className="w-16 h-16 border-4 border-[#d29000]  border-t-transparent rounded-full animate-spin"></div>
+        </div>
     }
- 
+
     if (error) {
         return <div className="text-center py-20 text-red-500">Error: {error}</div>;
     }
@@ -73,8 +75,8 @@ const GalleryPage: React.FC = () => {
     return (
         <div id="gallery-content" className="projects-content">
             <section className="projects-header page-header">
-                <h2>Project Gallery</h2>
-                <p style={{ color: '#8d6e63' }}>Explore our collection of completed collaborative canvases.</p>
+                <h2 className='!text-[28px] md:!text-[32px]'>Project Gallery</h2>
+                <p className='!text-[14px] !w-full md:!text-[19.2px] ' style={{ color: '#8d6e63' }}>Explore our collection of completed collaborative canvases.</p>
             </section>
 
             <section className="projects-grid mt-5">
@@ -104,7 +106,7 @@ const GalleryPage: React.FC = () => {
                                 <div className="flex items-center gap-2 mt-4"> {/* (3) Button group */}
                                     <Link
                                         to={`/project/${project?.canvasId}?view=gallery`}
-                                        className="btn-contribute flex-1 !bg-purple-600 hover:!bg-purple-700"
+                                        className="btn-contribute flex-1 hover:!text-white !bg-purple-600 hover:!bg-purple-700"
                                     >
                                         View Artwork
                                     </Link>

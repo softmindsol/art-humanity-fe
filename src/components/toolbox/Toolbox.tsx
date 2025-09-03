@@ -14,7 +14,7 @@ import {
 import { selectCurrentBrush } from '@/redux/slice/contribution';
 import useAppDispatch from '@/hook/useDispatch';
 
-const Toolbox = () => {
+const Toolbox = ({ boundaryRef }:any) => {
     const dispatch = useAppDispatch();
     const brushState = useSelector(selectCurrentBrush);
 
@@ -22,27 +22,48 @@ const Toolbox = () => {
     const [position, setPosition] = useState({ x: 72, y: 320 }); // Toolbox ki shuruaati position
     const [isDragging, setIsDragging] = useState(false);
     const dragOffsetRef = useRef({ x: 0, y: 0 }); // Mouse aur toolbox ke kone ka faasla
+    const toolboxRef = useRef<HTMLDivElement>(null); // Toolbox ka apna ref
 
-    // --- DRAGGING EVENT HANDLERS ---
+  
     const handleDragMouseDown = useCallback((e: React.MouseEvent) => {
-        setIsDragging(true);
-        // Toolbox ke kone se mouse ka faasla calculate karke save karein
-        dragOffsetRef.current = {
-            x: e.clientX - position.x,
-            y: e.clientY - position.y
-        };
-        e.preventDefault(); // Drag karte waqt text selection ko rokein
-    }, [position]);
+        if (!toolboxRef.current) return;
+        const toolboxRect = toolboxRef.current.getBoundingClientRect();
 
-    // Global event listeners ko manage karne ke liye useEffect
+        setIsDragging(true);
+        // Mouse click aur toolbox ke top-left corner ka faasla save karein
+        dragOffsetRef.current = {
+            x: e.clientX - toolboxRect.left,
+            y: e.clientY - toolboxRect.top,
+        };
+        e.preventDefault();
+    }, []);
+
     useEffect(() => {
         const handleDragMouseMove = (e: MouseEvent) => {
-            if (!isDragging) return;
-            // Nayi position set karein
-            setPosition({
-                x: e.clientX - dragOffsetRef.current.x,
-                y: e.clientY - dragOffsetRef.current.y,
-            });
+            if (!isDragging || !boundaryRef.current || !toolboxRef.current) return;
+
+            const boundaryRect = boundaryRef.current.getBoundingClientRect();
+            const toolboxRect = toolboxRef.current.getBoundingClientRect();
+
+            // Pehle, viewport ke hisab se nayi position calculate karein
+            const newX_viewport = e.clientX - dragOffsetRef.current.x;
+            const newY_viewport = e.clientY - dragOffsetRef.current.y;
+
+            // Ab, isko parent ke hisab se relative position mein badlein
+            let newX = newX_viewport - boundaryRect.left;
+            let newY = newY_viewport - boundaryRect.top;
+
+            // ===== YEH SAHI BOUNDARY LOGIC HAI =====
+            // Left boundary (0) se bahar na jaye
+            newX = Math.max(0, newX);
+            // Top boundary (0) se bahar na jaye
+            newY = Math.max(0, newY);
+            // Right boundary se bahar na jaye
+            newX = Math.min(newX, boundaryRect.width - toolboxRect.width);
+            // Bottom boundary se bahar na jaye
+            newY = Math.min(newY, boundaryRect.height - toolboxRect.height);
+
+            setPosition({ x: newX, y: newY });
         };
 
         const handleDragMouseUp = () => {
@@ -54,12 +75,14 @@ const Toolbox = () => {
             document.addEventListener('mouseup', handleDragMouseUp);
         }
 
-        // Cleanup: Component unmount hone par ya dragging rukne par listeners hatayein
         return () => {
             document.removeEventListener('mousemove', handleDragMouseMove);
             document.removeEventListener('mouseup', handleDragMouseUp);
         };
-    }, [isDragging]);
+    }, [isDragging, boundaryRef]);
+
+
+
 
 
     // --- COLOR LOGIC (Aapka pehle wala code) ---
@@ -95,6 +118,8 @@ const Toolbox = () => {
 
     return (
         <div
+            ref={toolboxRef}
+
             className="absolute top-56 z-50 bg-white border border-[#8b795e] rounded-lg p-4 w-[250px] shadow-lg flex flex-col gap-4 select-none"
             style={{
                 left: `${position.x}px`,

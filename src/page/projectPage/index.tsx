@@ -67,6 +67,7 @@ const ProjectPage = ({ projectName, projectId }: any) => {
     const canvasContainerRef = useRef<any>(null);
     const listItemRefs = useRef<any>({});
     const [cursors, setCursors] = useState<Record<string, any>>({});
+    const mainContentRef = useRef<HTMLDivElement>(null);
 
     // --- REDUX SELECTORS ---
     const currentProject = useSelector(selectCurrentProject);
@@ -349,7 +350,7 @@ const ProjectPage = ({ projectName, projectId }: any) => {
     // console.log("Rendering cursors:", cursors);
     return (
         // Design ke mutabiq page ka background color
-        <div className=" min-h-screen p-4 sm:p-6 lg:p-8">
+        <div ref={mainContentRef} className="relative  min-h-screen p-4 sm:p-6 lg:p-8">
             <div className="max-w-screen-2xl mx-auto">
 
                 {/* Yahan aapka page header aur "Back" button aa sakta hai */}
@@ -362,7 +363,7 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                 <div className="flex flex-col md:flex-row gap-6">
 
                     {/* Left Column: Toolbox */}
-                    {!isReadOnly && <Toolbox />}
+                    {!isReadOnly && <Toolbox boundaryRef={mainContentRef} />}
 
 
                     {/* Right Column: Canvas & Actions */}

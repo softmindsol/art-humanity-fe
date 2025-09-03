@@ -15,17 +15,17 @@
   --text-light: #efebe9; /* Off White */
   --gold: #d4af37; /* Gold Accent */
   --cream: #f5f5dc; /* Cream */
-  --parchment: #F2E8C9;         /* Parchment */
-    --bg-light: #f8f0e7;
-    --canvas-bg: #CCCCCC;
-    --white: #FFFFFF;
-    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.15);
-    --border-radius-sm: 4px;
-    --border-radius-md: 8px;
-    --border-radius-lg: 12px;
+  --parchment: #f2e8c9; /* Parchment */
+  --bg-light: #f8f0e7;
+  --canvas-bg: #cccccc;
+  --white: #ffffff;
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.15);
+  --border-radius-sm: 4px;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
 }
- 
+
 /* Base Styles */
 * {
   /* margin: 0; 
@@ -42,7 +42,9 @@ body {
   margin: 0;
   padding: 0;
 }
-body, html, #root {
+body,
+html,
+#root {
   height: 100%;
   margin: 0;
 }
@@ -81,7 +83,7 @@ a {
 }
 
 a:hover {
-  color: var(--primary-dark); 
+  color: var(--primary-dark);
 }
 
 /* Header Styles */
@@ -98,7 +100,7 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 15px 30px;
+  padding: 10px 30px;
   max-width: 1200px;
   margin: 0 auto;
 }
@@ -125,8 +127,6 @@ header {
   margin: 0;
   color: #333;
 }
-
-
 
 .tagline {
   font-size: 14px;
@@ -356,7 +356,7 @@ nav ul li a.active {
 }
 
 .project-card h3 {
-  padding: 20px 20px 10px;
+  padding: 5px 20px 1px;
   font-size: 1.3rem;
 }
 
@@ -427,6 +427,86 @@ nav ul li a.active {
 .rules-content {
   max-width: 900px;
   margin: 0 auto 60px;
+}
+
+/* ===== GUIDELINE PAGE - RESPONSIVE STYLES ===== */
+
+/* Pehle, image aur caption ke liye default styles set karein */
+.guideline-image {
+  max-width: 60%; /* Desktop par 60% width */
+  height: auto;
+  margin-top: 15px;
+  border-radius: 8px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.image-caption {
+  font-style: italic;
+  font-size: 0.9em;
+  text-align: center;
+  margin-top: 5px;
+  color: var(--primary); /* Text color behtar karein */
+}
+
+/* === AB YAHAN SE RESPONSIVE MAGIC SHURU HOGA === */
+/* 900px se choti screens (tablets aur mobile) ke liye */
+
+@media (max-width: 900px) {
+  /* 1. Header ka font size chota karein */
+  .rules-header h2 {
+    font-size: 2.2rem; /* Original 2.8rem se kam */
+  }
+
+  .rules-header,
+  .page-header {
+    text-align: center;
+    margin: 21px 0 21px;
+    padding-bottom: 20px;
+    position: relative;
+  }
+  .rules-content {
+    max-width: 90%;
+    margin: 0 auto 60px;
+  }
+  .rules-header p {
+    font-size: 1.1rem; /* Subtitle bhi thora chota */
+  }
+
+  /* 2. Rule cards ke andar padding kam karein */
+  .rule-card {
+    padding: 10px 15px; /* Top/Bottom 20px, Left/Right 15px */
+  }
+
+  /* 3. Card ke andar ke headings ka size kam karein */
+  .rule-card h3 {
+    font-size: 1.25rem; /* Original 1.4rem se kam */
+  }
+
+  /* 4. Paragraph text ko thora chota karein taake fit ho jaye */
+  .rule-card p {
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  /* 5. Image ko card ki poori width de dein */
+  .guideline-image {
+    max-width: 100%; /* Image ab poori chaurai legi */
+  }
+}
+
+/* Extra adjustments for bohat choti screens (480px se kam) */
+@media (max-width: 480px) {
+  .rules-header h2 {
+    font-size: 1.8rem; /* Aur chota karein */
+  }
+
+  /* Main container ki side padding kam karein */
+  .container {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
 }
 
 .rule-card {
@@ -567,6 +647,10 @@ footer {
 }
 
 @media (max-width: 1024px) {
+  header {
+    flex-direction: column;
+    align-items: center;
+  }
   .canvas-drawing-area {
     width: 100%;
     max-width: 1024px;
@@ -644,7 +728,6 @@ footer {
 
   .rules-header h2 {
     font-size: 2rem;
-
   }
 
   .rule-card {
@@ -691,13 +774,16 @@ footer {
     height: 400px;
   }
 
- nav ul li a{
-  font-size: 14px;
- }
-  
-header{
-  padding:10px 0
-}
+  nav ul li a {
+    font-size: 14px;
+  }
+  nav ul li {
+    margin-right: 15px;
+  }
+
+  header {
+    padding: 10px 0;
+  }
 }
 
 /* Contribute Page Styles */
@@ -848,7 +934,7 @@ header{
   align-items: center;
   font-size: 0.9rem;
   color: var(--primary-dark);
-  margin:1rem 0;
+  margin: 1rem 0;
   padding: 1rem;
   background-color: var(--bg-light);
   gap: 2rem;
@@ -857,18 +943,18 @@ header{
 }
 
 .stat-item {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 /* .stat-label {
     color: var(--text-dark);
     font-weight: 500;
 } */
 .stat-value {
-    /* color: var(--primary-dark); */
-    font-size: 14px !important;
-    font-weight: 600;
+  /* color: var(--primary-dark); */
+  font-size: 14px !important;
+  font-weight: 600;
 }
 /* Canvas Navigation Styles */
 .canvas-navigation {
@@ -1008,6 +1094,46 @@ header{
 .btn-auth-secondary:hover {
   background-color: var(--accent);
   color: var(--primary-dark);
+}
+
+.auth-form {
+  /* Scrollbar aur content ke beech space ke liye padding */
+  padding-right: 15px; /* <-- YEH SABSE ZAROORI LINE HAI */
+  padding-left: 5px; /* <-- Yeh balance ke liye hai */
+  margin-bottom: 10px;
+  /* Baqi scrollbar styles waisy hi rahenge */
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary-light) var(--accent);
+}
+
+/* Ab, Webkit browsers (Chrome, Safari, Edge) ke liye, jismein hum zyada design kar sakte hain */
+
+/* 1. Poora scrollbar kaisa dikhega */
+.auth-form::-webkit-scrollbar {
+  width: 8px; /* Scrollbar ki chaurai */
+}
+
+/* 2. Scrollbar ka track (jis par handle chalta hai) */
+.auth-form::-webkit-scrollbar-track {
+  background: var(--accent); /* Track ka halka background color */
+  border-radius: 10px;
+}
+
+/* 3. Scrollbar ka handle (jisko hum drag karte hain) */
+.auth-form::-webkit-scrollbar-thumb {
+  background-color: var(
+    --primary-light
+  ); /* Thumb/Handle ka color (Light Brown) */
+  border-radius: 10px;
+  /* Ek chota sa border dekar isko floating look de sakte hain */
+  border: 2px solid var(--accent);
+}
+
+/* 4. Jab mouse handle ke upar aaye (hover) */
+.auth-form::-webkit-scrollbar-thumb:hover {
+  background-color: var(
+    --primary
+  ); /* Hover par thora dark color (Medium Brown) */
 }
 
 /* Auth Modal */
@@ -1575,7 +1701,7 @@ header{
 .project-stats {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 0.5rem;
+  /* margin-bottom: 0.5rem; */
 }
 
 .stat {
@@ -1594,52 +1720,55 @@ header{
   font-size: 0.8rem;
   color: #212121;
 }
-.btn-contribute, .btn-notify, .btn-view {
-    display: block;
-    width: 100%;
-    padding: 0.8rem;
-    text-align: center;
-    border-radius: 4px;
-    font-weight: 400;
-    transition: all 0.3s ease;
-    text-decoration: none;
+.btn-contribute,
+.btn-notify,
+.btn-view {
+  display: block;
+  width: 100%;
+  padding: 0.8rem;
+  text-align: center;
+  border-radius: 4px;
+  font-weight: 400;
+  transition: all 0.3s ease;
+  text-decoration: none;
 }
 
 .btn-contribute {
-    background-color: #3a6ea5;
-    color: white;
-    border: none;
+  background-color: #3a6ea5;
+  color: white;
+  border: none;
 }
 
 .btn-contribute:hover {
-    background-color: #2c5282;
+  background-color: #2c5282;
 }
 
 .btn-notify {
-    background-color: white;
-    color: #ff9800;
-    border: 2px solid #ff9800;
+  background-color: white;
+  color: #ff9800;
+  border: 2px solid #ff9800;
 }
 
 .btn-notify:hover {
-    background-color: #ff9800;
-    color: white;
+  background-color: #ff9800;
+  color: white;
 }
 
 .btn-view {
-    background-color: white;
-    color: #3f51b5;
-    border: 2px solid #3f51b5;
+  background-color: white;
+  color: #3f51b5;
+  border: 2px solid #3f51b5;
 }
 
 .btn-view:hover {
-    background-color: #3f51b5;
-    color: white;
+  background-color: #3f51b5;
+  color: white;
 }
 
 /* Responsive Adjustments */
 @media (max-width: 768px) {
   .projects-grid {
+    max-width: 1024px;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   }
 }
@@ -1756,4 +1885,69 @@ header{
 .react-colorful__saturation,
 .react-colorful__hue {
   border-radius: 8px;
+}
+
+/* ===== GALLERY PAGE - RESPONSIVE PROJECT GRID ===== */
+
+/* 1. Grid Container ko Theek Karein */
+.projects-grid {
+  display: grid; /* Flex ke bajaye Grid istemal karein, yeh behtar hai */
+
+  /* YEH LINE RESPONSIVE MAGIC HAI */
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+
+  gap: 2rem; /* Cards ke beech fasla */
+  max-width: 1200px;
+  margin: 2rem auto; /* Top/bottom aur left/right margin */
+  padding: 0 20px; /* Side se thori padding */
+}
+
+/* 2. Project Card ko Flexible Banayein */
+.project-card {
+  /* width: 330px; <-- Fixed width ko HATA DEIN! */
+  width: 100%; /* Card ab apne grid column ki poori width lega */
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background-color: white;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex; /* Flexbox istemal karein taake content theek se align ho */
+  flex-direction: column; /* Image upar, text neeche */
+}
+
+.project-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* Baqi card ki styles waisy hi rahengi (image, info waghera) */
+.project-image {
+  width: 100%;
+  aspect-ratio: 1 / 1; /* Image ko hamesha square rakhein */
+  overflow: hidden;
+}
+.project-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Image ko stretch kiye bina fit karein */
+}
+.project-info {
+  padding: 1rem 1rem;
+  flex-grow: 1; /* Yeh info section ko baqi jaga lene dega */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* Content ko upar neeche phailayein */
+}
+
+/* === Choti Screens ke liye mazeed adjustments === */
+@media (max-width: 480px) {
+  .projects-grid {
+    /* Mobile par cards ko thora aur chota karein */
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    padding: 0 15px; /* Side padding kam karein */
+  }
+
+  .projects-header h2 {
+    font-size: 2rem; /* Header title chota karein */
+  }
 }

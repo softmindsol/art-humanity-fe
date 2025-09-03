@@ -162,7 +162,7 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
                                     id="filter"
                                     value={filter}
                                     onChange={(e) => setFilter(e.target.value)}
-                                    className="block w-full appearance-none text-[14px] p-2 pr-8 border-[2px] border-[#654321] text-[#654321] rounded-md"
+                                    className="block w-full appearance-none text-[12px] md:text-[14px] p-2 pr-8 border-[2px] border-[#654321] text-[#654321] rounded-md"
                                 >
                                     <option value="newest">Newest First</option>
                                     <option value="oldest">Oldest First</option>
