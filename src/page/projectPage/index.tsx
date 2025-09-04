@@ -31,7 +31,7 @@ import { openAuthModal } from '@/redux/slice/opeModal';
 import { io } from 'socket.io-client'; // Socket client import karein
 import { addContributionFromSocket } from '@/redux/slice/contribution'; // Naya action import karein
 import { useSelector } from 'react-redux';
-import { selectCurrentProject } from '@/redux/slice/project';
+import { selectCurrentProject, selectProjectsError, selectProjectsLoading } from '@/redux/slice/project';
 import type { RootState } from '@/redux/store';
 
 
@@ -78,7 +78,21 @@ const ProjectPage = ({ projectName, projectId }: any) => {
     const savedStrokes = useSelector(selectCanvasData);
     const isSaving = useSelector(selectIsLoadingOperation("batchCreateContributions"));
     const saveError = useSelector(selectErrorForOperation("batchCreateContributions"));
+    // Project details ki API call (`fetchProjectById`) ki states
+    const isProjectLoading = useSelector(selectProjectsLoading).fetchingById;
+    const projectError = useSelector(selectProjectsError).fetchingById;
+
+    // Contributions ki API call (`getContributionsByProject`) ki states
+    const areContributionsLoading = useSelector(selectIsLoadingOperation('getContributions'));
+    const contributionsError = useSelector(selectErrorForOperation('getContributions'));
     const isClearingCanvas = useSelector(selectIsLoadingOperation('clearCanvas'));
+    const [loadingSteps, setLoadingSteps] = useState({
+        projectDetails: false,
+        contributions: false,
+    });
+    // Yeh poore page ki initial loading ko control karega
+    const [isInitialLoading, setIsInitialLoading] = useState(true);
+
 
     const handleGenerateTimelapse = () => {
         if (!projectId) {

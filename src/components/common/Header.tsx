@@ -288,18 +288,26 @@ const Header = () => {
         }
       >
         {/* Close Button */}
-        <div className="w-full flex justify-end mb-4">
+        <div className="flex items-center justify-between mb-5 pb-2 border-b border-accent-dark">
+          {/* Logo (Left side) */}
+          <Link to="/" onClick={handleLinkClick} className="flex items-center gap-x-3">
+            <img src="/favicon.PNG" alt="Logo" className="h-10 w-10" />
+            {/* <span className="font-bold text-primary-dark text-lg font-playfair">Project Art</span> */}
+          </Link>
+
+          {/* Close Button (Right side) */}
           <button onClick={() => setIsSidebarOpen(false)}>
-            <X className="h-8 w-8 text-[#3e2723] cursor-pointer" />
+            <X className="h-6 w-6 text-primary-dark" />
           </button>
         </div>
 
+
         {/* Flex container to push auth section to the bottom */}
-        <div className="flex flex-col justify-between h-[calc(100%-50px)]">
+        <div className="flex flex-col justify-between h-[calc(100%-40px)]">
 
           {/* Navigation Links */}
           <nav>
-            <ul className='flex flex-col gap-y-6'>
+            <ul className='flex flex-col gap-y-4'>
               <li><NavLink to="/guideline" onClick={handleLinkClick} className="text-2xl font-semibold font-playfair text-[#3e2723]">Guideline</NavLink></li>
               <li><NavLink to="/gallery" onClick={handleLinkClick} className="text-2xl font-semibold font-playfair text-[#3e2723]">Gallery</NavLink></li>
               <li><NavLink to="/projects" onClick={handleLinkClick} className="text-2xl font-semibold font-playfair text-[#3e2723]">Contribute</NavLink></li>

@@ -498,7 +498,6 @@ nav ul li a.active {
 
 /* Extra adjustments for bohat choti screens (480px se kam) */
 @media (max-width: 767px) {
-
   /* .logo-text h1 {
      display:none;
 
@@ -507,19 +506,18 @@ nav ul li a.active {
     display: none;
 
 } */
-.header-right {
-      display: none;
-
-}
-header {
-  display: flex;
-  flex-direction: row !important;
-  justify-content: space-between;
-  align-items: center;
-  padding: 5px 30px;
-  max-width: 1200px;
-  margin: 0 auto;
-}
+  .header-right {
+    display: none;
+  }
+  header {
+    display: flex;
+    flex-direction: row !important;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
 }
 
 /* Is se hum drawer ki width aur background set karenge */
@@ -555,17 +553,14 @@ header {
     padding-right: 15px;
   }
   .logo-text h1 {
-     display:none;
-
-}
-.tagline{
     display: none;
-
-}
-.header-right {
-      display: none;
-
-}
+  }
+  .tagline {
+    display: none;
+  }
+  .header-right {
+    display: none;
+  }
 }
 
 .rule-card {
@@ -734,7 +729,6 @@ footer {
 }
 
 @media (max-width: 768px) {
-
   .logo-container {
     margin-bottom: 15px;
   }
@@ -839,6 +833,14 @@ footer {
   header {
     padding: 10px 0;
   }
+  .footer-logo h2 {
+    color: var(--text-light);
+    font-size: 1.7rem;
+    margin-bottom: 10px;
+  }
+  .footer-column {
+  margin-left: 30px;
+}
 }
 
 /* Contribute Page Styles */
@@ -1824,19 +1826,19 @@ footer {
 @media (max-width: 768px) {
   .projects-grid {
     max-width: 1024px;
+     margin-right: 17px !important;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   }
 }
 
-
-
 @media (max-width: 480px) {
   .projects-grid {
+    /* background-color: #000; */
     grid-template-columns: 1fr;
+    /* margin-left: -20px; */
+     margin-right: 5px;
   }
-
 }
-
 
 /* Medieval Theme Styles */
 .medieval-theme {
@@ -2000,6 +2002,8 @@ footer {
     /* Mobile par cards ko thora aur chota karein */
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     padding: 0 15px; /* Side padding kam karein */
+        margin-right: 5px;
+
   }
 
   .projects-header h2 {

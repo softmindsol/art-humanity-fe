@@ -3,11 +3,11 @@ const Footer = () => {
   return (
     <footer className="flex flex-col justify-end">
 
-
+ 
       <div className="footer-content">
         <div className="footer-logo">
           <h2>Project Art of Humanity</h2>
-          <p>Collaborative Canvases of Human Expression</p>
+          <p className="text-[14px] md:text-[16px]">Collaborative Canvases of Human Expression</p>
         </div>
         <div className="footer-links">
           <div className="footer-column">
