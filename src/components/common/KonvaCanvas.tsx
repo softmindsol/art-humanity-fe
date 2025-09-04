@@ -11,6 +11,7 @@ import useAuth from '@/hook/useAuth';
 
 // Helper function ka import
 import { transformContributionForKonva } from '@/utils/transformContributionForKonva';
+import { getCanvasPointerPosition } from '@/utils/getCanvasPointerPosition';
 
 // Props ke liye interface (apne project ke hisab se isay ahem banayein)
 interface KonvaCanvasProps {
@@ -238,7 +239,9 @@ const KonvaCanvas = ({
 
 
         const stage = e.target.getStage();
-        const pos = stage.getPointerPosition();
+        // const pos = stage.getPointerPosition();
+        const pos = getCanvasPointerPosition(stage); // <-- NAYI AUR THEEK LINE
+
         // Brush/Eraser (Freehand)
         if (brushState.mode === 'brush' || brushState.mode === 'eraser') {
             setIsDrawing(true);
@@ -275,11 +278,13 @@ const KonvaCanvas = ({
 
     const handleMouseMove = (e: any) => {
         const stage = e.target.getStage();
-        onStateChange({ worldPos: stage.getPointerPosition() });
-
+        // onStateChange({ worldPos: stage.getPointerPosition() });
+ const worldPos = getCanvasPointerPosition(stage);
+    onStateChange({ worldPos });
         if (!isDrawing) return;
 
-        const point = stage.getPointerPosition();
+        // const point = stage.getPointerPosition();
+        const point = getCanvasPointerPosition(stage); // <-- NAYI AUR THEEK LINE
 
         if (brushState.mode === 'brush' || brushState.mode === 'eraser') {
             const lastPoints = activeLine.points;

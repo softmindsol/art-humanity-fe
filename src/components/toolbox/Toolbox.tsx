@@ -102,7 +102,7 @@ const Toolbox = ({ boundaryRef }: any) => {
     return (
         <div
             ref={toolboxRef}
-            className="absolute z-50 bg-white border border-[#8b795e] rounded-lg p-4 w-[250px] shadow-lg flex flex-col gap-4 select-none"
+            className="absolute z-30 bg-white border border-[#8b795e] rounded-lg p-4 w-[250px] shadow-lg flex flex-col gap-4 select-none"
             style={{ left: `${position.x}px`, top: `${position.y}px`, cursor: 'default' }}
         >
             <div

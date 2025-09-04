@@ -67,7 +67,7 @@ const TiledCanvasPage: React.FC = () => {
             <Button
                 type="button"
                 onClick={() => {navigate(-1)}} // or: navigate('/projects')
-                className="absolute z-50 left-10 hidden lg:top-36 lg:inline-flex items-center gap-2
+                className="absolute z-30 left-10 hidden lg:top-36 lg:inline-flex items-center gap-2
                    rounded-xl border border-gray-200 bg-white/80 backdrop-blur
                    px-3 py-2 text-[#5d4037] hover:text-[#3e2723] shadow-sm hover:shadow
                    transition cursor-pointer"
