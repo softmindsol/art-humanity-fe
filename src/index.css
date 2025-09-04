@@ -497,6 +497,53 @@ nav ul li a.active {
 }
 
 /* Extra adjustments for bohat choti screens (480px se kam) */
+@media (max-width: 767px) {
+
+  /* .logo-text h1 {
+     display:none;
+
+}
+.tagline{
+    display: none;
+
+} */
+.header-right {
+      display: none;
+
+}
+header {
+  display: flex;
+  flex-direction: row !important;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+}
+
+/* Is se hum drawer ki width aur background set karenge */
+.drawer-custom .drawer-content {
+  width: 280px !important; /* Drawer ki width set karein */
+  max-width: 80%;
+  background-color: var(--cream) !important; /* Aapki theme ka cream color */
+}
+
+/* Overlay ka color set karein */
+.drawer-custom .drawer-overlay {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Sidebar ke andar ke links ke liye styles */
+.drawer-custom nav ul li a {
+  font-size: 1.5rem; /* 24px, mobile par bare aur aasan */
+  font-weight: 600;
+  color: var(--primary-dark);
+  padding: 10px;
+  font-family: "Playfair Display", serif;
+}
+
+/* Extra adjustments for bohat choti screens (480px se kam) */
 @media (max-width: 480px) {
   .rules-header h2 {
     font-size: 1.8rem; /* Aur chota karein */
@@ -507,6 +554,18 @@ nav ul li a.active {
     padding-left: 15px;
     padding-right: 15px;
   }
+  .logo-text h1 {
+     display:none;
+
+}
+.tagline{
+    display: none;
+
+}
+.header-right {
+      display: none;
+
+}
 }
 
 .rule-card {
@@ -675,10 +734,6 @@ footer {
 }
 
 @media (max-width: 768px) {
-  header {
-    flex-direction: column;
-    align-items: center;
-  }
 
   .logo-container {
     margin-bottom: 15px;
@@ -1773,11 +1828,15 @@ footer {
   }
 }
 
+
+
 @media (max-width: 480px) {
   .projects-grid {
     grid-template-columns: 1fr;
   }
+
 }
+
 
 /* Medieval Theme Styles */
 .medieval-theme {
@@ -1872,10 +1931,6 @@ footer {
   .auth-buttons {
     margin-left: 10px;
     /* margin-top: 15px; */
-  }
-
-  header {
-    flex-direction: column;
   }
 }
 .react-colorful {

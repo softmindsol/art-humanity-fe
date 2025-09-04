@@ -11,7 +11,7 @@ interface FilterProps {
 export const ProjectStatusFilter = ({ statusFilter, setStatusFilter }: FilterProps) => {
     const id = useId();
     return (
-        <div className="w-full md:w-auto">
+        <div className="w-[95%]  md:w-auto">
             
             <div className="relative">
                 {/* left icon */}

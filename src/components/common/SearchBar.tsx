@@ -15,7 +15,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({ searchTerm, setSearchTerm 
     };
 
     return (
-        <div className="w-full md:w-[420px]">
+        <div className="w-[95%] md:w-[420px]">
             <label htmlFor="project-search" className="sr-only">
                 Search by project title
             </label>

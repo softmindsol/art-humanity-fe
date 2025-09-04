@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
+import Drawer from 'react-drawer'; // <-- Step 1: Library ko import karein
+import 'react-drawer/lib/react-drawer.css'; // <-- Step 2: Default styles import karein
 import AuthModal from '../modal/AuthModal';
 import { useSelector } from 'react-redux';
 import { getUserById, logoutUser } from '@/redux/action/auth';
@@ -9,7 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { openAuthModal, closeAuthModal, selectIsAuthModalOpen } from '@/redux/slice/opeModal';
 import { useSocket } from '@/context/SocketContext';
 import { fetchNotifications, markNotificationsAsRead, markSingleNotificationRead } from '@/redux/action/notification';
-import { Bell } from 'lucide-react';
+import { Bell, Menu, X } from 'lucide-react';
 import { addNotification } from '@/redux/slice/notification';
 import { useOnClickOutside } from '@/hook/useOnClickOutside';
 
@@ -18,6 +20,9 @@ const Header = () => {
   const dispatch = useAppDispatch();
   const { user, profile } = useSelector((state: RootState) => state.auth);
   const notificationRef = useRef<HTMLDivElement>(null);
+
+   // --- DRAWER STATE ---
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // --- NOTIFICATION STATE ---
   const { notifications, unreadCount } = useSelector((state: RootState) => state?.notifications) || []; // <-- Notification state
@@ -84,7 +89,11 @@ const Header = () => {
 
     }
   };
-
+  // Link click par drawer band karne ke liye function
+  const handleLinkClick = () => {
+    setIsSidebarOpen(false);
+  }
+  
   const handleNotificationClick = (notification: any) => {
     // Pehle dropdown band kar dein
     setIsNotificationOpen(false);
@@ -98,19 +107,19 @@ const Header = () => {
     }
   };
 
-  useEffect(()=>{
-    if (isAuthModalOpen){
-      document.body.style.overflow='hidden'
+  useEffect(() => {
+    if (isAuthModalOpen || isSidebarOpen) {
+      document.body.style.overflow = 'hidden'
     }
     else {
       document.body.style.overflow = 'auto'
     }
 
-    return ()=>{
+    return () => {
       document.body.style.overflow = 'auto'
     }
 
-  }, [isAuthModalOpen])
+  }, [isAuthModalOpen, isSidebarOpen])
   useEffect(() => {
     if (user && user.id) {
       dispatch(getUserById(user.id));
@@ -120,12 +129,12 @@ const Header = () => {
   return (
     <>
       <div className="header-container">
-        <header className='z-10  '>
+        <header className='z-10 '>
           <div className="logo-container">
             <Link to="/" className="logo-link">
               <img src="/favicon.PNG" alt="Logo" className="logo" />
               <div className="logo-text ">
-                <h1>Project Art of Humanity</h1>
+                <h1 className='text-[24px] text-[#333] font-bold'>Project Art of Humanity</h1>
                 <p className="tagline">Collaborative Canvases of Human Expression</p>
               </div>
             </Link>
@@ -259,9 +268,80 @@ const Header = () => {
               )}
             </div>
           </div>
+          <div className='md:hidden mr-3'>
+            <button onClick={() => setIsSidebarOpen(true)}>
+              <Menu size={28} className='cursor-pointer' />
+            </button>
+          </div>
         </header>
       </div>
+      <div
+        onClick={() => setIsSidebarOpen(false)}
+        className={`fixed inset-0 bg-black/50 z-40 transition-opacity duration-300
+                    ${isSidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`
+        }
+      ></div>
 
+      {/* ===== SIDEBAR PANEL (WITH AUTH LOGIC) ===== */}
+      <div
+        className={`fixed top-0 right-0 h-full w-72 max-w-[80%] bg-[#f5f5dc] p-5 z-50 shadow-lg 
+                transition-transform duration-300 ease-in-out
+                ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}`
+        }
+      >
+        {/* Close Button */}
+        <div className="w-full flex justify-end mb-4">
+          <button onClick={() => setIsSidebarOpen(false)}>
+            <X className="h-8 w-8 text-[#3e2723] cursor-pointer" />
+          </button>
+        </div>
+
+        {/* Flex container to push auth section to the bottom */}
+        <div className="flex flex-col justify-between h-[calc(100%-50px)]">
+
+          {/* Navigation Links */}
+          <nav>
+            <ul className='flex flex-col gap-y-6'>
+              <li><NavLink to="/guideline" onClick={handleLinkClick} className="text-2xl font-semibold font-playfair text-[#3e2723]">Guideline</NavLink></li>
+              <li><NavLink to="/gallery" onClick={handleLinkClick} className="text-2xl font-semibold font-playfair text-[#3e2723]">Gallery</NavLink></li>
+              <li><NavLink to="/projects" onClick={handleLinkClick} className="text-2xl font-semibold font-playfair text-[#3e2723]">Contribute</NavLink></li>
+              <li><NavLink to="/demo" onClick={handleLinkClick} className="text-2xl font-semibold font-playfair text-[#3e2723]">Demo</NavLink></li>
+            </ul>
+          </nav>
+
+          {/* Auth Section (Sign In OR Profile/Logout) */}
+          <div className="pt-6 border-t border-[#a1887f]">
+            {profile ? (
+              // --- AGAR USER LOGGED IN HAI ---
+              <div className="text-center">
+                <div className="font-semibold text-lg text-[#3e2723]">{profile.fullName}</div>
+                <div className="text-sm text-primary mb-4">{profile.email}</div>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    handleLinkClick(); // Sidebar band karein
+                  }}
+                  className="w-full cursor-pointer py-2 bg-[#3e2723] text-white rounded-lg hover:opacity-75 transition-colors"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              // --- AGAR USER LOGGED OUT HAI ---
+              <button
+                onClick={() => {
+                  dispatch(openAuthModal()); // Auth modal kholein
+                  handleLinkClick(); // Sidebar band karein
+                }}
+                  className="w-full cursor-pointer py-2 bg-[#3e2723] text-[#ffff] rounded-lg font-semibold text-lg hover:opacity-75 transition-colors"
+              >
+                Sign In / Sign Up
+              </button>
+            )}
+          </div>
+
+        </div>
+      </div>
       {/* Modal renders conditionally */}
       {isAuthModalOpen && <AuthModal isOpen={isAuthModalOpen} onClose={() => dispatch(closeAuthModal())} />}
     </>

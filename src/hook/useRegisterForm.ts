@@ -64,7 +64,11 @@ export const useRegisterForm = ({onClose}:any) => {
 
       if (password.length < 8) {
         errs.password = "Password must be at least 8 characters";
-      } else if (!/[A-Z]/.test(password)) {
+      } 
+      
+      else if (/ {2,}/.test(password)) { // <-- YEH NAYI LINE HAI
+                errs.password = "Password cannot contain consecutive spaces";
+      }else if (!/[A-Z]/.test(password)) {
         errs.password = "Password must contain at least one uppercase letter";
       } else if (!/[a-z]/.test(password)) {
         errs.password = "Password must contain at least one lowercase letter";
@@ -135,7 +139,7 @@ export const useRegisterForm = ({onClose}:any) => {
         loginUser({ email: loginData.email, password: loginData.password })
       ).unwrap();
       // Add success toast or close modal
-      toast.success("Successfully logged in!");
+      toast.success("Successfully logged in.");
       setLoginData({ email: "", password: "" });
       onClose();
     } catch (err: any) {

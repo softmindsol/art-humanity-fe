@@ -2,7 +2,7 @@ import React, { useEffect, useCallback, useRef } from 'react';
 import { Brush, Eraser, Move, Grid, Undo, Redo } from 'lucide-react'; // Grid icon imported
 import { useCanvasState } from '@/hook/useCanvasState';
 import type { Position, Tile } from '@/types/canvas';
-import {  useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import {
     Dialog,
     DialogContent,
@@ -450,7 +450,7 @@ const DemoCanvas: React.FC = () => {
     }
 
     return (
-        <div ref={mainContentRef} className='h-[100vh] md:h-[155vh] lg:!h-[145vh] xl:!h-[145vh] 2xl:h-[135vh]' style={{ fontFamily: 'Georgia, serif', overflow: 'auto', position: 'relative' }}>
+        <div ref={mainContentRef} className='h-[90vh] md:h-[155vh] lg:!h-[145vh] xl:!min-h-[145vh] 2xl:h-[135vh]' style={{ fontFamily: 'Georgia, serif', overflow: 'auto', position: 'relative' }}>
             <div className=" md:mb-[190px] 3xl:mb-[150px] px-5 py-2 text-center">
                 <h1 className="text-2xl md:text-[40px] text-[#5d4e37] mb-1 font-normal">Demo Canvas</h1>
                 <p className="text-[#8b795e] italic mb-2">
@@ -491,8 +491,8 @@ const DemoCanvas: React.FC = () => {
                 </div>
             </div>
 
-          
-            
+
+
             <div ref={containerRef} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 'calc(100vh - 150px)' }}>
                 <canvas
                     ref={viewportCanvasRef}
