@@ -154,7 +154,20 @@ export const fetchContributors = createAsyncThunk(
   }
 );
 
-
+export const deleteProject = createAsyncThunk(
+  "projects/delete",
+  async (projectId: string, { rejectWithValue }) => {
+    try {
+      const response = await api.delete(`/projects/${projectId}`);
+      // Backend se { projectId: '...' } wapas aayega
+      return response.data.data;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response.data.message || "Failed to delete project"
+      );
+    }
+  }
+);
 interface AddContributorsArgs {
   projectId: string;
   userIdsToAdd: string[];

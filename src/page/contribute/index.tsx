@@ -17,7 +17,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { fetchActiveProjects, updateProjectStatus } from '@/redux/action/project';
+import { deleteProject, fetchActiveProjects, updateProjectStatus } from '@/redux/action/project';
 import { getImageUrl } from '@/utils/publicUrl';
 import useAppDispatch from '@/hook/useDispatch';
 import useAuth from '@/hook/useAuth';
@@ -25,7 +25,7 @@ import useAuth from '@/hook/useAuth';
 // UI Components
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Play, Pause, XCircle } from 'lucide-react'; // Icons
+import { Play, Pause, XCircle, Trash2 } from 'lucide-react'; // Icons
 import { useDebounce } from '@/hook/useDebounce';
 import { SearchBar } from '@/components/common/SearchBar';
 import { ProjectStatusFilter } from '@/components/common/ProjectStatusFilter';
@@ -45,7 +45,7 @@ const ActiveProjects: React.FC = () => {
     const [dialogState, setDialogState] = useState<any>({
         isOpen: false,
         projectId: null,
-        statusUpdate: null,
+        actionType: null, // 'PAUSE', 'CLOSE', ya 'DELETE'
         actionText: '',
     });
     const debouncedSearchTerm = useDebounce(searchTerm, 500); // 500ms ka delay
@@ -66,33 +66,31 @@ const ActiveProjects: React.FC = () => {
  
 
     // Naya handler jo sirf dialog ko kholega
-    const openConfirmationDialog = (projectId: string, statusUpdate: object, actionText: string) => {
+    const openConfirmationDialog = (projectId: string, actionType: string, actionText: string) => {
         setDialogState({
             isOpen: true,
             projectId,
-            statusUpdate,
+            actionType,
             actionText,
         });
     };
 
     // Asal action ko anjaam dene wala handler
     const handleConfirmAction = () => {
-        if (dialogState.projectId && dialogState.statusUpdate) {
-            dispatch(updateProjectStatus({
-                projectId: dialogState.projectId,
-                statusUpdate: dialogState.statusUpdate,
-            }));
-            // inside useEffect that fetches
-            dispatch(fetchActiveProjects({
-                page: currentPage,
-                limit: 9,                // keep consistent
-                status: statusFilter,
-                search: debouncedSearchTerm
-            }));
+        const { projectId, actionType } = dialogState;
 
+        if (projectId && actionType) {
+            if (actionType === 'PAUSE') {
+                dispatch(updateProjectStatus({ projectId, statusUpdate: { isPaused: true } }));
+            } else if (actionType === 'RESUME') {
+                dispatch(updateProjectStatus({ projectId, statusUpdate: { isPaused: false } }));
+            } else if (actionType === 'CLOSE') {
+                dispatch(updateProjectStatus({ projectId, statusUpdate: { isClosed: true } }));
+            } else if (actionType === 'DELETE') {
+                dispatch(deleteProject(projectId)); // <-- NAYI ACTION DISPATCH KAREIN
+            }
         }
-        // Dialog ko band karein
-        setDialogState({ isOpen: false, projectId: null, statusUpdate: null, actionText: '' });
+        setDialogState({ isOpen: false, projectId: null, actionType: null, actionText: '' });
     };
 
     if (isLoading) {
@@ -194,13 +192,15 @@ const ActiveProjects: React.FC = () => {
                                         {/* Text bhi badalna ek acha option hai */}
                                         {isProjectPaused ? "Project Paused" : "Enter Project"}
                                     </Link>
-                                    {/* --- ADMIN ACTION BUTTONS --- */}
+                                  {/* // -------- YEH MUKAMMAL UPDATE SHUDA JSX HAI -------- */}
+
                                     {user?.role === 'admin' && (
                                         <div className="mt-4 pt-4 border-t border-gray-200 ">
                                             <div className="flex items-center justify-between space-x-2">
                                                 <p className="text-xs !text-[#8d6e63]  !p-0 !m-0">Admin Actions:</p>
 
                                                 <div className="flex items-center space-x-2">
+                                                    {/* --- Pause/Resume Button (Updated onClick) --- */}
                                                     {project.isPaused ? (
                                                         <Button
                                                             className="cursor-pointer"
@@ -208,7 +208,8 @@ const ActiveProjects: React.FC = () => {
                                                             size="icon"
                                                             title="Resume Project"
                                                             onClick={() =>
-                                                                openConfirmationDialog(project._id, { isPaused: false }, 'Resume')
+                                                                // Naya Function Signature: (projectId, actionType, actionText)
+                                                                openConfirmationDialog(project._id, 'RESUME', 'Resume')
                                                             }
                                                         >
                                                             <Play className="h-4 w-4" />
@@ -220,23 +221,40 @@ const ActiveProjects: React.FC = () => {
                                                             size="icon"
                                                             title="Pause Project"
                                                             onClick={() =>
-                                                                openConfirmationDialog(project._id, { isPaused: true }, 'Pause')
+                                                                // Naya Function Signature: (projectId, actionType, actionText)
+                                                                openConfirmationDialog(project._id, 'PAUSE', 'Pause')
                                                             }
                                                         >
                                                             <Pause className="h-4 w-4" />
                                                         </Button>
                                                     )}
 
+                                                    {/* --- Close Button (Updated onClick) --- */}
                                                     <Button
                                                         className="cursor-pointer bg-red-100 hover:bg-red-200 text-red-600 border border-red-200"
                                                         variant="ghost"
                                                         size="icon"
-                                                        title="Close Project"
+                                                        title="Close Project (Move to Gallery)"
                                                         onClick={() =>
-                                                            openConfirmationDialog(project._id, { isClosed: true }, 'Close')
+                                                            // Naya Function Signature: (projectId, actionType, actionText)
+                                                            openConfirmationDialog(project._id, 'CLOSE', 'Close')
                                                         }
                                                     >
                                                         <XCircle className="h-4 w-4" />
+                                                    </Button>
+
+                                                    {/* --- Delete Button (Updated onClick) --- */}
+                                                    <Button
+                                                        className="cursor-pointer bg-red-600 hover:bg-red-700 text-white"
+                                                        variant="destructive"
+                                                        size="icon"
+                                                        title="Delete Project FOREVER"
+                                                        onClick={() =>
+                                                            // Naya Function Signature: (projectId, actionType, actionText)
+                                                            openConfirmationDialog(project._id, 'DELETE', 'DELETE PERMANENTLY')
+                                                        }
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
                                                     </Button>
                                                 </div>
                                             </div>

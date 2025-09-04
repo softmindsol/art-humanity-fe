@@ -2,6 +2,7 @@ import { createSlice } from "@reduxjs/toolkit";
 import {
   addContributors,
   createProject,
+  deleteProject,
   fetchActiveProjects,
   fetchContributors,
   fetchGalleryProjects,
@@ -34,6 +35,7 @@ const initialState: any = {
     fetchingById: false,
     updatingStatus: false,
     fetchingGallery: false, // Nayi loading state
+    deleting: false, // <-- Nayi loading state
 
     joining: false, // Nayi loading state
   },
@@ -42,6 +44,7 @@ const initialState: any = {
     fetching: null,
     fetchingById: null,
     updatingStatus: null,
+    deleting: null, // <-- Naya error state
     joining: null, // Nayi error state
     fetchingGallery: null, // Nayi loading state
     fetchingContributors: null,
@@ -87,6 +90,25 @@ const projectSlice = createSlice({
         state.loading.creating = false;
         state.error.creating = action.payload as any;
       });
+
+      builder
+        .addCase(deleteProject.pending, (state) => {
+          state.loading.deleting = true;
+          state.error.deleting = null;
+        })
+        .addCase(deleteProject.fulfilled, (state, action) => {
+          state.loading.deleting = false;
+          // action.payload mein { projectId: '...' } hai
+          const { projectId } = action.payload;
+          // Project ko 'projects' array se filter karke nikaal dein
+          state.projects = state.projects.filter(
+            (p: any) => p._id !== projectId
+          );
+        })
+        .addCase(deleteProject.rejected, (state, action) => {
+          state.loading.deleting = false;
+          state.error.deleting = action.payload as any;
+        });
 
     // Fetch All Projects
     builder
