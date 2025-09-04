@@ -8,6 +8,7 @@ import { clearCanvasData, selectCanvasData, selectIsLoadingOperation, selectPagi
 import { useSelector } from 'react-redux';
 import ContributorsPanel from './ContributorsPanel';
 import { AddContributorModal } from '../modal/AddContributorModal';
+import { useOnClickOutside } from '@/hook/useOnClickOutside';
 
 
 const SIDEBAR_WIDTH = 350; // Sidebar ki width ko ek variable mein rakhein
@@ -29,7 +30,15 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
     const isAdmin = user?.id === currentProject?.ownerId; // Check karein ke kya user admin hai
     // Refs
     const listContainerRef = useRef<HTMLDivElement>(null);
+    const sidebarRef = useRef(null);
 
+
+
+    useOnClickOutside(sidebarRef, () => {
+        if (isOpen) { // Sirf tab band karein jab pehle se khula ho
+            setIsOpen(false);
+        }
+    });
     // === MASTER useEffect for Data Fetching ===
     // Yeh useEffect ab filter, projectId, aur activeTab teeno par chalega.
     useEffect(() => {
@@ -90,7 +99,7 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
         return () => { document.body.style.overflow = 'auto'; };
     }, [isOpen]);
     return (
-        <div className={`fixed  top-0 right-0 h-screen z-40 flex items-center  `}
+        <div ref={sidebarRef} className={`fixed  top-0 right-0 h-screen z-40 flex items-center  `}
             style={{
                 width: isOpen ? `${SIDEBAR_WIDTH}px` : '',
                 right: isOpen ? '0px' : `-${SIDEBAR_WIDTH}px`, // Panel ki animation

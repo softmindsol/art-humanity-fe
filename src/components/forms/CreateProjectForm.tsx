@@ -30,13 +30,22 @@ const AdminDashboard = () => {
   // Validation Schema for Formik (using Yup)
   const validationSchema = Yup.object({
     title: Yup.string().required("Project title is required"),
-    description: Yup.string().required("Description is required"),
-    canvasId: Yup.string().required("Canvas ID is required"),
+    description: Yup.string()
+      .required("Description is required")
+      .test("wordCount", "Description must be no more than 50 words", (value: any) => {
+        if (value) {
+          const wordCount = value.trim().split(/\s+/).length; // Split by spaces and count words
+          return wordCount <= 50; // Validate that word count is 50 or fewer
+        }
+        return true; // Allow empty field, since it's already validated by `.required()`
+      }),    canvasId: Yup.string().required("Canvas ID is required"),
     width: Yup.number().required("Width is required").min(1, "Width must be a positive number"),
     height: Yup.number().required("Height is required").min(1, "Height must be a positive number"),
-    thumbnail: Yup.mixed().required("Thumbnail image is required").test("fileType", "Invalid file type", (value:any) => {
-      return value && (value.type === "image/jpeg" || value.type === "image/png");
-    }),
+    thumbnail: Yup.mixed()
+      .required("Thumbnail image is required")
+      .test("fileType", "Invalid type (only PNG, JPEG, etc.)", (value: any) => {
+        return value && (value.type === "image/jpeg" || value.type === "image/png");
+      }),
   });
 
   // Form submission handler
@@ -188,21 +197,37 @@ const AdminDashboard = () => {
                     {/* Thumbnail Upload */}
                     <div className="space-y-2">
                       <Label htmlFor="thumbnail" className="text-lg font-medium text-[#5d4037]">Thumbnail Image <span className="text-red-500">*</span></Label>
+
+                      {/* Custom File Upload Button */}
+                      <label
+                        htmlFor="thumbnail"
+                        className="cursor-pointer inline-block bg-[#5d4037] hover:bg-[#4e342e] text-white py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out text-center">
+                        Choose Thumbnail
+                      </label>
+
                       <input
                         id="thumbnail"
                         name="thumbnail"
                         type="file"
+                        accept="image/*"
                         onChange={(e) => {
                           if (e.target.files) {
                             setThumbnailFile(e.target.files[0]);
                             setFieldValue("thumbnail", e.target.files[0]);
                           }
                         }}
-                        className="h-12"
+                        className="hidden" // Hide the default file input
                       />
+
+                      {/* Error Message */}
                       <ErrorMessage name="thumbnail" component="div" className="text-red-500 text-sm" />
-                      {thumbnailFile && <p className="text-sm text-gray-500 mt-2">Selected: {thumbnailFile.name}</p>}
+
+                      {/* Display Selected File Name */}
+                      {thumbnailFile && (
+                        <p className="text-sm text-gray-500 mt-2">Selected: {thumbnailFile.name}</p>
+                      )}
                     </div>
+
 
                     <Button type="submit" disabled={loading.creating} className="w-full h-12 text-lg cursor-pointer text-white bg-[#5d4037] hover:bg-[#4e342e]">
                       {loading.creating ? (

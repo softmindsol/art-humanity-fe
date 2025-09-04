@@ -11,11 +11,9 @@ import {
 import { selectCurrentBrush } from '@/redux/slice/contribution';
 import useAppDispatch from '@/hook/useDispatch';
 
-interface ToolboxProps {
-    boundaryRef?: React.RefObject<HTMLDivElement>;
-}
 
-const Toolbox = ({ boundaryRef }: ToolboxProps) => {
+
+const Toolbox = ({ boundaryRef }: any) => {
     const dispatch = useAppDispatch();
     const brushState = useSelector(selectCurrentBrush);
 

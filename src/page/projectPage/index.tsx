@@ -76,8 +76,9 @@ const ProjectPage = ({ projectName, projectId }: any) => {
     const generationError = useSelector(selectErrorForOperation('generateTimelapse'));
     const isReadOnly = useMemo(() => new URLSearchParams(window.location.search).get('view') === 'gallery', []);
     const savedStrokes = useSelector(selectCanvasData);
-    const isSaving = useSelector(selectIsLoadingOperation("createContribution"));
-    const saveError = useSelector(selectErrorForOperation("createContribution"));
+    const isSaving = useSelector(selectIsLoadingOperation("batchCreateContributions"));
+    const saveError = useSelector(selectErrorForOperation("batchCreateContributions"));
+    const isClearingCanvas = useSelector(selectIsLoadingOperation('clearCanvas'));
 
     const handleGenerateTimelapse = () => {
         if (!projectId) {
@@ -347,7 +348,8 @@ const ProjectPage = ({ projectName, projectId }: any) => {
             return () => clearTimeout(timer);
         }
     }, [selectedContributionId]);
-    // console.log("Rendering cursors:", cursors);
+
+    console.log(isClearingCanvas)
     return (
         // Design ke mutabiq page ka background color
         <div ref={mainContentRef} className="relative  min-h-screen p-4 sm:p-6 lg:p-8">
@@ -355,7 +357,7 @@ const ProjectPage = ({ projectName, projectId }: any) => {
 
                 {/* Yahan aapka page header aur "Back" button aa sakta hai */}
                 <div className="mb-4 text-center">
-                    <h1 className="text-[28px] lg:text-[44.8px] font-serif text-[#3E2723]">{projectName}</h1>
+                    <h1 className="text-[28px] lg:text-[44.8px]     font-serif text-[#3E2723]">{projectName}</h1>
                     <p className="text-[#8D6E63] italic lg:text-[19.2px]">{currentProject?.description}</p>
                 </div>
  
@@ -392,7 +394,15 @@ const ProjectPage = ({ projectName, projectId }: any) => {
 
                                 <AlertDialogTrigger asChild>
                                     <button
-                                        className="bg-[#cd5c5c] text-white border-none text-[12px] md:text-[16px] px-2 py-2 md:px-4 md:py-2 rounded cursor-pointer"
+                                        // 1. Button ko disable karein agar drawing save ho rahi hai
+                                        disabled={isSaving || isClearingCanvas}
+
+                                        // 2. Title attribute se user ko wajah batayein (hover karne par dikhega)
+                                        title={isSaving ? "Cannot clear while a drawing is being saved" : "Clear the entire canvas"}
+
+                                        // 3. Styling add karein taake user ko pata chale ke button disabled hai
+                                        className="bg-[#cd5c5c] text-white border-none text-[12px] md:text-[16px] px-2 py-2 md:px-4 md:py-2 rounded cursor-pointer
+                   transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         Clear Canvas
                                     </button>
@@ -421,6 +431,7 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                                         <AlertDialogAction
                                             onClick={handleClearCanvas}
                                             className="bg-red-600 text-white cursor-pointer hover:bg-red-700"
+                                            
                                         >
                                             Yes, Clear Canvas
                                         </AlertDialogAction>

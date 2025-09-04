@@ -1,7 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import Drawer from 'react-drawer'; // <-- Step 1: Library ko import karein
-import 'react-drawer/lib/react-drawer.css'; // <-- Step 2: Default styles import karein
 import AuthModal from '../modal/AuthModal';
 import { useSelector } from 'react-redux';
 import { getUserById, logoutUser } from '@/redux/action/auth';

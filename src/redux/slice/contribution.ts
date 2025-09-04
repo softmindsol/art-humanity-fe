@@ -10,7 +10,6 @@ import {
   deleteContribution,
   batchCreateContributions,
 } from "../action/contribution";
-import { toast } from "sonner";
 
 // Naya, saaf suthra initialState
 const initialState = {
@@ -40,6 +39,8 @@ const initialState = {
     getContributions: false,
     voteOnContribution: false,
     deleteContribution: false,
+    batchCreateContributions: false, // <--- YEH LINE ADD KAREIN
+
     clearCanvas: false,
     generateTimelapse: false,
   },
@@ -49,6 +50,8 @@ const initialState = {
     createContribution: null,
     getContributions: null,
     clearCanvas: null,
+    batchCreateContributions: null, // <--- YEH LINE ADD KAREIN
+
     generateTimelapse: null,
     voteOnContribution: null,
     deleteContribution: null,
@@ -160,9 +163,15 @@ const paintPixelSlice = createSlice({
       })
 
       // --- THIS IS THE FIX ---
+      .addCase(batchCreateContributions.pending, (state) => {
+        state.loading.batchCreateContributions = true;
+        state.error.batchCreateContributions = null;
+      })
       .addCase(
         batchCreateContributions.fulfilled,
         (state: any, action: any) => {
+          state.loading.batchCreateContributions = false; // <-- YEH NAYI LINE HAI
+
           const savedContributions = action.payload; // These are the real contributions from the server
 
           // 1. Find and remove the temporary optimistic updates
@@ -176,7 +185,8 @@ const paintPixelSlice = createSlice({
         }
       )
       .addCase(batchCreateContributions.rejected, (state, action: any) => {
-        // If the batch fails (e.g., contribution limit reached),
+        state.loading.batchCreateContributions = false; // <-- YEH NAYI LINE HAI
+
         // we should roll back the optimistic update.
         const failedTempIds = new Set(
           action.meta.arg.contributions.map((c: any) => c.tempId)

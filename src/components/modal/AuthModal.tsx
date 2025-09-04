@@ -14,40 +14,6 @@ interface AuthModalProps {
 }
 
 
-
-// Sign Up form ke liye schema
-const signUpSchema = Yup.object().shape({
-    fullName: Yup.string()
-        .required('Display Name is required')
-        .min(3, 'Display Name must be at least 3 characters')
-        .matches(/^[a-zA-Z0-9]+$/, 'Display Name can only contain letters and numbers'), // Sirf alphabets aur numbers
-
-    email: Yup.string()
-        .required('Email is required')
-        .email('Invalid email address')
-        .matches(
-            /^[\w.%+-]+@[\w.-]+\.(com|org|net|io)$/i, // Aapka diya hua custom TLD check
-            'Email must end with .com, .org, .net, or .io'
-        ),
-
-    password: Yup.string()
-        .required('Password is required')
-        .min(6, 'Password must be at least 6 characters'),
-
-    confirmPassword: Yup.string()
-        .required('Confirm Password is required')
-        .oneOf([Yup.ref('password')], 'Passwords must match'), // Password se match karein
-});
-
-// Sign In form ke liye schema
-const signInSchema = Yup.object().shape({
-    email: Yup.string()
-        .required('Email is required')
-        .email('Invalid email address'),
-    password: Yup.string()
-        .required('Password is required'),
-});
-
 const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     const [activeTab, setActiveTab] = useState<'sign-in' | 'sign-up'>('sign-in');
     const [showForgotPassword, setShowForgotPassword] = useState(false);

@@ -105,6 +105,7 @@ export const useRegisterForm = ({onClose}:any) => {
       });
     } catch (err: any) {
       console.log(err);
+      toast.error(err.message || "Registration failed");
       setErrors({ submit: err.message || "Registration failed" });
     } finally {
       setLoading(false);
