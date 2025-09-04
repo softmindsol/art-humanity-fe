@@ -21,7 +21,7 @@ export const ProjectStatusFilter = ({ statusFilter, setStatusFilter }: FilterPro
                 >
                     <path d="M3 5h18M6 12h12M10 19h4" />
                 </svg>
-
+    
                 <select
                     id={id}
                     value={statusFilter}
