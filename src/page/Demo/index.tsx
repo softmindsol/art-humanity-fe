@@ -1,20 +1,12 @@
-import React, { useEffect, useCallback, useRef } from 'react';
-import { Brush, Eraser, Move, Grid, Undo, Redo } from 'lucide-react'; // Grid icon imported
+import React, { useEffect, useCallback, useRef, useState } from 'react';
+import { Grid } from 'lucide-react'; // Grid icon imported
 import { useCanvasState } from '@/hook/useCanvasState';
 import type { Position, Tile } from '@/types/canvas';
 import { useSelector } from 'react-redux';
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
 
-} from "@/components/ui/dialog"
 import {
-    selectCurrentBrush, selectCurrentCanvas, selectErrorForOperation, selectIsLoadingOperation, setBrushColor, setCanvasOffset, setZoomLevel, selectTimelapseUrl,
+    selectCurrentBrush, selectCurrentCanvas, setBrushColor, setCanvasOffset, setZoomLevel, selectTimelapseUrl,
 
-    setBrushMode,
-    setBrushSize,
     selectCanvasData,
 } from '@/redux/slice/contribution';
 import useAppDispatch from '@/hook/useDispatch';
@@ -39,7 +31,7 @@ const DemoCanvas: React.FC = () => {
     const mainContentRef = useRef<HTMLDivElement>(null);
 
     const {
-        isModalOpen, setIsModalOpen,
+         setIsModalOpen,
         // Refs
         containerRef,
         viewportCanvasRef,
@@ -56,23 +48,18 @@ const DemoCanvas: React.FC = () => {
         setIsPanning,
         panStart,
         setPanStart,
-        toolboxPos,
         setToolboxPos,
         isDraggingToolbox,
         setIsDraggingToolbox,
         toolboxStart,
-        setToolboxStart,
         // setIsCanvasHovered,
         showGrid,
         setShowGrid,
         hue,
-        setHue,
         saturation,
         lightness,
-        allStrokes,
         currentStrokePath,
         setCurrentStrokePath,
-        totalTiles,
         setTotalTiles,
         // sessionId,
         setStrokeStartTime,
@@ -84,7 +71,8 @@ const DemoCanvas: React.FC = () => {
     } = useCanvasState();
 
     const savedStrokes = useSelector(selectCanvasData);
-
+    // ===== YEH NAYI STATES ADD KAREIN =====
+    const [lineStartPos, setLineStartPos] = useState<Position | null>(null);
     // useEffect(() => {
     //     console.log("currentStrokePath:", currentStrokePath)
     // }, [currentStrokePath])
@@ -235,12 +223,13 @@ const DemoCanvas: React.FC = () => {
         return tile;
     };
 
-    // --- RENDERING LOGIC ---
+   
     const renderVisibleTiles = useCallback(() => {
         const viewportCanvas = viewportCanvasRef.current;
         if (!viewportCanvas) return;
         const ctx = viewportCanvas.getContext('2d')!;
         ctx.save();
+        // ... (baqi tile rendering ki logic waisi hi rahegi) ...
         ctx.clearRect(0, 0, VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
@@ -269,9 +258,27 @@ const DemoCanvas: React.FC = () => {
                 }
             }
         }
-        ctx.restore();
-    }, [canvasState, showGrid]);
 
+        // ===== YEH NAYA CODE ADD KIYA GAYA HAI =====
+        // Agar line tool active hai aur drag ho raha hai, to preview dikhayein
+        if (brushState.mode === 'line' && isDrawing && lineStartPos) {
+            ctx.beginPath();
+            // World coordinates ko viewport coordinates mein convert karein
+            const startX = (lineStartPos.x * zoomLevel) + offset.x;
+            const startY = (lineStartPos.y * zoomLevel) + offset.y;
+            const endX = (mousePos.x * zoomLevel) + offset.x;
+            const endY = (mousePos.y * zoomLevel) + offset.y;
+
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            ctx.strokeStyle = `rgba(${brushState.color.r}, ${brushState.color.g}, ${brushState.color.b}, ${brushState.color.a})`;
+            ctx.lineWidth = brushState.size;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+        }
+
+        ctx.restore();
+    }, [canvasState, showGrid, isDrawing, lineStartPos, mousePos, brushState]); // <-- Dependencies update karein
     useEffect(() => {
         renderVisibleTiles();
     }, [canvasState, renderVisibleTiles]);
@@ -329,18 +336,36 @@ const DemoCanvas: React.FC = () => {
     };
 
     const startDrawing = (e: React.MouseEvent) => {
+        // Agar line tool active hai
+        if (brushState.mode === 'line') {
+            const pos = getMousePosInWorld(e);
+            setLineStartPos(pos); // Sirf line ka start point save karein
+            setIsDrawing(true); // Drawing shuru karein
+            return; // Brush wali logic ko rokein
+        }
+
+        // Baqi tools ke liye purani logic
         if (brushState.mode === 'move' || canvasState.zoomLevel < 1) return;
         setIsDrawing(true);
         setLastPos(getMousePosInWorld(e));
         setCurrentStrokePath([]);
         setStrokeStartTime(new Date());
     };
-
+    
     const draw = (e: React.MouseEvent) => {
+        // Agar line tool active hai aur drawing ho rahi hai
+        if (brushState.mode === 'line' && isDrawing) {
+            // Har mouse move par poora canvas dobara render karein
+            // taake humein live preview dikhe
+            renderVisibleTiles();
+            return; // Brush wali logic ko rokein
+        }
+
+        // Baqi tools ke liye purani logic
         if (!isDrawing || brushState.mode === 'move' || canvasState.zoomLevel < 1) return;
         const pos = getMousePosInWorld(e);
+        // ... baqi freehand drawing ki logic ...
         setCurrentStrokePath((prev: any) => [...prev, { fromX: lastPos.x, fromY: lastPos.y, toX: pos.x, toY: pos.y }]);
-        // ... (visual drawing logic)
         const fromCoords = worldToTileCoords(lastPos.x, lastPos.y);
         const toCoords = worldToTileCoords(pos.x, pos.y);
         for (let y = Math.min(fromCoords.tileY, toCoords.tileY); y <= Math.max(fromCoords.tileY, toCoords.tileY); y++) {
@@ -352,13 +377,34 @@ const DemoCanvas: React.FC = () => {
         setLastPos(pos);
         renderVisibleTiles();
     };
-
     const stopDrawing = async () => {
+        // Agar line tool active tha
+        if (brushState.mode === 'line' && isDrawing && lineStartPos) {
+            // Mouse chhorne par line ko permanent draw karein
+            const endPos = mousePos; // Current mouse position
+            const fromCoords = worldToTileCoords(lineStartPos.x, lineStartPos.y);
+            const toCoords = worldToTileCoords(endPos.x, endPos.y);
+
+            for (let y = Math.min(fromCoords.tileY, toCoords.tileY); y <= Math.max(fromCoords.tileY, toCoords.tileY); y++) {
+                for (let x = Math.min(fromCoords.tileX, toCoords.tileX); x <= Math.max(fromCoords.tileX, toCoords.tileX); x++) {
+                    const tile = getTile(x, y);
+                    drawOnTile(tile, lineStartPos.x - x * TILE_SIZE, lineStartPos.y - y * TILE_SIZE, endPos.x - x * TILE_SIZE, endPos.y - y * TILE_SIZE);
+                }
+            }
+            renderVisibleTiles();
+            saveStateToHistory();
+
+            // States ko reset karein
+            setIsDrawing(false);
+            setLineStartPos(null);
+            return; // Brush wali logic ko rokein
+        }
+
+        // Baqi tools ke liye purani logic
         if (!isDrawing || currentStrokePath.length === 0) { setIsDrawing(false); return; }
         setIsDrawing(false);
         saveStateToHistory();
-        // const strokePayload = { canvasId, canvasResolution: canvasState.resolution, canvasSize: TILE_SIZE, strokePath: currentStrokePath, brushSize: brushState.size, color: brushState.color, mode: brushState.mode, sessionId, userId: null, zoomLevel: canvasState.zoomLevel, canvasOffset: canvasState.offset, strokeStartTime: strokeStartTime?.toISOString(), strokeEndTime: new Date().toISOString() };
-        // dispatch(createStroke(strokePayload) as any);
+        // ... stroke save karne ki logic ...
         setCurrentStrokePath([]);
     };
 
