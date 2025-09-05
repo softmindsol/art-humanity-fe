@@ -16,6 +16,7 @@ const initialState = {
   // canvasData ab contributions ka array store karega
   canvasData: [],
   timelapseVideoUrl: null,
+  pendingStrokes: [],
 
   currentBrush: {
     size: 3,
@@ -131,8 +132,16 @@ const paintPixelSlice = createSlice({
     removeContributionOptimistically: (state, action) => {
       const { contributionId } = action.payload;
       state.canvasData = state.canvasData.filter(
-        (c:any) => c._id !== contributionId
+        (c: any) => c._id !== contributionId
       );
+    },
+    // --- YEH ACTION AB PENDING STROKES MEIN ADD KAREGA ---
+    addPendingContribution: (state: any, action: any) => {
+      state.pendingStrokes.push(action.payload) as any;
+    },
+    // --- YEH ACTION PENDING STROKES KO SAAF KAREGA ---
+    clearPendingStrokes: (state) => {
+      state.pendingStrokes = [];
     },
   },
 
@@ -201,31 +210,45 @@ const paintPixelSlice = createSlice({
       //     (c: any) => !failedTempIds.has(c._id)
       //   );
       // });
+      // .addCase(batchCreateContributions.fulfilled, (state: any, action) => {
+      //   // `action.payload` is the array of real contributions from the server,
+      //   // and each one has a `tempId`.
+      //   const savedContributions = action.payload;
+
+      //   savedContributions.forEach((realContrib: any) => {
+      //     // Find the index of the temporary, optimistic contribution in our state
+      //     const index = state.canvasData.findIndex(
+      //       (optimisticContrib: any) =>
+      //         optimisticContrib._id === realContrib.tempId
+      //     );
+
+      //     if (index !== -1) {
+      //       // If we found it, replace the temporary one with the real one
+      //       state.canvasData[index] = realContrib;
+      //     } else {
+      //       // As a fallback (in case the optimistic one wasn't found), add it.
+      //       state.canvasData.push(realContrib);
+      //     }
+      //   });
+
+      //   state.loading.saving = false; // Or whatever your loading state is
+      // })
+
       .addCase(batchCreateContributions.fulfilled, (state: any, action) => {
-        // `action.payload` is the array of real contributions from the server,
-        // and each one has a `tempId`.
+        // action.payload mein server se anay wali contributions hain
         const savedContributions = action.payload;
 
-        savedContributions.forEach((realContrib: any) => {
-          // Find the index of the temporary, optimistic contribution in our state
-          const index = state.canvasData.findIndex(
-            (optimisticContrib: any) =>
-              optimisticContrib._id === realContrib.tempId
-          );
-
-          if (index !== -1) {
-            // If we found it, replace the temporary one with the real one
-            state.canvasData[index] = realContrib;
-          } else {
-            // As a fallback (in case the optimistic one wasn't found), add it.
-            state.canvasData.push(realContrib);
-          }
-        });
-
-        state.loading.saving = false; // Or whatever your loading state is
+        // In nayi, kamyab contributions ko state mein add kar do
+        state.canvasData.push(...savedContributions);
+        // Aur pending strokes ko saaf kar dein
+        state.pendingStrokes = [];
+        // loading state ko update karein (agar hai)
+        state.loading.saving = false;
       })
 
       .addCase(batchCreateContributions.rejected, (state: any, action: any) => {
+        state.pendingStrokes = [];
+
         // It's also important to remove the temporary card if the server fails
         const failedTempIds = new Set(
           action.meta.arg.contributions.map((c: any) => c.tempId)
@@ -338,6 +361,8 @@ export const {
   setCurrentBrush,
   addMultipleContributionsOptimistically, // Isay export karein
   removeContributionOptimistically,
+  addPendingContribution,
+  clearPendingStrokes,
 } = paintPixelSlice.actions;
 
 // Selectors
@@ -352,5 +377,7 @@ export const selectErrorForOperation = (operation: any) => (state: any) =>
 export const selectTimelapseUrl = (state: any) =>
   state.paintPixel.timelapseVideoUrl;
 export const selectPaginationInfo = (state: any) => state.paintPixel.pagination;
+export const selectPendingStrokes = (state: any) =>
+  state.paintPixel.pendingStrokes;
 
 export default paintPixelSlice.reducer;

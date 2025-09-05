@@ -55,6 +55,7 @@ const ProjectPage = ({ projectName, projectId }: any) => {
     const [socket, setSocket] = useState<any>(null);
     const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isContributionSaving, setIsContributionSaving] = useState(false);
     const [selectedContributionId, setSelectedContributionId] = useState(null);
     const [isJoinDialogOpen, setIsJoinDialogOpen] = useState(false);
     const [loginDialogDismissed, setLoginDialogDismissed] = useState(false);
@@ -422,7 +423,7 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                                 <AlertDialogTrigger asChild>
                                     <button
                                         // 1. Button ko disable karein agar drawing save ho rahi hai
-                                        disabled={isSaving || isClearingCanvas}
+                                        disabled={isContributionSaving || isClearingCanvas}
 
                                         // 2. Title attribute se user ko wajah batayein (hover karne par dikhega)
                                         title={isSaving ? "Cannot clear while a drawing is being saved" : "Clear the entire canvas"}
@@ -515,7 +516,7 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                                     onContributionLeave={handleContributionLeave}
                                     // onContributionSelect={setSelectedContributionId}
                                     onContributionSelect={handleCanvasClick}
-
+                                    setIsContributionSaving={setIsContributionSaving}
                                     onGuestInteraction={handleGuestCanvasInteraction}
                                     isContributor={isCurrentUserAContributor}
                                     // onContributionSelect={handleCanvasContributionSelect} 
@@ -552,7 +553,7 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                             zoom={canvasStats.zoom}
                             worldPos={canvasStats.worldPos}
                             strokeCount={savedStrokes?.length || 0}
-                            isSaving={isSaving}
+                            isSaving={isContributionSaving}
                             saveError={saveError}
                             boundaryRef={mainContentRef} // <-- YEH PROP ADD KAREIN
 

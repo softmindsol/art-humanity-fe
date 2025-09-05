@@ -13,12 +13,13 @@ const formatDate = (dateString: any) => {
 };
 
 const ContributionsList = ({
-    
+
     contributions,
     selectedContributionId,
     onContributionSelect,
     listItemRefs,
-    onGuestVoteAttempt
+    onGuestVoteAttempt,
+    isLoading
 }: any) => {
     const dispatch = useAppDispatch();
     const { user } = useAuth();
@@ -72,7 +73,7 @@ const ContributionsList = ({
         }
     }, [selectedContributionId, listItemRefs]);
 
-    if (!contributions || contributions.length === 0) {
+    if ((!contributions || contributions.length === 0) && !isLoading) {
         return <div className="p-4 text-center text-gray-500">No project contributions</div>;
     }
     return (

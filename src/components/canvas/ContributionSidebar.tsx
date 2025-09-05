@@ -41,7 +41,7 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
         if (isOpen) {
             setIsOpen(false);
         }
-    });
+    }); 
 
     // === MASTER useEffect for Data Fetching ===
     // Yeh useEffect ab filter, projectId, aur activeTab teeno par chalega.
@@ -221,7 +221,7 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
                             projectId={projectId}
                             onGuestVoteAttempt={onGuestVoteAttempt}
                             loading={loading} setLoading={setLoading}
-                          
+                            isLoading={isLoading}
 
 
                         />

@@ -37,11 +37,11 @@ const ActiveProjects: React.FC = () => {
 
     const projects = useSelector(selectAllProjects);
     const isLoading = useSelector(selectProjectsLoading).fetching;
-    const {  totalPages } = useSelector(selectProjectPagination);
+    const { totalPages } = useSelector(selectProjectPagination);
     const [currentPage, setCurrentPage] = useState(1);
     const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'paused'>('all');
     const [searchTerm, setSearchTerm] = useState('');
-    
+
     const [dialogState, setDialogState] = useState<any>({
         isOpen: false,
         projectId: null,
@@ -61,9 +61,9 @@ const ActiveProjects: React.FC = () => {
             status: statusFilter,
             search: debouncedSearchTerm
         }));
-    }, [currentPage, statusFilter, debouncedSearchTerm, dispatch]);   
- 
- 
+    }, [currentPage, statusFilter, debouncedSearchTerm, dispatch]);
+
+
 
     // Naya handler jo sirf dialog ko kholega
     const openConfirmationDialog = (projectId: string, actionType: string, actionText: string) => {
@@ -133,7 +133,6 @@ const ActiveProjects: React.FC = () => {
                 <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
                 <ProjectStatusFilter statusFilter={statusFilter} setStatusFilter={setStatusFilter} />
             </div>
-
             <section className="projects-grid mt-5">
                 {projects.length === 0 ? (
                     <div className="text-center w-full py-20 col-span-full">
@@ -168,7 +167,7 @@ const ActiveProjects: React.FC = () => {
                                     <h3 className='!text-[#5d4037]'>{project.title}</h3>
                                     <div className="project-stats">
                                         <div className="stat">
-                                            <span className="stat-value !text-[#8d6e63] !text-[12.8px]">{project.stats?.contributorCount || 0}</span>
+                                            <span className="stat-value !text-[#8d6e63] !text-[12.8px]">{project.contributors?.length || 0}</span>
                                             <span className="stat-label !text-[#8d6e63]">Contributors</span>
                                         </div>
                                         <div className="stat">
@@ -192,7 +191,7 @@ const ActiveProjects: React.FC = () => {
                                         {/* Text bhi badalna ek acha option hai */}
                                         {isProjectPaused ? "Project Paused" : "Enter Project"}
                                     </Link>
-                                  {/* // -------- YEH MUKAMMAL UPDATE SHUDA JSX HAI -------- */}
+                                    {/* // -------- YEH MUKAMMAL UPDATE SHUDA JSX HAI -------- */}
 
                                     {user?.role === 'admin' && (
                                         <div className="mt-4 pt-4 border-t border-gray-200 ">
@@ -272,7 +271,7 @@ const ActiveProjects: React.FC = () => {
                     currentPage={currentPage}
                     totalPages={totalPages}
                     onPageChange={setCurrentPage}
-                /> 
+                />
             </div>
             <AlertDialog open={dialogState.isOpen} onOpenChange={(isOpen) => setDialogState({ ...dialogState, isOpen })}>
                 <AlertDialogContent className="bg-[#5d4037] border-2 border-[#3e2723] text-white font-[Georgia, serif]">
