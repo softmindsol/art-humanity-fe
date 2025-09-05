@@ -14,7 +14,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
     AlertDialog,
- 
+
     AlertDialogCancel,
     AlertDialogContent,
     AlertDialogDescription,
@@ -30,9 +30,11 @@ import { fetchContributors, removeContributor } from "@/redux/action/project";
 import { selectProjectContributors } from "@/redux/slice/project";
 
 
-export default function ContributorsDropdown({ currentProject, loading, setLoading }: any) {
+export default function ContributorsDropdown({ currentProject, loading, setLoading, ref }: any) {
     const dispatch = useAppDispatch();
     const { user } = useAuth();
+    // --- STEP 1: Nayi state banayein jo search text ko store karegi ---
+    const [searchValue, setSearchValue] = useState("");
 
     const contributors = useSelector(selectProjectContributors) as Array<{
         _id?: string;
@@ -42,21 +44,38 @@ export default function ContributorsDropdown({ currentProject, loading, setLoadi
 
     const isLoading = useSelector((state: RootState) => state.projects.loading.contributors);
     const [confirmUser, setConfirmUser] = useState<{ id: string; name: string } | null>(null);
+    const ownerId = currentProject?.ownerId;
 
+
+    const normalized = useMemo(
+        () =>
+            (contributors || []).map((c: any) =>
+                // Check if the item in the array is a simple string (just an ID)
+                typeof c === "string"
+                    // If it's a string, create a basic object
+                    ? { id: c, name: "Loading...", email: "..." }
+                    // If it's an object, normalize its properties
+                    : { id: c._id ?? "", name: c.fullName ?? "Unknown Contributor", email: c.email ?? "No email" }
+            ),
+        [contributors]
+    );
+    const filteredUsers = useMemo(() => {
+        let users = (normalized || []).filter((user: any) => user.id !== ownerId);
+
+        // Agar search value khali nahi hai, to aage filter karein
+        if (searchValue) {
+            users = users.filter(user =>
+                user.name.toLowerCase().includes(searchValue.toLowerCase()) ||
+                user.email.toLowerCase().includes(searchValue.toLowerCase())
+            );
+        }
+
+        return users;
+    }, [normalized, ownerId, searchValue]); // <-- `searchValue` ko dependency banayein
     useEffect(() => {
         if (currentProject?._id) dispatch(fetchContributors({ projectId: currentProject?._id }));
     }, [currentProject?._id, dispatch]);
 
-    // Normalize: support both ["id"] and [{_id, fullName, email}]
-    const normalized = useMemo(
-        () =>
-            (contributors || []).map((c: any) =>
-                typeof c === "string"
-                    ? { id: c, name: c, email: "" }
-                    : { id: c._id ?? "", name: c.fullName ?? "Unknown", email: c.email ?? "" }
-            ),
-        [contributors]
-    );
 
     const count = normalized.length;
 
@@ -70,7 +89,7 @@ export default function ContributorsDropdown({ currentProject, loading, setLoadi
                     userId: user?.id,
                 })
             ).unwrap();
-            
+
             toast.success(`${name} has been removed.`);
         } catch (err: any) {
             toast.error(`Failed to remove contributor: ${err?.message || "Unknown error"}`);
@@ -81,13 +100,8 @@ export default function ContributorsDropdown({ currentProject, loading, setLoadi
     };
 
     // Exclude the project owner from the list of contributors
-    const ownerId = currentProject?.ownerId;
 
-    const filteredUsers = useMemo(
-        () =>
-            (normalized || []).filter((user: any) => user.id !== ownerId), // Exclude owner from contributors
-        [normalized, ownerId]
-    );
+   
 
     return (
         <div className="flex items-center gap-2 mb-5">
@@ -100,7 +114,7 @@ export default function ContributorsDropdown({ currentProject, loading, setLoadi
                             <span className="text-[16px]">Contributors</span>
                             <span className="rounded bg-muted  py-0.5 text-sm">({count})</span>
                         </div>
-                       
+
                         <ChevronDown className="h-4 w-4 opacity-70" />
                     </Button>
                 </DropdownMenuTrigger>
@@ -109,6 +123,8 @@ export default function ContributorsDropdown({ currentProject, loading, setLoadi
                     className="bg-[#f8f0e3] w-80 border-2 border-[#f8f0e3] text-[#] font-[Georgia, serif]"
                     align="start"
                     sideOffset={8}
+                    ref={ref} // <-- REF AB YAHAN HAI
+
                 >
                     <DropdownMenuSeparator />
 
@@ -118,8 +134,9 @@ export default function ContributorsDropdown({ currentProject, loading, setLoadi
                             Loading contributors…
                         </div>
                     ) : (
-                        <Command shouldFilter={false}>
-                            <CommandInput placeholder="Search contributors…" />
+                        <Command shouldFilter={false} >
+                                <CommandInput placeholder="Search contributors…" value={searchValue} // Input ki value ko state se jorein
+                                    onValueChange={setSearchValue} />
                             {filteredUsers.length === 0 ? (
                                 <CommandEmpty className="py-8 text-muted-foreground text-center">No contributors yet.</CommandEmpty>
                             ) : (

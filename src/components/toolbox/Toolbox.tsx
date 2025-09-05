@@ -107,10 +107,10 @@ const Toolbox = ({ boundaryRef }: any) => {
         >
             <div
                 className="flex justify-between items-center border-b pb-2 cursor-grab active:cursor-grabbing"
-                onMouseDown={handleDragMouseDown}
             >
                 <h3 className="text-[#8b795e] text-lg font-semibold m-0">Tools</h3>
-                <div title="Drag Toolbox">
+                <div title="Drag Toolbox" onMouseDown={handleDragMouseDown}
+                >
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="19" r="1"></circle>
                         <circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="19" r="1"></circle>

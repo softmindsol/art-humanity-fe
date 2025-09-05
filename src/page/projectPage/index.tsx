@@ -19,7 +19,7 @@ import {
 import { useCanvasState } from '@/hook/useCanvasState';
 import { clearCanvas, generateTimelapseVideo, getContributionsByProject } from '@/redux/action/contribution';
 import InfoBox from '@/components/toolbox/InfoBox';
-import { clearCanvasData, clearTimelapseUrl, selectCanvasData, selectErrorForOperation, selectIsLoadingOperation, selectTimelapseUrl } from '@/redux/slice/contribution';
+import { clearCanvasData, clearTimelapseUrl, removeContributionOptimistically, selectCanvasData, selectErrorForOperation, selectIsLoadingOperation, selectTimelapseUrl } from '@/redux/slice/contribution';
 import ContributionSidebar from '@/components/canvas/ContributionSidebar';
 import { joinProject } from '@/redux/action/project';
 import { Button } from '@/components/ui/button';
@@ -31,7 +31,7 @@ import { openAuthModal } from '@/redux/slice/opeModal';
 import { io } from 'socket.io-client'; // Socket client import karein
 import { addContributionFromSocket } from '@/redux/slice/contribution'; // Naya action import karein
 import { useSelector } from 'react-redux';
-import { selectCurrentProject, selectProjectsError, selectProjectsLoading } from '@/redux/slice/project';
+import { selectCurrentProject, } from '@/redux/slice/project';
 import type { RootState } from '@/redux/store';
 
 
@@ -79,19 +79,19 @@ const ProjectPage = ({ projectName, projectId }: any) => {
     const isSaving = useSelector(selectIsLoadingOperation("batchCreateContributions"));
     const saveError = useSelector(selectErrorForOperation("batchCreateContributions"));
     // Project details ki API call (`fetchProjectById`) ki states
-    const isProjectLoading = useSelector(selectProjectsLoading).fetchingById;
-    const projectError = useSelector(selectProjectsError).fetchingById;
+    // const isProjectLoading = useSelector(selectProjectsLoading).fetchingById;
+    // const projectError = useSelector(selectProjectsError).fetchingById;
 
     // Contributions ki API call (`getContributionsByProject`) ki states
-    const areContributionsLoading = useSelector(selectIsLoadingOperation('getContributions'));
-    const contributionsError = useSelector(selectErrorForOperation('getContributions'));
+    // const areContributionsLoading = useSelector(selectIsLoadingOperation('getContributions'));
+    // const contributionsError = useSelector(selectErrorForOperation('getContributions'));
     const isClearingCanvas = useSelector(selectIsLoadingOperation('clearCanvas'));
-    const [loadingSteps, setLoadingSteps] = useState({
-        projectDetails: false,
-        contributions: false,
-    });
+    // const [loadingSteps, setLoadingSteps] = useState({
+    //     projectDetails: false,
+    //     contributions: false,
+    // });
     // Yeh poore page ki initial loading ko control karega
-    const [isInitialLoading, setIsInitialLoading] = useState(true);
+    // const [isInitialLoading, setIsInitialLoading] = useState(true);
 
 
     const handleGenerateTimelapse = () => {
@@ -362,8 +362,21 @@ const ProjectPage = ({ projectName, projectId }: any) => {
             return () => clearTimeout(timer);
         }
     }, [selectedContributionId]);
+    useEffect(() => {
+        if (!socket) return;
 
-    console.log(isClearingCanvas)
+        const handleDeleteEvent = ({ contributionId }: { contributionId: string }) => {
+            console.log(`[Socket] Received delete event for contribution: ${contributionId}`);
+            // Socket se anay par UI foran update karein
+            dispatch(removeContributionOptimistically({ contributionId }));
+        };
+
+        socket.on('contribution_deleted', handleDeleteEvent);
+
+        return () => {
+            socket.off('contribution_deleted', handleDeleteEvent);
+        };
+    }, [socket, dispatch]);
     return (
         // Design ke mutabiq page ka background color
         <div ref={mainContentRef} className="relative  min-h-screen p-4 sm:p-6 lg:p-8">
@@ -374,7 +387,7 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                     <h1 className="text-[28px] lg:text-[44.8px]     font-serif text-[#3E2723]">{projectName}</h1>
                     <p className="text-[#8D6E63] italic lg:text-[19.2px]">{currentProject?.description}</p>
                 </div>
- 
+
                 {/* Main Content Area */}
                 <div className="flex flex-col md:flex-row gap-6">
 
@@ -445,7 +458,7 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                                         <AlertDialogAction
                                             onClick={handleClearCanvas}
                                             className="bg-red-600 text-white cursor-pointer hover:bg-red-700"
-                                            
+
                                         >
                                             Yes, Clear Canvas
                                         </AlertDialogAction>
@@ -653,9 +666,9 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                         {/* Case 2: Error State */}
                         {!isGenerating && generationError && (
                             <div className="text-center text-red-400">
-                                <h3 className="text-xl font-bold mb-2">Error!</h3>
-                                <p>Failed to generate the timelapse.</p>
-                                <p className="text-xs text-gray-500 mt-1">{generationError}</p>
+                                <h3 className="text-xl font-bold !text-white mb-2">Error!</h3>
+                                {/* <p>Failed to generate the timelapse.</p> */}
+                                <p className="text-lg text-white mt-1">{generationError}</p>
                             </div>
                         )}
 

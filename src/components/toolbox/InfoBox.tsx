@@ -3,16 +3,9 @@ import { GripVertical } from 'lucide-react'; // Handle ke liye icon
 import { selectCanvasData } from '@/redux/slice/contribution';
 import { useSelector } from 'react-redux';
 
-interface InfoBoxProps {
-    zoom: number;
-    worldPos: { x: number; y: number };
-    strokeCount: number;
-    isSaving: boolean;
-    saveError: string | null;
-    boundaryRef: React.RefObject<HTMLDivElement>; // Boundary ref prop add karein
-}
 
-const InfoBox = ({ zoom, worldPos, strokeCount, isSaving, saveError, boundaryRef }: InfoBoxProps) => {
+
+const InfoBox = ({ zoom, worldPos, isSaving, saveError, boundaryRef }: any) => {
     // --- DRAGGING LOGIC STATE & REFS ---
     const [position, setPosition] = useState({ x: window.innerWidth - 220, y: window.innerHeight - 150 }); // Shuruaati position right-bottom corner ke qareeb
     const [isDragging, setIsDragging] = useState(false);
@@ -102,10 +95,10 @@ const InfoBox = ({ zoom, worldPos, strokeCount, isSaving, saveError, boundaryRef
             {/* Drag Handle (Bilkul Toolbox jaisa) */}
             <div
                 className="w-full flex justify-between items-center mb-2 cursor-grab active:cursor-grabbing text-gray-400"
-                onMouseDown={handleDragMouseDown} // Dragging yahan se shuru hogi
             >
                 <p className="text-[#3e2723] text-lg font-bold m-0">Infobox</p>
-                <div> <GripVertical size={20} /></div>
+                <div onMouseDown={handleDragMouseDown} // Dragging yahan se shuru hogi
+> <GripVertical size={20} /></div>
             </div>
 
             {/* Aapka baqi content */}

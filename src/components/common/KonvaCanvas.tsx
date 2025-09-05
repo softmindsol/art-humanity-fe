@@ -14,23 +14,11 @@ import { transformContributionForKonva } from '@/utils/transformContributionForK
 import { getCanvasPointerPosition } from '@/utils/getCanvasPointerPosition';
 
 // Props ke liye interface (apne project ke hisab se isay ahem banayein)
-interface KonvaCanvasProps {
-    projectId: string;
-    userId: string;
-    width: number;
-    height: number;
-    onStateChange: (state: any) => void;
-    selectedContributionId: string | null;
-    onGuestInteraction: () => void;
-    isReadOnly: boolean;
-    isContributor: boolean;
-    socket: any;
-}
 
 const KonvaCanvas = ({
     projectId, userId, width, height, onStateChange, selectedContributionId,
     onGuestInteraction, isReadOnly, isContributor, socket
-}: KonvaCanvasProps) => {
+}: any) => {
 
     // --- Hooks ---
     const dispatch = useAppDispatch();
@@ -197,33 +185,33 @@ const KonvaCanvas = ({
     }, [dispatch, projectId, socket]);
 
 
-   const handleWheel = (e: any) => {
-    e.evt.preventDefault();
-    const stage = e.target.getStage();
-    const scaleBy = 1.05;
-    const oldScale = stage.scaleX();
-    
-    const mousePointTo = {
-        x: (stage.getPointerPosition().x - stage.x()) / oldScale,
-        y: (stage.getPointerPosition().y - stage.y()) / oldScale,
+    const handleWheel = (e: any) => {
+        e.evt.preventDefault();
+        const stage = e.target.getStage();
+        const scaleBy = 1.05;
+        const oldScale = stage.scaleX();
+
+        const mousePointTo = {
+            x: (stage.getPointerPosition().x - stage.x()) / oldScale,
+            y: (stage.getPointerPosition().y - stage.y()) / oldScale,
+        };
+
+        let newScale = e.evt.deltaY > 0 ? oldScale / scaleBy : oldScale * scaleBy;
+
+        // --- YEH NAYI LOGIC HAI ---
+        // Math.max yeh yaqeeni banata hai ke scale MIN_ZOOM se neeche na jaye.
+        // Math.min yeh yaqeeni banata hai ke scale MAX_ZOOM se upar na jaye.
+        newScale = Math.max(MIN_ZOOM, Math.min(newScale, MAX_ZOOM));
+
+        const newState = {
+            scale: newScale,
+            x: stage.getPointerPosition().x - mousePointTo.x * newScale,
+            y: stage.getPointerPosition().y - mousePointTo.y * newScale,
+        };
+
+        setStageState(newState);
+        onStateChange({ zoom: newState.scale });
     };
-
-    let newScale = e.evt.deltaY > 0 ? oldScale / scaleBy : oldScale * scaleBy;
-
-    // --- YEH NAYI LOGIC HAI ---
-    // Math.max yeh yaqeeni banata hai ke scale MIN_ZOOM se neeche na jaye.
-    // Math.min yeh yaqeeni banata hai ke scale MAX_ZOOM se upar na jaye.
-    newScale = Math.max(MIN_ZOOM, Math.min(newScale, MAX_ZOOM));
-    
-    const newState = {
-        scale: newScale,
-        x: stage.getPointerPosition().x - mousePointTo.x * newScale,
-        y: stage.getPointerPosition().y - mousePointTo.y * newScale,
-    };
-
-    setStageState(newState);
-    onStateChange({ zoom: newState.scale });
-};
     const handleMouseDown = (e: any) => {
         if (isReadOnly || !user) {
             if (!user) onGuestInteraction();
@@ -279,8 +267,8 @@ const KonvaCanvas = ({
     const handleMouseMove = (e: any) => {
         const stage = e.target.getStage();
         // onStateChange({ worldPos: stage.getPointerPosition() });
- const worldPos = getCanvasPointerPosition(stage);
-    onStateChange({ worldPos });
+        const worldPos = getCanvasPointerPosition(stage);
+        onStateChange({ worldPos });
         if (!isDrawing) return;
 
         // const point = stage.getPointerPosition();

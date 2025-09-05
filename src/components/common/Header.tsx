@@ -11,7 +11,7 @@ import { useSocket } from '@/context/SocketContext';
 import { fetchNotifications, markNotificationsAsRead, markSingleNotificationRead } from '@/redux/action/notification';
 import { Bell, Menu, X } from 'lucide-react';
 import { addNotification } from '@/redux/slice/notification';
-import { useOnClickOutside } from '@/hook/useOnClickOutside';
+import  useOnClickOutside  from '@/hook/useOnClickOutside';
 
 const Header = () => {
   const isAuthModalOpen = useSelector(selectIsAuthModalOpen);
@@ -39,7 +39,7 @@ const Header = () => {
       });
   };
 
-  useOnClickOutside(notificationRef, () => setIsNotificationOpen(false));
+  useOnClickOutside([notificationRef], () => setIsNotificationOpen(false));
 
   useEffect(() => {
     if (user && user?.id) {

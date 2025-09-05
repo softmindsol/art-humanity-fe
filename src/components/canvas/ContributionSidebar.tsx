@@ -8,7 +8,7 @@ import { clearCanvasData, selectCanvasData, selectIsLoadingOperation, selectPagi
 import { useSelector } from 'react-redux';
 import ContributorsPanel from './ContributorsPanel';
 import { AddContributorModal } from '../modal/AddContributorModal';
-import { useOnClickOutside } from '@/hook/useOnClickOutside';
+import  useOnClickOutside  from '@/hook/useOnClickOutside';
 
 
 const SIDEBAR_WIDTH = 350; // Sidebar ki width ko ek variable mein rakhein
@@ -31,14 +31,18 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
     // Refs
     const listContainerRef = useRef<HTMLDivElement>(null);
     const sidebarRef = useRef(null);
+    const searchDropdownRef = useRef(null); // <-- YEH NAYA REF BANAYEIN
+    const contributorsDropdownRef = useRef(null); // This ref will be for the dropdown content
 
 
 
-    useOnClickOutside(sidebarRef, () => {
-        if (isOpen) { // Sirf tab band karein jab pehle se khula ho
+    // NAYI AUR THEEK CALL:
+    useOnClickOutside([sidebarRef, contributorsDropdownRef], () => { // <-- AB EK ARRAY PASS KAREIN
+        if (isOpen) {
             setIsOpen(false);
         }
     });
+
     // === MASTER useEffect for Data Fetching ===
     // Yeh useEffect ab filter, projectId, aur activeTab teeno par chalega.
     useEffect(() => {
@@ -198,7 +202,7 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
                             </div>
                         </div>
                         }
-                        {isAdmin && <ContributorsPanel currentProject={currentProject} loading={loading}
+                        {isAdmin && <ContributorsPanel currentProject={currentProject} loading={loading} ref={contributorsDropdownRef}
                             setLoading={setLoading} />}
                         <div className='flex items-center justify-center mb-4'>
                             {
@@ -217,6 +221,8 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
                             projectId={projectId}
                             onGuestVoteAttempt={onGuestVoteAttempt}
                             loading={loading} setLoading={setLoading}
+                          
+
 
                         />
                         {/* Loading Indicator */}

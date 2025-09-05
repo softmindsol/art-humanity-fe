@@ -1,30 +1,30 @@
-// src/hooks/useOnClickOutside.ts
 import { useEffect } from "react";
 
-type Event = MouseEvent | TouchEvent;
-
-export const useOnClickOutside = (
-  ref: any,
-  handler: (event: Event) => void
-) => {
+function useOnClickOutside(refs: any, handler: any) {
   useEffect(() => {
-    const listener = (event: Event) => {
-      const el = ref?.current;
-      // Agar element mojood nahi hai ya user ne element ke andar click kiya hai, to kuch na karo
-      if (!el || el.contains(event.target as Node)) {
+    const listener = (event: any) => {
+      // Array mein mojood har ref ko check karein
+      const isClickInside = refs.some(
+        (ref: any) => ref.current && ref.current.contains(event.target)
+      );
+
+      // Agar click kisi bhi ref ke andar hua hai, to kuch na karein
+      if (isClickInside) {
         return;
       }
-      handler(event); // Warna, handler function (dropdown band karne wala) call karo
+
+      // Agar click sabhi refs ke bahar hua hai, to handler ko call karein
+      handler(event);
     };
 
-    // Event listeners add karein
     document.addEventListener("mousedown", listener);
     document.addEventListener("touchstart", listener);
 
-    // Cleanup: Component unmount hone par listeners ko hata dein
     return () => {
       document.removeEventListener("mousedown", listener);
       document.removeEventListener("touchstart", listener);
     };
-  }, [ref, handler]); // Yeh effect sirf tab dobara chalega jab ref ya handler badlega
-};
+  }, [refs, handler]); // Effect ab refs (array) par depend karega
+}
+
+export default useOnClickOutside;

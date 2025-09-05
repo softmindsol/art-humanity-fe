@@ -128,6 +128,12 @@ const paintPixelSlice = createSlice({
         (c: any) => !tempIdsToRemove.has(c._id)
       );
     },
+    removeContributionOptimistically: (state, action) => {
+      const { contributionId } = action.payload;
+      state.canvasData = state.canvasData.filter(
+        (c:any) => c._id !== contributionId
+      );
+    },
   },
 
   extraReducers: (builder) => {
@@ -167,33 +173,67 @@ const paintPixelSlice = createSlice({
         state.loading.batchCreateContributions = true;
         state.error.batchCreateContributions = null;
       })
-      .addCase(
-        batchCreateContributions.fulfilled,
-        (state: any, action: any) => {
-          state.loading.batchCreateContributions = false; // <-- YEH NAYI LINE HAI
+      // .addCase(
+      //   batchCreateContributions.fulfilled,
+      //   (state: any, action: any) => {
+      //     state.loading.batchCreateContributions = false; // <-- YEH NAYI LINE HAI
 
-          const savedContributions = action.payload; // These are the real contributions from the server
+      //     const savedContributions = action.payload; // These are the real contributions from the server
 
-          // 1. Find and remove the temporary optimistic updates
-          const tempIds = new Set(savedContributions.map((c: any) => c.tempId));
-          state.canvasData = state.canvasData.filter(
-            (c: any) => !tempIds.has(c._id)
+      //     // 1. Find and remove the temporary optimistic updates
+      //     const tempIds = new Set(savedContributions.map((c: any) => c.tempId));
+      //     state.canvasData = state.canvasData.filter(
+      //       (c: any) => !tempIds.has(c._id)
+      //     );
+
+      //     // 2. Add the final, saved contributions from the server
+      //     state.canvasData.push(...savedContributions);
+      //   }
+      // )
+      // .addCase(batchCreateContributions.rejected, (state, action: any) => {
+      //   state.loading.batchCreateContributions = false; // <-- YEH NAYI LINE HAI
+
+      //   // we should roll back the optimistic update.
+      //   const failedTempIds = new Set(
+      //     action.meta.arg.contributions.map((c: any) => c.tempId)
+      //   );
+      //   state.canvasData = state.canvasData.filter(
+      //     (c: any) => !failedTempIds.has(c._id)
+      //   );
+      // });
+      .addCase(batchCreateContributions.fulfilled, (state: any, action) => {
+        // `action.payload` is the array of real contributions from the server,
+        // and each one has a `tempId`.
+        const savedContributions = action.payload;
+
+        savedContributions.forEach((realContrib: any) => {
+          // Find the index of the temporary, optimistic contribution in our state
+          const index = state.canvasData.findIndex(
+            (optimisticContrib: any) =>
+              optimisticContrib._id === realContrib.tempId
           );
 
-          // 2. Add the final, saved contributions from the server
-          state.canvasData.push(...savedContributions);
-        }
-      )
-      .addCase(batchCreateContributions.rejected, (state, action: any) => {
-        state.loading.batchCreateContributions = false; // <-- YEH NAYI LINE HAI
+          if (index !== -1) {
+            // If we found it, replace the temporary one with the real one
+            state.canvasData[index] = realContrib;
+          } else {
+            // As a fallback (in case the optimistic one wasn't found), add it.
+            state.canvasData.push(realContrib);
+          }
+        });
 
-        // we should roll back the optimistic update.
+        state.loading.saving = false; // Or whatever your loading state is
+      })
+
+      .addCase(batchCreateContributions.rejected, (state: any, action: any) => {
+        // It's also important to remove the temporary card if the server fails
         const failedTempIds = new Set(
           action.meta.arg.contributions.map((c: any) => c.tempId)
         );
         state.canvasData = state.canvasData.filter(
           (c: any) => !failedTempIds.has(c._id)
         );
+        state.loading.saving = false;
       });
 
     builder
@@ -263,6 +303,8 @@ const paintPixelSlice = createSlice({
       .addCase(generateTimelapseVideo.rejected, (state, action) => {
         state.loading.generateTimelapse = false;
         state.error.generateTimelapse = action.payload as any;
+        console.log("state.error.generateTimelapse:", action.payload);
+        console.log("state.error.message:", action.payload);
       });
 
     // Clear Canvas
@@ -295,6 +337,7 @@ export const {
   addContributionFromSocket,
   setCurrentBrush,
   addMultipleContributionsOptimistically, // Isay export karein
+  removeContributionOptimistically,
 } = paintPixelSlice.actions;
 
 // Selectors
