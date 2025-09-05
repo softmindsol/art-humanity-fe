@@ -250,7 +250,6 @@ const ActiveProjects: React.FC = () => {
                                                         size="icon"
                                                         title="Delete Project FOREVER"
                                                         onClick={() =>
-                                                            // Naya Function Signature: (projectId, actionType, actionText)
                                                             openConfirmationDialog(project._id, 'DELETE', 'DELETE PERMANENTLY')
                                                         }
                                                     >
