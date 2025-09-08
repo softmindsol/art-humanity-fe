@@ -3,7 +3,7 @@ const Footer = () => {
   return (
     <footer className="flex flex-col justify-end">
 
- 
+
       <div className="footer-content">
         <div className="footer-logo">
           <h2>Project Art of Humanity</h2>
@@ -36,7 +36,7 @@ const Footer = () => {
       </div>
       <div className="copyright">
         <p>&copy; 2025 Project Art of Humanity. All rights reserved.</p>
-        </div>   
+      </div>
     </footer>
   );
 };

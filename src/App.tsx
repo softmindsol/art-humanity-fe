@@ -20,27 +20,27 @@ function App() {
   return (
     <Router>
       <SocketProvider>
-      <Header />
-      <ProjectProvider>
-        <main>
-          <Routes>
-            <Route path="/" element={<HeroSection />} />
-            <Route path="/guideline" element={<GuidelinePage />} />
-            <Route path="/gallery" element={<><GalleryPage /></>} />
-            <Route path="/profile" element={<><ProfilePage /></>} />
-            <Route path="/create-project" element={<CreateProjectPage />} />
+        <Header />
+        <ProjectProvider>
+          <main>
+            <Routes>
+              <Route path="/" element={<HeroSection />} />
+              <Route path="/guideline" element={<GuidelinePage />} />
+              <Route path="/gallery" element={<><GalleryPage /></>} />
+              <Route path="/profile" element={<><ProfilePage /></>} />
+              <Route path="/create-project" element={<CreateProjectPage />} />
 
-            <Route path="/projects" element={<><ActiveProjects /></>} />
-            <Route path="/demo" element={<Demo />} />
-            <Route path='/verify-email/:token' element={<VerifyEmail />} />
-            <Route path="/reset-password/:token" element={<ResetPassword />} />
-            <Route path="/project/:canvasId" element={<TiledCanvasPage />} />
+              <Route path="/projects" element={<><ActiveProjects /></>} />
+              <Route path="/demo" element={<Demo />} />
+              <Route path='/verify-email/:token' element={<VerifyEmail />} />
+              <Route path="/reset-password/:token" element={<ResetPassword />} />
+              <Route path="/project/:canvasId" element={<TiledCanvasPage />} />
 
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-        </main>
-      </ProjectProvider>
-      <Footer />
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+          </main>
+        </ProjectProvider>
+        <Footer />
       </SocketProvider>
     </Router>
   );

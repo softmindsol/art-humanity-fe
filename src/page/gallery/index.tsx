@@ -124,13 +124,13 @@ const GalleryPage: React.FC = () => {
                                     </Link>
 
                                     {/* --- YAHAN NAYA BUTTON ADD KAREIN --- */}
-                                     {/* <button
+                                     <button
                                         onClick={() => handleDownload(project)}
                                         disabled={downloading === project._id}
                                         className="btn-contribute cursor-pointer flex-1 !bg-green-600 hover:!bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         {downloading === project._id ? 'Preparing...' : 'Download'}
-                                    </button> */}
+                                    </button>
                                 </div>
                             </div>
                         </div>

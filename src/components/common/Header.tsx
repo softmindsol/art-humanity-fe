@@ -303,7 +303,7 @@ const Header = () => {
 
 
         {/* Flex container to push auth section to the bottom */}
-        <div className="flex flex-col justify-between h-[calc(100%-40px)]">
+        <div className="flex flex-col justify-between h-[calc(100%-64px)]">
 
           {/* Navigation Links */}
           <nav>
