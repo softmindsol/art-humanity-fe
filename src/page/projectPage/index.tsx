@@ -47,7 +47,7 @@ interface CursorData {
         color?: string;
     };
 }
-const ProjectPage = ({ projectName, projectId }: any) => {
+const ProjectPage = ({ projectName, projectId,totalContributors }: any) => {
     const { user } = useAuth();
     const dispatch = useAppDispatch();
 
@@ -485,7 +485,7 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                         <div className="canvas-count  w-[90%]  xl:w-full ">
                             <div className="stat-item">
                                 <span className="stat-label  !text-[14.4px]">Total Contributors:</span>
-                                <span className="stat-value  !text-[14.4px]" id="contributor-count">{currentProject?.stats?.contributorCount}</span>
+                                <span className="stat-value  !text-[14.4px]" id="contributor-count">{totalContributors}</span>
                             </div>
                             <div className="stat-item">
                                 <span className="stat-label !text-[14.4px]" >Pixels Painted:</span>
@@ -500,7 +500,7 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                         {/* <div className='w-full h-full min-w-[1024px] min-h-[1024px] bg-white relative overflow-hidden'> */}
                         <div
                             ref={canvasContainerRef}
-                            className=' h-full w-[95%] lg:w-[1024px] min-h-[1024px] mt-6 bg-white relative overflow-hidden'
+                            className=' h-full w-[90%] xl:w-[1024px] min-h-[1024px] mt-6 bg-white relative overflow-hidden'
                             style={{ border: '4px solid #4d2d2d' }}
                         >
                             {canvasSize.width > 0 && (
@@ -535,7 +535,7 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                                         transition: 'left 0.1s linear, top 0.1s linear' // Thori si smoothness ke liye
                                     }}
                                 >
-                                    {/* Aap yahan custom cursor icon istemal kar sakte hain */}
+                                    
                                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ color: data.user?.color || 'blue' }}>
                                         <path d="M4 4l7.071 17.071-1.414 1.414-4.243-4.243-1.414-1.414L4 4z" fill="currentColor" />
                                     </svg>
@@ -549,7 +549,7 @@ const ProjectPage = ({ projectName, projectId }: any) => {
                             ))}
                         </div>
                         {/* </div> */}
-                        <InfoBox
+                        <InfoBox 
                             zoom={canvasStats.zoom}
                             worldPos={canvasStats.worldPos}
                             strokeCount={savedStrokes?.length || 0}

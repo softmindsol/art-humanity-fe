@@ -124,13 +124,25 @@ export const updateProjectStatus = createAsyncThunk(
   }
 );
 
+
+interface FetchGalleryProjectsArgs {
+  page?: number;
+  limit?: number;
+}
+
 export const fetchGalleryProjects = createAsyncThunk(
   "projects/fetchGallery",
-  async (_, { rejectWithValue }) => {
+  async (args: FetchGalleryProjectsArgs = {}, { rejectWithValue }) => {
     try {
       // Naya API endpoint: GET /api/projects/view/gallery
+
+       const params = new URLSearchParams();
+       if (args.page) params.append("page", args.page.toString());
+       if (args.limit) params.append("limit", args.limit.toString());
       const response = await api.get(
-        `${config?.endpoints?.FETCH_PROJECT_BY_ID}/view/gallery`
+        `${
+          config?.endpoints?.FETCH_PROJECT_BY_ID
+        }/view/gallery?${params.toString()}`
       );
 
       return response.data.data;

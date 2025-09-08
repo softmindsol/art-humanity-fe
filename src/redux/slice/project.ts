@@ -23,6 +23,11 @@ const initialState: any = {
     totalPages: 1,
     totalProjects: 0,
   },
+  galleryPagination: {
+    currentPage: 1,
+    totalPages: 1,
+    totalProjects: 0,
+  },
   filters: {
     status: "all", // 'all', 'active', 'paused'
     search: "", // Search query
@@ -74,6 +79,9 @@ const projectSlice = createSlice({
     clearCurrentProject: (state) => {
       state.currentProject = null;
     },
+    setGalleryCurrentPage: (state, action) => {
+      state.galleryPagination.currentPage = action.payload;
+    },
   },
   extraReducers: (builder) => {
     // Create Project
@@ -91,24 +99,22 @@ const projectSlice = createSlice({
         state.error.creating = action.payload as any;
       });
 
-      builder
-        .addCase(deleteProject.pending, (state) => {
-          state.loading.deleting = true;
-          state.error.deleting = null;
-        })
-        .addCase(deleteProject.fulfilled, (state, action) => {
-          state.loading.deleting = false;
-          // action.payload mein { projectId: '...' } hai
-          const { projectId } = action.payload;
-          // Project ko 'projects' array se filter karke nikaal dein
-          state.projects = state.projects.filter(
-            (p: any) => p._id !== projectId
-          );
-        })
-        .addCase(deleteProject.rejected, (state, action) => {
-          state.loading.deleting = false;
-          state.error.deleting = action.payload as any;
-        });
+    builder
+      .addCase(deleteProject.pending, (state) => {
+        state.loading.deleting = true;
+        state.error.deleting = null;
+      })
+      .addCase(deleteProject.fulfilled, (state, action) => {
+        state.loading.deleting = false;
+        // action.payload mein { projectId: '...' } hai
+        const { projectId } = action.payload;
+        // Project ko 'projects' array se filter karke nikaal dein
+        state.projects = state.projects.filter((p: any) => p._id !== projectId);
+      })
+      .addCase(deleteProject.rejected, (state, action) => {
+        state.loading.deleting = false;
+        state.error.deleting = action.payload as any;
+      });
 
     // Fetch All Projects
     builder
@@ -187,10 +193,16 @@ const projectSlice = createSlice({
         state.loading.fetchingGallery = true;
         state.error.fetchingGallery = null;
       })
-      .addCase(fetchGalleryProjects.fulfilled, (state, action) => {
-        state.loading.fetchingGallery = false;
-        state.galleryProjects = action.payload; // Nayi state ko update karein
-      })
+       .addCase(fetchGalleryProjects.fulfilled, (state, action) => {
+                state.loading.fetchingGallery = false;
+                
+                // --- YAHAN PAR FIX HAI ---
+                // Backend se anay wale data se state update karein
+                state.galleryProjects = action.payload.projects;
+                state.galleryPagination.currentPage = action.payload.currentPage;
+                state.galleryPagination.totalPages = action.payload.totalPages;
+                state.galleryPagination.totalProjects = action.payload.totalProjects;
+            })
       .addCase(fetchGalleryProjects.rejected, (state, action) => {
         state.loading.fetchingGallery = false;
         state.error.fetchingGallery = action.payload as any;
@@ -284,7 +296,7 @@ const projectSlice = createSlice({
   },
 }); 
 
-export const { clearCurrentProject, setCurrentPage, setStatusFilter, setSearchTerm } =
+export const { clearCurrentProject, setCurrentPage, setGalleryCurrentPage ,setStatusFilter, setSearchTerm } =
   projectSlice.actions;
 
 // Selectors
@@ -302,5 +314,7 @@ export const selectContributorsLoading = (state: RootState) =>
 export const selectProjectPagination = (state: RootState) => state.projects.pagination;
 export const selectProjectFilters = (state: RootState) =>
   state.projects.filters;
+export const selectGalleryPagination = (state: RootState) =>
+  state.projects.galleryPagination;
 
 export default projectSlice.reducer;

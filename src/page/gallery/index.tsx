@@ -4,13 +4,16 @@ import { useSelector } from 'react-redux';
 import {
     selectGalleryProjects,
     selectProjectsLoading,
-    selectProjectsError
+    selectProjectsError,
+    setGalleryCurrentPage,
+    selectGalleryPagination
 } from '@/redux/slice/project';
 import { fetchGalleryProjects } from '@/redux/action/project'; // Naya thunk istemal karein
 import { getImageUrl } from '@/utils/publicUrl';
 import useAppDispatch from '@/hook/useDispatch';
 import { toast } from 'sonner';
 import api from '@/api/api';
+import { Pagination } from '@/components/common/Pagination';
 
 const GalleryPage: React.FC = () => {
     const [downloading, setDownloading] = useState<string | null>(null);
@@ -18,12 +21,21 @@ const GalleryPage: React.FC = () => {
     const projects = useSelector(selectGalleryProjects);
     const isLoading = useSelector(selectProjectsLoading).fetchingGallery;
     const error = useSelector(selectProjectsError).fetchingGallery;
+    const { currentPage, totalPages } = useSelector(selectGalleryPagination);
 
     useEffect(() => {
-        console.log("useEffect is running, dispatching fetchGalleryProjects..."); // <-- YEH LINE BHI ADD KAREIN
+        // Jab bhi 'currentPage' badlega, yeh effect chalega
+        dispatch(fetchGalleryProjects({ page: currentPage }));
+    }, [currentPage, dispatch]);
 
-        dispatch(fetchGalleryProjects());
-    }, [dispatch]);
+    // Page change handle karne ke liye function
+    const handlePageChange = (newPage: number) => {
+        dispatch(setGalleryCurrentPage(newPage));
+    };
+
+    if (isLoading && projects.length === 0) {
+        return <div className="text-center py-20">Loading Gallery...</div>;
+    }
 
     const handleDownload = async (project: any) => {
         if (downloading === project._id) return; // Agar pehle se download ho raha hai to kuch na karein
@@ -112,7 +124,7 @@ const GalleryPage: React.FC = () => {
                                     </Link>
 
                                     {/* --- YAHAN NAYA BUTTON ADD KAREIN --- */}
-                                    {/* <button
+                                     {/* <button
                                         onClick={() => handleDownload(project)}
                                         disabled={downloading === project._id}
                                         className="btn-contribute cursor-pointer flex-1 !bg-green-600 hover:!bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -125,6 +137,13 @@ const GalleryPage: React.FC = () => {
                     ))
                 )}
             </section>
+            <div className="mt-8">
+                <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                />
+            </div>
         </div>
     );
 };
