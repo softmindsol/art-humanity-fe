@@ -108,7 +108,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                             </span>
                             {loginErrors.password && <p className="error text-red-500">{loginErrors.password}</p>}
                         </div>
-                        <button type="submit" className="auth-submit" disabled={loginLoading}>
+                        <button  type="submit" className="auth-submit" disabled={loginLoading}>
                             {loginLoading ? 'Signing in...' : 'Sign In'}
                         </button>
                         <div className="auth-divider"><span>or</span></div>

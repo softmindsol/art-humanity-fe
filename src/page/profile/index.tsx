@@ -369,7 +369,7 @@ const ProfilePage = () => {
                                 {emailLoading ? "Submitting..." : "Submit"}
                             </Button>
                         </DialogFooter>
-
+ 
                         <p className="text-sm text-muted-foreground">
                             After submitting, your account will be set to <strong>unverified</strong>. Check your new inbox for the verification link.
                         </p>
