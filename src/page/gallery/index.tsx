@@ -123,7 +123,7 @@ const GalleryPage: React.FC = () => {
                                         View Artwork
                                     </Link>
 
-                                    {/* --- YAHAN NAYA BUTTON ADD KAREIN --- */}
+                                    
                                      <button
                                         onClick={() => handleDownload(project)}
                                         disabled={downloading === project._id}
