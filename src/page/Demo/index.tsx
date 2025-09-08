@@ -17,7 +17,81 @@ import Toolbox from '@/components/toolbox/Toolbox';
 const TILE_SIZE = 512; // Optimal tile size for performance
 const VIEWPORT_WIDTH = 1024; // Fixed viewport width
 const VIEWPORT_HEIGHT = 1024; // Fixed viewport height
+const styles = `
+    .canvas-container {
+        font-family: 'Georgia, serif';
+        position: relative;
+        width: 100%;
+        min-height: 100vh;
+        overflow-x: hidden; /* Prevent horizontal scroll */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 1rem;
+        box-sizing: border-box;
+    }
 
+    .canvas-header {
+        text-align: center;
+        margin-bottom: 1.5rem;
+        width: 100%;
+    }
+
+    .canvas-title {
+        font-size: 1.75rem; /* 28px */
+        color: #5d4e37;
+        margin-bottom: 0.25rem;
+        font-weight: normal;
+    }
+
+    .canvas-subtitle {
+        color: #8b795e;
+        font-style: italic;
+        margin-bottom: 1rem;
+    }
+
+    .canvas-controls {
+        display: flex;
+        flex-wrap: wrap; /* Allow buttons to wrap on small screens */
+        justify-content: center;
+        gap: 0.75rem; /* 12px */
+    }
+
+    .control-button {
+        border: none;
+        padding: 0.5rem 1rem; /* 8px 16px */
+        border-radius: 0.25rem; /* 4px */
+        cursor: pointer;
+        font-size: 0.875rem; /* 14px */
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: background-color 0.2s;
+    }
+
+    .canvas-viewport-wrapper {
+        width: 100%;
+        max-width: ${VIEWPORT_WIDTH}px; /* Canvas won't exceed its drawing size */
+        margin: auto; /* Center the canvas */
+    }
+
+    #viewport-canvas {
+        width: 100%;
+        height: auto; /* Maintain aspect ratio */
+        border: 4px solid #4d2d2d;
+        display: block; /* Remove extra space below canvas */
+    }
+
+    /* Media Queries for different screen sizes */
+    @media (min-width: 768px) { /* md breakpoint */
+        .canvas-title {
+            font-size: 2.5rem; /* 40px */
+        }
+        .control-button {
+            font-size: 1rem; /* 16px */
+        }
+    }
+`;
 
 
 const DemoCanvas: React.FC = () => {
@@ -176,6 +250,8 @@ const DemoCanvas: React.FC = () => {
     //     dispatch(generateTimelapseVideo({ sessionId }) as any);
     // };
     // Keyboard Shortcuts for Undo/Redo
+   
+   
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.ctrlKey || e.metaKey) { // metaKey for Command on Mac
@@ -279,6 +355,7 @@ const DemoCanvas: React.FC = () => {
 
         ctx.restore();
     }, [canvasState, showGrid, isDrawing, lineStartPos, mousePos, brushState]); // <-- Dependencies update karein
+  
     useEffect(() => {
         renderVisibleTiles();
     }, [canvasState, renderVisibleTiles]);
@@ -289,7 +366,9 @@ const DemoCanvas: React.FC = () => {
             setIsModalOpen(true);
         }
     }, [timelapseUrl]);
+   
     // --- MOUSE AND DRAWING HANDLERS ---
+   
     const getMousePosInWorld = (e: MouseEvent | React.MouseEvent): Position => {
         const viewport = viewportCanvasRef.current!;
         const rect = viewport.getBoundingClientRect();
@@ -491,83 +570,82 @@ const DemoCanvas: React.FC = () => {
         dispatch(setBrushColor(hslToRgb(hue, saturation, lightness)));
     }, [hue, saturation, lightness]);
 
+
+    
     if (!brushState || !canvasState) {
         return <div>Loading Canvas...</div>;
     }
 
     return (
-        <div ref={mainContentRef} className='h-[90vh] md:h-[155vh] lg:!h-[145vh] xl:!min-h-[145vh] 2xl:h-[135vh]' style={{ fontFamily: 'Georgia, serif', overflow: 'auto', position: 'relative' }}>
-            <div className=" md:mb-[190px] 3xl:mb-[150px] px-5 py-2 text-center">
-                <h1 className="text-2xl md:text-[40px] text-[#5d4e37] mb-1 font-normal">Demo Canvas</h1>
-                <p className="text-[#8b795e] italic mb-2">
-                    Using {TILE_SIZE}px tiles. Zoom with wheel, pan with Move tool.
-                </p>
+        <>
+            <style>{styles}</style>
+            <div ref={mainContentRef} className="canvas-container">
+                <div className="canvas-header">
+                    <h1 className="text-2xl md:text-[40px] text-[#5d4e37] mb-1 font-normal">Demo Canvas</h1>
+                    <p className="canvas-subtitle">
+                        Using {TILE_SIZE}px tiles. Zoom with wheel, pan with Move tool.
+                    </p>
 
-                <div className="flex justify-center gap-3">
-                    <button
-                        onClick={loadReferenceImage}
-                        className="bg-[#8b795e] text-[14px] lg:text-[16px] text-white border-none px-4 py-2 rounded cursor-pointer"
-                    >
-                        Load Image
-                    </button>
+                    <div className="canvas-controls">
+                        <button
+                            onClick={loadReferenceImage}
+                            className="control-button"
+                            style={{ backgroundColor: '#8b795e', color: 'white' }}
+                        >
+                            Load Image
+                        </button>
 
-                    <button
-                        onClick={handleClearCanvas}
-                        className="bg-[#cd5c5c] text-white text-[14px] lg:text-[16px] border-none px-4 py-2 rounded cursor-pointer"
-                    >
-                        Clear Canvas
-                    </button>
+                        <button
+                            onClick={handleClearCanvas}
+                            className="control-button"
+                            style={{ backgroundColor: '#cd5c5c', color: 'white' }}
+                        >
+                            Clear Canvas
+                        </button>
 
-                    <button
-                        onClick={() => setShowGrid(!showGrid)}
-                        className={`${showGrid ? 'bg-[#5d4037]' : 'bg-[#8b795e]'
-                            } text-white border-none px-4 py-2 text-[14px] lg:text-[16px] rounded cursor-pointer flex items-center gap-2`}
-                    >
-                        <Grid size={16} />
-                        {showGrid ? 'Hide Grid' : 'Show Grid'}
-                    </button>
-                    {/* <button
-                        onClick={handleGenerateTimelapse}
-                        disabled={isGeneratingTimelapse}
-                        className="bg-[#003366] text-white border-none px-4 py-2 rounded cursor-pointer flex items-center gap-2 disabled:opacity-50"
-                    >
-                        <Film size={16} />
-                        {isGeneratingTimelapse ? 'Generating...' : 'Create Timelapse'}
-                    </button> */}
+                        <button
+                            onClick={() => setShowGrid(!showGrid)}
+                            className="control-button"
+                            style={{
+                                backgroundColor: showGrid ? '#5d4037' : '#8b795e',
+                                color: 'white'
+                            }}
+                        >
+                            <Grid size={16} />
+                            {showGrid ? 'Hide Grid' : 'Show Grid'}
+                        </button>
+                    </div>
                 </div>
+
+                <div ref={containerRef} className="canvas-viewport-wrapper">
+                    <canvas
+                        id="viewport-canvas"
+                        ref={viewportCanvasRef}
+                        width={VIEWPORT_WIDTH}
+                        height={VIEWPORT_HEIGHT}
+                        style={{
+                            cursor: brushState.mode === 'move'
+                                ? (isPanning ? 'grabbing' : 'grab')
+                                : (canvasState.zoomLevel < 1 ? 'not-allowed' : 'crosshair'),
+                        }}
+                        onWheel={handleWheel}
+                        onMouseDown={(e) => { if (e.button === 2 || brushState.mode === 'move') startPan(e); else startDrawing(e); }}
+                        onMouseMove={(e) => {
+                            const pos = getMousePosInWorld(e);
+                            setMousePos({ x: Math.round(pos.x), y: Math.round(pos.y) });
+                            if (isPanning) pan(e); else if (isDrawing) draw(e);
+                        }}
+                        onMouseUp={() => { stopDrawing(); stopPan(); }}
+                        onMouseLeave={() => { stopDrawing(); stopPan(); }}
+                        onContextMenu={(e) => e.preventDefault()}
+                    />
+                </div>
+
+                <Toolbox boundaryRef={mainContentRef} />
             </div>
-
-
-
-            <div ref={containerRef} style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 'calc(100vh - 150px)' }}>
-                <canvas
-                    ref={viewportCanvasRef}
-                    width={VIEWPORT_WIDTH}
-                    height={VIEWPORT_HEIGHT}
-                    className=' w-[95%] md:w-[90%] md:h-[1024px]  xl:w-[1024px] xl:h-[1024px] relative'
-                    style={{
-                        // width: `${VIEWPORT_WIDTH}px`,
-                        // height: `${VIEWPORT_HEIGHT}px`,
-                        border: '4px solid #4d2d2d',
-                        cursor: brushState.mode === 'move' ? (isPanning ? 'grabbing' : 'grab') : (canvasState.zoomLevel < 1 ? 'not-allowed' : 'crosshair'),
-                    }}
-                    onWheel={handleWheel}
-                    onMouseDown={(e) => { if (e.button === 2 || brushState.mode === 'move') startPan(e); else startDrawing(e); }}
-                    onMouseMove={(e) => {
-                        const pos = getMousePosInWorld(e);
-                        setMousePos({ x: Math.round(pos.x), y: Math.round(pos.y) });
-                        if (isPanning) pan(e); else if (isDrawing) draw(e);
-                    }}
-                    onMouseUp={() => { stopDrawing(); stopPan(); }}
-                    onMouseLeave={() => { stopDrawing(); stopPan(); }}
-                    onContextMenu={(e) => e.preventDefault()}
-                />
-            </div>
-
-            <Toolbox boundaryRef={mainContentRef} />
-
-        </div>
+        </>
     );
 };
 
 export default DemoCanvas;
+
