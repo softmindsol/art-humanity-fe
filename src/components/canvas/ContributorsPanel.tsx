@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import { X, Users2, Loader2, Mail, ChevronDown } from "lucide-react";
@@ -28,24 +28,31 @@ import useAuth from "@/hook/useAuth";
 import type { RootState } from "@/redux/store";
 import { fetchContributors, removeContributor } from "@/redux/action/project";
 import { selectProjectContributors } from "@/redux/slice/project";
+import useOnClickOutside from "@/hook/useOnClickOutside";
 
 
-export default function ContributorsDropdown({ currentProject, loading, setLoading, ref }: any) {
+export default function ContributorsDropdown({ currentProject, loading, setLoading, ref,  }: any) {
     const dispatch = useAppDispatch();
     const { user } = useAuth();
     // --- STEP 1: Nayi state banayein jo search text ko store karegi ---
     const [searchValue, setSearchValue] = useState("");
+    const [isOpen, setIsOpen] = useState(false); // Dropdown ki visibility ke liye
 
     const contributors = useSelector(selectProjectContributors) as Array<{
         _id?: string;
         fullName?: string;
         email?: string;
     }> | string[];
+    const dropdownRef = useRef(null); // Dropdown ke container ke liye ref
 
     const isLoading = useSelector((state: RootState) => state.projects.loading.contributors);
     const [confirmUser, setConfirmUser] = useState<{ id: string; name: string } | null>(null);
     const ownerId = currentProject?.ownerId;
-
+    useOnClickOutside([dropdownRef], () => {
+        if (isOpen) {
+            setIsOpen(false);
+        }
+    });
 
     const normalized = useMemo(
         () =>
@@ -78,7 +85,6 @@ export default function ContributorsDropdown({ currentProject, loading, setLoadi
 
 
     const count = normalized.length;
-
     const handleRemove = async (id: string, name: string) => {
         try {
             setLoading(true)
@@ -104,75 +110,57 @@ export default function ContributorsDropdown({ currentProject, loading, setLoadi
    
 
     return (
-        <div className="flex items-center gap-2 mb-5">
-            <DropdownMenu>
-                {/* <span className="!font-semibold text-[#654321]">Contributors:</span> */}
-                <DropdownMenuTrigger asChild>
-                    <Button variant="outline" size="sm" className="flex items-center justify-between gap-2 w-full">
-                        <div className="flex items-center gap-2">
-                            <Users2 className="h-8 w-12" />
-                            <span className="text-[16px]">Contributors</span>
-                            <span className="rounded bg-muted  py-0.5 text-sm">({count})</span>
-                        </div>
+        <div ref={dropdownRef} className="relative w-full mb-5">
+            <Button
+                variant="outline"
+                size="sm"
+                className="flex items-center justify-between gap-2 w-full"
+                onClick={() => setIsOpen(!isOpen)} // Toggle visibility on click
+            >
+                <div className="flex items-center gap-2">
+                    <Users2 className="h-8 w-12" />
+                    <span className="text-[16px]">Other Contributors</span>
+                    <span className="rounded bg-muted py-0.5 text-sm">({count})</span>
+                </div>
+                <ChevronDown className={`h-4 w-4 opacity-70 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+            </Button>
 
-                        <ChevronDown className="h-4 w-4 opacity-70" />
-                    </Button>
-                </DropdownMenuTrigger>
-
-                <DropdownMenuContent
-                    className="bg-[#f8f0e3] w-80 border-2 border-[#f8f0e3] text-[#] font-[Georgia, serif]"
-                    align="start"
-                    sideOffset={8}
-                    ref={ref} // <-- REF AB YAHAN HAI
-
+            {/* STEP 3: Conditional Dropdown Content */}
+            {isOpen && (
+                <div
+                    className="absolute top-full mt-2 w-full z-20 bg-[#f8f0e3] border-2 border-[#5d4e37] rounded-lg shadow-xl text-[#] font-[Georgia, serif] p-1"
                 >
-                    <DropdownMenuSeparator />
-
+                    {/* Baaqi saara content iske andar daal dein */}
                     {isLoading ? (
                         <div className="flex items-center gap-2 p-4 text-sm text-muted-foreground">
                             <Loader2 className="h-4 w-4 animate-spin" />
                             Loading contributors…
                         </div>
                     ) : (
-                        <Command shouldFilter={false} >
-                                <CommandInput placeholder="Search contributors…" value={searchValue} // Input ki value ko state se jorein
-                                    onValueChange={setSearchValue} />
+                        <Command shouldFilter={false}>
+                            <CommandInput placeholder="Search contributors…" value={searchValue} onValueChange={setSearchValue} />
                             {filteredUsers.length === 0 ? (
                                 <CommandEmpty className="py-8 text-muted-foreground text-center">No contributors yet.</CommandEmpty>
                             ) : (
                                 <CommandGroup className="p-0">
                                     <div className="overflow-y-auto max-h-64">
-                                        {/* The list of contributors will scroll when the height exceeds max-h-72 */}
                                         {filteredUsers.map((c) => {
+                                            // ... (User list ka poora JSX code yahan paste karein)
                                             const isSelf = c.id && user?.id && c.id === user.id;
                                             return (
                                                 <CommandItem key={c.id || c.name} className="flex w-full items-center justify-between gap-2 px-3 py-2">
+                                                    {/* User info */}
                                                     <div className="flex min-w-0 items-center gap-3">
-                                                        <Avatar className="h-7 w-7">
-                                                            <AvatarFallback className="text-xs">
-                                                                {initials(c.name)}
-                                                            </AvatarFallback>
-                                                        </Avatar>
+                                                        <Avatar className="h-7 w-7"><AvatarFallback className="text-xs">{initials(c.name)}</AvatarFallback></Avatar>
                                                         <div className="min-w-0">
                                                             <div className="truncate text-sm font-medium">{c.name}</div>
                                                             <div className="flex items-center gap-1 truncate text-xs text-muted-foreground">
-                                                                <Mail className="h-3.5 w-3.5" />
-                                                                <span className="truncate">{c.email || "—"}</span>
+                                                                <Mail className="h-3.5 w-3.5" /><span className="truncate">{c.email || "—"}</span>
                                                             </div>
                                                         </div>
                                                     </div>
-
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-destructive hover:text-destructive cursor-pointer"
-                                                        disabled={!c.id || isSelf}
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            if (c.id) setConfirmUser({ id: c.id, name: c.name });
-                                                        }}
-                                                        title={isSelf ? "You can't remove yourself" : `Remove ${c.name}`}
-                                                    >
+                                                    {/* Remove Button */}
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive cursor-pointer" disabled={!c.id || isSelf} onClick={(e) => { e.stopPropagation(); if (c.id) setConfirmUser({ id: c.id, name: c.name }); }} title={isSelf ? "You can't remove yourself" : `Remove ${c.name}`}>
                                                         <X className="h-4 w-4" />
                                                     </Button>
                                                 </CommandItem>
@@ -183,8 +171,8 @@ export default function ContributorsDropdown({ currentProject, loading, setLoadi
                             )}
                         </Command>
                     )}
-                </DropdownMenuContent>
-            </DropdownMenu>
+                </div>
+            )}
 
             {/* Confirm Remove Dialog */}
             <AlertDialog open={!!confirmUser} onOpenChange={(o) => !o && setConfirmUser(null)}>

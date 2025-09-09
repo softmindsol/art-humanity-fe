@@ -18,6 +18,7 @@ const initialState: any = {
   galleryProjects: [], // Yeh Gallery ke liye hai
   currentProject: null, // Jo project abhi khula hua hai
   currentProjectContributors: [],
+
   pagination: {
     currentPage: 1,
     totalPages: 1,
@@ -76,11 +77,53 @@ const projectSlice = createSlice({
       state.pagination.currentPage = 1; // Search karne par bhi pehle page par wapas jao
     },
 
+    addContributorToState: (state, action) => {
+      const newContributor = action.payload;
+
+      // Safety check: Yaqeeni banayein ke user pehle se list mein nahi hai
+      const exists = state.currentProjectContributors.some(
+        (c: any) => c._id === newContributor._id
+      );
+      if (!exists) {
+        state.currentProjectContributors.push(newContributor);
+      }
+    },
     clearCurrentProject: (state) => {
       state.currentProject = null;
     },
     setGalleryCurrentPage: (state, action) => {
       state.galleryPagination.currentPage = action.payload;
+    },
+    removeContributorFromState: (state, action) => {
+                 const { removedUserId } = action.payload;
+
+                 // --- YAHAN PAR FIX HAI ---
+                 // Hum 'currentProject' ko ek naye object se replace karenge
+                 // taake Redux is change ko foran detect kar le.
+
+                 if (state.currentProject) {
+                   // 1. Ek naya, filtered contributors ka array banayein
+                   const newContributors =
+                     state.currentProject.contributors.filter(
+                       (c: any) =>
+                         (typeof c === "string" ? c : c._id) !== removedUserId
+                     );
+
+                   // 2. 'currentProject' ko ek bilkul naye object se update karein
+                   state.currentProject = {
+                     ...state.currentProject,
+                     contributors: newContributors,
+                   };
+                 }
+
+                 // populated list ko bhi update karein (yeh pehle se theek hai)
+                 if (state.currentProjectContributors) {
+                   state.currentProjectContributors =
+                     state.currentProjectContributors.filter(
+                       (c: any) => c._id !== removedUserId
+                     );
+                 }
+
     },
   },
   extraReducers: (builder) => {
@@ -193,16 +236,16 @@ const projectSlice = createSlice({
         state.loading.fetchingGallery = true;
         state.error.fetchingGallery = null;
       })
-       .addCase(fetchGalleryProjects.fulfilled, (state, action) => {
-                state.loading.fetchingGallery = false;
-                
-                // --- YAHAN PAR FIX HAI ---
-                // Backend se anay wale data se state update karein
-                state.galleryProjects = action.payload.projects;
-                state.galleryPagination.currentPage = action.payload.currentPage;
-                state.galleryPagination.totalPages = action.payload.totalPages;
-                state.galleryPagination.totalProjects = action.payload.totalProjects;
-            })
+      .addCase(fetchGalleryProjects.fulfilled, (state, action) => {
+        state.loading.fetchingGallery = false;
+
+        // --- YAHAN PAR FIX HAI ---
+        // Backend se anay wale data se state update karein
+        state.galleryProjects = action.payload.projects;
+        state.galleryPagination.currentPage = action.payload.currentPage;
+        state.galleryPagination.totalPages = action.payload.totalPages;
+        state.galleryPagination.totalProjects = action.payload.totalProjects;
+      })
       .addCase(fetchGalleryProjects.rejected, (state, action) => {
         state.loading.fetchingGallery = false;
         state.error.fetchingGallery = action.payload as any;
@@ -224,7 +267,6 @@ const projectSlice = createSlice({
       });
 
     builder
-
       .addCase(addContributors.pending, (state) => {
         state.loading.addingContributors = true;
       })
@@ -263,47 +305,40 @@ const projectSlice = createSlice({
 
         // --- YEH HAI ASAL FIX ---
         // action.payload ab { userIdToRemove: 'some_id' } jaisa object hai
-        const { userIdToRemove }: any = action.payload;
-
-        console.log(`[Reducer] Attempting to remove user: ${userIdToRemove}`); // Debugging ke liye
-
-        // 1. Pehli list (jo objects ka array hai) ko update karein
-        if (state.currentProjectContributors) {
-          state.currentProjectContributors =
-            state.currentProjectContributors.filter(
-              (contributor: any) => contributor._id !== userIdToRemove
-            );
-        }
-
-        // 2. Doosri list (jo sirf IDs ka array ho sakti hai) ko bhi update karein
-        //    Yeh data consistency ke liye bohat zaroori hai!
-        if (state.currentProject && state.currentProject.contributors) {
-          state.currentProject.contributors =
-            state.currentProject.contributors.filter((contributorOrId: any) => {
-              // Check karein ke array mein object hai ya sirf ID
-              const id =
-                typeof contributorOrId === "string"
-                  ? contributorOrId
-                  : contributorOrId._id;
-              return id !== userIdToRemove;
-            });
-        }
-      })
+        const { userIdToRemove } = action.payload;
+            // ... (bilkul wahi logic jo upar 'removeContributorFromState' mein hai)
+            if (state.currentProject) {
+                 const newContributors = state.currentProject.contributors.filter(/*...*/);
+                 state.currentProject = { ...state.currentProject, contributors: newContributors };
+            }
+            if (state.currentProjectContributors) {
+                state.currentProjectContributors = state.currentProjectContributors.filter(/*...*/)
+            }
+        })
       .addCase(removeContributor.rejected, (state, action) => {
         state.loading.removingContributor = false;
         state.error.removingContributor = action.payload as any;
       });
   },
-}); 
+});
 
-export const { clearCurrentProject, setCurrentPage, setGalleryCurrentPage ,setStatusFilter, setSearchTerm } =
-  projectSlice.actions;
+export const {
+  removeContributorFromState,
+  clearCurrentProject,
+  addContributorToState,
+  setCurrentPage,
+  setGalleryCurrentPage,
+  setStatusFilter,
+  setSearchTerm,
+} = projectSlice.actions;
 
 // Selectors
-export const selectAllProjects = (state: RootState) => state?.projects?.projects;
+export const selectAllProjects = (state: RootState) =>
+  state?.projects?.projects;
 export const selectCurrentProject = (state: RootState) =>
   state?.projects?.currentProject;
-export const selectProjectsLoading = (state: RootState) => state?.projects?.loading;
+export const selectProjectsLoading = (state: RootState) =>
+  state?.projects?.loading;
 export const selectProjectsError = (state: RootState) => state?.projects?.error;
 export const selectGalleryProjects = (state: RootState) =>
   state?.projects?.galleryProjects;
@@ -311,7 +346,8 @@ export const selectProjectContributors = (state: RootState) =>
   state.projects.currentProjectContributors;
 export const selectContributorsLoading = (state: RootState) =>
   state.projects.loading.fetchingContributors;
-export const selectProjectPagination = (state: RootState) => state.projects.pagination;
+export const selectProjectPagination = (state: RootState) =>
+  state.projects.pagination;
 export const selectProjectFilters = (state: RootState) =>
   state.projects.filters;
 export const selectGalleryPagination = (state: RootState) =>

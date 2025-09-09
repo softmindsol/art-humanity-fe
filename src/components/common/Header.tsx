@@ -178,7 +178,7 @@ const Header = () => {
                           {unreadCount > 0 && (
                             <button
                               onClick={handleMarkAllAsRead}
-                              className="text-xs text-blue-600 hover:underline"
+                              className="text-xs text-red-600 hover:underline cursor-pointer"
                             >
                               Mark all as read
                             </button>
@@ -190,11 +190,11 @@ const Header = () => {
                             {notifications.map((notif: any) => (
                               <li
                                 key={notif._id}
-                                className={`p-2 rounded-md text-sm ${!notif.isRead ? 'bg-[#f1e6da] font-semibold' : 'text-gray-600'} mb-2`}
+                                className={`p-2 rounded-md text-sm !mr-0 ${!notif.isRead ? 'bg-[#f1e6da] font-semibold ' : 'text-gray-600'} mb-2`}
                               >
                                 <Link to={`/project/${notif.project?.canvasId}`} onClick={() => handleNotificationClick(notif)}
                                 >
-                                  {notif.message}
+                                  {notif.message} 
                                   <div className='text-xs text-gray-500 mt-1'>{new Date(notif.createdAt).toLocaleString()}</div>
                                 </Link>
                               </li>

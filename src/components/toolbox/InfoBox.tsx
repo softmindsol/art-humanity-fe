@@ -1,20 +1,45 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { GripVertical } from 'lucide-react'; // Handle ke liye icon
+import { GripVertical, Minus, Plus } from 'lucide-react'; // Handle ke liye icon
 import { selectCanvasData } from '@/redux/slice/contribution';
 import { useSelector } from 'react-redux';
+import { useMediaQuery } from '@/hook/useMediaQuery';
 
 
 
 const InfoBox = ({ zoom, worldPos, isSaving, saveError, boundaryRef }: any) => {
-    // --- DRAGGING LOGIC STATE & REFS ---
-    const [position, setPosition] = useState({ x: window.innerWidth - 220, y: window.innerHeight - 150 }); // Shuruaati position right-bottom corner ke qareeb
-    const [isDragging, setIsDragging] = useState(false);
+    // --- MINIMIZE LOGIC ---
+    const [isMinimized, setIsMinimized] = useState(false);
+    const isSmallScreen = useMediaQuery(1440);
+
+    const [position, setPosition] = useState(() => {
+        // Shuru mein boundaryRef shayad na ho, isliye window ka size istemal karein
+        const initialBoundary = {
+            width: window.innerWidth,
+            height: window.innerHeight,
+        };
+
+        if (isSmallScreen) {
+            // Choti screen par, bottom-left mein
+            return { x: 20, y: initialBoundary.height - 80 };
+        } else {
+            // Bari screen par, bottom-right mein
+            return { x: initialBoundary.width - 220, y: initialBoundary.height - 150 };
+        }
+    });    const [isDragging, setIsDragging] = useState(false);
     const dragOffsetRef = useRef({ x: 0, y: 0 }); // Mouse aur box ke kone ka faasla
     const savedStrokes = useSelector(selectCanvasData);
     const infoBoxRef = useRef<HTMLDivElement>(null); // InfoBox ka apna ref
 
 
 
+    useEffect(() => {
+        if (!isSmallScreen) {
+            setIsMinimized(false);
+        }
+        else {
+            setIsMinimized(true);
+        }
+    }, [isSmallScreen]);
     const savedStrokeCount = useMemo(() =>
         savedStrokes.filter((c: any) => c && c._id && !c._id.startsWith('temp_')).length
         , [savedStrokes]);
@@ -82,6 +107,9 @@ const InfoBox = ({ zoom, worldPos, isSaving, saveError, boundaryRef }: any) => {
     }, [isDragging, boundaryRef]);
 
     return (
+        <div>
+
+        
         <div
             ref={infoBoxRef}
 
@@ -90,24 +118,46 @@ const InfoBox = ({ zoom, worldPos, isSaving, saveError, boundaryRef }: any) => {
                 left: `${position.x}px`,
                 top: `${position.y}px`,
                 cursor: isDragging ? 'grabbing' : 'default', // Cursor change karein
+                width: isMinimized && isSmallScreen ? 'auto' : '200px'
+
             }}
         >
             {/* Drag Handle (Bilkul Toolbox jaisa) */}
             <div
-                className="w-full flex justify-between items-center mb-2 cursor-grab active:cursor-grabbing text-gray-400"
+                className="w-full flex justify-between items-center gap-5 mb-2 cursor-grab active:cursor-grabbing text-gray-400"
             >
                 <p className="text-[#3e2723] text-lg font-bold m-0">Infobox</p>
-                <div onMouseDown={handleDragMouseDown} // Dragging yahan se shuru hogi
-> <GripVertical size={20} /></div>
+                <div className='flex items-center gap-2'>
+                    <div onMouseDown={handleDragMouseDown} // Dragging yahan se shuru hogi
+                    >
+                        <GripVertical size={20} />
+                    </div>
+                    {isSmallScreen && (
+                        <button
+                            onClick={(e) => {
+                                e.stopPropagation(); // Taake button click par dragging shuru na ho
+                                setIsMinimized(!isMinimized);
+                            }}
+                            className="p-1 hover:bg-gray-200 rounded-full"
+                            title={isMinimized ? "Maximize" : "Minimize"}
+                        >
+                            {isMinimized ? <Plus size={16} /> : <Minus size={16} />}
+                        </button>
+                    )}
+                </div>
             </div>
 
-            {/* Aapka baqi content */}
-            <div>Zoom: {Math.round(zoom * 100)}%</div>
-            <div>World Pos: ({Math.round(worldPos.x)}, {Math.round(worldPos.y)})</div>
-            <div>Strokes: {savedStrokeCount}</div>
-            {isSaving && <div className="text-orange-500 font-semibold mt-1">Saving...</div>}
-            {saveError && <div className="text-red-600 font-semibold mt-1">{saveError}</div>}
-        </div>
+            {!isMinimized && (
+                <>
+                    <div>Zoom: {Math.round(zoom * 100)}%</div>
+                    <div>World Pos: ({Math.round(worldPos.x)}, {Math.round(worldPos.y)})</div>
+                    <div>Strokes: {savedStrokeCount}</div>
+                    {isSaving && <div className="text-orange-500 font-semibold mt-1">Saving...</div>}
+                    {saveError && <div className="text-red-600 font-semibold mt-1">{saveError}</div>}
+                </>
+            )}
+
+            </div></div>
     );
 };
 

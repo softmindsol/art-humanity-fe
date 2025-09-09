@@ -8,7 +8,7 @@ import { clearCanvasData, selectCanvasData, selectIsLoadingOperation, selectPagi
 import { useSelector } from 'react-redux';
 import ContributorsPanel from './ContributorsPanel';
 import { AddContributorModal } from '../modal/AddContributorModal';
-import  useOnClickOutside  from '@/hook/useOnClickOutside';
+import useOnClickOutside from '@/hook/useOnClickOutside';
 
 
 const SIDEBAR_WIDTH = 350; // Sidebar ki width ko ek variable mein rakhein
@@ -31,17 +31,19 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
     // Refs
     const listContainerRef = useRef<HTMLDivElement>(null);
     const sidebarRef = useRef(null);
-    const searchDropdownRef = useRef(null); // <-- YEH NAYA REF BANAYEIN
     const contributorsDropdownRef = useRef(null); // This ref will be for the dropdown content
+    // --- ADD THIS STATE ---
+    const [isContributorsDropdownOpen, setIsContributorsDropdownOpen] = useState(false);
 
 
 
     // NAYI AUR THEEK CALL:
-    useOnClickOutside([sidebarRef, contributorsDropdownRef], () => { // <-- AB EK ARRAY PASS KAREIN
+    useOnClickOutside([sidebarRef, contributorsDropdownRef], () => {
+
         if (isOpen) {
             setIsOpen(false);
         }
-    }); 
+    });
 
     // === MASTER useEffect for Data Fetching ===
     // Yeh useEffect ab filter, projectId, aur activeTab teeno par chalega.
@@ -202,11 +204,17 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
                             </div>
                         </div>
                         }
-                        {isAdmin && <ContributorsPanel currentProject={currentProject} loading={loading} ref={contributorsDropdownRef}
-                            setLoading={setLoading} />}
+                        {isAdmin && <ContributorsPanel
+                            currentProject={currentProject}
+                            loading={loading}
+                            ref={contributorsDropdownRef}
+                            setLoading={setLoading}
+                            isDropdownOpen={isContributorsDropdownOpen}
+                            onDropdownOpenChange={setIsContributorsDropdownOpen}
+                        />}
                         <div className='flex items-center justify-center mb-4'>
                             {
-                                activeTab === 'my' && <button onClick={() => setIsModalOpen(true)} className="btn-primary  text-sm">
+                                (activeTab === 'my' && user?.role === 'admin') && <button onClick={() => setIsModalOpen(true)} className="btn-primary  text-sm">
                                     + Add Contributor
                                 </button>
                             }

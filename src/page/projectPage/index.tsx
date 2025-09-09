@@ -31,7 +31,7 @@ import { openAuthModal } from '@/redux/slice/opeModal';
 import { io } from 'socket.io-client'; // Socket client import karein
 import { addContributionFromSocket } from '@/redux/slice/contribution'; // Naya action import karein
 import { useSelector } from 'react-redux';
-import { selectCurrentProject, } from '@/redux/slice/project';
+import { addContributorToState, removeContributorFromState, selectCurrentProject, } from '@/redux/slice/project';
 import type { RootState } from '@/redux/store';
 
 
@@ -47,7 +47,7 @@ interface CursorData {
         color?: string;
     };
 }
-const ProjectPage = ({ projectName, projectId,totalContributors }: any) => {
+const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
     const { user } = useAuth();
     const dispatch = useAppDispatch();
 
@@ -371,13 +371,35 @@ const ProjectPage = ({ projectName, projectId,totalContributors }: any) => {
             // Socket se anay par UI foran update karein
             dispatch(removeContributionOptimistically({ contributionId }));
         };
+        const handleContributorJoined = ({ newContributor }: { newContributor: any }) => {
+            console.log(`[Socket] New contributor joined:`, newContributor);
+            // Jab naya contributor join kare, to usay Redux state mein add kar dein
+            dispatch(addContributorToState(newContributor));
+        };
+        // --- YAHAN PAR ISTEMAL HO RAHA HAI ---
+        const handleContributorRemoved = ({ removedUserId }: { removedUserId: string }) => {
+            console.log(`[Socket] Received event: Contributor ${removedUserId} was removed.`);
 
+            // Reducer ko dispatch karein taake UI update ho
+            dispatch(removeContributorFromState({ removedUserId }));
+
+            // Agar main khud remove hua hoon, to user ko batayein
+            if (user?.id === removedUserId) {
+                toast.warning("Your contributor access for this project has been revoked.");
+            }
+        };
+
+        socket.on('contributor_removed', handleContributorRemoved);
+        socket.on('contributor_joined', handleContributorJoined);
         socket.on('contribution_deleted', handleDeleteEvent);
 
         return () => {
             socket.off('contribution_deleted', handleDeleteEvent);
+            socket.off('contributor_joined', handleContributorJoined);
+            socket.off('contributor_removed', handleContributorRemoved);
+
         };
-    }, [socket, dispatch]);
+    }, [socket, dispatch, user]);
     return (
         // Design ke mutabiq page ka background color
         <div ref={mainContentRef} className="relative  min-h-screen p-4 sm:p-6 lg:p-8">
@@ -535,7 +557,7 @@ const ProjectPage = ({ projectName, projectId,totalContributors }: any) => {
                                         transition: 'left 0.1s linear, top 0.1s linear' // Thori si smoothness ke liye
                                     }}
                                 >
-                                    
+
                                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ color: data.user?.color || 'blue' }}>
                                         <path d="M4 4l7.071 17.071-1.414 1.414-4.243-4.243-1.414-1.414L4 4z" fill="currentColor" />
                                     </svg>
@@ -549,7 +571,7 @@ const ProjectPage = ({ projectName, projectId,totalContributors }: any) => {
                             ))}
                         </div>
                         {/* </div> */}
-                        <InfoBox 
+                        <InfoBox
                             zoom={canvasStats.zoom}
                             worldPos={canvasStats.worldPos}
                             strokeCount={savedStrokes?.length || 0}
@@ -667,7 +689,7 @@ const ProjectPage = ({ projectName, projectId,totalContributors }: any) => {
                         {/* Case 2: Error State */}
                         {!isGenerating && generationError && (
                             <div className="text-center text-red-400">
-                                <h3 className="text-xl font-bold !text-white mb-2">Error!</h3>
+                                {/* <h3 className="text-xl font-bold !text-white mb-2">Error!</h3> */}
                                 {/* <p>Failed to generate the timelapse.</p> */}
                                 <p className="text-lg text-white mt-1">{generationError}</p>
                             </div>

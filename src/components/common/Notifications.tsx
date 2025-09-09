@@ -26,7 +26,7 @@ export const Notifications = () => {
     useEffect(() => {
         if (!socket) return;
 
-        const handleNewNotification = (notification: any) => {
+        const handleNewNotification = () => {
             // Jab nayi notification aaye, to list ko dobara fetch karein
             dispatch(fetchNotifications({ userId: user?.id }));
         };
@@ -60,18 +60,18 @@ export const Notifications = () => {
             {isOpen && (
                 <div className="absolute top-full right-0 mt-2 w-80 bg-white border rounded shadow-lg">
                     <div className="p-2 font-bold border-b">Notifications</div>
-                    <ul>
+                    <div>
                         {notifications.length > 0 ? (
                             notifications.map((notif:any) => (
-                                <li key={notif._id} className={`p-2 border-b ${!notif.isRead ? 'bg-blue-50' : ''}`}>
+                                <div key={notif._id} className={`p-2 border-b !m-0 ${!notif.isRead ? 'bg-blue-50' : ''}`}>
                                     <p className="text-sm">{notif.message}</p>
                                     <p className="text-xs text-gray-500">{new Date(notif.createdAt).toLocaleString()}</p>
-                                </li>
+                                </div>
                             ))
                         ) : (
-                            <li className="p-4 text-center text-gray-500">No new notifications.</li>
+                            <p className="p-4 text-center text-gray-500">No new notifications.</p>
                         )}
-                    </ul>
+                    </div>
                 </div>
             )}
         </div>

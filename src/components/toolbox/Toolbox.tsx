@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
-import { Brush, Eraser, Move, Minus } from 'lucide-react';
+import { Brush, Eraser, Move, Minus, Plus } from 'lucide-react';
 import {
     setBrushColor,
     setCurrentBrush,
@@ -10,6 +10,7 @@ import {
 } from '@/redux/slice/contribution';
 import { selectCurrentBrush } from '@/redux/slice/contribution';
 import useAppDispatch from '@/hook/useDispatch';
+import { useMediaQuery } from '@/hook/useMediaQuery';
 
 
 
@@ -22,7 +23,10 @@ const Toolbox = ({ boundaryRef }: any) => {
     const dragOffsetRef = useRef({ x: 0, y: 0 });
     const toolboxRef = useRef<HTMLDivElement>(null);
 
-    // ... (Aapki dragging logic yahan aayegi, yeh bilkul theek hai) ...
+    // --- MINIMIZE LOGIC ---
+    const [isMinimized, setIsMinimized] = useState(false);
+    const isSmallScreen = useMediaQuery(1440); // 1440px par check karega
+
     const handleDragMouseDown = useCallback((e: React.MouseEvent) => {
         if (!toolboxRef.current) return;
         const toolboxRect = toolboxRef.current.getBoundingClientRect();
@@ -60,8 +64,18 @@ const Toolbox = ({ boundaryRef }: any) => {
         };
     }, [isDragging, boundaryRef]);
 
+    // Jab screen bari ho jaye to toolbox ko aape se maximize kar dein
+    useEffect(() => {
+        if (!isSmallScreen) {
+            setIsMinimized(false);
+        }
+        else{
+            setIsMinimized(true);
+            setPosition({ x: 100, y: 60 });
+        }
 
-    // --- COLOR LOGIC (YAHAN PAR FINAL FIX HAI) ---
+    }, [isSmallScreen]);
+
     const hslToRgb = (h: number, s: number, l: number) => {
         s /= 100; l /= 100;
         const c = (1 - Math.abs(2 * l - 1)) * s, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = l - c / 2;
@@ -109,16 +123,30 @@ const Toolbox = ({ boundaryRef }: any) => {
                 className="flex justify-between items-center border-b pb-2 cursor-grab active:cursor-grabbing"
             >
                 <h3 className="text-[#8b795e] text-lg font-semibold m-0">Tools</h3>
-                <div title="Drag Toolbox" onMouseDown={handleDragMouseDown}
-                >
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="19" r="1"></circle>
-                        <circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="19" r="1"></circle>
-                    </svg>
+                <div className='flex items-center gap-x-2'>
+                    {isSmallScreen && (
+                        <button
+                            onClick={() => setIsMinimized(!isMinimized)}
+                            className="p-1 hover:bg-gray-200 rounded-full"
+                            title={isMinimized ? "Maximize" : "Minimize"}
+                        >
+                            {isMinimized ? <Plus size={18} /> : <Minus size={18} />}
+                        </button>
+                    )}
+                    <div title="Drag Toolbox" onMouseDown={handleDragMouseDown}
+                    >
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="19" r="1"></circle>
+                            <circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="19" r="1"></circle>
+                        </svg>
+                    </div>
+                  
                 </div>
+               
             </div>
 
-            {/* Baqi toolbox ka content... */}
+           {!isMinimized &&
+            <div className=''>
             <div className="flex gap-2">
                 {(['brush', 'eraser', 'line'] as const).map((mode) => {
                     const Icon = { brush: Brush, eraser: Eraser, line: Minus }[mode];
@@ -159,7 +187,7 @@ const Toolbox = ({ boundaryRef }: any) => {
                     onChange={(e) => dispatch(setBrushSize(Number(e.target.value)))}
                     className="w-full"
                 />
-            </div>
+            </div></div>}
         </div>
     );
 };
