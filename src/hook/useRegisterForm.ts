@@ -38,17 +38,21 @@ export const useRegisterForm = ({onClose}:any) => {
   const validate = () => {
     const errs: { [key: string]: string } = {};
 
+    // --- YAHAN VALIDATION UPDATE KI GAYI HAI ---
     if (!formData.fullName.trim()) {
-      errs.fullName = "Name is required";
-    } else if (/ {2,}/.test(formData.fullName)) {
-      errs.fullName = "Name cannot contain multiple consecutive spaces";
-    } else if (!/^[a-zA-Z0-9\s]+$/.test(formData.fullName)) {
-      // <-- Sirf letters, numbers, aur spaces allow karega
-      errs.fullName = "Display Name can only contain letters and numbers";
+      errs.fullName = "Display Name is required";
     } else if (formData.fullName.length < 3) {
       errs.fullName = "Display Name must be at least 3 characters";
+    } else if (formData.fullName.length > 30) {
+      errs.fullName = "Display Name cannot be more than 30 characters";
+    } else if (!/^[a-zA-Z0-9\s]*$/.test(formData.fullName)) {
+      // Rule 1: Pehle check karo ke koi special character to nahin hai.
+      errs.fullName = "Special characters are not allowed.";
+    } else if (!/[a-zA-Z]/.test(formData.fullName)) {
+      // Rule 2 (NAYA RULE): Ab check karo ke kam se kam ek letter mojood hai ya nahin.
+      // Yeh "12345" jaise inputs ko reject kar dega.
+      errs.fullName = "Display Name must contain at least one letter.";
     }
-
 
     if (!formData.email.trim()) {
       errs.email = "Email is required";
@@ -64,11 +68,10 @@ export const useRegisterForm = ({onClose}:any) => {
 
       if (password.length < 8) {
         errs.password = "Password must be at least 8 characters";
-      } 
-      
-      else if (/ {2,}/.test(password)) { // <-- YEH NAYI LINE HAI
-                errs.password = "Password cannot contain consecutive spaces";
-      }else if (!/[A-Z]/.test(password)) {
+      } else if (/ {2,}/.test(password)) {
+        // <-- YEH NAYI LINE HAI
+        errs.password = "Password cannot contain consecutive spaces";
+      } else if (!/[A-Z]/.test(password)) {
         errs.password = "Password must contain at least one uppercase letter";
       } else if (!/[a-z]/.test(password)) {
         errs.password = "Password must contain at least one lowercase letter";

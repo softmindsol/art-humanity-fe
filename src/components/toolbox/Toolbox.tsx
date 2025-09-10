@@ -120,7 +120,7 @@ const Toolbox = ({ boundaryRef }: any) => {
             style={{ left: `${position.x}px`, top: `${position.y}px`, cursor: 'default' }}
         >
             <div
-                className="flex justify-between items-center border-b pb-2 cursor-grab active:cursor-grabbing"
+                className="flex justify-between items-center border-b pb-2 "
             >
                 <h3 className="text-[#8b795e] text-lg font-semibold m-0">Tools</h3>
                 <div className='flex items-center gap-x-2'>
@@ -133,7 +133,7 @@ const Toolbox = ({ boundaryRef }: any) => {
                             {isMinimized ? <Plus size={18} /> : <Minus size={18} />}
                         </button>
                     )}
-                    <div title="Drag Toolbox" onMouseDown={handleDragMouseDown}
+                    <div title="Drag Toolbox" className='cursor-grab active:cursor-grabbing' onMouseDown={handleDragMouseDown}
                     >
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="19" r="1"></circle>

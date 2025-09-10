@@ -195,7 +195,7 @@ export const clearCanvas = createAsyncThunk(
     try {
       // Call the new DELETE endpoint
       const response = await api.delete(
-        `/contributions/project/${projectId}/clear`
+        `/contributions/${projectId}/clear-canvas`
       );
       return response.data; // Should return { success: true, ... }
     } catch (error: any) {

@@ -19,7 +19,7 @@ import {
 import { useCanvasState } from '@/hook/useCanvasState';
 import { clearCanvas, generateTimelapseVideo, getContributionsByProject } from '@/redux/action/contribution';
 import InfoBox from '@/components/toolbox/InfoBox';
-import { clearCanvasData, clearTimelapseUrl, removeContributionOptimistically, selectCanvasData, selectErrorForOperation, selectIsLoadingOperation, selectTimelapseUrl } from '@/redux/slice/contribution';
+import { clearAllContributionsFromState, clearCanvasData, clearTimelapseUrl, removeContributionFromState, removeContributionOptimistically, selectCanvasData, selectErrorForOperation, selectIsLoadingOperation, selectTimelapseUrl } from '@/redux/slice/contribution';
 import ContributionSidebar from '@/components/canvas/ContributionSidebar';
 import { joinProject } from '@/redux/action/project';
 import { Button } from '@/components/ui/button';
@@ -31,7 +31,7 @@ import { openAuthModal } from '@/redux/slice/opeModal';
 import { io } from 'socket.io-client'; // Socket client import karein
 import { addContributionFromSocket } from '@/redux/slice/contribution'; // Naya action import karein
 import { useSelector } from 'react-redux';
-import { addContributorToState, removeContributorFromState, selectCurrentProject, } from '@/redux/slice/project';
+import { addContributorToState, removeContributorFromState, selectCurrentProject } from '@/redux/slice/project';
 import type { RootState } from '@/redux/store';
 
 
@@ -388,7 +388,30 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
                 toast.warning("Your contributor access for this project has been revoked.");
             }
         };
+        const handleContributionDeleted = ({ contributionId }: { contributionId: string }) => {
+            console.log(`[Socket] Received delete event for contribution: ${contributionId}`);
 
+            // Redux action ko dispatch karein taake UI foran update ho
+            dispatch(removeContributionFromState({ contributionId }));
+
+            // (Optional) Ek chota sa toaster dikhayein
+            toast.info("A contribution was removed by an admin.");
+        };
+        const handleCanvasCleared = (data: { projectId: string }) => {
+            // Safety check: Yaqeeni banayein ke event isi project ke liye hai
+            if (data.projectId === projectId) {
+                console.log(`[Socket] Received event: Canvas for project ${data.projectId} was cleared.`);
+
+                // Redux action ko dispatch karein taake UI foran update ho
+                dispatch(clearAllContributionsFromState());
+
+                // User ko ek saaf message dikhayein
+                toast.warning("The canvas has been cleared by an admin.");
+            }
+        };
+
+        socket.on('canvas_cleared', handleCanvasCleared);
+        socket.on('contribution_deleted', handleContributionDeleted);
         socket.on('contributor_removed', handleContributorRemoved);
         socket.on('contributor_joined', handleContributorJoined);
         socket.on('contribution_deleted', handleDeleteEvent);
@@ -397,6 +420,8 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
             socket.off('contribution_deleted', handleDeleteEvent);
             socket.off('contributor_joined', handleContributorJoined);
             socket.off('contributor_removed', handleContributorRemoved);
+            socket.off('contribution_deleted', handleContributionDeleted);
+            socket.off('canvas_cleared', handleCanvasCleared);
 
         };
     }, [socket, dispatch, user]);

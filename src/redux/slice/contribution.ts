@@ -143,6 +143,15 @@ const paintPixelSlice = createSlice({
     clearPendingStrokes: (state) => {
       state.pendingStrokes = [];
     },
+    removeContributionFromState: (state, action) => {
+      const { contributionId } = action.payload;
+      state.canvasData = state.canvasData.filter(
+        (c: any) => c._id !== contributionId
+      );
+    },
+    clearAllContributionsFromState: (state) => {
+      state.canvasData = [];
+    },
   },
 
   extraReducers: (builder) => {
@@ -267,7 +276,6 @@ const paintPixelSlice = createSlice({
       .addCase(deleteContribution.fulfilled, (state, action) => {
         state.loading.deleteContribution = false;
         const { contributionId } = action.payload;
-        // canvasData array se deleted contribution ko nikaal dein
         state.canvasData = state.canvasData.filter(
           (contrib: any) => contrib._id !== contributionId
         );
@@ -363,6 +371,8 @@ export const {
   removeContributionOptimistically,
   addPendingContribution,
   clearPendingStrokes,
+  removeContributionFromState,
+  clearAllContributionsFromState,
 } = paintPixelSlice.actions;
 
 // Selectors
