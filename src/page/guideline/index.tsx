@@ -9,7 +9,7 @@ const GuidelinePage: React.FC = () => {
                     <h2>Project Guideline</h2>
                     <p>Guidelines applicable to all projects</p>
                 </section>
-
+ 
                 <section className="rules-content">
                     <div className="rule-card">
                         <h3>How It Works</h3>

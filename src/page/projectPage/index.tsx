@@ -596,7 +596,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
                             ))}
                         </div>
                         {/* </div> */}
-                        <InfoBox
+                        {!isReadOnly && <InfoBox
                             zoom={canvasStats.zoom}
                             worldPos={canvasStats.worldPos}
                             strokeCount={savedStrokes?.length || 0}
@@ -604,7 +604,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
                             saveError={saveError}
                             boundaryRef={mainContentRef} // <-- YEH PROP ADD KAREIN
 
-                        />
+                        />}
                         {tooltip.visible && (
                             <div
                                 className="absolute z-[100] bg-black text-white text-xs px-2 py-1 rounded-sm pointer-events-none"

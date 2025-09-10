@@ -75,8 +75,9 @@ const GalleryPage: React.FC = () => {
         }
     };
     if (isLoading) {
-        return <div className="flex justify-center items-center bg-red-300 h-full w-full py-20">
+        return <div className="flex justify-center items-center h-full w-full py-20">
             <div className="w-16 h-16 border-4 border-[#d29000]  border-t-transparent rounded-full animate-spin"></div>
+
         </div>
     }
 

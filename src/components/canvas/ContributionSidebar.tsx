@@ -9,6 +9,7 @@ import { useSelector } from 'react-redux';
 import ContributorsPanel from './ContributorsPanel';
 import { AddContributorModal } from '../modal/AddContributorModal';
 import useOnClickOutside from '@/hook/useOnClickOutside';
+import CustomSelect from '../common/CustomSelect';
 
 
 const SIDEBAR_WIDTH = 350; // Sidebar ki width ko ek variable mein rakhein
@@ -36,6 +37,13 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
     const [isContributorsDropdownOpen, setIsContributorsDropdownOpen] = useState(false);
 
 
+    // --- YAHAN OPTIONS KA EK ARRAY BANAYEIN ---
+    const filterOptions = [
+        { value: 'newest', label: 'Newest First' },
+        { value: 'oldest', label: 'Oldest First' },
+        { value: 'most-upvoted', label: 'Most Upvoted' },
+        { value: 'most-downvoted', label: 'Most Downvoted' },
+    ];
 
     // NAYI AUR THEEK CALL:
     useOnClickOutside([sidebarRef, contributorsDropdownRef], () => {
@@ -172,35 +180,12 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
                                 Filter By:
                             </label>
 
-                            <div className="relative w-[200px]">
-                                <select
-                                    id="filter"
+                            <div className="w-[200px]">
+                                <CustomSelect
+                                    options={filterOptions}
                                     value={filter}
-                                    onChange={(e) => setFilter(e.target.value)}
-                                    className="block w-full appearance-none text-[12px] md:text-[14px] p-2 pr-8 border-[2px] border-[#654321] text-[#654321] rounded-md"
-                                >
-                                    <option value="newest">Newest First</option>
-                                    <option value="oldest">Oldest First</option>
-                                    <option value="most-upvoted">Most Upvoted</option>
-                                    <option value="most-downvoted">Most Downvoted</option>
-                                </select>
-
-                                {/* Custom dropdown arrow */}
-                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-600">
-                                    <svg
-                                        className="w-4 h-4"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        viewBox="0 0 24 24"
-                                    >
-                                        <path
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            strokeWidth="2"
-                                            d="M19 9l-7 7-7-7"
-                                        />
-                                    </svg>
-                                </div>
+                                    onChange={(newValue) => setFilter(newValue)}
+                                />
                             </div>
                         </div>
                         }
