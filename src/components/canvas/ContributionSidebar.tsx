@@ -197,14 +197,14 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
                             isDropdownOpen={isContributorsDropdownOpen}
                             onDropdownOpenChange={setIsContributorsDropdownOpen}
                         />}
-                        <div className='flex items-center justify-center mb-4'>
+                        {/* <div className='flex items-center justify-center mb-4'>
                             {
                                 (activeTab === 'my' && user?.role === 'admin') && <button onClick={() => setIsModalOpen(true)} className="btn-primary  text-sm">
                                     + Add Contributor
                                 </button>
                             }
 
-                        </div>
+                        </div> */}
 
                         <ContributionsList
                             contributions={contributions}

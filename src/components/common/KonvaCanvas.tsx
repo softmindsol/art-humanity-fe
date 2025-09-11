@@ -39,6 +39,7 @@ const KonvaCanvas = ({
     const currentStrokePathRef = useRef<any[]>([]);
     const strokeQueueRef = useRef<any[]>([]);
     const batchTimerRef = useRef<NodeJS.Timeout | null>(null);
+    const isDrawingRef = useRef(isDrawing);
 
     // --- zoom in/out limit --- 
     const MAX_ZOOM = 32;
@@ -168,9 +169,20 @@ const KonvaCanvas = ({
     }, [savedStrokes, width, height]);
 
     // --- Event Handlers ---
-
+    // Use a `useEffect` to keep the ref in sync with the state.
+    // This is a standard React pattern.
+    useEffect(() => {
+        isDrawingRef.current = isDrawing;
+    }, [isDrawing]);
     const sendBatchToServer = useCallback(() => {
 
+        // Check the LATEST value of isDrawing using the ref.
+        if (isDrawingRef.current) {
+            console.log("User is still drawing, delaying batch send.");
+            if (batchTimerRef.current) clearTimeout(batchTimerRef.current);
+            batchTimerRef.current = setTimeout(sendBatchToServer, 3000); // Dobara 3 sec ka timer lagayein
+            return;
+        }
         if (strokeQueueRef.current.length > 0) {
 
             const contributionsToSend = [...strokeQueueRef.current];
@@ -192,7 +204,7 @@ const KonvaCanvas = ({
                 });
         }
     }, [dispatch, projectId, socket]);
-
+    // console.log("isDrawing:", isDrawing)
 
     const handleWheel = (e: any) => {
         e.evt.preventDefault();
@@ -233,21 +245,20 @@ const KonvaCanvas = ({
         if (brushState.mode === 'move') return;
 
         setIsDrawing(true);
-
-
         const stage = e.target.getStage();
         // const pos = stage.getPointerPosition();
         const pos = getCanvasPointerPosition(stage); // <-- NAYI AUR THEEK LINE
+        const { r, g, b, a } = brushState.color;
+        const colorString = `rgba(${r}, ${g}, ${b}, ${a})`;
 
         // Brush/Eraser (Freehand)
         if (brushState.mode === 'brush' || brushState.mode === 'eraser') {
             setIsDrawing(true);
             currentStrokePathRef.current = [];
             // Redux se anay wale color object ko CSS ke rgba string mein convert karein
-            const { r, g, b, a } = brushState.color;
-            const colorString = `rgba(${r}, ${g}, ${b}, ${a})`;
-
+          
             setActiveLine({
+
                 points: [pos.x, pos.y],
                 tool: brushState.mode,
                 stroke: colorString, // <--- AB YEH SAHI DYNAMIC COLOR ISTEMAL KAREGA
@@ -257,14 +268,16 @@ const KonvaCanvas = ({
 
         // --- NAYA LOGIC FOR STRAIGHT LINE ---
         if (brushState.mode === 'line') {
-            setIsDrawing(true);
+
+            console.log("straight Line.....")
+            // setIsDrawing(true);
             // 1. Line ka start point save karein
             lineStartPointRef.current = pos;
             // 2. activeLine ko shuru karein (start aur end point abhi same hain)
             setActiveLine({
                 points: [pos.x, pos.y, pos.x, pos.y],
                 tool: 'brush', // Straight line hamesha 'brush' mode mein draw hogi
-                stroke: `rgba(...)`,
+                stroke: colorString, // <-- USE THE CORRECT DYNAMIC COLOR HERE
                 strokeWidth: brushState.size,
             });
         }
@@ -306,11 +319,37 @@ const KonvaCanvas = ({
 
     // --- YEH handleMouseUp AB INSTANT DRAW KAREGA ---
     const handleMouseUp = () => {
-        if (!isDrawing || currentStrokePathRef.current.length === 0) {
-            if (isDrawing) setIsDrawing(false);
+        const wasStrokeMade = isDrawing && currentStrokePathRef.current.length > 0;
+
+        // Always set isDrawing to false when the mouse is up
+        setIsDrawing(false);
+
+        // If no stroke was made, there's nothing else to do
+        if (!wasStrokeMade) {
             return;
         }
-        setIsDrawing(false);
+
+
+        // Step 1: Check if the tool was 'line' and create the final stroke path
+        if (brushState.mode === 'line' && lineStartPointRef.current) {
+            const startPoint = lineStartPointRef.current;
+            const endPoint = { x: activeLine.points[2], y: activeLine.points[3] };
+            // Create the stroke path data for the backend
+            currentStrokePathRef.current = [{
+                fromX: startPoint.x,
+                fromY: startPoint.y,
+                toX: endPoint.x,
+                toY: endPoint.y,
+            }];
+            lineStartPointRef.current = null; // Reset the ref
+        }
+
+        // Step 2: If no actual drawing was made (e.g., just a click), exit.
+        // This now correctly checks AFTER the line tool has created its path.
+        if (currentStrokePathRef.current.length === 0) {
+            setActiveLine({ points: [] }); // Clear the preview line if it exists
+            return;
+        }
 
         // --- NAYA LOGIC FOR INSTANT DRAW ---
         // 1. Agar bakedImage mojood hai, to usay ek naye (temporary) canvas par draw karein

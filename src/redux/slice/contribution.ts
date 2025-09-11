@@ -9,6 +9,7 @@ import {
   voteOnContribution,
   deleteContribution,
   batchCreateContributions,
+  fetchContributionsByTiles,
 } from "../action/contribution";
 
 // Naya, saaf suthra initialState
@@ -151,6 +152,16 @@ const paintPixelSlice = createSlice({
     },
     clearAllContributionsFromState: (state) => {
       state.canvasData = [];
+    },
+    removeMultipleContributionsFromState: (state, action) => {
+      const idsToRemove = new Set(action.payload);
+
+      // This line will no longer crash because state.canvasData is guaranteed to be an array
+      const newCanvasData = state.canvasData.filter(
+        (contribution: any) => !idsToRemove.has(contribution._id)
+      );
+
+      state.canvasData = newCanvasData;
     },
   },
 
@@ -352,6 +363,21 @@ const paintPixelSlice = createSlice({
         state.loading.clearCanvas = false;
         state.error.clearCanvas = action.payload as any;
       });
+
+    builder
+      // --- YEH NAYA CASE HAI ---
+      .addCase(
+        fetchContributionsByTiles.fulfilled,
+        (state: any, action: any) => {
+          const newContributions = action.payload;
+          // Naye data ko purane data ke saath merge karein, duplicates ko rokein
+          const existingIds = new Set(state.canvasData.map((c: any) => c._id));
+          const uniqueNewContributions = newContributions.filter(
+            (c: any) => !existingIds.has(c._id)
+          );
+          state.canvasData.push(...uniqueNewContributions);
+        }
+      );
   },
 });
 
@@ -373,6 +399,7 @@ export const {
   clearPendingStrokes,
   removeContributionFromState,
   clearAllContributionsFromState,
+  removeMultipleContributionsFromState 
 } = paintPixelSlice.actions;
 
 // Selectors

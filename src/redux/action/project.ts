@@ -232,6 +232,7 @@ export const removeContributor = createAsyncThunk(
       // Hum sirf remove kiye gaye user ki ID wapas bhejenge taake slice usay state se nikaal sake
       return response.data.data; 
     } catch (error: any) {
+      console.log("Error in removeContributor:", error);
       return thunkAPI.rejectWithValue(error.response?.data?.message);
     }
   }

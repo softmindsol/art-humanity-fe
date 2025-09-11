@@ -19,7 +19,7 @@ import {
 import { useCanvasState } from '@/hook/useCanvasState';
 import { clearCanvas, generateTimelapseVideo, getContributionsByProject } from '@/redux/action/contribution';
 import InfoBox from '@/components/toolbox/InfoBox';
-import { clearAllContributionsFromState, clearCanvasData, clearTimelapseUrl, removeContributionFromState, removeContributionOptimistically, selectCanvasData, selectErrorForOperation, selectIsLoadingOperation, selectTimelapseUrl } from '@/redux/slice/contribution';
+import { clearAllContributionsFromState, clearCanvasData, clearTimelapseUrl, removeContributionFromState, removeContributionOptimistically, removeMultipleContributionsFromState, selectCanvasData, selectErrorForOperation, selectIsLoadingOperation, selectTimelapseUrl } from '@/redux/slice/contribution';
 import ContributionSidebar from '@/components/canvas/ContributionSidebar';
 import { joinProject } from '@/redux/action/project';
 import { Button } from '@/components/ui/button';
@@ -409,7 +409,16 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
                 toast.warning("The canvas has been cleared by an admin.");
             }
         };
+        const handleContributionsPurged = ({ deletedContributionIds }: { deletedContributionIds: string[] }) => {
+            console.log(`[Socket] Received event: ${deletedContributionIds.length} contributions were purged.`);
 
+            // Reducer ko dispatch karein taake UI foran update ho
+            dispatch(removeMultipleContributionsFromState(deletedContributionIds));
+
+            toast.info("A removed user's contributions have been cleared from the canvas.");
+        };
+
+        socket.on('contributions_purged', handleContributionsPurged);
         socket.on('canvas_cleared', handleCanvasCleared);
         socket.on('contribution_deleted', handleContributionDeleted);
         socket.on('contributor_removed', handleContributorRemoved);
@@ -422,6 +431,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
             socket.off('contributor_removed', handleContributorRemoved);
             socket.off('contribution_deleted', handleContributionDeleted);
             socket.off('canvas_cleared', handleCanvasCleared);
+            socket.off('contributions_purged', handleContributionsPurged);
 
         };
     }, [socket, dispatch, user]);
@@ -596,7 +606,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
                             ))}
                         </div>
                         {/* </div> */}
-                        {!isReadOnly && <InfoBox
+                      { !isReadOnly && <InfoBox
                             zoom={canvasStats.zoom}
                             worldPos={canvasStats.worldPos}
                             strokeCount={savedStrokes?.length || 0}

@@ -1,4 +1,5 @@
 import api from "@/api/api";
+import type { FetchTilesArgs } from "@/types/canvas";
 import { config } from "@/utils/endpoints";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 
@@ -206,75 +207,17 @@ export const clearCanvas = createAsyncThunk(
   }
 );
 
-// Get tile data
-export const getTileData = createAsyncThunk(
-  "paintPixel/getTileData",
-  async ({ sessionId, tileX, tileY, tileSize = 64 }: any, thunkAPI) => {
-    try {
-      const params = new URLSearchParams({
-        tileSize: tileSize.toString(),
-      });
-      const response = await api.get(
-        `${config?.endpoints?.GET_USER}/tile/${sessionId}/${tileX}/${tileY}?${params}`
-      );
-      return response.data;
-    } catch (error: any) {
-      return thunkAPI.rejectWithValue(
-        error.response?.data?.message || "Failed to fetch tile data"
-      );
-    }
-  }
-);
 
-// Get canvas statistics
-export const getCanvasStats = createAsyncThunk(
-  "paintPixel/getCanvasStats",
-  async (sessionId: any, thunkAPI) => {
+export const fetchContributionsByTiles = createAsyncThunk(
+  "contributions/fetchByTiles",
+  async ({ projectId, tiles }: FetchTilesArgs, { rejectWithValue }) => {
     try {
       const response = await api.get(
-        `${config?.endpoints?.GET_USER}/stats/${sessionId}`
+        `/contributions/project/${projectId}?tiles=${tiles}`
       );
-      return response.data;
+      return response.data.data.contributions;
     } catch (error: any) {
-      return thunkAPI.rejectWithValue(
-        error.response?.data?.message || "Failed to fetch canvas stats"
-      );
-    }
-  }
-);
-
-// Export canvas
-export const exportCanvas = createAsyncThunk(
-  "paintPixel/exportCanvas",
-  async ({ sessionId, format = "json" }: any, thunkAPI) => {
-    try {
-      const params = new URLSearchParams({ format });
-      const response = await api.get(
-        `${config?.endpoints?.GET_USER}/export/${sessionId}?${params}`
-      );
-      return response.data;
-    } catch (error: any) {
-      return thunkAPI.rejectWithValue(
-        error.response?.data?.message || "Failed to export canvas"
-      );
-    }
-  }
-);
-
-// Import canvas
-export const importCanvas = createAsyncThunk(
-  "paintPixel/importCanvas",
-  async ({ data, overwrite = false }: any, thunkAPI) => {
-    try {
-      const response = await api.post(`${config?.endpoints?.GET_USER}/import`, {
-        data,
-        overwrite,
-      });
-      return response.data;
-    } catch (error: any) {
-      return thunkAPI.rejectWithValue(
-        error.response?.data?.message || "Failed to import canvas"
-      );
+      return rejectWithValue(error.response.data.message);
     }
   }
 );

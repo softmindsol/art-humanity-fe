@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
-import { Brush, Eraser, Move, Minus, Plus } from 'lucide-react';
+import { Brush, Eraser, Move, Minus, Plus, Baseline } from 'lucide-react';
 import {
     setBrushColor,
     setCurrentBrush,
@@ -112,7 +112,7 @@ const Toolbox = ({ boundaryRef }: any) => {
     };
 
     const currentColorString = `rgba(${brushState.color.r}, ${brushState.color.g}, ${brushState.color.b}, ${brushState.color.a})`;
-
+    console.log("brushState.mode:", brushState.mode)
     return (
         <div
             ref={toolboxRef}
@@ -149,7 +149,7 @@ const Toolbox = ({ boundaryRef }: any) => {
             <div className=''>
             <div className="flex gap-2">
                 {(['brush', 'eraser', 'line'] as const).map((mode) => {
-                    const Icon = { brush: Brush, eraser: Eraser, line: Minus }[mode];
+                    const Icon = { brush: Brush, eraser: Eraser, line: Baseline }[mode];
                     const isActive = brushState.mode === mode;
                     return (
                         <button key={mode} onClick={() => dispatch(setCurrentBrush({ mode }))} title={mode.charAt(0).toUpperCase() + mode.slice(1)} className={`flex-1 p-2 border border-[#8b795e] rounded flex justify-center transition-colors ${isActive ? 'bg-[#8b795e] text-white' : 'bg-white text-[#8b795e] hover:bg-gray-200'}`}>

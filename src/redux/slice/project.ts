@@ -95,36 +95,34 @@ const projectSlice = createSlice({
       state.galleryPagination.currentPage = action.payload;
     },
     removeContributorFromState: (state, action) => {
-                 const { removedUserId } = action.payload;
+      const { removedUserId } = action.payload;
 
-                 // --- YAHAN PAR FIX HAI ---
-                 // Hum 'currentProject' ko ek naye object se replace karenge
-                 // taake Redux is change ko foran detect kar le.
+      // --- YAHAN PAR FIX HAI ---
+      // Hum 'currentProject' ko ek naye object se replace karenge
+      // taake Redux is change ko foran detect kar le.
 
-                 if (state.currentProject) {
-                   // 1. Ek naya, filtered contributors ka array banayein
-                   const newContributors =
-                     state.currentProject.contributors.filter(
-                       (c: any) =>
-                         (typeof c === "string" ? c : c._id) !== removedUserId
-                     );
+      if (state.currentProject) {
+        // 1. Ek naya, filtered contributors ka array banayein
+        const newContributors = state.currentProject.contributors.filter(
+          (c: any) => (typeof c === "string" ? c : c._id) !== removedUserId
+        );
 
-                   // 2. 'currentProject' ko ek bilkul naye object se update karein
-                   state.currentProject = {
-                     ...state.currentProject,
-                     contributors: newContributors,
-                   };
-                 }
+        // 2. 'currentProject' ko ek bilkul naye object se update karein
+        state.currentProject = {
+          ...state.currentProject,
+          contributors: newContributors,
+        };
+      }
 
-                 // populated list ko bhi update karein (yeh pehle se theek hai)
-                 if (state.currentProjectContributors) {
-                   state.currentProjectContributors =
-                     state.currentProjectContributors.filter(
-                       (c: any) => c._id !== removedUserId
-                     );
-                 }
-
+      // populated list ko bhi update karein (yeh pehle se theek hai)
+      if (state.currentProjectContributors) {
+        state.currentProjectContributors =
+          state.currentProjectContributors.filter(
+            (c: any) => c._id !== removedUserId
+          );
+      }
     },
+   
   },
   extraReducers: (builder) => {
     // Create Project
@@ -303,18 +301,39 @@ const projectSlice = createSlice({
       .addCase(removeContributor.fulfilled, (state, action) => {
         state.loading.removingContributor = false;
 
-        // --- YEH HAI ASAL FIX ---
+        // --- THIS IS THE COMPLETE AND CORRECTED LOGIC ---
         // action.payload ab { userIdToRemove: 'some_id' } jaisa object hai
         const { userIdToRemove } = action.payload;
-            // ... (bilkul wahi logic jo upar 'removeContributorFromState' mein hai)
-            if (state.currentProject) {
-                 const newContributors = state.currentProject.contributors.filter(/*...*/);
-                 state.currentProject = { ...state.currentProject, contributors: newContributors };
+
+        // 1. Populated contributors ki list (UI ke liye) ko update karein
+        if (state.currentProjectContributors) {
+          state.currentProjectContributors =
+            state.currentProjectContributors.filter(
+              (contributor: any) => contributor._id !== userIdToRemove
+            );
+        }
+
+        // 2. 'currentProject' (jo data ka main source hai) ko bhi IMMUTABLY update karein
+        if (state.currentProject && state.currentProject.contributors) {
+          // Ek naya, filtered contributors ka array banayein
+          const newContributors = state.currentProject.contributors.filter(
+            (contributorOrId: any) => {
+              const id =
+                typeof contributorOrId === "string"
+                  ? contributorOrId
+                  : contributorOrId._id;
+              return id !== userIdToRemove;
             }
-            if (state.currentProjectContributors) {
-                state.currentProjectContributors = state.currentProjectContributors.filter(/*...*/)
-            }
-        })
+          );
+
+          // 'currentProject' ko ek bilkul naye object se update karein
+          // Yeh 'useMemo' ko trigger karne ke liye zaroori hai
+          state.currentProject = {
+            ...state.currentProject,
+            contributors: newContributors,
+          };
+        }
+      })
       .addCase(removeContributor.rejected, (state, action) => {
         state.loading.removingContributor = false;
         state.error.removingContributor = action.payload as any;
