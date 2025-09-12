@@ -112,7 +112,7 @@ const Toolbox = ({ boundaryRef }: any) => {
     };
 
     const currentColorString = `rgba(${brushState.color.r}, ${brushState.color.g}, ${brushState.color.b}, ${brushState.color.a})`;
-    console.log("brushState.mode:", brushState.mode)
+
     return (
         <div
             ref={toolboxRef}

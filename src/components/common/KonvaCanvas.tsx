@@ -258,7 +258,6 @@ const KonvaCanvas = ({
             // Redux se anay wale color object ko CSS ke rgba string mein convert karein
           
             setActiveLine({
-
                 points: [pos.x, pos.y],
                 tool: brushState.mode,
                 stroke: colorString, // <--- AB YEH SAHI DYNAMIC COLOR ISTEMAL KAREGA
@@ -268,9 +267,7 @@ const KonvaCanvas = ({
 
         // --- NAYA LOGIC FOR STRAIGHT LINE ---
         if (brushState.mode === 'line') {
-
-            console.log("straight Line.....")
-            // setIsDrawing(true);
+            setIsDrawing(true);
             // 1. Line ka start point save karein
             lineStartPointRef.current = pos;
             // 2. activeLine ko shuru karein (start aur end point abhi same hain)
@@ -318,22 +315,108 @@ const KonvaCanvas = ({
     };
 
     // --- YEH handleMouseUp AB INSTANT DRAW KAREGA ---
+    // const handleMouseUp = () => {
+    //     const wasStrokeMade = isDrawing && currentStrokePathRef.current.length > 0;
+
+    //     // Always set isDrawing to false when the mouse is up
+    //     setIsDrawing(false);
+
+    //     // If no stroke was made, there's nothing else to do
+    //     if (!wasStrokeMade) {
+    //         return;
+    //     }
+
+    //     // Step 1: Check if the tool was 'line' and create the final stroke path
+    //     if (brushState.mode === 'line' && lineStartPointRef.current) {
+    //         const startPoint = lineStartPointRef.current;
+    //         const endPoint = { x: activeLine.points[2], y: activeLine.points[3] };
+
+    //         // Create the stroke path data for the backend
+    //         currentStrokePathRef.current = [{
+    //             fromX: startPoint.x,
+    //             fromY: startPoint.y,
+    //             toX: endPoint.x,
+    //             toY: endPoint.y,
+    //         }];
+    //         lineStartPointRef.current = null; // Reset the ref
+    //     }
+
+    //     // Step 2: If no actual drawing was made (e.g., just a click), exit.
+    //     // This now correctly checks AFTER the line tool has created its path.
+    //     if (currentStrokePathRef.current.length === 0) {
+    //         setActiveLine({ points: [] }); // Clear the preview line if it exists
+    //         return;
+    //     }
+
+        
+        
+    //     // --- NAYA LOGIC FOR INSTANT DRAW ---
+    //     // 1. Agar bakedImage mojood hai, to usay ek naye (temporary) canvas par draw karein
+    //     const tempCanvas = document.createElement('canvas');
+    //     tempCanvas.width = width;
+    //     tempCanvas.height = height;
+    //     const ctx = tempCanvas.getContext('2d');
+    //     if (!ctx) return;
+
+    //     if (bakedImage) {
+    //         ctx.drawImage(bakedImage, 0, 0);
+    //     } else {
+    //         // Agar pehli drawing hai, to safed background banayein
+    //         ctx.fillStyle = 'white';
+    //         ctx.fillRect(0, 0, width, height);
+    //     }
+
+    //     // 2. Ab 'activeLine' ko is temporary canvas par draw karein
+    //     ctx.beginPath();
+    //     ctx.moveTo(activeLine.points[0], activeLine.points[1]);
+    //     for (let i = 2; i < activeLine.points.length; i += 2) {
+    //         ctx.lineTo(activeLine.points[i], activeLine.points[i + 1]);
+    //     }
+    //     ctx.strokeStyle = activeLine.stroke;
+    //     ctx.lineWidth = activeLine.strokeWidth;
+    //     ctx.lineCap = 'round';
+    //     ctx.lineJoin = 'round';
+    //     ctx.globalCompositeOperation = activeLine.tool === 'eraser' ? 'destination-out' : 'source-over';
+    //     ctx.stroke();
+
+    //     // 3. Is naye canvas se ek nayi image banayein aur usay foran 'bakedImage' set kar dein
+    //     const newImage = new window.Image();
+    //     newImage.src = tempCanvas.toDataURL();
+    //     newImage.onload = () => {
+    //         setBakedImage(newImage);
+    //     };
+    //     // --- INSTANT DRAW MUKAMMAL ---
+
+    //     // 4. activeLine ko foran saaf kar dein
+    //     setActiveLine({ points: [] });
+
+    //     // 5. Backend ke liye data tayar karein (yeh logic waisa hi rahega)
+    //     const backendContribution = {
+    //         projectId: projectId,
+    //         userId: userId,
+    //         strokes: [{
+    //             strokePath: [...currentStrokePathRef.current],
+    //             brushSize: brushState.size,
+    //             color: brushState.color,
+    //             mode: brushState.mode
+    //         }],
+    //     };
+    //     strokeQueueRef.current.push(backendContribution);
+    //     currentStrokePathRef.current = [];
+
+    //     // 6. API call ke liye timer set karein
+    //     if (batchTimerRef.current) clearTimeout(batchTimerRef.current);
+    //     batchTimerRef.current = setTimeout(sendBatchToServer, 3000);
+    // };
+
     const handleMouseUp = () => {
-        const wasStrokeMade = isDrawing && currentStrokePathRef.current.length > 0;
-
-        // Always set isDrawing to false when the mouse is up
-        setIsDrawing(false);
-
-        // If no stroke was made, there's nothing else to do
-        if (!wasStrokeMade) {
-            return;
-        }
-
+        if (!isDrawing) return;
 
         // Step 1: Check if the tool was 'line' and create the final stroke path
         if (brushState.mode === 'line' && lineStartPointRef.current) {
             const startPoint = lineStartPointRef.current;
             const endPoint = { x: activeLine.points[2], y: activeLine.points[3] };
+
             // Create the stroke path data for the backend
             currentStrokePathRef.current = [{
                 fromX: startPoint.x,
@@ -344,12 +427,16 @@ const KonvaCanvas = ({
             lineStartPointRef.current = null; // Reset the ref
         }
 
-        // Step 2: If no actual drawing was made (e.g., just a click), exit.
-        // This now correctly checks AFTER the line tool has created its path.
+        // Step 2: Ab check karein ke kya waqai koi drawing save karne ke liye hai
+        // Yeh check ab freehand aur straight line dono ke liye kaam karega
         if (currentStrokePathRef.current.length === 0) {
-            setActiveLine({ points: [] }); // Clear the preview line if it exists
+            setIsDrawing(false);
+            setActiveLine({ points: [] }); // Preview line ko saaf karein (agar hai)
             return;
         }
+        // Ab jab humein pata hai ke kuch save karna hai, to hi 'isDrawing' ko false karein
+        setIsDrawing(false);
+
 
         // --- NAYA LOGIC FOR INSTANT DRAW ---
         // 1. Agar bakedImage mojood hai, to usay ek naye (temporary) canvas par draw karein
@@ -399,7 +486,7 @@ const KonvaCanvas = ({
                 strokePath: [...currentStrokePathRef.current],
                 brushSize: brushState.size,
                 color: brushState.color,
-                mode: brushState.mode
+                mode: brushState.mode === 'line' ? 'brush' : brushState.mode
             }],
         };
         strokeQueueRef.current.push(backendContribution);
@@ -409,8 +496,6 @@ const KonvaCanvas = ({
         if (batchTimerRef.current) clearTimeout(batchTimerRef.current);
         batchTimerRef.current = setTimeout(sendBatchToServer, 3000);
     };
-
-
     const highlightedLines = useMemo(() => {
         if (!selectedContributionId) return [];
         const selected = savedStrokes.find((c: any) => c._id === selectedContributionId);
