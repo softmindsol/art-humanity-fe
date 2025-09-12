@@ -208,16 +208,24 @@ export const clearCanvas = createAsyncThunk(
 );
 
 
+
+
+
+
 export const fetchContributionsByTiles = createAsyncThunk(
   "contributions/fetchByTiles",
   async ({ projectId, tiles }: FetchTilesArgs, { rejectWithValue }) => {
     try {
+      // Naye "smart" API endpoint ko call karein
       const response = await api.get(
         `/contributions/project/${projectId}?tiles=${tiles}`
       );
-      return response.data.data.contributions;
+      return response.data.data.contributions; // Sirf contributions ka array return karein
     } catch (error: any) {
-      return rejectWithValue(error.response.data.message);
+      console.error("Failed to fetch contributions for tiles:", error);
+      return rejectWithValue(
+        error.response?.data?.message || "Could not load artwork for this area."
+      );
     }
   }
 );

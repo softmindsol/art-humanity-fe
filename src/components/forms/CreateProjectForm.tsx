@@ -41,11 +41,16 @@ const AdminDashboard = () => {
       }),    canvasId: Yup.string().required("Canvas ID is required"),
     width: Yup.number().required("Width is required").min(1, "Width must be a positive number"),
     height: Yup.number().required("Height is required").min(1, "Height must be a positive number"),
-    thumbnail: Yup.mixed()
-      .required("Thumbnail image is required")
-      .test("fileType", "Invalid type (only PNG, JPEG, etc.)", (value: any) => {
-        return value && (value.type === "image/jpeg" || value.type === "image/png");
-      }),
+   thumbnail: Yup.mixed()
+    .required("Thumbnail image is required")
+    .test("fileType", "Invalid type (only PNG, JPEG, WebP allowed)", (value: any) => {
+      // Check if file type is PNG, JPEG, or WebP
+      return value && (value.type === "image/jpeg" || value.type === "image/png" || value.type === "image/webp");
+    })
+    .test("fileSize", "File size is too large. Maximum size is 2MB", (value: any) => {
+      // Optional file size validation, if needed
+      return value && value.size <= 2 * 1024 * 1024; // Limit to 2MB
+    }),
   });
 
   // Form submission handler
@@ -66,7 +71,7 @@ const AdminDashboard = () => {
 
     if (createProject.fulfilled.match(resultAction)) {
       const newProject = resultAction.payload;
-      toast.success("Project created successfully!");
+      toast.success("Project created successfully.");
       navigate(`/project/${newProject.canvasId}`); // Navigate with canvasId for a clean URL
     } else {
       // toast.error("Failed to create project. Please try again.");
@@ -106,12 +111,13 @@ const AdminDashboard = () => {
                 width: 1024,
                 height: 1024,
                 userId: user?.id || "",
+                thumbnail: null, // Initially set thumbnail to null
               }}
               validationSchema={validationSchema}
               onSubmit={handleSubmit}
               enableReinitialize
             >
-              {({ setFieldValue, values }) => {
+              {({ setFieldValue, values, errors, touched }) => {
                 // Automatically sync canvasId with title
                 const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
                   const title = e.target.value;
@@ -213,7 +219,7 @@ const AdminDashboard = () => {
                         onChange={(e) => {
                           if (e.target.files) {
                             setThumbnailFile(e.target.files[0]);
-                            setFieldValue("thumbnail", e.target.files[0]);
+                            setFieldValue("thumbnail", e.target.files[0]); // Update Formik field value
                           }
                         }}
                         className="hidden" // Hide the default file input
@@ -227,7 +233,6 @@ const AdminDashboard = () => {
                         <p className="text-sm text-gray-500 mt-2">Selected: {thumbnailFile.name}</p>
                       )}
                     </div>
-
 
                     <Button type="submit" disabled={loading.creating} className="w-full h-12 text-lg cursor-pointer text-white bg-[#5d4037] hover:bg-[#4e342e]">
                       {loading.creating ? (
@@ -245,6 +250,7 @@ const AdminDashboard = () => {
                 );
               }}
             </Formik>
+
           </CardContent>
         </Card>
       </div>
