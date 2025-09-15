@@ -365,12 +365,12 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
             return () => clearTimeout(timer);
         }
     }, [selectedContributionId]);
-    
-    
+
+
     useEffect(() => {
         if (!socket) return;
 
-        if (currentProject.status==='Paused' || currentProject.status==='Completed') {
+        if (currentProject.status === 'Paused' || currentProject.status === 'Completed') {
             navigate(`/projects`);
             toast.warning("The project is no longer active. Redirecting to projects page.");
         }
@@ -454,11 +454,11 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
             dispatch(updateContributionInState(data.contribution));
         };
 
-        
+
         const onProjectPaused = handleStatusUpdate('Paused');
         const onProjectCompleted = handleStatusUpdate('Completed');
         const onProjectResumed = handleStatusUpdate('Active');
-        
+
         socket.on('vote_updated', handleVoteUpdate);
         socket.on('project_paused', onProjectPaused);
         socket.on('project_completed', onProjectCompleted);
@@ -489,7 +489,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
     // const isGalleryView = useMemo(() => new URLSearchParams(window.location.search).get('view') === 'gallery', []);
     // const isProjectInactive = currentProject?.status === 'Paused' || currentProject?.status === 'Completed';
     // const finalIsReadOnly = isGalleryView || isProjectInactive;
-    
+
     return (
         // Design ke mutabiq page ka background color
         <div ref={mainContentRef} className="relative  min-h-screen p-4 sm:p-6 lg:p-8">
