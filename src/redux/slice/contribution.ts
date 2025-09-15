@@ -163,6 +163,20 @@ const paintPixelSlice = createSlice({
 
       state.canvasData = newCanvasData;
     },
+    updateContributionInState: (state:any, action) => {
+      // `action.payload` will be the full, updated contribution object from the socket event
+      const updatedContribution = action.payload;
+
+      // Find the index of the contribution that needs to be updated
+      const index = state.canvasData.findIndex(
+        (c: any) => c._id === updatedContribution._id
+      );
+
+      // If found, replace it with the new version
+      if (index !== -1) {
+        state.canvasData[index] = updatedContribution;
+      }
+    },
   },
 
   extraReducers: (builder) => {
@@ -364,24 +378,22 @@ const paintPixelSlice = createSlice({
         state.error.clearCanvas = action.payload as any;
       });
 
-      builder
-        // --- YEH NAYA CASE HAI ---
-        .addCase(
-          fetchContributionsByTiles.fulfilled,
-          (state: any, action: any) => {
-            const newContributions = action.payload;
+    builder
+      // --- YEH NAYA CASE HAI ---
+      .addCase(
+        fetchContributionsByTiles.fulfilled,
+        (state: any, action: any) => {
+          const newContributions = action.payload;
 
-            // Naye data ko purane data ke saath merge karein, duplicates ko rokein
-            const existingIds = new Set(
-              state.canvasData.map((c: any) => c._id)
-            );
-            const uniqueNewContributions = newContributions.filter(
-              (c:any) => !existingIds.has(c._id)
-            );
+          // Naye data ko purane data ke saath merge karein, duplicates ko rokein
+          const existingIds = new Set(state.canvasData.map((c: any) => c._id));
+          const uniqueNewContributions = newContributions.filter(
+            (c: any) => !existingIds.has(c._id)
+          );
 
-            state.canvasData.push(...uniqueNewContributions);
-          }
-        );
+          state.canvasData.push(...uniqueNewContributions);
+        }
+      );
   },
 });
 
@@ -403,7 +415,8 @@ export const {
   clearPendingStrokes,
   removeContributionFromState,
   clearAllContributionsFromState,
-  removeMultipleContributionsFromState 
+  removeMultipleContributionsFromState,
+  updateContributionInState,
 } = paintPixelSlice.actions;
 
 // Selectors

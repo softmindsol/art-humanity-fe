@@ -76,6 +76,7 @@ const ContributionsList = ({
     if ((!contributions || contributions.length === 0) && !isLoading) {
         return <div className="p-4 text-center text-gray-500">No project contributions</div>;
     }
+
     return (
         <ul className="space-y-4 font-serif">
             {contributions?.map((contrib: any) => {
@@ -128,9 +129,9 @@ const ContributionsList = ({
                         </div>
 
                         {/* Dates */}
-                        <div className="flex justify-between items-center p-2 bg-[#f8f0e3] border-y border-gray-300">
+                        <div className="flex justify-end items-center p-2 bg-[#f8f0e3] border-y border-gray-300">
                             <span className="text-[11px] text-[#654321]">Created: {formatDate(contrib.createdAt)}</span>
-                            <span className="text-[11px] text-[#654321]">Modified: {formatDate(contrib.updatedAt)}</span>
+                            {/* <span className="text-[11px] text-[#654321]">Modified: {formatDate(contrib.updatedAt)}</span> */}
                         </div>
 
                         {/* Voting and Actions */}

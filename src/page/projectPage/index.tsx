@@ -19,7 +19,7 @@ import {
 import { useCanvasState } from '@/hook/useCanvasState';
 import { clearCanvas, generateTimelapseVideo, getContributionsByProject } from '@/redux/action/contribution';
 import InfoBox from '@/components/toolbox/InfoBox';
-import { clearAllContributionsFromState, clearCanvasData, clearTimelapseUrl, removeContributionFromState, removeContributionOptimistically, removeMultipleContributionsFromState, selectCanvasData, selectErrorForOperation, selectIsLoadingOperation, selectTimelapseUrl } from '@/redux/slice/contribution';
+import { clearAllContributionsFromState, clearCanvasData, clearTimelapseUrl, removeContributionFromState, removeContributionOptimistically, removeMultipleContributionsFromState, selectCanvasData, selectErrorForOperation, selectIsLoadingOperation, selectTimelapseUrl, updateContributionInState } from '@/redux/slice/contribution';
 import ContributionSidebar from '@/components/canvas/ContributionSidebar';
 import { joinProject } from '@/redux/action/project';
 import { Button } from '@/components/ui/button';
@@ -96,7 +96,6 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
     // const [isInitialLoading, setIsInitialLoading] = useState(true);
 
 
-    console.log(currentProject)
 
     const handleGenerateTimelapse = () => {
         if (!projectId) {
@@ -448,11 +447,19 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
                     toast.info(data.message);
                 }
             };
+        const handleVoteUpdate = (data: { contribution: any }) => {
+            console.log(`[Socket] Received vote update for contribution ${data.contribution._id}`);
 
+            // Dispatch the action to update the specific contribution in the Redux store
+            dispatch(updateContributionInState(data.contribution));
+        };
+
+        
         const onProjectPaused = handleStatusUpdate('Paused');
         const onProjectCompleted = handleStatusUpdate('Completed');
         const onProjectResumed = handleStatusUpdate('Active');
-
+        
+        socket.on('vote_updated', handleVoteUpdate);
         socket.on('project_paused', onProjectPaused);
         socket.on('project_completed', onProjectCompleted);
         socket.on('project_resumed', onProjectResumed);
@@ -473,15 +480,16 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
             socket.off('project_paused', onProjectPaused);
             socket.off('project_completed', onProjectCompleted);
             socket.off('project_resumed', onProjectResumed);
+            socket.off('vote_updated', handleVoteUpdate);
+
         };
     }, [socket, dispatch, user]);
 
     // This logic will now react to real-time state changes from the listener
-    const isGalleryView = useMemo(() => new URLSearchParams(window.location.search).get('view') === 'gallery', []);
-    const isProjectInactive = currentProject?.status === 'Paused' || currentProject?.status === 'Completed';
-    const finalIsReadOnly = isGalleryView || isProjectInactive;
-    console.log(isGalleryView, isProjectInactive, finalIsReadOnly)
-
+    // const isGalleryView = useMemo(() => new URLSearchParams(window.location.search).get('view') === 'gallery', []);
+    // const isProjectInactive = currentProject?.status === 'Paused' || currentProject?.status === 'Completed';
+    // const finalIsReadOnly = isGalleryView || isProjectInactive;
+    
     return (
         // Design ke mutabiq page ka background color
         <div ref={mainContentRef} className="relative  min-h-screen p-4 sm:p-6 lg:p-8">

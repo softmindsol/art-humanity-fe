@@ -122,7 +122,19 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
         >
 
             <button
-                onClick={() => setIsOpen(!isOpen)}
+                onClick={() => {
+                    setIsOpen(!isOpen);
+                    if(isOpen===false){
+                        dispatch(getContributionsByProject({
+                            projectId,
+                            sortBy: filter,
+                            page: 1,
+                            // Agar 'my' tab active hai to userId bhejein
+                            userId: activeTab === 'my' ? user?.id : undefined
+                        }));
+                    }
+
+                }}
                 className="absolute top-1/2 -translate-y-1/2 !bg-[#654321] !text-[17px] text-white py-2 px-8 rounded-l-md shadow-lg cursor-pointer z-50"
                 style={{
                     right: '100%', // Yeh button ko panel ke bilkul bahar (left side) rakhega
