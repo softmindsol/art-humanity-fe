@@ -122,7 +122,38 @@ const projectSlice = createSlice({
           );
       }
     },
-   
+
+    updateProjectStatusInState: (state, action) => {
+      const { projectId, status } = action.payload;
+
+      console.log(projectId, status);
+      // 1. Update the project in the main `projects` list (for the ActiveProjects page)
+      const projectIndex = state.projects.findIndex(
+        (p: any) => p._id === projectId
+      );
+      if (projectIndex !== -1) {
+        // Create a new object to ensure immutability and trigger re-renders
+        state.projects[projectIndex] = {
+          ...state.projects[projectIndex],
+          status: status,
+        };
+      }
+
+      // 2. Update the `currentProject` if the user is currently on that page
+      if (state.currentProject && state.currentProject._id === projectId) {
+        // Create a new object here as well
+        state.currentProject = {
+          ...state.currentProject,
+          status: status,
+        };
+      }
+    },
+
+    // Yeh real-time project deletion ke liye hai
+    removeProjectFromList: (state, action) => {
+      const { projectId } = action.payload;
+      state.projects = state.projects.filter((p: any) => p._id !== projectId);
+    },
   },
   extraReducers: (builder) => {
     // Create Project
@@ -223,6 +254,13 @@ const projectSlice = createSlice({
         );
         if (index !== -1) {
           state.projects[index] = updatedProject;
+        }
+        // Agar woh project abhi khula hua hai, to usay bhi update karein
+        if (
+          state.currentProject &&
+          state.currentProject._id === updatedProject._id
+        ) {
+          state.currentProject = updatedProject;
         }
       })
       .addCase(updateProjectStatus.rejected, (state, action) => {
@@ -349,6 +387,8 @@ export const {
   setGalleryCurrentPage,
   setStatusFilter,
   setSearchTerm,
+  updateProjectStatusInState,
+  removeProjectFromList,
 } = projectSlice.actions;
 
 // Selectors

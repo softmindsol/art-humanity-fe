@@ -1,11 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import {
     selectAllProjects,
     selectProjectsLoading,
     selectProjectsError,
-    selectProjectPagination
+    selectProjectPagination,
+    removeProjectFromList,
+    updateProjectStatusInState
 } from '@/redux/slice/project';
 import {
     AlertDialog,
@@ -25,11 +27,13 @@ import useAuth from '@/hook/useAuth';
 // UI Components
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Play, Pause, XCircle, Trash2 } from 'lucide-react'; // Icons
+import { Play, Pause, Trash2, CheckCircle } from 'lucide-react'; // Icons
 import { useDebounce } from '@/hook/useDebounce';
 import { SearchBar } from '@/components/common/SearchBar';
 import { ProjectStatusFilter } from '@/components/common/ProjectStatusFilter';
 import { Pagination } from '@/components/common/Pagination';
+import { toast } from 'sonner';
+import { useSocket } from '@/context/SocketContext';
 
 const ActiveProjects: React.FC = () => {
     const { user } = useAuth();
@@ -41,6 +45,7 @@ const ActiveProjects: React.FC = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'paused'>('all');
     const [searchTerm, setSearchTerm] = useState('');
+    const { socket } = useSocket(); // Get the socket instance from your context
 
     const [dialogState, setDialogState] = useState<any>({
         isOpen: false,
@@ -78,20 +83,77 @@ const ActiveProjects: React.FC = () => {
     // Asal action ko anjaam dene wala handler
     const handleConfirmAction = () => {
         const { projectId, actionType } = dialogState;
+        if (!projectId || !actionType) return;
 
-        if (projectId && actionType) {
-            if (actionType === 'PAUSE') {
-                dispatch(updateProjectStatus({ projectId, statusUpdate: { isPaused: true } }));
-            } else if (actionType === 'RESUME') {
-                dispatch(updateProjectStatus({ projectId, statusUpdate: { isPaused: false } }));
-            } else if (actionType === 'CLOSE') {
-                dispatch(updateProjectStatus({ projectId, statusUpdate: { isClosed: true } }));
-            } else if (actionType === 'DELETE') {
-                dispatch(deleteProject(projectId)); // <-- NAYI ACTION DISPATCH KAREIN
-            }
+        // --- YAHAN PAR FIX HAI: Naye status field ke mutabiq actions ---
+        if (actionType === 'PAUSE') {
+            dispatch(updateProjectStatus({ projectId, status: 'Paused' }));
+        } else if (actionType === 'RESUME') {
+            dispatch(updateProjectStatus({ projectId, status: 'Active' }));
+        } else if (actionType === 'COMPLETE') { // 'CLOSE' ke bajaye 'COMPLETE'
+            dispatch(updateProjectStatus({ projectId, status: 'Completed' }));
+        } else if (actionType === 'DELETE') {
+            dispatch(deleteProject(projectId));
         }
+
         setDialogState({ isOpen: false, projectId: null, actionType: null, actionText: '' });
     };
+
+    // --- REAL-TIME LISTENER FOR DELETED PROJECTS ---
+    useEffect(() => {
+        if (!socket) {
+            console.log("[Socket] No socket instance available yet. Waiting...");
+            return;
+        }
+
+
+        console.log("[Socket] Setting up listeners for ActiveProjects page...");
+
+        const handleProjectDeleted = (data: { projectId: string, message: string }) => {
+            dispatch(removeProjectFromList({ projectId: data.projectId }));
+            toast.error(data.message);
+        };
+
+        const handleStatusChange = (data: { projectId: string, status: string, message: string }) => {
+            // --- YEH HAI ASAL FIX ---
+            console.log("[Socket] Received status change:", data);
+            // Step 1: User ko hamesha toast dikhao
+            // Hum `message` ka istemal karenge jo backend se aa raha hai
+            if (data.status === 'Paused') {
+                toast.warning(data.message || `A project has been paused.`);
+            } else if (data.status === 'Active') {
+                toast.success(data.message || `A project has been resumed.`);
+            }
+
+            // Step 2: Redux state ko update karo
+            if (data.status === 'Completed') {
+                // Agar project complete ho gaya hai, to usay is "Active Projects" list se nikaal do
+                dispatch(removeProjectFromList({ projectId: data.projectId }));
+                // Completed ka toast alag se dikha do
+                toast.info(data.message || `A project has been completed and moved to the gallery.`);
+            } else {
+                // Agar Paused ya Resumed hua hai, to uski state ko list mein update karo
+                // Is se project card par "Paused" ka badge foran nazar aayega
+                dispatch(updateProjectStatusInState({ projectId: data.projectId, status: data.status }));
+            }
+        };
+
+        socket.on('project_deleted', handleProjectDeleted);
+        socket.on('project_paused', handleStatusChange);
+        socket.on('project_completed', handleStatusChange);
+        socket.on('project_resumed', handleStatusChange);
+
+        // This `return` function is the CLEANUP function.
+        // React runs this when the component unmounts. This is the ONLY correct place for `socket.off`.
+        return () => {
+            console.log("[Socket] Cleaning up listeners for ActiveProjects page.");
+            socket.off('project_deleted', handleProjectDeleted);
+            socket.off('project_paused', handleStatusChange);
+            socket.off('project_completed', handleStatusChange);
+            socket.off('project_resumed', handleStatusChange);
+        };
+    }, [socket, dispatch]); // Dependencies are correct
+
 
     if (isLoading) {
         return (
@@ -141,8 +203,9 @@ const ActiveProjects: React.FC = () => {
                     </div>
                 ) : (
                     projects.map((project: any) => {
-                        const isProjectPaused = project.isPaused;
-
+                        const isProjectPaused = project.status === 'Paused';
+                        const badgeText = project.status; // 'Active', 'Paused'
+                        const badgeColor = project.status === 'Paused' ? 'destructive' : 'secondary';
                         return (
                             <div key={project._id} className="project-card active">
                                 <div className="project-image relative">
@@ -151,11 +214,20 @@ const ActiveProjects: React.FC = () => {
                                         alt={project.title}
                                     />
                                     {/* Project status badge */}
-                                    {project.isPaused && (
-                                        <div className="absolute top-2 right-2">
-                                            <Badge variant="destructive" className="text-sm">Paused</Badge>
-                                        </div>
-                                    )}
+                                    <div className="absolute top-2 right-2">
+                                        <Badge
+                                            // We will no longer use the generic 'variant' prop.
+                                            // Instead, we'll use a template literal for dynamic, high-contrast classes.
+                                            className={`text-sm font-semibold  shadow-md
+                                                ${project.status === 'Paused'
+                                                    ? 'bg-red-600 text-white border-red-700'      // Prominent Red for Paused
+                                                    : 'bg-green-600 text-white border-green-700'  // Prominent Green for Active
+                                                }
+                                         `}
+                                        >
+                                            {project.status}
+                                        </Badge>
+                                    </div>
                                     <div className="project-progress">
                                         <div className="progress-bar">
                                             <div className="progress-fill" style={{ width: `${project.stats?.percentComplete || 0}%` }}></div>
@@ -194,71 +266,53 @@ const ActiveProjects: React.FC = () => {
                                     {/* // -------- YEH MUKAMMAL UPDATE SHUDA JSX HAI -------- */}
 
                                     {user?.role === 'admin' && (
-                                        <div className="mt-4 pt-4 border-t border-gray-200 ">
-                                            <div className="flex items-center justify-between space-x-2">
-                                                <p className="text-xs !text-[#8d6e63]  !p-0 !m-0">Admin Actions:</p>
-
-                                                <div className="flex items-center space-x-2">
-                                                    {/* --- Pause/Resume Button (Updated onClick) --- */}
-                                                    {project.isPaused ? (
-                                                        <Button
-                                                            className="cursor-pointer"
-                                                            variant="outline"
-                                                            size="icon"
-                                                            title="Resume Project"
-                                                            onClick={() =>
-                                                                // Naya Function Signature: (projectId, actionType, actionText)
-                                                                openConfirmationDialog(project._id, 'RESUME', 'Resume')
-                                                            }
-                                                        >
-                                                            <Play className="h-4 w-4" />
-                                                        </Button>
-                                                    ) : (
-                                                        <Button
-                                                            className="cursor-pointer"
-                                                            variant="outline"
-                                                            size="icon"
-                                                            title="Pause Project"
-                                                            onClick={() =>
-                                                                // Naya Function Signature: (projectId, actionType, actionText)
-                                                                openConfirmationDialog(project._id, 'PAUSE', 'Pause')
-                                                            }
-                                                        >
-                                                            <Pause className="h-4 w-4" />
-                                                        </Button>
-                                                    )}
-
-                                                    {/* --- Close Button (Updated onClick) --- */}
+                                        <div className="mt-4 pt-4 border-t">
+                                            <div className="flex items-center justify-between">
+                                                {/* --- ADMIN ACTIONS AB NAYE STATUS FIELD PAR CHALENGE --- */}
+                                                {project.status === 'Paused' ? (
                                                     <Button
-                                                        className="cursor-pointer bg-red-100 hover:bg-red-200 text-red-600 border border-red-200"
-                                                        variant="ghost"
+                                                        className="cursor-pointer"
+                                                        variant="outline"
                                                         size="icon"
-                                                        title="Close Project (Move to Gallery)"
+                                                        title="Resume Project"
                                                         onClick={() =>
                                                             // Naya Function Signature: (projectId, actionType, actionText)
-                                                            openConfirmationDialog(project._id, 'CLOSE', 'Close')
+                                                            openConfirmationDialog(project._id, 'RESUME', 'Resume')
                                                         }
                                                     >
-                                                        <XCircle className="h-4 w-4" />
+                                                        <Play className="h-4 w-4" />
                                                     </Button>
-
-                                                    {/* --- Delete Button (Updated onClick) --- */}
+                                                ) : (
                                                     <Button
-                                                        className="cursor-pointer bg-red-600 hover:bg-red-700 text-white"
-                                                        variant="destructive"
+                                                        className="cursor-pointer"
+                                                        variant="outline"
                                                         size="icon"
-                                                        title="Delete Project FOREVER"
+                                                        title="Pause Project"
                                                         onClick={() =>
-                                                            openConfirmationDialog(project._id, 'DELETE', 'DELETE PERMANENTLY')
+                                                            // Naya Function Signature: (projectId, actionType, actionText)
+                                                            openConfirmationDialog(project._id, 'PAUSE', 'Pause')
                                                         }
                                                     >
-                                                        <Trash2 className="h-4 w-4" />
+                                                        <Pause className="h-4 w-4" />
                                                     </Button>
-                                                </div>
+                                                )}
+
+                                                <Button className="cursor-pointer bg-red-100 hover:bg-red-200 text-red-600 border border-red-200"
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    title="Close Project (Move to Gallery)" onClick={() => openConfirmationDialog(project._id, 'COMPLETE', 'Mark as Complete')}>
+                                                    <CheckCircle className="h-4 w-4 cursor-pointer" />
+                                                </Button>
+
+                                                <Button className="cursor-pointer bg-red-600 hover:bg-red-700 text-white"
+                                                    variant="destructive"
+                                                    size="icon"
+                                                    title="Delete Project FOREVER" onClick={() => openConfirmationDialog(project._id, 'DELETE', 'DELETE PERMANENTLY')}>
+                                                    <Trash2 className="h-4 w-4 cursor-pointer" color='white' />
+                                                </Button>
                                             </div>
                                         </div>
                                     )}
-
                                 </div>
                             </div>
                         )

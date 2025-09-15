@@ -31,8 +31,9 @@ import { openAuthModal } from '@/redux/slice/opeModal';
 import { io } from 'socket.io-client'; // Socket client import karein
 import { addContributionFromSocket } from '@/redux/slice/contribution'; // Naya action import karein
 import { useSelector } from 'react-redux';
-import { addContributorToState, removeContributorFromState, selectCurrentProject } from '@/redux/slice/project';
+import { addContributorToState, removeContributorFromState, selectCurrentProject, updateProjectStatusInState } from '@/redux/slice/project';
 import type { RootState } from '@/redux/store';
+import { useNavigate } from 'react-router-dom';
 
 
 const TILE_SIZE = 512; // Optimal tile size for performance
@@ -50,7 +51,7 @@ interface CursorData {
 const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
     const { user } = useAuth();
     const dispatch = useAppDispatch();
-
+    const navigate = useNavigate();
     // --- STATES ---
     const [socket, setSocket] = useState<any>(null);
     const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
@@ -94,6 +95,8 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
     // Yeh poore page ki initial loading ko control karega
     // const [isInitialLoading, setIsInitialLoading] = useState(true);
 
+
+    console.log(currentProject)
 
     const handleGenerateTimelapse = () => {
         if (!projectId) {
@@ -363,9 +366,15 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
             return () => clearTimeout(timer);
         }
     }, [selectedContributionId]);
+    
+    
     useEffect(() => {
         if (!socket) return;
 
+        if (currentProject.status==='Paused' || currentProject.status==='Completed') {
+            navigate(`/projects`);
+            toast.warning("The project is no longer active. Redirecting to projects page.");
+        }
         const handleDeleteEvent = ({ contributionId }: { contributionId: string }) => {
             console.log(`[Socket] Received delete event for contribution: ${contributionId}`);
             // Socket se anay par UI foran update karein
@@ -418,6 +427,35 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
             toast.info("A removed user's contributions have been cleared from the canvas.");
         };
 
+        const handleStatusUpdate = (newStatus: string) =>
+            (data: { projectId: string, message: string }) => {
+                console.log("data.projectId === projectId:", data.projectId === projectId)
+                // Only act if the event is for the project we are currently viewing
+                if (data.projectId === projectId) {
+                    console.log(`[Socket] Received project status change: ${newStatus}`);
+                    if (newStatus === "Paused") {
+                        toast.warning("The project has been paused by an admin. Contributions are now disabled.");
+                        navigate(`/projects`);
+                    }
+                    if (newStatus === "Completed") {
+                        toast.warning("The project has been Completed by an admin.");
+                        navigate(`/gallery`);
+                    }
+                    // Dispatch the action to update the status in the Redux state
+                    dispatch(updateProjectStatusInState({ projectId, status: newStatus }));
+
+                    // Show a notification
+                    toast.info(data.message);
+                }
+            };
+
+        const onProjectPaused = handleStatusUpdate('Paused');
+        const onProjectCompleted = handleStatusUpdate('Completed');
+        const onProjectResumed = handleStatusUpdate('Active');
+
+        socket.on('project_paused', onProjectPaused);
+        socket.on('project_completed', onProjectCompleted);
+        socket.on('project_resumed', onProjectResumed);
         socket.on('contributions_purged', handleContributionsPurged);
         socket.on('canvas_cleared', handleCanvasCleared);
         socket.on('contribution_deleted', handleContributionDeleted);
@@ -432,9 +470,18 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
             socket.off('contribution_deleted', handleContributionDeleted);
             socket.off('canvas_cleared', handleCanvasCleared);
             socket.off('contributions_purged', handleContributionsPurged);
-
+            socket.off('project_paused', onProjectPaused);
+            socket.off('project_completed', onProjectCompleted);
+            socket.off('project_resumed', onProjectResumed);
         };
     }, [socket, dispatch, user]);
+
+    // This logic will now react to real-time state changes from the listener
+    const isGalleryView = useMemo(() => new URLSearchParams(window.location.search).get('view') === 'gallery', []);
+    const isProjectInactive = currentProject?.status === 'Paused' || currentProject?.status === 'Completed';
+    const finalIsReadOnly = isGalleryView || isProjectInactive;
+    console.log(isGalleryView, isProjectInactive, finalIsReadOnly)
+
     return (
         // Design ke mutabiq page ka background color
         <div ref={mainContentRef} className="relative  min-h-screen p-4 sm:p-6 lg:p-8">
@@ -606,7 +653,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
                             ))}
                         </div>
                         {/* </div> */}
-                      { !isReadOnly && <InfoBox
+                        {!isReadOnly && <InfoBox
                             zoom={canvasStats.zoom}
                             worldPos={canvasStats.worldPos}
                             strokeCount={savedStrokes?.length || 0}

@@ -28,7 +28,7 @@ interface FetchActiveProjectsArgs {
   status?: "active" | "paused" | "all";
   search?: string;
 }
-
+ 
 
 // Saare active projects laane ke liye
 export const fetchActiveProjects = createAsyncThunk(
@@ -98,33 +98,52 @@ export const joinProject = createAsyncThunk(
   }
 );
 
+// export const updateProjectStatus = createAsyncThunk(
+//   "projects/updateStatus",
+//   async (
+//     {
+//       projectId,
+//       statusUpdate,
+//     }: {
+//       projectId: string;
+//       statusUpdate: { isPaused?: boolean; isClosed?: boolean };
+//     },
+//     { rejectWithValue }
+//   ) => {
+//     try {
+//       const response = await api.patch(
+//         `${config?.endpoints?.FETCH_PROJECT_BY_ID}/${projectId}/status`,
+//         statusUpdate
+//       );
+//       return response.data.data; // Return the updated project object
+//     } catch (error: any) {
+//       return rejectWithValue(
+//         error.response.data.message || "Failed to update project status"
+//       );
+//     }
+//   }
+// );
+
+interface UpdateStatusArgs {
+projectId: string;
+status: 'Active' | 'Paused' | 'Completed';
+}
+// Purane 'updateProjectStatus' ko isse replace karein
 export const updateProjectStatus = createAsyncThunk(
-  "projects/updateStatus",
-  async (
-    {
-      projectId,
-      statusUpdate,
-    }: {
-      projectId: string;
-      statusUpdate: { isPaused?: boolean; isClosed?: boolean };
-    },
-    { rejectWithValue }
-  ) => {
-    try {
-      const response = await api.patch(
-        `${config?.endpoints?.FETCH_PROJECT_BY_ID}/${projectId}/status`,
-        statusUpdate
-      );
-      return response.data.data; // Return the updated project object
-    } catch (error: any) {
-      return rejectWithValue(
-        error.response.data.message || "Failed to update project status"
-      );
-    }
-  }
+'project/updateStatus',
+async ({ projectId, status }: UpdateStatusArgs, { rejectWithValue }) => {
+try {
+// Ab hum sirf 'status' bhejenge
+const response = await api.patch(
+  `${config?.endpoints?.FETCH_PROJECT_BY_ID}/${projectId}/status`,
+  { status }
 );
-
-
+return response.data.data; // Updated project object return karein
+} catch (error: any) {
+return rejectWithValue(error.response?.data?.message || "Could not update status.");
+}
+}
+);
 interface FetchGalleryProjectsArgs {
   page?: number;
   limit?: number;

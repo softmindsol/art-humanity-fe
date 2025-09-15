@@ -52,7 +52,7 @@ const HeroSection: React.FC = () => {
           <div className="bg-[#f5f5dc] p-8 text-center rounded-md shadow-lg border border-[#a1887f] transition-transform duration-300 ease-in-out hover:-translate-y-2.5">
             <div className="text-5xl mb-5">🗳️</div>
             <h3 className="text-2xl font-bold mb-4 font-playfair text-primary-dark">Vote on Contributions</h3>
-            <p>Help maintain quality by voting on other artists contributions.</p>
+            <p>Help maintain quality by voting on other artist's contributions.</p>
           </div>
         </section>
       </main>
