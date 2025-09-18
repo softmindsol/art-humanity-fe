@@ -13,7 +13,6 @@ const TiledCanvasPage: React.FC = () => {
     const { canvasId } = useParams<{ canvasId: string }>();
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
-    console.log(canvasId)
     const project = useSelector(selectCurrentProject);
     const  loading = useSelector(selectProjectsLoading).fetchingById;
     const error = useSelector(selectProjectsError).fetchingById;

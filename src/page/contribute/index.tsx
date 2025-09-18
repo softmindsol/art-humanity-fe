@@ -62,7 +62,7 @@ const ActiveProjects: React.FC = () => {
         // inside useEffect that fetches
         dispatch(fetchActiveProjects({
             page: currentPage,
-            limit: 9,                // keep consistent
+            limit: 6,                // keep consistent
             status: statusFilter,
             search: debouncedSearchTerm
         }));
@@ -155,22 +155,6 @@ const ActiveProjects: React.FC = () => {
     }, [socket, dispatch]); // Dependencies are correct
 
 
-    if (isLoading) {
-        return (
-            <div className="flex justify-center items-center w-full py-20">
-                <div className="w-16 h-16 border-4 border-[#d29000] border-t-transparent rounded-full animate-spin"></div>
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="text-center py-20 text-red-600 bg-red-50 p-4 rounded-lg">
-                <h3 className="font-bold">Oops! Something went wrong.</h3>
-                <p>{error}</p>
-            </div>
-        );
-    }
 
     return (
         <div id="projects-content" className="projects-content">
@@ -195,130 +179,150 @@ const ActiveProjects: React.FC = () => {
                 <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
                 <ProjectStatusFilter statusFilter={statusFilter} setStatusFilter={setStatusFilter} />
             </div>
-            <section className="projects-grid mt-5">
-                {projects.length === 0 ? (
-                    <div className="text-center w-full py-20 col-span-full">
-                        <h3 className="text-2xl !text-[#5d4037]">No active projects found.</h3>
-                        {user?.role === 'admin' && <p className="!text-[#5d4037]">You can create the first one from the Admin Dashboard.</p>}
+            {
+
+                isLoading ? (
+                    // Agar loading ho rahi hai, to yahan loader dikhayein
+                    <div className="flex justify-center items-center w-full py-20" >
+                        <div className="w-16 h-16 border-4 border-[#d29000] border-t-transparent rounded-full animate-spin"></div>
                     </div>
-                ) : (
-                    projects.map((project: any) => {
-                        const isProjectPaused = project.status === 'Paused';
-                        const badgeText = project.status; // 'Active', 'Paused'
-                        const badgeColor = project.status === 'Paused' ? 'destructive' : 'secondary';
-                        return (
-                            <div key={project._id} className="project-card active">
-                                <div className="project-image relative">
-                                    <img
-                                        src={getImageUrl(project.thumbnailUrl) || 'https://via.placeholder.com/400x250'}
-                                        alt={project.title}
-                                    />
-                                    {/* Project status badge */}
-                                    <div className="absolute top-2 right-2">
-                                        <Badge
-                                            // We will no longer use the generic 'variant' prop.
-                                            // Instead, we'll use a template literal for dynamic, high-contrast classes.
-                                            className={`text-sm font-semibold  shadow-md
-                                                ${project.status === 'Paused'
-                                                    ? 'bg-red-600 text-white border-red-700'      // Prominent Red for Paused
-                                                    : 'bg-green-600 text-white border-green-700'  // Prominent Green for Active
-                                                }
-                                         `}
-                                        >
-                                            {project.status}
-                                        </Badge>
-                                    </div>
-                                    <div className="project-progress">
-                                        <div className="progress-bar">
-                                            <div className="progress-fill" style={{ width: `${project.stats?.percentComplete || 0}%` }}></div>
-                                        </div>
-                                        <div className="progress-text">{project.stats?.percentComplete?.toFixed(2) || 0}% Complete</div>
-                                    </div>
+                ) : error ? (
+                    // Agar error hai, to yahan error message dikhayein
+                    <div className="text-center py-20 text-red-600 bg-red-50 p-4 rounded-lg">
+                        <h3 className="font-bold">Oops! Something went wrong.</h3>
+                        <p>{error}</p>
+                    </div>
+                ) :
+
+                    <section className="projects-grid mt-5">
+                        {
+
+
+
+
+                            projects.length === 0 ? (
+                                <div className="text-center w-full py-20 col-span-full">
+                                    <h3 className="text-2xl !text-[#5d4037]">No active projects found.</h3>
+                                    {user?.role === 'admin' && <p className="!text-[#5d4037]">You can create the first one from the Admin Dashboard.</p>}
                                 </div>
-                                <div className="project-info">
-                                    <h3 className='!text-[#5d4037]'>{project.title}</h3>
-                                    <div className="project-stats">
-                                        <div className="stat">
-                                            <span className="stat-value !text-[#8d6e63] !text-[12.8px]">{project.contributors?.length || 0}</span>
-                                            <span className="stat-label !text-[#8d6e63]">Contributors</span>
-                                        </div>
-                                        <div className="stat">
-                                            <span className="stat-value !text-[#8d6e63] !text-[12.8px]">{project.stats?.pixelCount || 0}</span>
-                                            <span className="stat-label !text-[#8d6e63]">Pixels Painted</span>
-                                        </div>
-                                    </div>
-                                    <Link
-                                        // Step 1: Agar project paused hai, to usay kahin bhi na le kar jao
-                                        to={isProjectPaused ? "#" : `/project/${project?.canvasId}`}
-
-                                        // Step 2: Kuch aisi CSS classes lagayein jo disabled jaisa look dein
-                                        className={`btn-contribute !text-black !bg-[#d4af37] ${isProjectPaused ? 'opacity-50 cursor-not-allowed' : 'hover:!bg-[#b38f2c]'}`}
-
-                                        // Step 3: Event ko cancel karein taake link kaam na kare
-                                        onClick={(e) => { if (isProjectPaused) e.preventDefault(); }}
-
-                                        // title se user ko wajah batayein
-                                        title={isProjectPaused ? "This project is currently paused" : "Enter Project"}
-                                    >
-                                        {/* Text bhi badalna ek acha option hai */}
-                                        {isProjectPaused ? "Project Paused" : "Enter Project"}
-                                    </Link>
-                                    {/* // -------- YEH MUKAMMAL UPDATE SHUDA JSX HAI -------- */}
-
-                                    {user?.role === 'admin' && (
-                                        <div className="mt-4 pt-4 border-t">
-                                            <div className="flex items-center justify-between">
-                                                {/* --- ADMIN ACTIONS AB NAYE STATUS FIELD PAR CHALENGE --- */}
-                                                {project.status === 'Paused' ? (
-                                                    <Button
-                                                        className="cursor-pointer"
-                                                        variant="outline"
-                                                        size="icon"
-                                                        title="Resume Project"
-                                                        onClick={() =>
-                                                            // Naya Function Signature: (projectId, actionType, actionText)
-                                                            openConfirmationDialog(project._id, 'RESUME', 'Resume')
-                                                        }
+                            ) : (
+                                projects.map((project: any) => {
+                                    const isProjectPaused = project.status === 'Paused';
+                                    const badgeText = project.status; // 'Active', 'Paused'
+                                    const badgeColor = project.status === 'Paused' ? 'destructive' : 'secondary';
+                                    return (
+                                        <div key={project._id} className="project-card active">
+                                            <div className="project-image relative">
+                                                <img
+                                                    src={getImageUrl(project.thumbnailUrl) || 'https://via.placeholder.com/400x250'}
+                                                    alt={project.title}
+                                                />
+                                                {/* Project status badge */}
+                                                <div className="absolute top-2 right-2">
+                                                    <Badge
+                                                        // We will no longer use the generic 'variant' prop.
+                                                        // Instead, we'll use a template literal for dynamic, high-contrast classes.
+                                                        className={`text-sm font-semibold  shadow-md
+                                                ${project.status === 'Paused'
+                                                                ? 'bg-red-600 text-white border-red-700'      // Prominent Red for Paused
+                                                                : 'bg-green-600 text-white border-green-700'  // Prominent Green for Active
+                                                            }
+                                         `}
                                                     >
-                                                        <Play className="h-4 w-4" />
-                                                    </Button>
-                                                ) : (
-                                                    <Button
-                                                        className="cursor-pointer"
-                                                        variant="outline"
-                                                        size="icon"
-                                                        title="Pause Project"
-                                                        onClick={() =>
-                                                            // Naya Function Signature: (projectId, actionType, actionText)
-                                                            openConfirmationDialog(project._id, 'PAUSE', 'Pause')
-                                                        }
-                                                    >
-                                                        <Pause className="h-4 w-4" />
-                                                    </Button>
+                                                        {project.status}
+                                                    </Badge>
+                                                </div>
+                                                <div className="project-progress">
+                                                    <div className="progress-bar">
+                                                        <div className="progress-fill" style={{ width: `${project.stats?.percentComplete || 0}%` }}></div>
+                                                    </div>
+                                                    <div className="progress-text">{project.stats?.percentComplete?.toFixed(2) || 0}% Complete</div>
+                                                </div>
+                                            </div>
+                                            <div className="project-info">
+                                                <h3 className='!text-[#5d4037]'>{project.title}</h3>
+                                                <div className="project-stats">
+                                                    <div className="stat">
+                                                        <span className="stat-value !text-[#8d6e63] !text-[12.8px]">{project.contributors?.length || 0}</span>
+                                                        <span className="stat-label !text-[#8d6e63]">Contributors</span>
+                                                    </div>
+                                                    <div className="stat">
+                                                        <span className="stat-value !text-[#8d6e63] !text-[12.8px]">{project.stats?.pixelCount || 0}</span>
+                                                        <span className="stat-label !text-[#8d6e63]">Pixels Painted</span>
+                                                    </div>
+                                                </div>
+                                                <Link
+                                                    // Step 1: Agar project paused hai, to usay kahin bhi na le kar jao
+                                                    to={isProjectPaused ? "#" : `/project/${project?.canvasId}`}
+
+                                                    // Step 2: Kuch aisi CSS classes lagayein jo disabled jaisa look dein
+                                                    className={`btn-contribute !text-black !bg-[#d4af37] ${isProjectPaused ? 'opacity-50 cursor-not-allowed' : 'hover:!bg-[#b38f2c]'}`}
+
+                                                    // Step 3: Event ko cancel karein taake link kaam na kare
+                                                    onClick={(e) => { if (isProjectPaused) e.preventDefault(); }}
+
+                                                    // title se user ko wajah batayein
+                                                    title={isProjectPaused ? "This project is currently paused" : "Enter Project"}
+                                                >
+                                                    {/* Text bhi badalna ek acha option hai */}
+                                                    {isProjectPaused ? "Project Paused" : "Enter Project"}
+                                                </Link>
+                                                {/* // -------- YEH MUKAMMAL UPDATE SHUDA JSX HAI -------- */}
+
+                                                {user?.role === 'admin' && (
+                                                    <div className="mt-4 pt-4 border-t">
+                                                        <div className="flex items-center justify-between">
+                                                            {/* --- ADMIN ACTIONS AB NAYE STATUS FIELD PAR CHALENGE --- */}
+                                                            {project.status === 'Paused' ? (
+                                                                <Button
+                                                                    className="cursor-pointer"
+                                                                    variant="outline"
+                                                                    size="icon"
+                                                                    title="Resume Project"
+                                                                    onClick={() =>
+                                                                        // Naya Function Signature: (projectId, actionType, actionText)
+                                                                        openConfirmationDialog(project._id, 'RESUME', 'Resume')
+                                                                    }
+                                                                >
+                                                                    <Play className="h-4 w-4" />
+                                                                </Button>
+                                                            ) : (
+                                                                <Button
+                                                                    className="cursor-pointer"
+                                                                    variant="outline"
+                                                                    size="icon"
+                                                                    title="Pause Project"
+                                                                    onClick={() =>
+                                                                        // Naya Function Signature: (projectId, actionType, actionText)
+                                                                        openConfirmationDialog(project._id, 'PAUSE', 'Pause')
+                                                                    }
+                                                                >
+                                                                    <Pause className="h-4 w-4" />
+                                                                </Button>
+                                                            )}
+
+                                                            <Button className="cursor-pointer bg-red-100 hover:bg-red-200 text-red-600 border border-red-200"
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                title="Close Project (Move to Gallery)" onClick={() => openConfirmationDialog(project._id, 'COMPLETE', 'Mark as Complete')}>
+                                                                <CheckCircle className="h-4 w-4 cursor-pointer" />
+                                                            </Button>
+
+                                                            <Button className="cursor-pointer bg-red-600 hover:bg-red-700 text-white"
+                                                                variant="destructive"
+                                                                size="icon"
+                                                                title="Delete Project FOREVER" onClick={() => openConfirmationDialog(project._id, 'DELETE', 'DELETE PERMANENTLY')}>
+                                                                <Trash2 className="h-4 w-4 cursor-pointer" color='white' />
+                                                            </Button>
+                                                        </div>
+                                                    </div>
                                                 )}
-
-                                                <Button className="cursor-pointer bg-red-100 hover:bg-red-200 text-red-600 border border-red-200"
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    title="Close Project (Move to Gallery)" onClick={() => openConfirmationDialog(project._id, 'COMPLETE', 'Mark as Complete')}>
-                                                    <CheckCircle className="h-4 w-4 cursor-pointer" />
-                                                </Button>
-
-                                                <Button className="cursor-pointer bg-red-600 hover:bg-red-700 text-white"
-                                                    variant="destructive"
-                                                    size="icon"
-                                                    title="Delete Project FOREVER" onClick={() => openConfirmationDialog(project._id, 'DELETE', 'DELETE PERMANENTLY')}>
-                                                    <Trash2 className="h-4 w-4 cursor-pointer" color='white' />
-                                                </Button>
                                             </div>
                                         </div>
-                                    )}
-                                </div>
-                            </div>
-                        )
-                    })
-                )}
-            </section>
+                                    )
+                                })
+                            )}
+                    </section>}
 
             <div className="mt-8">
                 <Pagination

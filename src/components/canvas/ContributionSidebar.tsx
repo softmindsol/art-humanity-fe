@@ -1,7 +1,7 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import ContributionsList from './ContributionsList';
-import { getContributionsByProject } from '@/redux/action/contribution';
+import { fetchContributionsByTiles, getContributionsByProject } from '@/redux/action/contribution';
 import useAuth from '@/hook/useAuth';
 import useAppDispatch from '@/hook/useDispatch';
 import { clearCanvasData, selectCanvasData, selectIsLoadingOperation, selectPaginationInfo } from '@/redux/slice/contribution';
@@ -57,19 +57,18 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
     // Yeh useEffect ab filter, projectId, aur activeTab teeno par chalega.
     useEffect(() => {
         if (projectId) {
-            console.log(`Fetching data for Tab: ${activeTab}, Filter: ${filter}`);
 
             // (1) Pehle purana data saaf karein
             dispatch(clearCanvasData());
 
             // (2) Naye parameters ke saath pehla page fetch karein
-            dispatch(getContributionsByProject({
-                projectId,
-                sortBy: filter,
-                page: 1,
-                // Agar 'my' tab active hai to userId bhejein
-                userId: activeTab === 'my' ? user?.id : undefined
-            }));
+            // dispatch(getContributionsByProject({
+            //     projectId,
+            //     sortBy: filter,
+            //     page: 1,
+            //     // Agar 'my' tab active hai to userId bhejein
+            //     userId: activeTab === 'my' ? user?.id : undefined
+            // }));
         }
     }, [filter, projectId, activeTab, user?.id, dispatch]); // activeTab ko dependency mein add karna sab se zaroori hai
 
@@ -125,13 +124,15 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
                 onClick={() => {
                     setIsOpen(!isOpen);
                     if(isOpen===false){
-                        dispatch(getContributionsByProject({
-                            projectId,
-                            sortBy: filter,
-                            page: 1,
-                            // Agar 'my' tab active hai to userId bhejein
-                            userId: activeTab === 'my' ? user?.id : undefined
-                        }));
+                        // dispatch(getContributionsByProject({
+                        //     projectId,
+                        //     sortBy: filter,
+                        //     page: 1,
+                        //     // Agar 'my' tab active hai to userId bhejein
+                        //     userId: activeTab === 'my' ? user?.id : undefined
+                        // }));
+                                    dispatch(fetchContributionsByTiles({ projectId, tiles:'512' }));
+                        
                     }
 
                 }}

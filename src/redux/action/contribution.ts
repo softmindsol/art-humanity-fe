@@ -226,6 +226,6 @@ export const fetchContributionsByTiles = createAsyncThunk(
       return rejectWithValue(
         error.response?.data?.message || "Could not load artwork for this area."
       );
-    }
+    } 
   }
 );

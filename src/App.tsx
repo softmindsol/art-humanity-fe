@@ -16,8 +16,13 @@ import TiledCanvasPage from './page/TiledCanvasPage';
 import Demo from './page/Demo';
 import GalleryPage from './page/gallery';
 import { SocketProvider } from './context/SocketContext';
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements } from '@stripe/react-stripe-js';
 function App() {
+  const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+
   return (
+    <Elements stripe={stripePromise}>
     <Router>
       <SocketProvider>
         <Header />
@@ -43,6 +48,7 @@ function App() {
         <Footer />
       </SocketProvider>
     </Router>
+    </Elements>
   );
 }
 

@@ -17,7 +17,7 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { useCanvasState } from '@/hook/useCanvasState';
-import { clearCanvas, generateTimelapseVideo, getContributionsByProject } from '@/redux/action/contribution';
+import { clearCanvas, fetchContributionsByTiles, generateTimelapseVideo, getContributionsByProject } from '@/redux/action/contribution';
 import InfoBox from '@/components/toolbox/InfoBox';
 import { clearAllContributionsFromState, clearCanvasData, clearTimelapseUrl, removeContributionFromState, removeContributionOptimistically, removeMultipleContributionsFromState, selectCanvasData, selectErrorForOperation, selectIsLoadingOperation, selectTimelapseUrl, updateContributionInState } from '@/redux/slice/contribution';
 import ContributionSidebar from '@/components/canvas/ContributionSidebar';
@@ -34,6 +34,7 @@ import { useSelector } from 'react-redux';
 import { addContributorToState, removeContributorFromState, selectCurrentProject, updateProjectStatusInState } from '@/redux/slice/project';
 import type { RootState } from '@/redux/store';
 import { useNavigate } from 'react-router-dom';
+import { useDebounce } from '@/hook/useDebounce';
 
 
 const TILE_SIZE = 512; // Optimal tile size for performance
@@ -54,6 +55,12 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
     const navigate = useNavigate();
     // --- STATES ---
     const [socket, setSocket] = useState<any>(null);
+    const [canvasStats, setCanvasStats] = useState({
+        zoom: 1,
+        worldPos: { x: 0, y: 0 },
+    });
+
+    const debouncedCanvasStats = useDebounce(canvasStats, 300); // Debounce panning/zooming
     const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isContributionSaving, setIsContributionSaving] = useState(false);
@@ -63,16 +70,19 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
     const [isTimelapseOpen, setIsTimelapseOpen] = useState(false);
     const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, text: '' });
     const [isGeneratingTimelapse, _] = useState(false);
-    const contributions = useSelector(selectCanvasData);
-    const { loading } = useSelector((state: RootState) => state.projects);
+    const [isTimelapseFullscreen, setIsTimelapseFullscreen] = useState(false);
+
     // --- REFS ---
     const canvasContainerRef = useRef<any>(null);
     const listItemRefs = useRef<any>({});
     const [cursors, setCursors] = useState<Record<string, any>>({});
     const mainContentRef = useRef<HTMLDivElement>(null);
+    const loadedTilesRef = useRef(new Set()); // Keep track of loaded tiles
 
     // --- REDUX SELECTORS ---
     const currentProject = useSelector(selectCurrentProject);
+    const contributions = useSelector(selectCanvasData);
+    const { loading } = useSelector((state: RootState) => state.projects);
     const timelapseUrl = useSelector(selectTimelapseUrl);
     const isGenerating = useSelector(selectIsLoadingOperation('generateTimelapse'));
     const generationError = useSelector(selectErrorForOperation('generateTimelapse'));
@@ -80,20 +90,8 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
     const savedStrokes = useSelector(selectCanvasData);
     const isSaving = useSelector(selectIsLoadingOperation("batchCreateContributions"));
     const saveError = useSelector(selectErrorForOperation("batchCreateContributions"));
-    // Project details ki API call (`fetchProjectById`) ki states
-    // const isProjectLoading = useSelector(selectProjectsLoading).fetchingById;
-    // const projectError = useSelector(selectProjectsError).fetchingById;
-
-    // Contributions ki API call (`getContributionsByProject`) ki states
-    // const areContributionsLoading = useSelector(selectIsLoadingOperation('getContributions'));
-    // const contributionsError = useSelector(selectErrorForOperation('getContributions'));
     const isClearingCanvas = useSelector(selectIsLoadingOperation('clearCanvas'));
-    // const [loadingSteps, setLoadingSteps] = useState({
-    //     projectDetails: false,
-    //     contributions: false,
-    // });
-    // Yeh poore page ki initial loading ko control karega
-    // const [isInitialLoading, setIsInitialLoading] = useState(true);
+
 
 
 
@@ -110,6 +108,8 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
     const handleModalClose = (isOpen: any) => {
         if (!isOpen) {
             dispatch(clearTimelapseUrl());
+            setIsTimelapseFullscreen(false); // Reset fullscreen state when modal closes
+
         }
         setIsTimelapseOpen(isOpen);
     };
@@ -121,10 +121,6 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
         setIsClearAlertOpen,
     } = useCanvasState();
 
-    const [canvasStats, setCanvasStats] = useState({
-        zoom: 1,
-        worldPos: { x: 0, y: 0 },
-    });
 
 
     // Canvas se click handle karne wala function
@@ -139,6 +135,51 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
         setSelectedContributionId(contributionId);
         // Sidebar pehle se khula hai, usay dobara kholne ki zaroorat nahi
     }, []);
+
+
+    // --- DYNAMIC VALUES ---
+    const totalCanvasPixels = useMemo(() => {
+        if (!currentProject?.width || !currentProject?.height) return 1;
+        return currentProject.width * currentProject.height;
+    }, [currentProject]);
+
+
+    // --- TILING LOGIC ---
+    useEffect(() => {
+        if (!currentProject || !canvasContainerRef.current) return;
+
+        const { width, height } = currentProject;
+        const { zoom, worldPos }: any = debouncedCanvasStats;
+        const { offsetWidth, offsetHeight } = canvasContainerRef.current;
+
+        const startX = -worldPos.x / zoom;
+        const startY = -worldPos.y / zoom;
+        const endX = startX + offsetWidth / zoom;
+        const endY = startY + offsetHeight / zoom;
+
+        const firstTileX = Math.max(0, Math.floor(startX / TILE_SIZE));
+        const firstTileY = Math.max(0, Math.floor(startY / TILE_SIZE));
+        const lastTileX = Math.min(Math.ceil(width / TILE_SIZE) - 1, Math.floor(endX / TILE_SIZE));
+        const lastTileY = Math.min(Math.ceil(height / TILE_SIZE) - 1, Math.floor(endY / TILE_SIZE));
+
+        const tilesToLoad = [];
+        for (let y = firstTileY; y <= lastTileY; y++) {
+            for (let x = firstTileX; x <= lastTileX; x++) {
+                const tileId = `${x}-${y}`;
+                if (!loadedTilesRef.current.has(tileId)) {
+                    tilesToLoad.push(tileId);
+                }
+            }
+        }
+
+        if (tilesToLoad.length > 0) {
+            tilesToLoad.forEach(tileId => loadedTilesRef.current.add(tileId));
+            dispatch(fetchContributionsByTiles({ projectId, tiles: tilesToLoad.join(',') }));
+        }
+    }, [debouncedCanvasStats, currentProject, projectId, dispatch]);
+
+
+
 
     const handleClearCanvas = () => {
         dispatch(clearCanvas({ projectId }));
@@ -370,7 +411,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
     useEffect(() => {
         if (!socket) return;
 
-        if (currentProject.status === 'Paused' || currentProject.status === 'Completed') {
+        if (currentProject.status === 'Paused' /*|| currentProject.status === 'Completed'*/) {
             navigate(`/projects`);
             toast.warning("The project is no longer active. Redirecting to projects page.");
         }
@@ -556,7 +597,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
                                         </AlertDialogTitle>
                                         <AlertDialogDescription className="text-gray-300 pt-2">
                                             This action cannot be undone. This will permanently delete all
-                                            the drawings for the project <strong className="text-amber-300">{'projectName'}</strong> from our servers.
+                                            the drawings for the project <strong className="text-amber-300">{projectName}</strong> from our servers.
                                         </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter className="mt-4">
@@ -605,7 +646,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
                             </div>
                             <div className="stat-item">
                                 <span className="stat-label !text-[14.4px]">Canvas Size:</span>
-                                <span className="stat-value !text-[14.4px]">1024px by 1024px</span>
+                                <span className="stat-value !text-[14.4px]">2560px by 2560px</span>
                             </div>
                         </div>
 
@@ -622,6 +663,8 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
                                     userId={user?.id}
                                     width={canvasSize.width}
                                     height={canvasSize.height}
+                                    virtualWidth={currentProject.width}
+                                    virtualHeight={currentProject.height}
                                     onStateChange={handleCanvasStateChange} // Callback function pass karein
                                     selectedContributionId={selectedContributionId}
                                     onContributionHover={handleContributionHover}
@@ -761,13 +804,19 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
 
             />
             <Dialog open={isTimelapseOpen} onOpenChange={handleModalClose}>
-                <DialogContent className="bg-[#5d4037] border-2 border-[#3e2723] text-white font-[Georgia, serif] max-w-3xl">
+                <DialogContent className={`
+            bg-[#5d4037] border-2 border-[#3e2723] text-white font-[Georgia, serif] p-0
+            transition-all duration-300 ease-in-out
+            ${isTimelapseFullscreen
+                        ? 'fixed inset-0 w-full h-full max-w-full max-h-full rounded-none' // Fullscreen styles
+                        : 'sm:max-w-4xl md:max-w-5xl lg:max-w-6xl' // Default modal styles
+                    }
+        `}>
                     <DialogHeader>
-                        <DialogTitle className="text-2xl !text-white text-center">Project Timelapse</DialogTitle>
+                        <DialogTitle className="text-2xl !text-white text-center pt-3">Project Timelapse</DialogTitle>
                     </DialogHeader>
 
                     <div className="min-h-[400px] flex justify-center items-center p-4">
-                        {/* Case 1: Loading State */}
                         {isGenerating && (
                             <div className="text-center">
                                 <div className="w-12 h-12 border-4 border-blue-400 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
@@ -776,7 +825,6 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
                             </div>
                         )}
 
-                        {/* Case 2: Error State */}
                         {!isGenerating && generationError && (
                             <div className="text-center text-red-400">
                                 {/* <h3 className="text-xl font-bold !text-white mb-2">Error!</h3> */}
@@ -788,11 +836,19 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
                         {/* Case 3: Success State (Video Ready) */}
                         {!isGenerating && timelapseUrl && (
                             <video
-                                key={`${timelapseUrl}?t=${new Date().getTime()}`}
-                                src={`${import.meta.env.VITE_BASE}${timelapseUrl}?t=${new Date().getTime()}`}
+                                key={timelapseUrl}
+                                src={`${import.meta.env.VITE_BASE}${timelapseUrl}`}
                                 controls
                                 autoPlay
-                                className="w-full max-h-[70vh] rounded-lg"
+                                muted
+                                playsInline
+                                className={`
+                        w-full h-auto rounded-lg
+                        ${isTimelapseFullscreen
+                                        ? 'max-h-screen' // Allow full screen height
+                                        : 'max-h-[85vh]'   // Default max height
+                                    }
+                    `}
                             >
                                 Your browser does not support the video tag.
                             </video>

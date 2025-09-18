@@ -24,6 +24,32 @@ const ContributionsList = ({
     const dispatch = useAppDispatch();
     const { user } = useAuth();
 
+    // const handleVote = async (e: any, contributionId: any, voteType: any) => {
+    //     e.stopPropagation();
+
+    //     if (!user) {
+    //         onGuestVoteAttempt();
+    //         return;
+    //     }
+
+    //     try {
+    //         // Dispatch vote action
+    //         await dispatch(voteOnContribution({ contributionId, voteType, userId: user?.id })).unwrap();
+
+    //         // Toast on success
+    //         toast.success(
+    //             voteType === 'up'
+    //                 ? 'You upvoted this contribution.'
+    //                 : 'You downvoted this contribution.'
+    //         );
+    //     } catch (err: any) {
+    //         console.error('Voting failed:', err);
+    //         toast.error('Failed to register your vote. Please try again.');
+    //     }
+    // };
+
+    // src/components/canvas/ContributionsList.js
+
     const handleVote = async (e: any, contributionId: any, voteType: any) => {
         e.stopPropagation();
 
@@ -33,21 +59,50 @@ const ContributionsList = ({
         }
 
         try {
-            // Dispatch vote action
-            await dispatch(voteOnContribution({ contributionId, voteType, userId: user?.id })).unwrap();
+            // --- YEH HAI ASAL NAYI LOGIC ---
 
-            // Toast on success
-            toast.success(
-                voteType === 'up'
-                    ? 'You upvoted this contribution.'
-                    : 'You downvoted this contribution.'
-            );
+            // Step 1: Action dispatch karne se pehle, purana vote status check karein
+            const originalContribution = contributions.find((c: any) => c._id === contributionId);
+            const previousVote = originalContribution?.voters?.find((v: any) => v.userId === user.id);
+
+            // Step 2: Action ko dispatch karein aur backend se naya, updated contribution object hasil karein
+            // Humne iska naam 'response' rakha hai, iske andar 'wasDeleted' ya 'updatedContribution' ho sakta hai
+            const response = await dispatch(voteOnContribution({ contributionId, voteType, userId: user.id })).unwrap();
+
+            // Agar contribution delete ho gayi to kuch na karein (is a toast in slice already)
+            if (response.wasDeleted) {
+                toast.info("Contribution was auto-deleted due to high downvotes.");
+                return;
+            }
+
+            const updatedContribution = response;
+
+            // Step 3: Ab purane aur naye vote status ko compare karke sahi message dikhayein
+            const newVote = updatedContribution.voters.find((v: any) => v.userId === user.id);
+
+            let toastMessage = '';
+
+            if (!previousVote && newVote) {
+                // Case A: Pehle vote nahi tha, ab hai (Naya vote laga hai)
+                toastMessage = `You ${voteType === 'up' ? 'upvoted' : 'downvoted'} this contribution.`;
+                toast.success(toastMessage);
+            } else if (previousVote && !newVote) {
+                // Case B: Pehle vote tha, ab nahi hai (Vote hataya gaya hai)
+                toastMessage = `Your ${voteType === 'up' ? 'upvote' : 'downvote'} has been removed.`;
+                toast.info(toastMessage);
+            } else if (previousVote && newVote && previousVote.voteType !== newVote.voteType) {
+                // Case C: Pehle vote tha, aur ab bhi hai, lekin type badal gaya hai (upvote se downvote ya vice versa)
+                toastMessage = `Your vote has been changed to an ${voteType === 'up' ? 'upvote' : 'downvote'}.`;
+                toast.success(toastMessage);
+            }
+            // Case D: Agar user ne dobara same button dabaya aur vote remove ho gaya (Case B handle kar lega),
+            // ya agar koi aur unexpected case ho to hum kuch nahi dikhayeinge taake user confuse na ho.
+
         } catch (err: any) {
             console.error('Voting failed:', err);
-            toast.error('Failed to register your vote. Please try again.');
+            toast.error(err.response?.data?.message || 'Failed to register your vote.');
         }
     };
-
     const handleDelete = (e: any, contributionId: any) => {
         e.stopPropagation();
         // if (confirm('Are you sure you want to delete this contribution?')) {

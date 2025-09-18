@@ -17,7 +17,7 @@ import { getCanvasPointerPosition } from '@/utils/getCanvasPointerPosition';
 
 const KonvaCanvas = ({
     projectId, userId, width, height, onStateChange, selectedContributionId,
-    onGuestInteraction, isReadOnly, isContributor, socket, setIsContributionSaving
+    onGuestInteraction, isReadOnly, isContributor, socket, setIsContributionSaving, virtualWidth, virtualHeight
 }: any) => {
 
     // --- Hooks ---
@@ -40,6 +40,7 @@ const KonvaCanvas = ({
     const strokeQueueRef = useRef<any[]>([]);
     const batchTimerRef = useRef<NodeJS.Timeout | null>(null);
     const isDrawingRef = useRef(isDrawing);
+    const stageRef = useRef<any>(null);
 
     // --- zoom in/out limit --- 
     const MAX_ZOOM = 32;
@@ -50,8 +51,8 @@ const KonvaCanvas = ({
         return transformContributionForKonva(contribution);
     }, []); // Transform function ko memoize karein
 
-
-
+    console.log(virtualWidth, virtualHeight)
+console.log(width,height)
     useEffect(() => {
         if (!savedStrokes || width === 0 || height === 0) {
             setBakedImage(null);
@@ -80,6 +81,45 @@ const KonvaCanvas = ({
 
         // Ab jab bhi savedStrokes change honge, yeh turant render ho jayega
     }, [savedStrokes, width, height]);
+
+    // The single, authoritative baking hook
+    useEffect(() => {
+        if (!virtualWidth || !virtualHeight) return;
+
+        const offscreenCanvas = document.createElement('canvas');
+        offscreenCanvas.width = virtualWidth;
+        offscreenCanvas.height = virtualHeight;
+        const ctx = offscreenCanvas.getContext('2d');
+        if (!ctx) return;
+
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, virtualWidth, virtualHeight);
+
+        const allStrokesToDraw = [...savedStrokes, ...pendingStrokes];
+
+        allStrokesToDraw.forEach((contribution) => {
+            if (contribution?.strokes?.length > 0) {
+                const konvaData = memoizedTransformContributionForKonva(contribution);
+                konvaData.lines.forEach((line:any) => {
+                    if (!line.points || line.points.length < 2) return;
+                    ctx.beginPath();
+                    ctx.moveTo(line.points[0], line.points[1]);
+                    for (let i = 2; i < line.points.length; i += 2) ctx.lineTo(line.points[i], line.points[i + 1]);
+                    ctx.strokeStyle = line.stroke;
+                    ctx.lineWidth = line.strokeWidth;
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                    ctx.globalCompositeOperation = line.globalCompositeOperation;
+                    ctx.stroke();
+                });
+            }
+        });
+
+        const image = new window.Image();
+        image.src = offscreenCanvas.toDataURL();
+        image.onload = () => setBakedImage(image);
+    }, [savedStrokes, pendingStrokes, virtualWidth, virtualHeight, memoizedTransformContributionForKonva]);
+
 
     const drawAllStrokes = useCallback((ctx: any) => {
         if (!ctx) return;
@@ -256,7 +296,7 @@ const KonvaCanvas = ({
             setIsDrawing(true);
             currentStrokePathRef.current = [];
             // Redux se anay wale color object ko CSS ke rgba string mein convert karein
-          
+
             setActiveLine({
                 points: [pos.x, pos.y],
                 tool: brushState.mode,
@@ -348,8 +388,8 @@ const KonvaCanvas = ({
     //         return;
     //     }
 
-        
-        
+
+
     //     // --- NAYA LOGIC FOR INSTANT DRAW ---
     //     // 1. Agar bakedImage mojood hai, to usay ek naye (temporary) canvas par draw karein
     //     const tempCanvas = document.createElement('canvas');
@@ -622,6 +662,15 @@ const KonvaCanvas = ({
             }
         }
     };
+
+    const handleStageChange = () => {
+        if (stageRef.current) {
+            onStateChange({
+                zoom: stageRef.current.scaleX(),
+                position: stageRef.current.position()
+            });
+        }
+    };
     const highlightedLines = useMemo(() => {
         if (!selectedContributionId) return [];
         const selected = savedStrokes.find((c: any) => c._id === selectedContributionId);
@@ -630,11 +679,38 @@ const KonvaCanvas = ({
 
     return (
         <Stage
-            width={width} height={height}
-            scaleX={stageState.scale} scaleY={stageState.scale}
-            x={stageState.x} y={stageState.y}
+            width={width} 
+            height={height}
+            scaleX={stageState.scale} 
+            scaleY={stageState.scale}
+            x={stageState.x} 
+            y={stageState.y}
             draggable={brushState.mode === 'move'}
             style={{ cursor: brushState.mode === 'move' ? 'grab' : 'crosshair' }}
+              onWheel={(e) => {
+                e.evt.preventDefault();
+                const stage = stageRef.current;
+                if (!stage) return;
+                
+                const oldScale = stage.scaleX();
+                const pointer = stage.getPointerPosition();
+                const mousePointTo = {
+                    x: (pointer.x - stage.x()) / oldScale,
+                    y: (pointer.y - stage.y()) / oldScale,
+                };
+                
+                let newScale = e.evt.deltaY > 0 ? oldScale / 1.1 : oldScale * 1.1;
+                newScale = Math.max(MIN_ZOOM, Math.min(newScale, MAX_ZOOM));
+                
+                const newPos = {
+                    x: pointer.x - mousePointTo.x * newScale,
+                    y: pointer.y - mousePointTo.y * newScale,
+                };
+
+                stage.scale({ x: newScale, y: newScale });
+                stage.position(newPos);
+                handleStageChange();
+            }}
         >
             <Layer>
                 {bakedImage && <KonvaImage image={bakedImage} listening={false} />}
@@ -660,7 +736,9 @@ const KonvaCanvas = ({
 
             <Layer>
                 <Rect
-                    width={width} height={height}
+                    // width={width} height={height}
+                    width={virtualWidth}
+                    height={virtualHeight}
                     fill="transparent"
                     onWheel={handleWheel}
                     onMouseDown={handleMouseDown}

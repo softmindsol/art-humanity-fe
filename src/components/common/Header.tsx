@@ -9,9 +9,13 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { openAuthModal, closeAuthModal, selectIsAuthModalOpen } from '@/redux/slice/opeModal';
 import { useSocket } from '@/context/SocketContext';
 import { fetchNotifications, markNotificationsAsRead, markSingleNotificationRead } from '@/redux/action/notification';
-import { Bell, Menu, X } from 'lucide-react';
+import { Bell, Heart, LogOut, Menu, UserCircle2, X } from 'lucide-react';
 import { addNotification } from '@/redux/slice/notification';
-import  useOnClickOutside  from '@/hook/useOnClickOutside';
+import useOnClickOutside from '@/hook/useOnClickOutside';
+import { toast } from 'sonner';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
+import DonationForm from '../stripe/DonationForm';
+import CheckoutForm from '../stripe/CheckoutForm';
 
 const Header = () => {
   const isAuthModalOpen = useSelector(selectIsAuthModalOpen);
@@ -19,7 +23,7 @@ const Header = () => {
   const { user, profile } = useSelector((state: RootState) => state.auth);
   const notificationRef = useRef<HTMLDivElement>(null);
 
-   // --- DRAWER STATE ---
+  // --- DRAWER STATE ---
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // --- NOTIFICATION STATE ---
@@ -41,6 +45,33 @@ const Header = () => {
 
   useOnClickOutside([notificationRef], () => setIsNotificationOpen(false));
 
+
+  // --- DONATION MODAL KE LIYE NAYI STATE ---
+  const [donationState, setDonationState] = useState({
+    isFormOpen: false, // Yeh DonationForm (amount input) ko control karega
+    isCheckoutOpen: false, // Yeh CheckoutForm (card input) ko control karega
+    clientSecret: null as string | null,
+    amount: 0,
+  });
+
+  // Jab DonationForm 'onDonate' call kare
+  const handleOnDonate = (clientSecret: string, amount: number) => {
+    setDonationState({
+      isFormOpen: false, // Amount wala form band kar do
+      isCheckoutOpen: true, // Card wala form khol do
+      clientSecret,
+      amount,
+    });
+  };
+
+  // Jab payment kamyab ho jaye
+  const handlePaymentSuccess = () => {
+    toast.success("Thank you for your generous donation!");
+    setDonationState({ isFormOpen: false, isCheckoutOpen: false, clientSecret: null, amount: 0 });
+  };
+
+
+
   useEffect(() => {
     if (user && user?.id) {
       dispatch(getUserById(user.id));
@@ -53,7 +84,6 @@ const Header = () => {
   useEffect(() => {
     // Ab 'socket' variable ya to اصل socket instance hai ya null
     if (socket) {
-      console.log("[Header] Socket instance found, attaching listener.");
 
       const handleNewNotification = (notification: any) => {
         console.log("New notification received:", notification);
@@ -91,7 +121,7 @@ const Header = () => {
   const handleLinkClick = () => {
     setIsSidebarOpen(false);
   }
-  
+
   const handleNotificationClick = (notification: any) => {
     // Pehle dropdown band kar dein
     setIsNotificationOpen(false);
@@ -194,7 +224,7 @@ const Header = () => {
                               >
                                 <Link to={`/project/${notif.project?.canvasId}`} onClick={() => handleNotificationClick(notif)}
                                 >
-                                  {notif.message} 
+                                  {notif.message}
                                   <div className='text-xs text-gray-500 mt-1'>{new Date(notif.createdAt).toLocaleString()}</div>
                                 </Link>
                               </li>
@@ -240,18 +270,30 @@ const Header = () => {
                       </DropdownMenuLabel>
                       <DropdownMenuSeparator className="bg-[#d4af37]" />
 
+                      {/* --- PROFILE LINK WITH ICON --- */}
                       <Link to='/profile'>
-                        <DropdownMenuItem
-                          className="cursor-pointer text-[#5d4037] hover:bg-[#f1e6da] transition-colors"
-                        >
-                          Profile
+                        <DropdownMenuItem className="cursor-pointer text-[#5d4037] hover:bg-[#f1e6da] transition-colors flex items-center gap-2">
+                          <UserCircle2 size={16} />
+                          <span>Profile</span>
                         </DropdownMenuItem>
                       </Link>
+
+                      {/* --- SUPPORT US LINK WITH ICON --- */}
+                      <DropdownMenuItem
+                        onClick={() => setDonationState({ ...donationState, isFormOpen: true })}
+                        className="cursor-pointer text-[#5d4037] hover:bg-[#f1e6da] transition-colors flex items-center gap-2"
+                      >
+                        <Heart size={16} />
+                        <span>Support Us</span>
+                      </DropdownMenuItem>
+
+                      {/* --- LOGOUT BUTTON WITH ICON --- */}
                       <DropdownMenuItem
                         onClick={handleLogout}
-                        className="cursor-pointer text-red-600 hover:bg-[#f1e6da] transition-colors"
+                        className="cursor-pointer text-red-600 hover:bg-[#f1e6da] transition-colors flex items-center gap-2"
                       >
-                        Logout
+                        <LogOut size={16} />
+                        <span>Logout</span>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu></>
@@ -339,7 +381,7 @@ const Header = () => {
                   dispatch(openAuthModal()); // Auth modal kholein
                   handleLinkClick(); // Sidebar band karein
                 }}
-                  className="w-full cursor-pointer py-2 bg-[#3e2723] text-[#ffff] rounded-lg font-semibold text-lg hover:opacity-75 transition-colors"
+                className="w-full cursor-pointer py-2 bg-[#3e2723] text-[#ffff] rounded-lg font-semibold text-lg hover:opacity-75 transition-colors"
               >
                 Sign In / Sign Up
               </button>
@@ -348,6 +390,31 @@ const Header = () => {
 
         </div>
       </div>
+
+
+      {/* --- DONATION MODALS AB YAHAN HAIN --- */}
+      {/* 1. Amount Input Wala Modal */}
+      <Dialog open={donationState.isFormOpen} onOpenChange={(isOpen) => setDonationState({ ...donationState, isFormOpen: isOpen })}>
+        <DialogContent className="bg-[#5d4037] border-2 border-[#3e2723] text-white font-[Georgia, serif] max-w-3xl">
+          <DonationForm onDonate={handleOnDonate} />
+        </DialogContent>
+      </Dialog>
+
+      {/* 2. Card Input Wala Modal */}
+      <Dialog open={donationState.isCheckoutOpen} onOpenChange={(isOpen) => setDonationState({ ...donationState, isCheckoutOpen: isOpen })}>
+        <DialogContent className="!bg-[#5d4037] border-2 border-[#3e2723] text-white font-[Georgia, serif] max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className='!text-white'>Confirm Your Donation</DialogTitle>
+          </DialogHeader>
+          {donationState.clientSecret && (
+            <CheckoutForm
+              clientSecret={donationState.clientSecret}
+              projectPrice={donationState.amount}
+              onPaymentSuccess={handlePaymentSuccess}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
       {/* Modal renders conditionally */}
       {isAuthModalOpen && <AuthModal isOpen={isAuthModalOpen} onClose={() => dispatch(closeAuthModal())} />}
     </>

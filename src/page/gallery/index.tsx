@@ -14,14 +14,53 @@ import useAppDispatch from '@/hook/useDispatch';
 import { toast } from 'sonner';
 import api from '@/api/api';
 import { Pagination } from '@/components/common/Pagination';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import CheckoutForm from '@/components/stripe/CheckoutForm';
+import useAuth from '@/hook/useAuth';
 
 const GalleryPage: React.FC = () => {
+    const { user } = useAuth()
     const [downloading, setDownloading] = useState<string | null>(null);
     const dispatch = useAppDispatch();
     const projects = useSelector(selectGalleryProjects);
     const isLoading = useSelector(selectProjectsLoading).fetchingGallery;
     const error = useSelector(selectProjectsError).fetchingGallery;
     const { currentPage, totalPages } = useSelector(selectGalleryPagination);
+
+
+
+    const [paymentState, setPaymentState] = useState({
+        isOpen: false,
+        clientSecret: null,
+        projectToDownload: null,
+    });
+
+    const handleBuyClick = async (project: any) => {
+        try {
+            // Hamara naya backend endpoint call karein
+            const response = await api.post('/payments/create-payment-intent', { projectId: project._id, userId: user?.id });
+
+            // Payment modal kholein aur usay client secret dein
+            setPaymentState({
+                isOpen: true,
+                clientSecret: response.data.data.clientSecret,
+                projectToDownload: project,
+            });
+        } catch (err: any) {
+            toast.error(err?.response?.data?.message || "Could not initiate payment.");
+        }
+    };
+
+    const handlePaymentSuccess = () => {
+        // Payment kamyab hone par download shuru karein
+        handleDownload(paymentState.projectToDownload); // Aapka purana download function
+        setPaymentState({ isOpen: false, clientSecret: null, projectToDownload: null });
+    };
+
+
+
+
+
 
     useEffect(() => {
         // Jab bhi 'currentPage' badlega, yeh effect chalega
@@ -124,14 +163,16 @@ const GalleryPage: React.FC = () => {
                                         View Artwork
                                     </Link>
 
-                                    
-                                     <button
+
+                                    {/* <button
                                         onClick={() => handleDownload(project)}
                                         disabled={downloading === project._id}
                                         className="btn-contribute cursor-pointer flex-1 !bg-green-600 hover:!bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         {downloading === project._id ? 'Preparing...' : 'Download'}
-                                    </button>
+                                    </button> */}
+                                    <button className="btn-contribute cursor-pointer flex-1 !bg-green-600 hover:!bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed" onClick={() => handleBuyClick(project)}>Buy & Download</button>
+
                                 </div>
                             </div>
                         </div>
@@ -145,6 +186,25 @@ const GalleryPage: React.FC = () => {
                     onPageChange={handlePageChange}
                 />
             </div>
+
+            <Dialog open={paymentState.isOpen} onOpenChange={() => setPaymentState({ ...paymentState, isOpen: false })} >
+                <DialogContent className="bg-[#5d4037] border-2 border-[#3e2723] text-white font-[Georgia, serif] max-w-3xl">
+                    <DialogHeader>
+                        <DialogTitle className='!text-white'>Complete Your Purchase</DialogTitle>
+                    </DialogHeader>
+                    {paymentState.clientSecret && paymentState.projectToDownload && (
+                        <CheckoutForm
+                            clientSecret={paymentState.clientSecret}
+                            onPaymentSuccess={handlePaymentSuccess}
+
+                            // --- THIS IS THE FIX ---
+                            // Get the price from the project object stored in the state
+                            projectPrice={paymentState.projectToDownload?.price}
+                        />
+                    )}
+
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };

@@ -36,12 +36,12 @@ export const SocketProvider = ({ children }: SocketProviderProps) => {
         query: { userId: user.id }
       });
 
-      console.log(`[SocketProvider] Socket connected for user: ${user.id}`);
+      // console.log(`[SocketProvider] Socket connected for user: ${user.id}`);
       setSocket(newSocket);
 
       // Cleanup function (bohat zaroori)
       return () => {
-        console.log(`[SocketProvider] Disconnecting socket for user: ${user.id}`);
+        // console.log(`[SocketProvider] Disconnecting socket for user: ${user.id}`);
         newSocket.disconnect();
       };
     } else {
