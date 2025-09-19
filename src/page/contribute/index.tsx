@@ -91,7 +91,7 @@ const ActiveProjects: React.FC = () => {
         } else if (actionType === 'RESUME') {
             dispatch(updateProjectStatus({ projectId, status: 'Active' }));
         } else if (actionType === 'COMPLETE') { // 'CLOSE' ke bajaye 'COMPLETE'
-          
+
             dispatch(updateProjectStatus({ projectId, status: 'Completed' }));
         } else if (actionType === 'DELETE') {
             dispatch(deleteProject(projectId));
@@ -182,7 +182,7 @@ const ActiveProjects: React.FC = () => {
                             ) : (
                                 projects.map((project: any) => {
                                     const isProjectPaused = project.status === 'Paused';
-                                   
+
                                     return (
                                         <div key={project._id} className="project-card active">
                                             <div className="project-image relative">
@@ -195,12 +195,18 @@ const ActiveProjects: React.FC = () => {
                                                     <Badge
                                                         // We will no longer use the generic 'variant' prop.
                                                         // Instead, we'll use a template literal for dynamic, high-contrast classes.
-                                                        className={`text-sm font-semibold  shadow-md
-                                                ${project.status === 'Paused'
-                                                                ? 'bg-red-600 text-white border-red-700'      // Prominent Red for Paused
-                                                                : 'bg-green-600 text-white border-green-700'  // Prominent Green for Active
+                                                        className={`text-sm font-semibold shadow-md
+        ${
+                                                            // Pehla check: Kya status 'Paused' hai?
+                                                            project.status === 'Paused'
+                                                                ? 'bg-red-600 text-white border-red-700' // Haan, to Red (laal)
+                                                                // Agar nahi, to doosra check: Kya status 'Completed' hai?
+                                                                : project.status === 'Completed'
+                                                                    ? 'bg-purple-600 text-white border-purple-700' // Haan, to Purple (jamni)
+                                                                    // Agar woh bhi nahi (matlab 'Active' hai)
+                                                                    : 'bg-green-600 text-white border-green-700' // To Green (sabz)
                                                             }
-                                         `}
+    `}
                                                     >
                                                         {project.status}
                                                     </Badge>
@@ -233,7 +239,7 @@ const ActiveProjects: React.FC = () => {
                                                     >
                                                         View Artwork
                                                     </Link>
-                                                ) :( <Link
+                                                ) : (<Link
                                                     // Step 1: Agar project paused hai, to usay kahin bhi na le kar jao
                                                     to={isProjectPaused ? "#" : `/project/${project?.canvasId}`}
 
