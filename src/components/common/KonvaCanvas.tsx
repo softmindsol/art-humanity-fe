@@ -685,8 +685,17 @@ console.log(width,height)
             scaleY={stageState.scale}
             x={stageState.x} 
             y={stageState.y}
-            draggable={brushState.mode === 'move'}
-            style={{ cursor: brushState.mode === 'move' ? 'grab' : 'crosshair' }}
+            // draggable={brushState.mode === 'move'}
+            draggable={isReadOnly || brushState.mode === 'move'}
+
+            // style={{ cursor: brushState.mode === 'move' ? 'grab' : 'crosshair' }}
+            style={{
+                cursor: isReadOnly
+                    ? 'grab' // Agar read-only hai, to aam cursor
+                    : brushState.mode === 'move'
+                        ? 'grab' // Agar move tool hai, to 'grab'
+                        : 'crosshair' // Warna drawing wala 'crosshair'
+            }}
               onWheel={(e) => {
                 e.evt.preventDefault();
                 const stage = stageRef.current;
@@ -752,7 +761,7 @@ console.log(width,height)
                 />
             </Layer>
         </Stage>
-    );
+    ); 
 };
 
 export default React.memo(KonvaCanvas);

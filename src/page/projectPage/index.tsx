@@ -144,41 +144,56 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
     }, [currentProject]);
 
 
-    // --- TILING LOGIC ---
+    // --- TILING DATA FETCHING LOGIC ---
     useEffect(() => {
+        // Agar project ya canvas ka container tayyar nahi hai, to kuch na karein
         if (!currentProject || !canvasContainerRef.current) return;
 
         const { width, height } = currentProject;
-        const { zoom, worldPos }: any = debouncedCanvasStats;
+        const { zoom, worldPos } = debouncedCanvasStats;
         const { offsetWidth, offsetHeight } = canvasContainerRef.current;
 
+        // Screen par nazar anay wale area ki virtual coordinates calculate karein
         const startX = -worldPos.x / zoom;
         const startY = -worldPos.y / zoom;
         const endX = startX + offsetWidth / zoom;
         const endY = startY + offsetHeight / zoom;
 
+        // In coordinates ko tile numbers mein convert karein
         const firstTileX = Math.max(0, Math.floor(startX / TILE_SIZE));
         const firstTileY = Math.max(0, Math.floor(startY / TILE_SIZE));
         const lastTileX = Math.min(Math.ceil(width / TILE_SIZE) - 1, Math.floor(endX / TILE_SIZE));
         const lastTileY = Math.min(Math.ceil(height / TILE_SIZE) - 1, Math.floor(endY / TILE_SIZE));
 
         const tilesToLoad = [];
+        // Loop chala kar un tamam tiles ki list banayein jo load karne hain
         for (let y = firstTileY; y <= lastTileY; y++) {
             for (let x = firstTileX; x <= lastTileX; x++) {
                 const tileId = `${x}-${y}`;
+                // Sirf un tiles ko load karein jo pehle se load nahi hue
                 if (!loadedTilesRef.current.has(tileId)) {
                     tilesToLoad.push(tileId);
                 }
             }
         }
 
+        // Agar load karne ke liye naye tiles hain, to hi API call karein
         if (tilesToLoad.length > 0) {
+            console.log("Fetching data for new tiles:", tilesToLoad.join(','));
+            // Naye tiles ko "loaded" mark kar dein taake dobara na mangwaye ja sakein
             tilesToLoad.forEach(tileId => loadedTilesRef.current.add(tileId));
+            // Sahi format mein API call dispatch karein
             dispatch(fetchContributionsByTiles({ projectId, tiles: tilesToLoad.join(',') }));
         }
     }, [debouncedCanvasStats, currentProject, projectId, dispatch]);
 
-
+    // Project badalne par purana data saaf karein
+    useEffect(() => {
+        return () => {
+            dispatch(clearAllContributionsFromState()); // Redux mein ek naya reducer
+            loadedTilesRef.current.clear();
+        };
+    }, [projectId, dispatch]);
 
 
     const handleClearCanvas = () => {
@@ -276,7 +291,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
 
 
     useEffect(() => {
-        if (currentProject && user && !isCurrentUserAContributor) {
+        if (currentProject && user && !isCurrentUserAContributor && !isReadOnly ) {
             setIsJoinDialogOpen(true);
         }
         if (isCurrentUserAContributor) {
@@ -317,7 +332,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
     useEffect(() => {
 
         console.log(`Fetching strokes for projectId: ${projectId}`);
-        dispatch(getContributionsByProject({ projectId }));
+        // dispatch(getContributionsByProject({ projectId }));
 
         // ya jab `projectId` badlega (naye data fetch hone se pehle).
         return () => {
@@ -469,7 +484,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
 
         const handleStatusUpdate = (newStatus: string) =>
             (data: { projectId: string, message: string }) => {
-                console.log("data.projectId === projectId:", data.projectId === projectId)
+                
                 // Only act if the event is for the project we are currently viewing
                 if (data.projectId === projectId) {
                     console.log(`[Socket] Received project status change: ${newStatus}`);
@@ -478,6 +493,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
                         navigate(`/projects`);
                     }
                     if (newStatus === "Completed") {
+                        
                         toast.warning("The project has been Completed by an admin.");
                         navigate(`/gallery`);
                     }

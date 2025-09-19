@@ -82,7 +82,7 @@ console.log("userId in thunk:", userId); // Debugging ke liye
       if (userId) params.append("userId", userId);
 
       const queryString = params.toString();
-      let url = `/contributions/project/${projectId}`;
+      let url = `/contributions/${projectId}`;
       if (queryString) {
         url += `?${queryString}`;
       }

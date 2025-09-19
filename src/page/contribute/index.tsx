@@ -91,6 +91,12 @@ const ActiveProjects: React.FC = () => {
         } else if (actionType === 'RESUME') {
             dispatch(updateProjectStatus({ projectId, status: 'Active' }));
         } else if (actionType === 'COMPLETE') { // 'CLOSE' ke bajaye 'COMPLETE'
+            dispatch(fetchActiveProjects({
+                page: currentPage,
+                limit: 6,                // keep consistent
+                status: statusFilter,
+                search: debouncedSearchTerm
+            }));
             dispatch(updateProjectStatus({ projectId, status: 'Completed' }));
         } else if (actionType === 'DELETE') {
             dispatch(deleteProject(projectId));
@@ -114,43 +120,16 @@ const ActiveProjects: React.FC = () => {
             toast.error(data.message);
         };
 
-        const handleStatusChange = (data: { projectId: string, status: string, message: string }) => {
-            // --- YEH HAI ASAL FIX ---
-            console.log("[Socket] Received status change:", data);
-            // Step 1: User ko hamesha toast dikhao
-            // Hum `message` ka istemal karenge jo backend se aa raha hai
-            if (data.status === 'Paused') {
-                toast.warning(data.message || `A project has been paused.`);
-            } else if (data.status === 'Active') {
-                toast.success(data.message || `A project has been resumed.`);
-            }
 
-            // Step 2: Redux state ko update karo
-            if (data.status === 'Completed') {
-                // Agar project complete ho gaya hai, to usay is "Active Projects" list se nikaal do
-                dispatch(removeProjectFromList({ projectId: data.projectId }));
-                // Completed ka toast alag se dikha do
-                toast.info(data.message || `A project has been completed and moved to the gallery.`);
-            } else {
-                // Agar Paused ya Resumed hua hai, to uski state ko list mein update karo
-                // Is se project card par "Paused" ka badge foran nazar aayega
-                dispatch(updateProjectStatusInState({ projectId: data.projectId, status: data.status }));
-            }
-        };
 
         socket.on('project_deleted', handleProjectDeleted);
-        socket.on('project_paused', handleStatusChange);
-        socket.on('project_completed', handleStatusChange);
-        socket.on('project_resumed', handleStatusChange);
 
         // This `return` function is the CLEANUP function.
         // React runs this when the component unmounts. This is the ONLY correct place for `socket.off`.
         return () => {
             console.log("[Socket] Cleaning up listeners for ActiveProjects page.");
             socket.off('project_deleted', handleProjectDeleted);
-            socket.off('project_paused', handleStatusChange);
-            socket.off('project_completed', handleStatusChange);
-            socket.off('project_resumed', handleStatusChange);
+
         };
     }, [socket, dispatch]); // Dependencies are correct
 

@@ -62,13 +62,13 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
             dispatch(clearCanvasData());
 
             // (2) Naye parameters ke saath pehla page fetch karein
-            // dispatch(getContributionsByProject({
-            //     projectId,
-            //     sortBy: filter,
-            //     page: 1,
-            //     // Agar 'my' tab active hai to userId bhejein
-            //     userId: activeTab === 'my' ? user?.id : undefined
-            // }));
+            dispatch(getContributionsByProject({
+                projectId,
+                sortBy: filter,
+                page: 1,
+                // Agar 'my' tab active hai to userId bhejein
+                userId: activeTab === 'my' ? user?.id : undefined
+            }));
         }
     }, [filter, projectId, activeTab, user?.id, dispatch]); // activeTab ko dependency mein add karna sab se zaroori hai
 
@@ -124,14 +124,14 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
                 onClick={() => {
                     setIsOpen(!isOpen);
                     if(isOpen===false){
-                        // dispatch(getContributionsByProject({
-                        //     projectId,
-                        //     sortBy: filter,
-                        //     page: 1,
-                        //     // Agar 'my' tab active hai to userId bhejein
-                        //     userId: activeTab === 'my' ? user?.id : undefined
-                        // }));
-                                    dispatch(fetchContributionsByTiles({ projectId, tiles:'512' }));
+                        dispatch(getContributionsByProject({
+                            projectId,
+                            sortBy: filter,
+                            page: 1,
+                            // Agar 'my' tab active hai to userId bhejein
+                            userId: activeTab === 'my' ? user?.id : undefined
+                        }));
+                                    // dispatch(fetchContributionsByTiles({ projectId, tiles:'512' }));
                         
                     }
 
