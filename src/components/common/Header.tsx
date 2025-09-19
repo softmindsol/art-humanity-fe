@@ -32,6 +32,7 @@ const Header = () => {
   const { socket }: any = useSocket(); // <-- Socket instance hasil karein
 
   const handleLogout = () => {
+    
     dispatch(logoutUser())
       .unwrap()
       .then(() => {
@@ -39,6 +40,8 @@ const Header = () => {
         window.location.reload()
       })
       .catch((err) => {
+        localStorage.clear(); // optional, if using redux-persist
+        window.location.reload()
         console.error("Logout failed", err);
       });
   };

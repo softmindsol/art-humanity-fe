@@ -91,12 +91,7 @@ const ActiveProjects: React.FC = () => {
         } else if (actionType === 'RESUME') {
             dispatch(updateProjectStatus({ projectId, status: 'Active' }));
         } else if (actionType === 'COMPLETE') { // 'CLOSE' ke bajaye 'COMPLETE'
-            dispatch(fetchActiveProjects({
-                page: currentPage,
-                limit: 6,                // keep consistent
-                status: statusFilter,
-                search: debouncedSearchTerm
-            }));
+          
             dispatch(updateProjectStatus({ projectId, status: 'Completed' }));
         } else if (actionType === 'DELETE') {
             dispatch(deleteProject(projectId));
@@ -167,7 +162,7 @@ const ActiveProjects: React.FC = () => {
                     </div>
                 ) : error ? (
                     // Agar error hai, to yahan error message dikhayein
-                    <div className="text-center py-20 text-red-600 bg-red-50 p-4 rounded-lg">
+                    <div className="text-center py-20 text-red-600  p-4 rounded-lg">
                         <h3 className="font-bold">Oops! Something went wrong.</h3>
                         <p>{error}</p>
                     </div>
@@ -187,8 +182,7 @@ const ActiveProjects: React.FC = () => {
                             ) : (
                                 projects.map((project: any) => {
                                     const isProjectPaused = project.status === 'Paused';
-                                    const badgeText = project.status; // 'Active', 'Paused'
-                                    const badgeColor = project.status === 'Paused' ? 'destructive' : 'secondary';
+                                   
                                     return (
                                         <div key={project._id} className="project-card active">
                                             <div className="project-image relative">
@@ -230,7 +224,16 @@ const ActiveProjects: React.FC = () => {
                                                         <span className="stat-label !text-[#8d6e63]">Pixels Painted</span>
                                                     </div>
                                                 </div>
-                                                <Link
+                                                {project.status === 'Completed' ? (
+                                                    // --- AGAR PROJECT COMPLETED HAI ---
+                                                    <Link
+                                                        to={`/project/${project?.canvasId}?view=gallery`}
+                                                        className="btn-contribute !text-white !bg-purple-600 hover:!bg-purple-700" // Gallery wala style
+                                                        title="View this completed artwork in the gallery"
+                                                    >
+                                                        View Artwork
+                                                    </Link>
+                                                ) :( <Link
                                                     // Step 1: Agar project paused hai, to usay kahin bhi na le kar jao
                                                     to={isProjectPaused ? "#" : `/project/${project?.canvasId}`}
 
@@ -245,7 +248,7 @@ const ActiveProjects: React.FC = () => {
                                                 >
                                                     {/* Text bhi badalna ek acha option hai */}
                                                     {isProjectPaused ? "Project Paused" : "Enter Project"}
-                                                </Link>
+                                                </Link>)}
                                                 {/* // -------- YEH MUKAMMAL UPDATE SHUDA JSX HAI -------- */}
 
                                                 {user?.role === 'admin' && (
