@@ -10,6 +10,7 @@ import {
   deleteContribution,
   batchCreateContributions,
   fetchContributionsByTiles,
+  addStrokes,
 } from "../action/contribution";
 
 // Naya, saaf suthra initialState
@@ -18,6 +19,7 @@ const initialState = {
   canvasData: [],
   timelapseVideoUrl: null,
   pendingStrokes: [],
+  activeContributionId: null, // <-- ADD THIS NEW STATE
 
   currentBrush: {
     size: 3,
@@ -64,6 +66,24 @@ const paintPixelSlice = createSlice({
   name: "paintPixel",
   initialState,
   reducers: {
+    // --- ADD THESE NEW REDUCERS ---
+    setActiveContribution: (state, action) => {
+      state.activeContributionId = action.payload;
+    },
+    addContributionToState: (state: any, action) => {
+      // Add a new contribution (from an API call or socket) to the list
+      state.canvasData.push(action.payload);
+    },
+    updateContributionInState: (state: any, action) => {
+      // Find an existing contribution and replace it with the updated version
+      const updatedContribution = action.payload;
+      const index = state.canvasData.findIndex(
+        (c: any) => c._id === updatedContribution._id
+      );
+      if (index !== -1) {
+        state.canvasData[index] = updatedContribution;
+      }
+    },
     // Synchronous reducers
     setBrushSize: (state, action) => {
       state.currentBrush.size = action.payload;
@@ -163,20 +183,20 @@ const paintPixelSlice = createSlice({
 
       state.canvasData = newCanvasData;
     },
-    updateContributionInState: (state:any, action) => {
-      // `action.payload` will be the full, updated contribution object from the socket event
-      const updatedContribution = action.payload;
+    //   updateContributionInState: (state: any, action) => {
+    //     // `action.payload` will be the full, updated contribution object from the socket event
+    //     const updatedContribution = action.payload;
 
-      // Find the index of the contribution that needs to be updated
-      const index = state.canvasData.findIndex(
-        (c: any) => c._id === updatedContribution._id
-      );
+    //     // Find the index of the contribution that needs to be updated
+    //     const index = state.canvasData.findIndex(
+    //       (c: any) => c._id === updatedContribution._id
+    //     );
 
-      // If found, replace it with the new version
-      if (index !== -1) {
-        state.canvasData[index] = updatedContribution;
-      }
-    },
+    //     // If found, replace it with the new version
+    //     if (index !== -1) {
+    //       state.canvasData[index] = updatedContribution;
+    //     }
+    //   },
   },
 
   extraReducers: (builder) => {
@@ -394,6 +414,17 @@ const paintPixelSlice = createSlice({
           state.canvasData.push(...uniqueNewContributions);
         }
       );
+      builder.addCase(addStrokes.fulfilled, (state:any, action) => {
+        // This is a simple update, so we can just call our existing reducer
+        const updatedContribution = action.payload;
+        const index = state.canvasData.findIndex(
+          (c: any) => c._id === updatedContribution._id
+        );
+        if (index !== -1) {
+          state.canvasData[index] = updatedContribution;
+        }
+        // Also handle loading state if you have one for this
+      });
   },
 });
 
@@ -416,10 +447,15 @@ export const {
   removeContributionFromState,
   clearAllContributionsFromState,
   removeMultipleContributionsFromState,
+  setActiveContribution,
+  addContributionToState,
   updateContributionInState,
 } = paintPixelSlice.actions;
 
 // Selectors
+export const selectActiveContributionId = (state:any) =>
+  state.paintPixel.activeContributionId;
+
 export const selectCanvasData = (state: any) => state.paintPixel.canvasData;
 export const selectCurrentBrush = (state: any) => state.paintPixel.currentBrush;
 export const selectCurrentCanvas = (state: any) =>

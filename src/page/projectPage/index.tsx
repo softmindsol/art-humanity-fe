@@ -59,7 +59,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
         zoom: 1,
         worldPos: { x: 0, y: 0 },
     });
-
+    console.log(user)
     const debouncedCanvasStats = useDebounce(canvasStats, 300); // Debounce panning/zooming
     const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -95,6 +95,13 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
 
 
 
+    // --- YEH NAYA HANDLER BANAYEIN ---
+    const handleClearHighlight = useCallback(() => {
+        // Agar pehle se koi cheez selected hai, to usay deselect kar do
+        if (selectedContributionId) {
+            setSelectedContributionId(null);
+        }
+    }, [selectedContributionId]); // Dependency array zaroori hai
     const handleGenerateTimelapse = () => {
         if (!projectId) {
             toast.error("Project ID is not available.");
@@ -254,10 +261,10 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
 
         return currentProject.contributors.some((contributor: any) => {
             if (typeof contributor === "string") {
-                return contributor === user.id;
+                return contributor === user._id;
             }
             if (typeof contributor === "object" && contributor?._id) {
-                return contributor._id === user.id;
+                return contributor._id === user._id;
             }
             return false;
         });
@@ -266,12 +273,12 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
 
     const handleJoin = async () => {
         try {
-            if (!user?.id) {
+            if (!user?._id) {
                 toast.error("User ID is missing.");
                 return;
             }
 
-            await dispatch(joinProject({ projectId, userId: user.id })).unwrap();
+            await dispatch(joinProject({ projectId, userId: user._id })).unwrap();
 
             toast.success("You have joined the project! You can now contribute.");
         } catch (error: any) {
@@ -291,7 +298,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
 
 
     useEffect(() => {
-        if (currentProject && user && !isCurrentUserAContributor && !isReadOnly ) {
+        if (currentProject && user && !isCurrentUserAContributor && !isReadOnly) {
             setIsJoinDialogOpen(true);
         }
         if (isCurrentUserAContributor) {
@@ -360,7 +367,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
         const newSocket = io(import.meta.env.VITE_BASE, {
             // Connection ke waqt query parameters mein userId bhejein
             query: {
-                userId: user?.id
+                userId: user?._id
             }
         });
         setSocket(newSocket);
@@ -448,7 +455,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
             dispatch(removeContributorFromState({ removedUserId }));
 
             // Agar main khud remove hua hoon, to user ko batayein
-            if (user?.id === removedUserId) {
+            if (user?._id === removedUserId) {
                 toast.warning("Your contributor access for this project has been revoked.");
             }
         };
@@ -484,7 +491,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
 
         const handleStatusUpdate = (newStatus: string) =>
             (data: { projectId: string, message: string }) => {
-                
+
                 // Only act if the event is for the project we are currently viewing
                 if (data.projectId === projectId) {
                     console.log(`[Socket] Received project status change: ${newStatus}`);
@@ -493,7 +500,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
                         navigate(`/projects`);
                     }
                     if (newStatus === "Completed") {
-                        
+
                         toast.warning("The project has been Completed by an admin.");
                         navigate(`/gallery`);
                     }
@@ -599,7 +606,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
 
                                         // 3. Styling add karein taake user ko pata chale ke button disabled hai
                                         className="bg-[#cd5c5c] text-white border-none text-[12px] md:text-[16px] px-2 py-2 md:px-4 md:py-2 rounded cursor-pointer
-                   transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                                        transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         Clear Canvas
                                     </button>
@@ -676,7 +683,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
                                 <KonvaCanvas
                                     socket={socket} // Naya prop
                                     projectId={projectId}
-                                    userId={user?.id}
+                                    userId={user?._id}
                                     width={canvasSize.width}
                                     height={canvasSize.height}
                                     virtualWidth={currentProject.width}
@@ -693,6 +700,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
                                     // onContributionSelect={handleCanvasContributionSelect} 
 
                                     isReadOnly={isReadOnly} // Naya prop pass karein
+                                    onClearHighlight={handleClearHighlight} // <-- YEH NAYA PROP PASS KAREIN
 
                                 />
                             )}

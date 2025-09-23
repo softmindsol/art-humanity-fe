@@ -26,14 +26,14 @@ interface SocketProviderProps {
 }
 
 export const SocketProvider = ({ children }: SocketProviderProps) => {
-  const { user } = useSelector((state: RootState) => state.auth);
+  const { user } = useSelector((state: RootState) => state?.auth);
   const [socket, setSocket] = useState<Socket | null>(null);
 
   useEffect(() => {
     // Sirf tab connect karein jab user mojood ho
-    if (user && user.id) {
+    if (user && user._id) {
       const newSocket: Socket = io(import.meta.env.VITE_BASE, {
-        query: { userId: user.id }
+        query: { userId: user._id }
       });
 
       // console.log(`[SocketProvider] Socket connected for user: ${user.id}`);

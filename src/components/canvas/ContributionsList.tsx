@@ -19,7 +19,8 @@ const ContributionsList = ({
     onContributionSelect,
     listItemRefs,
     onGuestVoteAttempt,
-    isLoading
+    isLoading,
+    activeContributionId
 }: any) => {
     const dispatch = useAppDispatch();
     const { user } = useAuth();
@@ -34,7 +35,7 @@ const ContributionsList = ({
 
     //     try {
     //         // Dispatch vote action
-    //         await dispatch(voteOnContribution({ contributionId, voteType, userId: user?.id })).unwrap();
+    //         await dispatch(voteOnContribution({ contributionId, voteType, userId: user?._id })).unwrap();
 
     //         // Toast on success
     //         toast.success(
@@ -63,11 +64,11 @@ const ContributionsList = ({
 
             // Step 1: Action dispatch karne se pehle, purana vote status check karein
             const originalContribution = contributions.find((c: any) => c._id === contributionId);
-            const previousVote = originalContribution?.voters?.find((v: any) => v.userId === user.id);
+            const previousVote = originalContribution?.voters?.find((v: any) => v.userId === user._id);
 
             // Step 2: Action ko dispatch karein aur backend se naya, updated contribution object hasil karein
             // Humne iska naam 'response' rakha hai, iske andar 'wasDeleted' ya 'updatedContribution' ho sakta hai
-            const response = await dispatch(voteOnContribution({ contributionId, voteType, userId: user.id })).unwrap();
+            const response = await dispatch(voteOnContribution({ contributionId, voteType, userId: user._id })).unwrap();
 
             // Agar contribution delete ho gayi to kuch na karein (is a toast in slice already)
             if (response.wasDeleted) {
@@ -78,7 +79,7 @@ const ContributionsList = ({
             const updatedContribution = response;
 
             // Step 3: Ab purane aur naye vote status ko compare karke sahi message dikhayein
-            const newVote = updatedContribution.voters.find((v: any) => v.userId === user.id);
+            const newVote = updatedContribution.voters.find((v: any) => v.userId === user._id);
 
             let toastMessage = '';
 
@@ -136,6 +137,8 @@ const ContributionsList = ({
         <ul className="space-y-4 font-serif">
             {contributions?.map((contrib: any) => {
                 const isSelected = contrib?._id === selectedContributionId;
+                const isActive = contrib?._id === activeContributionId; // <-- Check if this is the active one
+
                 const artistName = contrib.userId?.fullName || 'Artist';
                 const totalVotes = (contrib.upvotes || 0) + (contrib.downvotes || 0);
                 const downvotePercentage = totalVotes === 0 ? 0 : ((contrib.downvotes || 0) / totalVotes) * 100;
@@ -154,7 +157,7 @@ const ContributionsList = ({
                                 listItemRefs.current[contrib._id] = el;
                             }
                         }}
-                        className={`bg-white rounded-lg border transition-all shadow-sm p-2 cursor-pointer ${isSelected ? 'border-[#a1887f] shadow-lg' : 'border-gray-200 hover:border-[#d7ccc8]'
+                        className={`bg-white rounded-lg border transition-all shadow-sm p-2 cursor-pointer ${isActive ? 'border-2 border-blue-500' : 'border-gray-200'} ${isSelected ? 'border-[#a1887f] shadow-lg' : 'border-gray-200 hover:border-[#d7ccc8]'
                             }`}
                         onClick={() => onContributionSelect(contrib._id)}
                     >

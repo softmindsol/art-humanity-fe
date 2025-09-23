@@ -67,7 +67,7 @@ export default function ContributorsDropdown({ currentProject, loading, setLoadi
         [contributors]
     );
     const filteredUsers = useMemo(() => {
-        let users = (normalized || []).filter((user: any) => user.id !== ownerId);
+        let users = (normalized || []).filter((user: any) => user._id !== ownerId);
 
         // Agar search value khali nahi hai, to aage filter karein
         if (searchValue) {
@@ -92,7 +92,7 @@ export default function ContributorsDropdown({ currentProject, loading, setLoadi
                 removeContributor({
                     projectId: currentProject?._id,
                     userIdToRemove: id,
-                    userId: user?.id,
+                    userId: user?._id,
                 })
             ).unwrap();
 
@@ -146,7 +146,7 @@ export default function ContributorsDropdown({ currentProject, loading, setLoadi
                                     <div className="overflow-y-auto max-h-64">
                                         {filteredUsers.map((c) => {
                                             // ... (User list ka poora JSX code yahan paste karein)
-                                            const isSelf = c.id && user?.id && c.id === user.id;
+                                            const isSelf = c.id && user?._id && c.id === user._id;
                                             return (
                                                 <CommandItem key={c.id || c.name} className="flex w-full items-center justify-between gap-2 px-3 py-2">
                                                     {/* User info */}

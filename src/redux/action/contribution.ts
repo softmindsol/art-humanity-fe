@@ -74,7 +74,6 @@ export const getContributionsByProject = createAsyncThunk(
   ) => {
     try {
       const params = new URLSearchParams();
-console.log("userId in thunk:", userId); // Debugging ke liye
       if (sortBy) params.append("sortBy", sortBy);
       if (page) params.append("page", page.toString());
       if (limit) params.append("limit", limit.toString());
@@ -99,7 +98,6 @@ console.log("userId in thunk:", userId); // Debugging ke liye
   }
 );
 
-// --- NAYA VOTE THUNK ---
 export const voteOnContribution = createAsyncThunk(
   "paintPixel/voteOnContribution",
   // Payload ab ek object hoga: { contributionId, voteType }
@@ -189,6 +187,28 @@ export const batchCreateStrokes = createAsyncThunk(
   }
 );
 
+export const addStrokes = createAsyncThunk(
+  "contributions/addStrokes",
+  async (
+    { contributionId, strokes }: { contributionId: string; strokes: any[] },
+    { rejectWithValue }
+  ) => {
+    try {
+      // Call our new PATCH endpoint
+      const response = await api.patch(
+        `/contributions/${contributionId}/strokes`,
+        { strokes }
+      );
+      // The backend will return the fully updated contribution object
+      return response.data.data;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Could not save your drawing."
+      );
+    }
+  }
+);
+
 // Clear canvas
 export const clearCanvas = createAsyncThunk(
   "paintPixel/clearCanvasAPI",
@@ -206,11 +226,6 @@ export const clearCanvas = createAsyncThunk(
     }
   }
 );
-
-
-
-
-
 
 export const fetchContributionsByTiles = createAsyncThunk(
   "contributions/fetchByTiles",

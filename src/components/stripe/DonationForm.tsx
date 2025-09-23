@@ -26,7 +26,7 @@ const DonationForm: React.FC<DonationFormProps> = ({ onDonate }) => {
         setIsLoading(true);
         try {
             // Hamara naya backend endpoint call karein
-            const response = await api.post('/payments/create-donation-intent', { amount: numericAmount, userId: user?.id });
+            const response = await api.post('/payments/create-donation-intent', { amount: numericAmount, userId: user?._id });
 
             // Parent ko client secret aur amount bhejein taake woh payment modal khol sake
             onDonate(response.data.data.clientSecret, numericAmount);

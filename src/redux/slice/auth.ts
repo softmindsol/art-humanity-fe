@@ -12,21 +12,23 @@ import {
 } from "../action/auth";
 
 interface Profile {
-  id: string;
+  _id: string;
   email: string;
   fullName: string;
   isVerified: boolean;
   createdAt: string;
   avatar: string | null;
+  paymentHistory?: any[];
 }
 
 interface User {
-  id: string;
+  _id: string;
   email: string;
   fullName: string;
   token: string;
   avatar?: string | null;
   role: string;
+  paymentHistory?: any[];
 }
 
 interface initialStateType {
@@ -61,6 +63,18 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
+    addSuccessfulPaymentToHistory: (state, action) => {
+      const newPayment = action.payload;
+
+      // Yaqeeni banayein ke profile aur paymentHistory mojood hain
+      if (state.profile && state.profile.paymentHistory) {
+        // Nayi payment ko history ke shuru mein add karein
+        state.profile.paymentHistory.unshift(newPayment);
+      } else if (state.profile) {
+        // Agar paymentHistory mojood nahi, to usay banayein
+        state.profile.paymentHistory = [newPayment];
+      }
+    },
     resetAuthState: (state) => {
       state.loading = false;
       state.googleLoading = false;
@@ -184,7 +198,7 @@ const authSlice = createSlice({
         if (updated) {
           // Only overwrite known fields to avoid losing local shape
           state.profile = {
-            id: updated._id || updated.id || state.profile?.id || "",
+            _id: updated._id || updated.id || state.profile?._id || "",
             email: updated.email ?? state.profile?.email ?? "",
             fullName: updated.fullName ?? state.profile?.fullName ?? "",
             isVerified:
@@ -210,5 +224,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { resetAuthState } = authSlice.actions;
+export const { resetAuthState, addSuccessfulPaymentToHistory } = authSlice.actions;
 export default authSlice.reducer;

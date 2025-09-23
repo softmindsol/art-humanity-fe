@@ -1,15 +1,22 @@
 
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import ContributionsList from './ContributionsList';
-import { fetchContributionsByTiles, getContributionsByProject } from '@/redux/action/contribution';
+import { getContributionsByProject } from '@/redux/action/contribution';
 import useAuth from '@/hook/useAuth';
 import useAppDispatch from '@/hook/useDispatch';
-import { clearCanvasData, selectCanvasData, selectIsLoadingOperation, selectPaginationInfo } from '@/redux/slice/contribution';
+import {
+    clearCanvasData, selectCanvasData, selectIsLoadingOperation, selectPaginationInfo, setActiveContribution, addContributionToState,
+    selectActiveContributionId
+} from '@/redux/slice/contribution';
 import { useSelector } from 'react-redux';
 import ContributorsPanel from './ContributorsPanel';
 import { AddContributorModal } from '../modal/AddContributorModal';
 import useOnClickOutside from '@/hook/useOnClickOutside';
 import CustomSelect from '../common/CustomSelect';
+import { toast } from 'sonner';
+import api from '@/api/api';
+import { PlusCircle } from 'lucide-react';
+import { Button } from '../ui/button';
 
 
 const SIDEBAR_WIDTH = 350; // Sidebar ki width ko ek variable mein rakhein
@@ -23,18 +30,21 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
     // States
     const [activeTab, setActiveTab] = useState('project');
     const [filter, setFilter] = useState('newest');
+    const [isCreateEmptyContributionLoading, setIsCreateEmptyContributionLoading] = useState(false);
 
+  
     // Redux Selectors
     const contributions = useSelector(selectCanvasData);
     const { currentPage, totalPages } = useSelector(selectPaginationInfo);
     const isLoading = useSelector(selectIsLoadingOperation('getContributions'));
-    const isAdmin = user?.id === currentProject?.ownerId; // Check karein ke kya user admin hai
+    const isAdmin = user?._id === currentProject?.ownerId; // Check karein ke kya user admin hai
     // Refs
     const listContainerRef = useRef<HTMLDivElement>(null);
     const sidebarRef = useRef(null);
     const contributorsDropdownRef = useRef(null); // This ref will be for the dropdown content
     // --- ADD THIS STATE ---
     const [isContributorsDropdownOpen, setIsContributorsDropdownOpen] = useState(false);
+    const activeContributionId = useSelector(selectActiveContributionId); // Get the active ID
 
 
     // --- YAHAN OPTIONS KA EK ARRAY BANAYEIN ---
@@ -67,10 +77,41 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
                 sortBy: filter,
                 page: 1,
                 // Agar 'my' tab active hai to userId bhejein
-                userId: activeTab === 'my' ? user?.id : undefined
+                userId: activeTab === 'my' ? user?._id : undefined
             }));
         }
-    }, [filter, projectId, activeTab, user?.id, dispatch]); // activeTab ko dependency mein add karna sab se zaroori hai
+    }, [filter, projectId, activeTab, user?._id, dispatch]); // activeTab ko dependency mein add karna sab se zaroori hai
+
+    const handleCreateNewContribution = async () => {
+        setIsCreateEmptyContributionLoading(true);
+        try {
+            // Call our new backend endpoint to create an empty contribution
+            const response = await api.post('/contributions', { projectId,userId:user?._id });
+            const newContribution = response.data.data;
+
+            // No need to dispatch addContributionToState, the socket event will handle it
+            // For now, let's add it manually for immediate feedback
+            dispatch(addContributionToState(newContribution));
+
+            // Automatically set the new contribution as the active one
+            dispatch(setActiveContribution(newContribution._id));
+
+            toast.success("New contribution created. You can start drawing!");
+
+        } catch (err) {
+            toast.error("Failed to create new contribution.");
+        } finally {
+            setIsCreateEmptyContributionLoading(false);
+        }
+    };
+
+    // This function will be passed to the list item
+    const handleContributionClick = useCallback((contributionId: any) => {
+        // Set the clicked contribution as the active one in Redux
+        dispatch(setActiveContribution(contributionId));
+        // Also call the prop to highlight it on the canvas
+        onContributionSelect(contributionId);
+    }, [dispatch, onContributionSelect]);
 
     // Infinite Scroll Logic
     const handleScroll = useCallback(() => {
@@ -85,11 +126,11 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
                     projectId,
                     sortBy: filter,
                     page: nextPage,
-                    userId: activeTab === 'my' ? user?.id : undefined
+                    userId: activeTab === 'my' ? user?._id : undefined
                 }));
             }
         }
-    }, [isLoading, currentPage, totalPages, projectId, filter, activeTab, user?.id, dispatch]);
+    }, [isLoading, currentPage, totalPages, projectId, filter, activeTab, user?._id, dispatch]);
 
     useEffect(() => {
         // Yeh effect tab chalega jab selection badlega ya sidebar khulega
@@ -123,16 +164,16 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
             <button
                 onClick={() => {
                     setIsOpen(!isOpen);
-                    if(isOpen===false){
+                    if (isOpen === false) {
                         dispatch(getContributionsByProject({
                             projectId,
                             sortBy: filter,
                             page: 1,
                             // Agar 'my' tab active hai to userId bhejein
-                            userId: activeTab === 'my' ? user?.id : undefined
+                            userId: activeTab === 'my' ? user?._id : undefined
                         }));
-                                    // dispatch(fetchContributionsByTiles({ projectId, tiles:'512' }));
-                        
+                        // dispatch(fetchContributionsByTiles({ projectId, tiles:'512' }));
+
                     }
 
                 }}
@@ -218,17 +259,29 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
                             }
 
                         </div> */}
+                        <div className="p-4 border-b border-gray-300">
+                            <Button
+
+                                onClick={handleCreateNewContribution}
+                                disabled={isCreateEmptyContributionLoading}
+                                className="w-full bg-green-600 hover:bg-green-700"
+                            >
+                                <PlusCircle className="mr-2 h-4 w-4" />
+                                {isLoading ? 'Creating...' : 'New Contribution'}
+                            </Button>
+                        </div>
 
                         <ContributionsList
                             contributions={contributions}
                             selectedContributionId={selectedContributionId}
-                            onContributionSelect={onContributionSelect}
+                            // onContributionSelect={onContributionSelect}
                             listItemRefs={listItemRefs}
                             projectId={projectId}
                             onGuestVoteAttempt={onGuestVoteAttempt}
                             loading={loading} setLoading={setLoading}
                             isLoading={isLoading}
-
+                            activeContributionId={activeContributionId} // <-- Pass the active ID
+                            onContributionSelect={handleContributionClick} // <-- Pass the new handler
 
                         />
                         {/* Loading Indicator */}

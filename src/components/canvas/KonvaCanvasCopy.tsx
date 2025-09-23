@@ -198,7 +198,7 @@ const KonvaCanvas = ({
         const optimisticContribution: any = {
             _id: tempId,
             projectId: projectId,
-            userId: { _id: user?.id, fullName: user?.fullName },
+            userId: { _id: user?._id, fullName: user?.fullName },
             strokes: [{
                 strokePath: [...currentStrokePathRef.current],
                 brushSize: brushState.size,

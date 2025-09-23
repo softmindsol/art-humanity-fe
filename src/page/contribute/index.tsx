@@ -196,7 +196,7 @@ const ActiveProjects: React.FC = () => {
                                                         // We will no longer use the generic 'variant' prop.
                                                         // Instead, we'll use a template literal for dynamic, high-contrast classes.
                                                         className={`text-sm font-semibold shadow-md
-        ${
+                                                        ${
                                                             // Pehla check: Kya status 'Paused' hai?
                                                             project.status === 'Paused'
                                                                 ? 'bg-red-600 text-white border-red-700' // Haan, to Red (laal)
@@ -206,7 +206,7 @@ const ActiveProjects: React.FC = () => {
                                                                     // Agar woh bhi nahi (matlab 'Active' hai)
                                                                     : 'bg-green-600 text-white border-green-700' // To Green (sabz)
                                                             }
-    `}
+                                                                `}
                                                     >
                                                         {project.status}
                                                     </Badge>

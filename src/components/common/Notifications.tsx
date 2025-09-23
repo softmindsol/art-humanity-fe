@@ -19,7 +19,7 @@ export const Notifications = () => {
 
     // Pehli baar notifications fetch karein
     useEffect(() => {
-        dispatch(fetchNotifications({ userId :user?.id}));
+        dispatch(fetchNotifications({ userId :user?._id}));
     }, [dispatch]);
 
     // Real-time mein nayi notifications sunein
@@ -28,7 +28,7 @@ export const Notifications = () => {
 
         const handleNewNotification = () => {
             // Jab nayi notification aaye, to list ko dobara fetch karein
-            dispatch(fetchNotifications({ userId: user?.id }));
+            dispatch(fetchNotifications({ userId: user?._id }));
         };
 
         socket.on('new_notification', handleNewNotification);
@@ -42,7 +42,7 @@ export const Notifications = () => {
         setIsOpen(!isOpen);
         // Agar unread notifications hain, to unhe 'read' mark kar dein
         if (unreadCount > 0) {
-            dispatch(markNotificationsAsRead({ userId: user?.id }));
+            dispatch(markNotificationsAsRead({ userId: user?._id }));
         }
     };
 

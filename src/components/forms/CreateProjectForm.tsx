@@ -61,7 +61,7 @@ const AdminDashboard = () => {
     projectFormData.append("canvasId", values.canvasId);
     projectFormData.append("width", String(values.width));
     projectFormData.append("height", String(values.height));
-    projectFormData.append("userId", String(user?.id));
+    projectFormData.append("userId", String(user?._id));
 
     if (thumbnailFile) {
       projectFormData.append("thumbnail", thumbnailFile);
@@ -110,7 +110,7 @@ const AdminDashboard = () => {
                 canvasId: "",
                 width: 1024,
                 height: 1024,
-                userId: user?.id || "",
+                userId: user?._id || "",
                 thumbnail: null, // Initially set thumbnail to null
               }}
               validationSchema={validationSchema}

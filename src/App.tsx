@@ -32,7 +32,7 @@ function App() {
               <Route path="/" element={<HeroSection />} />
               <Route path="/guideline" element={<GuidelinePage />} />
               <Route path="/gallery" element={<><GalleryPage /></>} />
-              <Route path="/profile" element={<><ProfilePage /></>} />
+              <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
               <Route path="/create-project" element={<CreateProjectPage />} />
 
               <Route path="/projects" element={<><ActiveProjects /></>} />

@@ -22,7 +22,6 @@ const Header = () => {
   const dispatch = useAppDispatch();
   const { user, profile } = useSelector((state: RootState) => state.auth);
   const notificationRef = useRef<HTMLDivElement>(null);
-
   // --- DRAWER STATE ---
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
@@ -76,10 +75,10 @@ const Header = () => {
 
 
   useEffect(() => {
-    if (user && user?.id) {
-      dispatch(getUserById(user.id));
+    if (user && user?._id) {
+      dispatch(getUserById(user?._id));
       // --- JAISE HI USER LOGIN HO, NOTIFICATIONS FETCH KAREIN ---
-      dispatch(fetchNotifications({ userId: user?.id })); // <--
+      dispatch(fetchNotifications({ userId: user?._id })); // <--
     }
   }, [user, dispatch]);
 
@@ -116,7 +115,7 @@ const Header = () => {
     e.stopPropagation(); // Event bubble na ho
     if (unreadCount > 0) {
       console.log("Marking all notifications as read via button click...");
-      dispatch(markNotificationsAsRead({ userId: user?.id }));
+      dispatch(markNotificationsAsRead({ userId: user?._id }));
 
     }
   };
@@ -132,8 +131,8 @@ const Header = () => {
     // Agar notification pehle se 'read' nahi hai, to hi API call bhejein
     if (!notification.isRead) {
       console.log(`Marking notification ${notification._id} as read...`);
-      dispatch(markSingleNotificationRead({ notificationId: notification._id, userId: user?.id }));
-      dispatch(fetchNotifications({ userId: user?.id }));
+      dispatch(markSingleNotificationRead({ notificationId: notification._id, userId: user?._id }));
+      dispatch(fetchNotifications({ userId: user?._id }));
 
     }
   };
@@ -152,8 +151,8 @@ const Header = () => {
 
   }, [isAuthModalOpen, isSidebarOpen])
   useEffect(() => {
-    if (user && user.id) {
-      dispatch(getUserById(user.id));
+    if (user && user._id) {
+      dispatch(getUserById(user._id));
     }
   }, [user, dispatch]);
 
@@ -187,7 +186,7 @@ const Header = () => {
 
 
                 <li><NavLink to="/demo">Demo</NavLink></li>
-                {user?.id && <li>
+                {user?._id && <li>
                   <div ref={notificationRef} className=" mt-2 md:mt-3">
                     <button
                       onClick={handleBellClick}

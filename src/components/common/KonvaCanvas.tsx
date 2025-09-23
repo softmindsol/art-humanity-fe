@@ -4,8 +4,8 @@ import { useSelector } from 'react-redux';
 import { toast } from 'sonner';
 
 // Apne Redux actions aur slices ke ahem imports
-import { getContributionsByProject, batchCreateContributions } from '@/redux/action/contribution';
-import { selectCurrentBrush, selectCanvasData, selectPendingStrokes } from '@/redux/slice/contribution';
+import { getContributionsByProject, batchCreateContributions, addStrokes } from '@/redux/action/contribution';
+import { selectCurrentBrush, selectCanvasData, selectPendingStrokes, selectActiveContributionId } from '@/redux/slice/contribution';
 import useAppDispatch from '@/hook/useDispatch';
 import useAuth from '@/hook/useAuth';
 
@@ -17,7 +17,9 @@ import { getCanvasPointerPosition } from '@/utils/getCanvasPointerPosition';
 
 const KonvaCanvas = ({
     projectId, userId, width, height, onStateChange, selectedContributionId,
-    onGuestInteraction, isReadOnly, isContributor, socket, setIsContributionSaving, virtualWidth, virtualHeight
+    onGuestInteraction, isReadOnly, isContributor, socket, setIsContributionSaving, virtualWidth, virtualHeight,
+    onClearHighlight
+
 }: any) => {
 
     // --- Hooks ---
@@ -25,6 +27,7 @@ const KonvaCanvas = ({
     const brushState = useSelector(selectCurrentBrush);
     const savedStrokes = useSelector(selectCanvasData);
     const pendingStrokes = useSelector(selectPendingStrokes); // Temporary data
+    const activeContributionId = useSelector(selectActiveContributionId); // <-- Get the active ID
 
     const { user } = useAuth();
 
@@ -52,7 +55,7 @@ const KonvaCanvas = ({
     }, []); // Transform function ko memoize karein
 
     console.log(virtualWidth, virtualHeight)
-console.log(width,height)
+    console.log(width, height)
     useEffect(() => {
         if (!savedStrokes || width === 0 || height === 0) {
             setBakedImage(null);
@@ -100,7 +103,7 @@ console.log(width,height)
         allStrokesToDraw.forEach((contribution) => {
             if (contribution?.strokes?.length > 0) {
                 const konvaData = memoizedTransformContributionForKonva(contribution);
-                konvaData.lines.forEach((line:any) => {
+                konvaData.lines.forEach((line: any) => {
                     if (!line.points || line.points.length < 2) return;
                     ctx.beginPath();
                     ctx.moveTo(line.points[0], line.points[1]);
@@ -283,7 +286,9 @@ console.log(width,height)
             return;
         }
         if (brushState.mode === 'move') return;
-
+        if (onClearHighlight) {
+            onClearHighlight();
+        }
         setIsDrawing(true);
         const stage = e.target.getStage();
         // const pos = stage.getPointerPosition();
@@ -354,17 +359,9 @@ console.log(width,height)
         }
     };
 
-    // --- YEH handleMouseUp AB INSTANT DRAW KAREGA ---
+
     // const handleMouseUp = () => {
-    //     const wasStrokeMade = isDrawing && currentStrokePathRef.current.length > 0;
-
-    //     // Always set isDrawing to false when the mouse is up
-    //     setIsDrawing(false);
-
-    //     // If no stroke was made, there's nothing else to do
-    //     if (!wasStrokeMade) {
-    //         return;
-    //     }
+    //     if (!isDrawing) return;
 
     //     // Step 1: Check if the tool was 'line' and create the final stroke path
     //     if (brushState.mode === 'line' && lineStartPointRef.current) {
@@ -381,13 +378,15 @@ console.log(width,height)
     //         lineStartPointRef.current = null; // Reset the ref
     //     }
 
-    //     // Step 2: If no actual drawing was made (e.g., just a click), exit.
-    //     // This now correctly checks AFTER the line tool has created its path.
+    //     // Step 2: Ab check karein ke kya waqai koi drawing save karne ke liye hai
+    //     // Yeh check ab freehand aur straight line dono ke liye kaam karega
     //     if (currentStrokePathRef.current.length === 0) {
-    //         setActiveLine({ points: [] }); // Clear the preview line if it exists
+    //         setIsDrawing(false);
+    //         setActiveLine({ points: [] }); // Preview line ko saaf karein (agar hai)
     //         return;
     //     }
-
+    //     // Ab jab humein pata hai ke kuch save karna hai, to hi 'isDrawing' ko false karein
+    //     setIsDrawing(false);
 
 
     //     // --- NAYA LOGIC FOR INSTANT DRAW ---
@@ -438,7 +437,7 @@ console.log(width,height)
     //             strokePath: [...currentStrokePathRef.current],
     //             brushSize: brushState.size,
     //             color: brushState.color,
-    //             mode: brushState.mode
+    //             mode: brushState.mode === 'line' ? 'brush' : brushState.mode
     //         }],
     //     };
     //     strokeQueueRef.current.push(backendContribution);
@@ -450,14 +449,19 @@ console.log(width,height)
     // };
 
     const handleMouseUp = () => {
+        // If the mouse was released but we weren't in a drawing state, do nothing.
         if (!isDrawing) return;
 
-        // Step 1: Check if the tool was 'line' and create the final stroke path
+        // The drawing process is now finished.
+        setIsDrawing(false);
+
+        // Step 1: Finalize the stroke path data.
+        // For the 'line' tool, we create this data now from the preview line.
+        // For the 'brush' tool, this data was already created in handleMouseMove.
         if (brushState.mode === 'line' && lineStartPointRef.current) {
             const startPoint = lineStartPointRef.current;
             const endPoint = { x: activeLine.points[2], y: activeLine.points[3] };
 
-            // Create the stroke path data for the backend
             currentStrokePathRef.current = [{
                 fromX: startPoint.x,
                 fromY: startPoint.y,
@@ -467,75 +471,55 @@ console.log(width,height)
             lineStartPointRef.current = null; // Reset the ref
         }
 
-        // Step 2: Ab check karein ke kya waqai koi drawing save karne ke liye hai
-        // Yeh check ab freehand aur straight line dono ke liye kaam karega
+        // Step 2: Validate if a stroke was actually made.
+        // If the path is empty (e.g., user just clicked without dragging), stop here.
         if (currentStrokePathRef.current.length === 0) {
-            setIsDrawing(false);
-            setActiveLine({ points: [] }); // Preview line ko saaf karein (agar hai)
+            setActiveLine({ points: [] }); // Clear any visual artifacts from a simple click
             return;
         }
-        // Ab jab humein pata hai ke kuch save karna hai, to hi 'isDrawing' ko false karein
-        setIsDrawing(false);
 
-
-        // --- NAYA LOGIC FOR INSTANT DRAW ---
-        // 1. Agar bakedImage mojood hai, to usay ek naye (temporary) canvas par draw karein
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = width;
-        tempCanvas.height = height;
-        const ctx = tempCanvas.getContext('2d');
-        if (!ctx) return;
-
-        if (bakedImage) {
-            ctx.drawImage(bakedImage, 0, 0);
-        } else {
-            // Agar pehli drawing hai, to safed background banayein
-            ctx.fillStyle = 'white';
-            ctx.fillRect(0, 0, width, height);
+        // --- NEW "CONTAINER" LOGIC ---
+        // Step 3: Check if there is an active contribution "folder" selected.
+        if (!activeContributionId) {
+            toast.error("Please create or select a contribution first before drawing.");
+            setActiveLine({ points: [] }); // Clear the visual line
+            currentStrokePathRef.current = []; // Clear the data
+            return;
         }
 
-        // 2. Ab 'activeLine' ko is temporary canvas par draw karein
-        ctx.beginPath();
-        ctx.moveTo(activeLine.points[0], activeLine.points[1]);
-        for (let i = 2; i < activeLine.points.length; i += 2) {
-            ctx.lineTo(activeLine.points[i], activeLine.points[i + 1]);
-        }
-        ctx.strokeStyle = activeLine.stroke;
-        ctx.lineWidth = activeLine.strokeWidth;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        ctx.globalCompositeOperation = activeLine.tool === 'eraser' ? 'destination-out' : 'source-over';
-        ctx.stroke();
+        // Step 4: Prepare the stroke data to be sent to the backend.
+        const strokesToSend = [{
+            strokePath: [...currentStrokePathRef.current],
+            brushSize: brushState.size,
+            color: brushState.color,
+            mode: brushState.mode, // Send the original mode
+        }];
 
-        // 3. Is naye canvas se ek nayi image banayein aur usay foran 'bakedImage' set kar dein
-        const newImage = new window.Image();
-        newImage.src = tempCanvas.toDataURL();
-        newImage.onload = () => {
-            setBakedImage(newImage);
-        };
-        // --- INSTANT DRAW MUKAMMAL ---
+        // --- NEW API CALL ---
+        // Step 5: Dispatch the `addStrokes` action immediately. No more batching/queue.
+        dispatch(addStrokes({
+            contributionId: activeContributionId,
+            strokes: strokesToSend
+        }))
+            .unwrap()
+            .then((updatedContribution) => {
+                // The backend returns the updated contribution. The socket event will be the main
+                // source of truth, but we can log success here.
+                console.log("Strokes saved successfully to:", updatedContribution._id);
+            })
+            .catch((err) => {
+                // If the API call fails, inform the user.
+                toast.error(`Failed to save drawing: ${err}`);
+            });
 
-        // 4. activeLine ko foran saaf kar dein
-        setActiveLine({ points: [] });
+        // We no longer need the local "instant draw" baking logic, as the UI will now
+        // be updated via the real-time socket event, providing a more reliable "source of truth".
 
-        // 5. Backend ke liye data tayar karein (yeh logic waisa hi rahega)
-        const backendContribution = {
-            projectId: projectId,
-            userId: userId,
-            strokes: [{
-                strokePath: [...currentStrokePathRef.current],
-                brushSize: brushState.size,
-                color: brushState.color,
-                mode: brushState.mode === 'line' ? 'brush' : brushState.mode
-            }],
-        };
-        strokeQueueRef.current.push(backendContribution);
+        // Step 6: Clean up for the next stroke.
         currentStrokePathRef.current = [];
-
-        // 6. API call ke liye timer set karein
-        if (batchTimerRef.current) clearTimeout(batchTimerRef.current);
-        batchTimerRef.current = setTimeout(sendBatchToServer, 3000);
+        setActiveLine({ points: [] });
     };
+
 
     const handleDrawEnd = () => {
         if (!isDrawing) return;
@@ -679,11 +663,11 @@ console.log(width,height)
 
     return (
         <Stage
-            width={width} 
+            width={width}
             height={height}
-            scaleX={stageState.scale} 
+            scaleX={stageState.scale}
             scaleY={stageState.scale}
-            x={stageState.x} 
+            x={stageState.x}
             y={stageState.y}
             // draggable={brushState.mode === 'move'}
             draggable={isReadOnly || brushState.mode === 'move'}
@@ -696,21 +680,21 @@ console.log(width,height)
                         ? 'grab' // Agar move tool hai, to 'grab'
                         : 'crosshair' // Warna drawing wala 'crosshair'
             }}
-              onWheel={(e) => {
+            onWheel={(e) => {
                 e.evt.preventDefault();
                 const stage = stageRef.current;
                 if (!stage) return;
-                
+
                 const oldScale = stage.scaleX();
                 const pointer = stage.getPointerPosition();
                 const mousePointTo = {
                     x: (pointer.x - stage.x()) / oldScale,
                     y: (pointer.y - stage.y()) / oldScale,
                 };
-                
+
                 let newScale = e.evt.deltaY > 0 ? oldScale / 1.1 : oldScale * 1.1;
                 newScale = Math.max(MIN_ZOOM, Math.min(newScale, MAX_ZOOM));
-                
+
                 const newPos = {
                     x: pointer.x - mousePointTo.x * newScale,
                     y: pointer.y - mousePointTo.y * newScale,
@@ -761,7 +745,7 @@ console.log(width,height)
                 />
             </Layer>
         </Stage>
-    ); 
+    );
 };
 
 export default React.memo(KonvaCanvas);
