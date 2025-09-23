@@ -674,6 +674,7 @@ const KonvaCanvas = ({
 
             // style={{ cursor: brushState.mode === 'move' ? 'grab' : 'crosshair' }}
             style={{
+                backgroundColor: '#F0F0F0',
                 cursor: isReadOnly
                     ? 'grab' // Agar read-only hai, to aam cursor
                     : brushState.mode === 'move'

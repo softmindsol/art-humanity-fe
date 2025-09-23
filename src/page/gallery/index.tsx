@@ -55,7 +55,7 @@ const GalleryPage: React.FC = () => {
         setPaymentLoading(project._id);
 
         try {
-            const response = await api.post('/payments/create-payment-intent', { projectId: project._id,userId:user._id });
+            const response = await api.post('/payments/create-payment-intent', { projectId: project._id, userId: user._id });
             setPaymentState({
                 isOpen: true,
                 clientSecret: response.data.data.clientSecret,
@@ -140,14 +140,7 @@ const GalleryPage: React.FC = () => {
         dispatch(setGalleryCurrentPage(newPage));
     };
 
- 
-    if (isLoading && projects.length === 0) {
-        return (
-            <div className="flex justify-center items-center h-full w-full py-20">
-                <div className="w-16 h-16 border-4 border-[#d29000] border-t-transparent rounded-full animate-spin"></div>
-            </div>
-        );
-    }
+
 
     if (error) {
         return <div className="text-center py-20 text-red-500">Error: {error}</div>;
@@ -159,12 +152,16 @@ const GalleryPage: React.FC = () => {
                 <h2 className='!text-[28px] md:!text-[32px]'>Project Gallery</h2>
                 <p className='!text-[14px] !w-full md:!text-[19.2px]' style={{ color: '#8d6e63' }}>Explore our collection of completed collaborative canvases.</p>
             </section>
-
+            {
+                (isLoading) && <div className="flex justify-center items-center h-full w-full py-20">
+                    <div className="w-16 h-16 border-4 border-[#d29000] border-t-transparent rounded-full animate-spin"></div>
+                </div>
+            }
             <section className="projects-grid mt-5">
-                {projects.length === 0 ? (
+                {!isLoading && projects.length === 0 ? (
                     <div className="text-center w-full py-20 col-span-full">
                         <h3 className="text-2xl text-gray-500">The Gallery is currently empty.</h3>
-                    </div>
+                    </div> 
                 ) : (
                     projects.map((project: any) => {
                         // --- YEH HAI ASAL NAYI LOGIC ---
@@ -184,7 +181,7 @@ const GalleryPage: React.FC = () => {
                                     <div className="flex flex-col items-center gap-2 mt-4">
                                         <Link
                                             to={`/project/${project?.canvasId}?view=gallery`}
-                                            className="btn-contribute flex-1 hover:!text-white !bg-purple-600 hover:!bg-purple-700"
+                                            className="btn-contribute flex-1 hover:!text-white !text-[16px] !bg-purple-600 hover:!bg-purple-700"
                                         >
                                             View Artwork
                                         </Link>
@@ -199,19 +196,19 @@ const GalleryPage: React.FC = () => {
                                                 {downloading === project._id ? 'Preparing...' : 'Download Again'}
                                             </Button>
                                         ) : (
-                                                <Button
-                                                    onClick={() => handleBuyClick(project)}
-                                                    // Button ko disable karein agar is project ke liye payment load ho rahi hai
-                                                    disabled={paymentLoading === project._id}
-                                                    className="btn-contribute cursor-pointer flex-1 !bg-blue-600 hover:!bg-blue-700 disabled:opacity-50"
-                                                >
-                                                    {
-                                                        // Text ko aql-mand tareeqe se badlein
-                                                        paymentLoading === project._id
-                                                            ? 'Processing...'
-                                                            : `Buy & Download ($${project.price.toFixed(2)})`
-                                                    }
-                                                </Button>
+                                            <Button
+                                                onClick={() => handleBuyClick(project)}
+                                                // Button ko disable karein agar is project ke liye payment load ho rahi hai
+                                                disabled={paymentLoading === project._id}
+                                                className="btn-contribute cursor-pointer flex-1 !bg-blue-600 hover:!bg-blue-700 disabled:opacity-50"
+                                            >
+                                                {
+                                                    // Text ko aql-mand tareeqe se badlein
+                                                    paymentLoading === project._id
+                                                        ? 'Processing...'
+                                                        : `Buy & Download ($${project.price.toFixed(2)})`
+                                                }
+                                            </Button>
                                         )}
                                     </div>
                                 </div>
