@@ -3,6 +3,7 @@ import { useState } from "react";
 import useAppDispatch from "./useDispatch";
 import { googleLogin, loginUser, registerUser } from "@/redux/action/auth";
 import { toast } from "sonner";
+import { triggerDonationPrompt } from "@/redux/slice/opeModal";
 export const useRegisterForm = ({onClose}:any) => {
   const dispatch = useAppDispatch();
   const [showPassword, setShowPassword] = useState(false);
@@ -144,6 +145,7 @@ export const useRegisterForm = ({onClose}:any) => {
       ).unwrap();
       // Add success toast or close modal
       toast.success("Successfully logged in.");
+      dispatch(triggerDonationPrompt()); 
       setLoginData({ email: "", password: "" });
       onClose();
     } catch (err: any) {

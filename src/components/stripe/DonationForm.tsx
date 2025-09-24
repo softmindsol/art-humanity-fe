@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import api from '@/api/api'; // Aapka api instance
 import useAuth from '@/hook/useAuth';
+import { closeDonationForm } from '@/redux/slice/opeModal';
+import useAppDispatch from '@/hook/useDispatch';
 
 // Parent ko batane ke liye ke payment process shuru karna hai
 interface DonationFormProps {
@@ -16,6 +18,7 @@ const DonationForm: React.FC<DonationFormProps> = ({ onDonate }) => {
     const [amount, setAmount] = useState<number | string>(5); // Default amount $5
     const [isLoading, setIsLoading] = useState(false);
     const { user } = useAuth()
+    const dispatch = useAppDispatch();
     const handleDonateClick = async () => {
         const numericAmount = Number(amount);
         if (isNaN(numericAmount) || numericAmount < 1) {
@@ -35,6 +38,7 @@ const DonationForm: React.FC<DonationFormProps> = ({ onDonate }) => {
             toast.error(err.response?.data?.message || "Could not initiate donation.");
         } finally {
             setIsLoading(false);
+            dispatch(closeDonationForm())
         }
     };
 

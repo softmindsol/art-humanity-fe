@@ -6,7 +6,7 @@ import { getUserById, logoutUser } from '@/redux/action/auth';
 import type { RootState } from '@/redux/store';
 import useAppDispatch from '@/hook/useDispatch';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '../ui/dropdown-menu';
-import { openAuthModal, closeAuthModal, selectIsAuthModalOpen } from '@/redux/slice/opeModal';
+import { openAuthModal, closeAuthModal, selectIsAuthModalOpen, selectIsDonationModalOpen, closeDonationForm, openDonationForm } from '@/redux/slice/opeModal';
 import { useSocket } from '@/context/SocketContext';
 import { fetchNotifications, markNotificationsAsRead, markSingleNotificationRead } from '@/redux/action/notification';
 import { Bell, Heart, LogOut, Menu, UserCircle2, X } from 'lucide-react';
@@ -16,11 +16,15 @@ import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import DonationForm from '../stripe/DonationForm';
 import CheckoutForm from '../stripe/CheckoutForm';
+import PaymentSuccessModal from '../modal/PaymentSuccessModal';
 
-const Header = () => {
+const Header = ({ onOpenDonationForm }: any) => {
   const isAuthModalOpen = useSelector(selectIsAuthModalOpen);
   const dispatch = useAppDispatch();
   const { user, profile } = useSelector((state: RootState) => state.auth);
+  const isDonationFormOpen = useSelector(selectIsDonationModalOpen);
+
+  console.log("isDonationFormOpen:", isDonationFormOpen)
   const notificationRef = useRef<HTMLDivElement>(null);
   // --- DRAWER STATE ---
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -29,9 +33,19 @@ const Header = () => {
   const { notifications, unreadCount } = useSelector((state: RootState) => state?.notifications) || []; // <-- Notification state
   const [isNotificationOpen, setIsNotificationOpen] = useState(false); // <-- Dropdown ke liye state
   const { socket }: any = useSocket(); // <-- Socket instance hasil karein
+  // ----State----
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+
+  // --- DONATION MODAL KE LIYE NAYI STATE ---
+  const [donationState, setDonationState] = useState({
+    isFormOpen: false, // Yeh DonationForm (amount input) ko control karega
+    isCheckoutOpen: false, // Yeh CheckoutForm (card input) ko control karega
+    clientSecret: null as string | null,
+    amount: 0,
+  });
 
   const handleLogout = () => {
-    
+
     dispatch(logoutUser())
       .unwrap()
       .then(() => {
@@ -48,13 +62,6 @@ const Header = () => {
   useOnClickOutside([notificationRef], () => setIsNotificationOpen(false));
 
 
-  // --- DONATION MODAL KE LIYE NAYI STATE ---
-  const [donationState, setDonationState] = useState({
-    isFormOpen: false, // Yeh DonationForm (amount input) ko control karega
-    isCheckoutOpen: false, // Yeh CheckoutForm (card input) ko control karega
-    clientSecret: null as string | null,
-    amount: 0,
-  });
 
   // Jab DonationForm 'onDonate' call kare
   const handleOnDonate = (clientSecret: string, amount: number) => {
@@ -70,8 +77,18 @@ const Header = () => {
   const handlePaymentSuccess = () => {
     toast.success("Thank you for your generous donation!");
     setDonationState({ isFormOpen: false, isCheckoutOpen: false, clientSecret: null, amount: 0 });
+    setIsSuccessModalOpen(true);
+
   };
 
+  const handleSupportClick = () => {
+    // if (onOpenDonationForm) {
+    //   onOpenDonationForm();
+    // }
+    // // Foran apne andar wala modal kholein
+    // setDonationState({ ...donationState, isFormOpen: true });
+    dispatch(openDonationForm())
+  };
 
 
   useEffect(() => {
@@ -282,7 +299,8 @@ const Header = () => {
 
                       {/* --- SUPPORT US LINK WITH ICON --- */}
                       <DropdownMenuItem
-                        onClick={() => setDonationState({ ...donationState, isFormOpen: true })}
+                        // onClick={() => setDonationState({ ...donationState, isFormOpen: true })}
+                        onClick={handleSupportClick}
                         className="cursor-pointer text-[#5d4037] hover:bg-[#f1e6da] transition-colors flex items-center gap-2"
                       >
                         <Heart size={16} />
@@ -396,7 +414,10 @@ const Header = () => {
 
       {/* --- DONATION MODALS AB YAHAN HAIN --- */}
       {/* 1. Amount Input Wala Modal */}
-      <Dialog open={donationState.isFormOpen} onOpenChange={(isOpen) => setDonationState({ ...donationState, isFormOpen: isOpen })}>
+      <Dialog open={isDonationFormOpen}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) dispatch(closeDonationForm());
+        }}>
         <DialogContent className="bg-[#5d4037] border-2 border-[#3e2723] text-white font-[Georgia, serif] max-w-3xl">
           <DonationForm onDonate={handleOnDonate} />
         </DialogContent>
@@ -419,6 +440,12 @@ const Header = () => {
       </Dialog>
       {/* Modal renders conditionally */}
       {isAuthModalOpen && <AuthModal isOpen={isAuthModalOpen} onClose={() => dispatch(closeAuthModal())} />}
+      <PaymentSuccessModal
+        isOpen={isSuccessModalOpen}
+        onClose={() => setIsSuccessModalOpen(false)}
+        paymentType="donation" // Is baar type 'donation' hai
+      // Donation ke case mein project ya download handler ki zaroorat nahi
+      />
     </>
   );
 };

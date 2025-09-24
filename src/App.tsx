@@ -18,14 +18,41 @@ import GalleryPage from './page/gallery';
 import { SocketProvider } from './context/SocketContext';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
+import { useEffect, useState } from 'react';
+import DonationPromptModal from './components/modal/DonationPromptModal';
+import { useSelector } from 'react-redux';
+import { openDonationForm, resetDonationPrompt, selectIsDonationPromptModalOpen } from './redux/slice/opeModal';
+import { useDispatch } from 'react-redux';
 function App() {
   const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+  const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
+  const shouldShow = useSelector(selectIsDonationPromptModalOpen);
+  const dispatch = useDispatch();
+  // This useEffect listens for the trigger from Redux
+  useEffect(() => {
+    if (shouldShow) {
+      // Check if the user has ALREADY seen the modal in this session or ever before
+      const hasSeenModal = localStorage.getItem('hasSeenDonationPrompt');
+      if (!hasSeenModal) {
+        const timer = setTimeout(() => {
+          // 5 second ke baad, modal ko dikhayein
+          setIsPromptModalOpen(true);
+          // Aur foran record set kar dein taake dobara na dikhe
+          localStorage.setItem('hasSeenDonationPrompt', 'true');
+        }, 5000); // 5000 milliseconds = 5 seconds
 
+        // Hamesha cleanup function return karein taake agar component unmount ho to timer cancel ho jaye
+        return () => clearTimeout(timer);
+      }
+      // Reset the trigger immediately so it doesn't fire again on re-renders
+      dispatch(resetDonationPrompt());
+    }
+  }, [shouldShow, dispatch]);
   return (
     <Elements stripe={stripePromise}>
     <Router>
       <SocketProvider>
-        <Header />
+          <Header  />
         <ProjectProvider>
           <main>
             <Routes>
@@ -46,6 +73,14 @@ function App() {
           </main>
         </ProjectProvider>
         <Footer />
+
+          <DonationPromptModal
+                isOpen={isPromptModalOpen}
+                onClose={() => setIsPromptModalOpen(false)}
+                onDonateClick={() => {
+                  dispatch(openDonationForm())
+                }}
+            />
       </SocketProvider>
     </Router>
     </Elements>

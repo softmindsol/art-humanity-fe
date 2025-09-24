@@ -23,6 +23,7 @@ const Footer = () => {
             <ul>
               <li><a href="/projects">Join a Project</a></li>
               <li><a href="/demo">Try the Demo</a></li>
+
             </ul>
           </div>
           <div className="footer-column ">

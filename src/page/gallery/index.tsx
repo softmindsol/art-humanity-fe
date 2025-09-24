@@ -23,6 +23,7 @@ import CheckoutForm from '@/components/stripe/CheckoutForm';
 import type { RootState } from '@/redux/store';
 import { Button } from '@/components/ui/button';
 import { addSuccessfulPaymentToHistory } from '@/redux/slice/auth';
+import PaymentSuccessModal from '@/components/modal/PaymentSuccessModal';
 
 const GalleryPage: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -45,6 +46,11 @@ const GalleryPage: React.FC = () => {
         projectToDownload: null,
     });
 
+    // --- SUCCESS MODAL KE LIYE NAYI STATE ---
+    const [successState, setSuccessState] = useState({
+        isOpen: false,
+        project: null as any | null,
+    });
     const handleBuyClick = async (project: any) => {
         if (!user) {
             toast.error("Please log in to make a purchase.");
@@ -91,6 +97,12 @@ const GalleryPage: React.FC = () => {
         // --- NAYI LOGIC KHATAM ---
         handleDownload(paymentState.projectToDownload);
         setPaymentState({ isOpen: false, clientSecret: null, projectToDownload: null });
+        // --- NAYI LOGIC: SUCCESS MODAL KHOLEIN ---
+        setSuccessState({
+            isOpen: true,
+            project: project,
+        });
+
     };
 
     const handleDownload = async (project: any) => {
@@ -161,7 +173,7 @@ const GalleryPage: React.FC = () => {
                 {!isLoading && projects.length === 0 ? (
                     <div className="text-center w-full py-20 col-span-full">
                         <h3 className="text-2xl text-gray-500">The Gallery is currently empty.</h3>
-                    </div> 
+                    </div>
                 ) : (
                     projects.map((project: any) => {
                         // --- YEH HAI ASAL NAYI LOGIC ---
@@ -240,6 +252,13 @@ const GalleryPage: React.FC = () => {
                     )}
                 </DialogContent>
             </Dialog>
+            <PaymentSuccessModal
+                isOpen={successState.isOpen}
+                onClose={() => setSuccessState({ isOpen: false, project: null })}
+                paymentType="purchase"
+                project={successState.project}
+                onDownload={handleDownload} // Download function pass karein
+            />
         </div>
     );
 };
