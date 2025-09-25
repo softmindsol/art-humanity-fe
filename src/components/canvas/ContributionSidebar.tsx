@@ -1,5 +1,5 @@
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ContributionsList from './ContributionsList';
 import { getContributionsByProject } from '@/redux/action/contribution';
 import useAuth from '@/hook/useAuth';
@@ -20,6 +20,7 @@ import { Button } from '../ui/button';
 
 
 const SIDEBAR_WIDTH = 350; // Sidebar ki width ko ek variable mein rakhein
+const MAX_CONTRIBUTIONS_LIMIT = 10; // Limit ko yahan define karein
 
 const ContributionSidebar = ({ projectId, selectedContributionId, onContributionSelect, listItemRefs, onGuestVoteAttempt, isOpen, setIsOpen }: any) => {
     const dispatch = useAppDispatch();
@@ -31,8 +32,9 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
     const [activeTab, setActiveTab] = useState('project');
     const [filter, setFilter] = useState('newest');
     const [isCreateEmptyContributionLoading, setIsCreateEmptyContributionLoading] = useState(false);
+    const [isCreateLoading, setIsCreateLoading] = useState(false); // Loading state for the create button
 
-  
+
     // Redux Selectors
     const contributions = useSelector(selectCanvasData);
     const { currentPage, totalPages } = useSelector(selectPaginationInfo);
@@ -46,6 +48,14 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
     const [isContributorsDropdownOpen, setIsContributorsDropdownOpen] = useState(false);
     const activeContributionId = useSelector(selectActiveContributionId); // Get the active ID
 
+    // --- CONTRIBUTION LIMIT LOGIC ---
+    const userContributionCount = useMemo(() => {
+        if (!user?._id || !contributions) return 0;
+        return contributions.filter((c: any) => c.userId?._id === user._id).length;
+    }, [contributions, user?._id]);
+
+    const isLimitReached = userContributionCount >= MAX_CONTRIBUTIONS_LIMIT;
+    // -----------------------------
 
     // --- YAHAN OPTIONS KA EK ARRAY BANAYEIN ---
     const filterOptions = [
@@ -83,10 +93,10 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
     }, [filter, projectId, activeTab, user?._id, dispatch]); // activeTab ko dependency mein add karna sab se zaroori hai
 
     const handleCreateNewContribution = async () => {
-        setIsCreateEmptyContributionLoading(true);
+        setIsCreateLoading(true);
         try {
             // Call our new backend endpoint to create an empty contribution
-            const response = await api.post('/contributions', { projectId,userId:user?._id });
+            const response = await api.post('/contributions', { projectId, userId: user?._id });
             const newContribution = response.data.data;
 
             // No need to dispatch addContributionToState, the socket event will handle it
@@ -98,10 +108,12 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
 
             toast.success("New contribution created. You can start drawing!");
 
-        } catch (err) {
-            toast.error("Failed to create new contribution.");
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || "Failed to create contribution.");
         } finally {
             setIsCreateEmptyContributionLoading(false);
+            setIsCreateLoading(false);
+
         }
     };
 
@@ -259,17 +271,23 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
                             }
 
                         </div> */}
-                        <div className="p-4 border-b border-gray-300">
+                        <div className=" text-sm mb-1">
                             <Button
-
                                 onClick={handleCreateNewContribution}
-                                disabled={isCreateEmptyContributionLoading}
-                                className="w-full bg-green-600 hover:bg-green-700"
+                                disabled={isCreateLoading || isLimitReached}
+                                title={isLimitReached ? `You have reached the limit of ${MAX_CONTRIBUTIONS_LIMIT} contributions.` : "Create a new contribution"}
+                                className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <PlusCircle className="mr-2 h-4 w-4" />
-                                {isLoading ? 'Creating...' : 'New Contribution'}
+                                {isCreateLoading ? 'Creating...' : 'New Contribution'}
                             </Button>
+                            {isLimitReached && (
+                                <p className="text-xs text-red-600 text-center mt-2">
+                                    Contribution limit reached ({userContributionCount}/{MAX_CONTRIBUTIONS_LIMIT}).
+                                </p>
+                            )}
                         </div>
+
 
                         <ContributionsList
                             contributions={contributions}

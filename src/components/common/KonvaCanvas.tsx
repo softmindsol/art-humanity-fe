@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 
 // Apne Redux actions aur slices ke ahem imports
 import { getContributionsByProject, batchCreateContributions, addStrokes } from '@/redux/action/contribution';
-import { selectCurrentBrush, selectCanvasData, selectPendingStrokes, selectActiveContributionId } from '@/redux/slice/contribution';
+import { selectCurrentBrush, selectCanvasData, selectPendingStrokes, selectActiveContributionId, addPendingStrokes } from '@/redux/slice/contribution';
 import useAppDispatch from '@/hook/useDispatch';
 import useAuth from '@/hook/useAuth';
 
@@ -26,7 +26,7 @@ const KonvaCanvas = ({
     const dispatch = useAppDispatch();
     const brushState = useSelector(selectCurrentBrush);
     const savedStrokes = useSelector(selectCanvasData);
-    const pendingStrokes = useSelector(selectPendingStrokes); // Temporary data
+    const pendingStrokes = useSelector(selectPendingStrokes); // Naya selector
     const activeContributionId = useSelector(selectActiveContributionId); // <-- Get the active ID
 
     const { user } = useAuth();
@@ -54,8 +54,7 @@ const KonvaCanvas = ({
         return transformContributionForKonva(contribution);
     }, []); // Transform function ko memoize karein
 
-    console.log(virtualWidth, virtualHeight)
-    console.log(width, height)
+
     useEffect(() => {
         if (!savedStrokes || width === 0 || height === 0) {
             setBakedImage(null);
@@ -98,12 +97,33 @@ const KonvaCanvas = ({
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, virtualWidth, virtualHeight);
 
-        const allStrokesToDraw = [...savedStrokes, ...pendingStrokes];
+        // --- YEH HAI NAYI AUR BEHTAR LOGIC ---
 
-        allStrokesToDraw.forEach((contribution) => {
+        // Step 1: Ek temporary "deep copy" banayein taake hum Redux ki state ko direct na badlein
+        const contributionsMap:any = new Map(savedStrokes.map((c:any) => [c._id, JSON.parse(JSON.stringify(c))]));
+
+        // Step 2: Ab "pending" strokes ko is map ke upar "merge" karein
+        pendingStrokes.forEach((pending:any) => {
+            if (contributionsMap.has(pending._id)) {
+                // Agar contribution pehle se mojood hai, to sirf naye strokes usmein add karein
+                contributionsMap.get(pending._id).strokes.push(...pending.strokes);
+            } else {
+                // Agar nahi, to pending ko poori contribution ke tor par add kar dein
+                // (Yeh case tab aayega jab user ek nayi contribution banaye aur foran draw kare)
+                contributionsMap.set(pending._id, { ...pending, userId: user }); // User info add kar dein
+            }
+        });
+
+        // Step 3: Map se wapas ek array banayein taake us par loop chala sakein
+        const allContributionsToDraw = Array.from(contributionsMap.values());
+
+        // --- NAYI LOGIC KHATAM ---
+
+        // Ab 'allContributionsToDraw' ko draw karein
+        allContributionsToDraw.forEach((contribution) => {
             if (contribution?.strokes?.length > 0) {
                 const konvaData = memoizedTransformContributionForKonva(contribution);
-                konvaData.lines.forEach((line: any) => {
+                konvaData.lines.forEach((line:any) => {
                     if (!line.points || line.points.length < 2) return;
                     ctx.beginPath();
                     ctx.moveTo(line.points[0], line.points[1]);
@@ -121,8 +141,8 @@ const KonvaCanvas = ({
         const image = new window.Image();
         image.src = offscreenCanvas.toDataURL();
         image.onload = () => setBakedImage(image);
-    }, [savedStrokes, pendingStrokes, virtualWidth, virtualHeight, memoizedTransformContributionForKonva]);
 
+    }, [savedStrokes, pendingStrokes, virtualWidth, virtualHeight, memoizedTransformContributionForKonva, user]);
 
     const drawAllStrokes = useCallback((ctx: any) => {
         if (!ctx) return;
@@ -217,37 +237,70 @@ const KonvaCanvas = ({
     useEffect(() => {
         isDrawingRef.current = isDrawing;
     }, [isDrawing]);
-    const sendBatchToServer = useCallback(() => {
 
-        // Check the LATEST value of isDrawing using the ref.
-        if (isDrawingRef.current) {
-            console.log("User is still drawing, delaying batch send.");
-            if (batchTimerRef.current) clearTimeout(batchTimerRef.current);
-            batchTimerRef.current = setTimeout(sendBatchToServer, 3000); // Dobara 3 sec ka timer lagayein
+
+    // const sendBatchToServer = useCallback(() => {
+
+    //     // Check the LATEST value of isDrawing using the ref.
+    //     if (isDrawingRef.current) {
+    //         console.log("User is still drawing, delaying batch send.");
+    //         if (batchTimerRef.current) clearTimeout(batchTimerRef.current);
+    //         batchTimerRef.current = setTimeout(sendBatchToServer, 3000); // Dobara 3 sec ka timer lagayein
+    //         return;
+    //     }
+    //     if (strokeQueueRef.current.length > 0) {
+
+    //         const contributionsToSend = [...strokeQueueRef.current];
+    //         strokeQueueRef.current = [];
+    //         dispatch(batchCreateContributions({ projectId, contributions: contributionsToSend }))
+    //             .unwrap()
+    //             .then((savedContributions: any[]) => {
+    //                 savedContributions.forEach((contribution: any) => {
+    //                     if (socket) socket.emit('new_drawing', { projectId, contribution });
+    //                 });
+    //                 setIsContributionSaving(false)
+    //                 setActiveLine({ points: [] });
+    //             })
+    //             .catch((err: any) => {
+    //                 toast.error(err || "Could not save your drawing.");
+    //                 setActiveLine({ points: [] });
+    //                 setIsContributionSaving(false)
+
+    //             });
+    //     }
+    // }, [dispatch, projectId, socket]);
+
+
+    // src/components/common/KonvaCanvas.js
+
+    const sendBatchToServer = useCallback(() => {
+        // Agar queue khaali hai ya koi contribution active nahi hai, to kuch na karein
+        if (strokeQueueRef.current.length === 0 || !activeContributionId) {
             return;
         }
-        if (strokeQueueRef.current.length > 0) {
 
-            const contributionsToSend = [...strokeQueueRef.current];
-            strokeQueueRef.current = [];
-            dispatch(batchCreateContributions({ projectId, contributions: contributionsToSend }))
-                .unwrap()
-                .then((savedContributions: any[]) => {
-                    savedContributions.forEach((contribution: any) => {
-                        if (socket) socket.emit('new_drawing', { projectId, contribution });
-                    });
-                    setIsContributionSaving(false)
-                    setActiveLine({ points: [] });
-                })
-                .catch((err: any) => {
-                    toast.error(err || "Could not save your drawing.");
-                    setActiveLine({ points: [] });
-                    setIsContributionSaving(false)
+        // --- BATCHING LOGIC ---
+        // Queue mein mojood tamam strokes ko API call ke liye nikaal lein
+        const strokesToSend = [...strokeQueueRef.current];
+        strokeQueueRef.current = []; // Queue ko foran khaali kar dein
 
-                });
-        }
-    }, [dispatch, projectId, socket]);
-    // console.log("isDrawing:", isDrawing)
+        console.log(`Sending a batch of ${strokesToSend.length} strokes to contribution ${activeContributionId}`);
+
+        // Nayi `addStrokes` action ko dispatch karein
+        dispatch(addStrokes({
+            contributionId: activeContributionId,
+            strokes: strokesToSend // Poora batch (strokes ka array) bhejein
+        }))
+            .unwrap()
+            .catch((err) => {
+                // Agar API call fail ho, to user ko batayein
+                toast.error(`Failed to save drawing: ${err}`);
+                // Optional: Failed strokes ko wapas queue mein daal dein taake dobara koshish ki ja sake
+                // strokeQueueRef.current.push(...strokesToSend); 
+            });
+
+    }, [dispatch, activeContributionId]); // Dependency array ko update karein
+
 
     const handleWheel = (e: any) => {
         e.evt.preventDefault();
@@ -486,38 +539,35 @@ const KonvaCanvas = ({
             currentStrokePathRef.current = []; // Clear the data
             return;
         }
-
-        // Step 4: Prepare the stroke data to be sent to the backend.
-        const strokesToSend = [{
+        // --- BATCHING LOGIC ---
+        // Step 1: Stroke ka data tayar karein
+        const strokeData = {
             strokePath: [...currentStrokePathRef.current],
             brushSize: brushState.size,
             color: brushState.color,
-            mode: brushState.mode, // Send the original mode
-        }];
+            mode: brushState.mode,
+        };
 
-        // --- NEW API CALL ---
-        // Step 5: Dispatch the `addStrokes` action immediately. No more batching/queue.
-        dispatch(addStrokes({
+        // Foran UI update ke liye, naye reducer ko dispatch karein
+        dispatch(addPendingStrokes({
             contributionId: activeContributionId,
-            strokes: strokesToSend
-        }))
-            .unwrap()
-            .then((updatedContribution) => {
-                // The backend returns the updated contribution. The socket event will be the main
-                // source of truth, but we can log success here.
-                console.log("Strokes saved successfully to:", updatedContribution._id);
-            })
-            .catch((err) => {
-                // If the API call fails, inform the user.
-                toast.error(`Failed to save drawing: ${err}`);
-            });
+            newStrokes: [strokeData] // Isay ek array mein bhejein
+        }));
+        // Step 2: Stroke ko queue mein daal dein
+        strokeQueueRef.current.push(strokeData);
 
-        // We no longer need the local "instant draw" baking logic, as the UI will now
-        // be updated via the real-time socket event, providing a more reliable "source of truth".
-
-        // Step 6: Clean up for the next stroke.
+        // Step 3: Agle stroke ke liye ref ko khaali karein
         currentStrokePathRef.current = [];
+
+        // (Optional) Optimistic UI ke liye stroke ko foran Redux mein daal dein
+        // dispatch(addPendingStroke(...));
+
+        // Preview line ko screen se saaf karein
         setActiveLine({ points: [] });
+
+        // Step 4: Batch bhejne ke liye timer ko reset karein
+        if (batchTimerRef.current) clearTimeout(batchTimerRef.current);
+        batchTimerRef.current = setTimeout(sendBatchToServer, 3000); // 3 second ke baad bhejein
     };
 
 

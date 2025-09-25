@@ -197,6 +197,22 @@ const paintPixelSlice = createSlice({
     //       state.canvasData[index] = updatedContribution;
     //     }
     //   },
+    addPendingStrokes: (state: any, action) => {
+      const { contributionId, newStrokes } = action.payload;
+      // Pehle se mojood pending contribution ko dhoondein ya ek nayi banayein
+      let pendingContribution = state.pendingStrokes.find(
+        (c: any) => c._id === contributionId
+      );
+      if (pendingContribution) {
+        pendingContribution.strokes.push(...newStrokes);
+      } else {
+        state.pendingStrokes.push({
+          _id: contributionId, // ID wahi hogi jo active hai
+          strokes: newStrokes,
+          // Yahan user ki info bhi daal sakte hain agar zaroorat ho
+        });
+      }
+    },
   },
 
   extraReducers: (builder) => {
@@ -414,16 +430,27 @@ const paintPixelSlice = createSlice({
           state.canvasData.push(...uniqueNewContributions);
         }
       );
-      builder.addCase(addStrokes.fulfilled, (state:any, action) => {
-        // This is a simple update, so we can just call our existing reducer
+    builder
+      .addCase(addStrokes.fulfilled, (state: any, action) => {
         const updatedContribution = action.payload;
+        // 1. Pending strokes ko saaf karein
+        state.pendingStrokes = state.pendingStrokes.filter(
+          (c: any) => c._id !== updatedContribution._id
+        );
+        // 2. Asal 'canvasData' ko server se anay wale naye data se update karein
         const index = state.canvasData.findIndex(
           (c: any) => c._id === updatedContribution._id
         );
         if (index !== -1) {
           state.canvasData[index] = updatedContribution;
         }
-        // Also handle loading state if you have one for this
+      })
+      .addCase(addStrokes.rejected, (state, action) => {
+        // Agar API fail ho, to optimistic update ko "rollback" karein
+        const { contributionId } = action.meta.arg;
+        state.pendingStrokes = state.pendingStrokes.filter(
+          (c: any) => c._id !== contributionId
+        );
       });
   },
 });
@@ -450,10 +477,11 @@ export const {
   setActiveContribution,
   addContributionToState,
   updateContributionInState,
+  addPendingStrokes,
 } = paintPixelSlice.actions;
 
 // Selectors
-export const selectActiveContributionId = (state:any) =>
+export const selectActiveContributionId = (state: any) =>
   state.paintPixel.activeContributionId;
 
 export const selectCanvasData = (state: any) => state.paintPixel.canvasData;
@@ -467,6 +495,7 @@ export const selectErrorForOperation = (operation: any) => (state: any) =>
 export const selectTimelapseUrl = (state: any) =>
   state.paintPixel.timelapseVideoUrl;
 export const selectPaginationInfo = (state: any) => state.paintPixel.pagination;
+
 export const selectPendingStrokes = (state: any) =>
   state.paintPixel.pendingStrokes;
 

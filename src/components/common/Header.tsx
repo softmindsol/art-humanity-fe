@@ -18,7 +18,7 @@ import DonationForm from '../stripe/DonationForm';
 import CheckoutForm from '../stripe/CheckoutForm';
 import PaymentSuccessModal from '../modal/PaymentSuccessModal';
 
-const Header = ({ onOpenDonationForm }: any) => {
+const Header = () => {
   const isAuthModalOpen = useSelector(selectIsAuthModalOpen);
   const dispatch = useAppDispatch();
   const { user, profile } = useSelector((state: RootState) => state.auth);
