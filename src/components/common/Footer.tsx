@@ -6,7 +6,7 @@ const Footer = () => {
 
       <div className="flex flex-col lg:flex-row items-start w-[80%] sm:w-[90%] lg:w-[900px]  m-auto lg:items-start lg:justify-between gap-10 lg:gap-[110px]  pt-3 lg:pb-8">
         <div className="">
-          <h2 className="text-[1.8rem] sm:!text-[2rem] !text-[#efebe9]  ">Project Art of Humanity</h2>
+          <h2 className="text-[1.8rem] sm:!text-[2rem] !text-[#efebe9]  ">MurArt</h2>
           <p className="text-[14px] md:text-[16px] !italic">Collaborative Canvases of Human Expression</p>
         </div>
         <div className="flex !items-start gap-14  mb-2 ">
@@ -36,7 +36,7 @@ const Footer = () => {
         </div>
       </div>
       <div className="copyright">
-        <p>&copy; 2025 Project Art of Humanity. All rights reserved.</p>
+        <p>&copy; 2025 MurArt. All rights reserved.</p>
       </div>
     </footer>
   );

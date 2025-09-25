@@ -51,7 +51,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
             <div className="auth-modal-content">
                 <span className="auth-modal-close" onClick={onClose}>&times;</span>
                 <div className="auth-modal-header">
-                    <h2>Join Project Art of Humanity</h2>
+                    <h2>Join MurArt</h2>
                     <p>Create an account to contribute to the world's largest collaborative art project</p>
                 </div>
 

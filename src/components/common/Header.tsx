@@ -181,7 +181,7 @@ const Header = () => {
             <Link to="/" className="logo-link">
               <img src="/favicon.PNG" alt="Logo" className="logo" />
               <div className="logo-text ">
-                <h1 className='text-[24px] text-[#333] font-bold'>Project Art of Humanity</h1>
+                <h1 className='text-[24px] text-[#333] font-bold'>MurArt</h1>
                 <p className="tagline">Collaborative Canvases of Human Expression</p>
               </div>
             </Link>
