@@ -3,7 +3,7 @@
 import Toolbox from '@/components/toolbox/Toolbox';
 import { useState, useRef, useLayoutEffect, useEffect, useMemo, useCallback } from 'react';
 import KonvaCanvas from '../../components/common/KonvaCanvas';
-import { Film } from 'lucide-react'; // Grid icon imported
+import { Film, Square } from 'lucide-react'; // Grid icon imported
 
 import {
     AlertDialog,
@@ -59,7 +59,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
         zoom: 1,
         worldPos: { x: 0, y: 0 },
     });
-    console.log(user)
+    const [displaySize, setDisplaySize] = useState(1024); // Shuru mein size 1024px hoga
     const debouncedCanvasStats = useDebounce(canvasStats, 300); // Debounce panning/zooming
     const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -135,7 +135,10 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
         console.log(`Canvas clicked. Setting selected ID to: ${contributionId}`);
         setSelectedContributionId(contributionId);
     };
-
+    const handleToggleCanvasSize = () => {
+        // Agar mojooda size 1024 hai, to 2560 kar do, warna 1024 kar do
+        setDisplaySize(prevSize => prevSize === 1024 ? 2560 : 1024);
+    };
 
 
     const handleSidebarContributionSelect = useCallback((contributionId: any) => {
@@ -549,10 +552,6 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
         };
     }, [socket, dispatch, user]);
 
-    // This logic will now react to real-time state changes from the listener
-    // const isGalleryView = useMemo(() => new URLSearchParams(window.location.search).get('view') === 'gallery', []);
-    // const isProjectInactive = currentProject?.status === 'Paused' || currentProject?.status === 'Completed';
-    // const finalIsReadOnly = isGalleryView || isProjectInactive;
 
     return (
         // Design ke mutabiq page ka background color
@@ -584,7 +583,14 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
                             >
                                 Load Image
                             </button> */}
-
+                            <button
+                                onClick={handleToggleCanvasSize}
+                                className="bg-blue-500 text-white border-none text-[12px] md:text-[16px] px-2 py-2 md:px-4 md:py-2 rounded cursor-pointer flex items-center gap-2"
+                                title={`Current display size: ${displaySize}px. Click to toggle.`}
+                            >
+                                <Square size={16} />
+                                Toggle Size
+                            </button>
                             {user?.role == 'admin' && <button
                                 onClick={handleGenerateTimelapse}
                                 disabled={isGeneratingTimelapse}
@@ -673,61 +679,71 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
                             </div>
                         </div>
 
-                        {/* <div className='w-full h-full min-w-[1024px] min-h-[1024px] bg-white relative overflow-hidden'> */}
-                        <div
-                            ref={canvasContainerRef}
-                            className=' h-full w-[90%] xl:w-[1024px] min-h-[1024px] mt-6 bg-white relative overflow-hidden'
-                            style={{ border: '4px solid #4d2d2d' }}
-                        >
-                            {canvasSize.width > 0 && (
-                                <KonvaCanvas
-                                    socket={socket} // Naya prop
-                                    projectId={projectId}
-                                    userId={user?._id}
-                                    width={canvasSize.width}
-                                    height={canvasSize.height}
-                                    virtualWidth={currentProject.width}
-                                    virtualHeight={currentProject.height}
-                                    onStateChange={handleCanvasStateChange} // Callback function pass karein
-                                    selectedContributionId={selectedContributionId}
-                                    onContributionHover={handleContributionHover}
-                                    onContributionLeave={handleContributionLeave}
-                                    // onContributionSelect={setSelectedContributionId}
-                                    onContributionSelect={handleCanvasClick}
-                                    setIsContributionSaving={setIsContributionSaving}
-                                    onGuestInteraction={handleGuestCanvasInteraction}
-                                    isContributor={isCurrentUserAContributor}
-                                    // onContributionSelect={handleCanvasContributionSelect} 
+                        <div className='w-full max-w-7xl mx-auto overflow-x-auto mt-6  flex items-center justify-center'>
+                            <div
+                                ref={canvasContainerRef}
+                                // className=' h-full w-[90%] xl:w-[1024px] min-h-[1024px] mt-6 bg-white relative overflow-hidden'
+                                className='relative mt-6 overflow-hidden bg-white'
+                                style={{
+                                    // --- YEH HAI ASAL FIX ---
+                                    // 'div' ka on-screen size ab hamari local 'displaySize' state se control hoga
+                                    width: `${displaySize}px`,
+                                    height: `${displaySize}px`,
+                                    // -----------------------
+                                    border: '4px solid #4d2d2d',
+                                    maxWidth: '100%',
+                                }}
 
-                                    isReadOnly={isReadOnly} // Naya prop pass karein
-                                    onClearHighlight={handleClearHighlight} // <-- YEH NAYA PROP PASS KAREIN
+                            >
+                                {canvasSize.width > 0 && (
+                                    <KonvaCanvas
+                                        socket={socket} // Naya prop
+                                        projectId={projectId}
+                                        userId={user?._id}
+                                        width={currentProject.width}
+                                        height={currentProject.height}
+                                        virtualWidth={currentProject.width}
+                                        virtualHeight={currentProject.height}
+                                        onStateChange={handleCanvasStateChange} // Callback function pass karein
+                                        selectedContributionId={selectedContributionId}
+                                        onContributionHover={handleContributionHover}
+                                        onContributionLeave={handleContributionLeave}
+                                        // onContributionSelect={setSelectedContributionId}
+                                        onContributionSelect={handleCanvasClick}
+                                        setIsContributionSaving={setIsContributionSaving}
+                                        onGuestInteraction={handleGuestCanvasInteraction}
+                                        isContributor={isCurrentUserAContributor}
+                                        // onContributionSelect={handleCanvasContributionSelect} 
 
-                                />
-                            )}
-                            {Object.entries(cursors as Record<string, CursorData>).map(([socketId, data]) => (
-                                <div
-                                    key={socketId}
-                                    className="absolute z-50 pointer-events-none"
-                                    style={{
-                                        left: `${data.position.x}px`,
-                                        top: `${data.position.y}px`,
-                                        transition: 'left 0.1s linear, top 0.1s linear' // Thori si smoothness ke liye
-                                    }}
-                                >
+                                        isReadOnly={isReadOnly} // Naya prop pass karein
+                                        onClearHighlight={handleClearHighlight} // <-- YEH NAYA PROP PASS KAREIN
 
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ color: data.user?.color || 'blue' }}>
-                                        <path d="M4 4l7.071 17.071-1.414 1.414-4.243-4.243-1.414-1.414L4 4z" fill="currentColor" />
-                                    </svg>
-                                    <span
-                                        className="bg-black text-white text-xs px-2 py-1 rounded"
-                                        style={{ backgroundColor: data.user?.color || 'blue', marginLeft: '5px' }}
+                                    />
+                                )}
+                                {Object.entries(cursors as Record<string, CursorData>).map(([socketId, data]) => (
+                                    <div
+                                        key={socketId}
+                                        className="absolute z-50 pointer-events-none"
+                                        style={{
+                                            left: `${data.position.x}px`,
+                                            top: `${data.position.y}px`,
+                                            transition: 'left 0.1s linear, top 0.1s linear' // Thori si smoothness ke liye
+                                        }}
                                     >
-                                        {data.user?.name || 'Guest'}
-                                    </span>
-                                </div>
-                            ))}
+
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style={{ color: data.user?.color || 'blue' }}>
+                                            <path d="M4 4l7.071 17.071-1.414 1.414-4.243-4.243-1.414-1.414L4 4z" fill="currentColor" />
+                                        </svg>
+                                        <span
+                                            className="bg-black text-white text-xs px-2 py-1 rounded"
+                                            style={{ backgroundColor: data.user?.color || 'blue', marginLeft: '5px' }}
+                                        >
+                                            {data.user?.name || 'Guest'}
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
-                        {/* </div> */}
                         {!isReadOnly && <InfoBox
                             zoom={canvasStats.zoom}
                             worldPos={canvasStats.worldPos}

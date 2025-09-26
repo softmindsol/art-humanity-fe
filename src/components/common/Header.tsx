@@ -17,6 +17,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import DonationForm from '../stripe/DonationForm';
 import CheckoutForm from '../stripe/CheckoutForm';
 import PaymentSuccessModal from '../modal/PaymentSuccessModal';
+import ConfirmationModal from '../modal/ConfirmationModal';
 
 const Header = () => {
   const isAuthModalOpen = useSelector(selectIsAuthModalOpen);
@@ -24,7 +25,6 @@ const Header = () => {
   const { user, profile } = useSelector((state: RootState) => state.auth);
   const isDonationFormOpen = useSelector(selectIsDonationModalOpen);
 
-  console.log("isDonationFormOpen:", isDonationFormOpen)
   const notificationRef = useRef<HTMLDivElement>(null);
   // --- DRAWER STATE ---
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -44,23 +44,31 @@ const Header = () => {
     amount: 0,
   });
 
-  const handleLogout = () => {
+  useOnClickOutside([notificationRef], () => setIsNotificationOpen(false));
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false); // Loading state
 
-    dispatch(logoutUser())
-      .unwrap()
-      .then(() => {
-        localStorage.clear(); // optional, if using redux-persist
-        window.location.reload()
-      })
-      .catch((err) => {
-        localStorage.clear(); // optional, if using redux-persist
-        window.location.reload()
-        console.error("Logout failed", err);
-      });
+  const handleLogout = () => {
+    // Ab yeh function foran logout nahi karega, sirf modal kholega
+    setIsLogoutModalOpen(true);
   };
 
-  useOnClickOutside([notificationRef], () => setIsNotificationOpen(false));
-
+  // Jab user modal ke andar "Logout" button par click karega
+  const confirmLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await dispatch(logoutUser()).unwrap();
+      // Logout kamyab hone par
+      localStorage.clear();
+      window.location.href = '/'; // Redirect to home page for a full refresh
+    } catch (err) {
+      toast.error("Logout failed. Please try again.");
+      console.error("Logout failed", err);
+    } finally {
+      setIsLoggingOut(false);
+      setIsLogoutModalOpen(false); // Modal ko band karein
+    }
+  };
 
 
   // Jab DonationForm 'onDonate' call kare
@@ -445,6 +453,15 @@ const Header = () => {
         onClose={() => setIsSuccessModalOpen(false)}
         paymentType="donation" // Is baar type 'donation' hai
       // Donation ke case mein project ya download handler ki zaroorat nahi
+      />
+      <ConfirmationModal
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+        onConfirm={confirmLogout}
+        title="Are you sure you want to log out?"
+        description="You will be returned to the homepage. You can always log back in anytime."
+        confirmText="Yes, Logout"
+        isLoading={isLoggingOut}
       />
     </>
   );
