@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 import { toast } from 'sonner';
 
 // Apne Redux actions aur slices ke ahem imports
-import { getContributionsByProject, batchCreateContributions, addStrokes } from '@/redux/action/contribution';
+import { getContributionsByProject, addStrokes } from '@/redux/action/contribution';
 import { selectCurrentBrush, selectCanvasData, selectPendingStrokes, selectActiveContributionId, addPendingStrokes } from '@/redux/slice/contribution';
 import useAppDispatch from '@/hook/useDispatch';
 import useAuth from '@/hook/useAuth';
@@ -115,12 +115,12 @@ const KonvaCanvas = ({
         });
 
         // Step 3: Map se wapas ek array banayein taake us par loop chala sakein
-        const allContributionsToDraw = Array.from(contributionsMap.values());
+        const allContributionsToDraw:any = Array.from(contributionsMap.values());
 
         // --- NAYI LOGIC KHATAM ---
 
         // Ab 'allContributionsToDraw' ko draw karein
-        allContributionsToDraw.forEach((contribution) => {
+        allContributionsToDraw.forEach((contribution:any) => {
             if (contribution?.strokes?.length > 0) {
                 const konvaData = memoizedTransformContributionForKonva(contribution);
                 konvaData.lines.forEach((line:any) => {

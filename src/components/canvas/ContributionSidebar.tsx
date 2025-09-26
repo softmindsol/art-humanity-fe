@@ -31,7 +31,7 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
     // States
     const [activeTab, setActiveTab] = useState('project');
     const [filter, setFilter] = useState('newest');
-    const [isCreateEmptyContributionLoading, setIsCreateEmptyContributionLoading] = useState(false);
+    const [_, setIsCreateEmptyContributionLoading] = useState(false);
     const [isCreateLoading, setIsCreateLoading] = useState(false); // Loading state for the create button
 
 

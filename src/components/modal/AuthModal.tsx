@@ -3,7 +3,6 @@ import googleImage from '../../assets/images/google-icon.svg';
 import { useRegisterForm } from '@/hook/useRegisterForm';
 import { Eye, EyeOff } from 'lucide-react';
 import ForgotPasswordForm from './ForgotPasswordForm';
-import * as Yup from 'yup'; // <-- Step 1: Yup ko import karein
 
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/redux/store';
