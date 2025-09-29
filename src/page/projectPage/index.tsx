@@ -19,7 +19,7 @@ import {
 import { useCanvasState } from '@/hook/useCanvasState';
 import { clearCanvas, fetchContributionsByTiles, generateTimelapseVideo, getContributionsByProject } from '@/redux/action/contribution';
 import InfoBox from '@/components/toolbox/InfoBox';
-import { clearAllContributionsFromState, clearCanvasData, clearTimelapseUrl, removeContributionFromState, removeContributionOptimistically, removeMultipleContributionsFromState, selectCanvasData, selectErrorForOperation, selectIsLoadingOperation, selectTimelapseUrl, updateContributionInState } from '@/redux/slice/contribution';
+import { appendStrokesToContribution, clearAllContributionsFromState, clearCanvasData, clearTimelapseUrl, removeContributionFromState, removeContributionOptimistically, removeMultipleContributionsFromState, selectCanvasData, selectErrorForOperation, selectIsLoadingOperation, selectTimelapseUrl, updateContributionInState } from '@/redux/slice/contribution';
 import ContributionSidebar from '@/components/canvas/ContributionSidebar';
 import { joinProject } from '@/redux/action/project';
 import { Button } from '@/components/ui/button';
@@ -520,12 +520,18 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
             // Dispatch the action to update the specific contribution in the Redux store
             dispatch(updateContributionInState(data.contribution));
         };
+        const handleStrokesAdded = (data: { contributionId: string, newStrokes: any[] }) => {
+            console.log(`[Socket] Received ${data.newStrokes.length} new strokes for contribution ${data.contributionId}`);
+            // Dispatch the new, efficient reducer
+            dispatch(appendStrokesToContribution(data));
+        };
 
 
         const onProjectPaused = handleStatusUpdate('Paused');
         const onProjectCompleted = handleStatusUpdate('Completed');
         const onProjectResumed = handleStatusUpdate('Active');
-
+        
+        socket.on('strokes_added', handleStrokesAdded);
         socket.on('vote_updated', handleVoteUpdate);
         socket.on('project_paused', onProjectPaused);
         socket.on('project_completed', onProjectCompleted);
@@ -548,6 +554,8 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
             socket.off('project_completed', onProjectCompleted);
             socket.off('project_resumed', onProjectResumed);
             socket.off('vote_updated', handleVoteUpdate);
+            socket.off('strokes_added', handleStrokesAdded);
+
 
         };
     }, [socket, dispatch, user]);

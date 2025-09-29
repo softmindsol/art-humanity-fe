@@ -37,6 +37,7 @@ const KonvaCanvas = ({
     const [activeLine, setActiveLine] = useState<any>({ points: [] });
     const [bakedImage, setBakedImage] = useState<HTMLImageElement | null>(null);
     const lineStartPointRef = useRef<{ x: number; y: number } | null>(null);
+    const [isPanning, setIsPanning] = useState(false);
 
     // --- Refs ---
     const currentStrokePathRef = useRef<any[]>([]);
@@ -44,6 +45,8 @@ const KonvaCanvas = ({
     const batchTimerRef = useRef<NodeJS.Timeout | null>(null);
     const isDrawingRef = useRef(isDrawing);
     const stageRef = useRef<any>(null);
+    const panStartPointRef = useRef<any>({ x: 0, y: 0 });
+    const lastPanPointRef = useRef<any>(null);
 
     // --- zoom in/out limit --- 
     const MAX_ZOOM = 32;
@@ -85,64 +88,6 @@ const KonvaCanvas = ({
     }, [savedStrokes, width, height]);
 
     // The single, authoritative baking hook
-    useEffect(() => {
-        if (!virtualWidth || !virtualHeight) return;
-
-        const offscreenCanvas = document.createElement('canvas');
-        offscreenCanvas.width = virtualWidth;
-        offscreenCanvas.height = virtualHeight;
-        const ctx = offscreenCanvas.getContext('2d');
-        if (!ctx) return;
-
-        ctx.fillStyle = 'white';
-        ctx.fillRect(0, 0, virtualWidth, virtualHeight);
-
-        // --- YEH HAI NAYI AUR BEHTAR LOGIC ---
-
-        // Step 1: Ek temporary "deep copy" banayein taake hum Redux ki state ko direct na badlein
-        const contributionsMap:any = new Map(savedStrokes.map((c:any) => [c._id, JSON.parse(JSON.stringify(c))]));
-
-        // Step 2: Ab "pending" strokes ko is map ke upar "merge" karein
-        pendingStrokes.forEach((pending:any) => {
-            if (contributionsMap.has(pending._id)) {
-                // Agar contribution pehle se mojood hai, to sirf naye strokes usmein add karein
-                contributionsMap.get(pending._id).strokes.push(...pending.strokes);
-            } else {
-                // Agar nahi, to pending ko poori contribution ke tor par add kar dein
-                // (Yeh case tab aayega jab user ek nayi contribution banaye aur foran draw kare)
-                contributionsMap.set(pending._id, { ...pending, userId: user }); // User info add kar dein
-            }
-        });
-
-        // Step 3: Map se wapas ek array banayein taake us par loop chala sakein
-        const allContributionsToDraw:any = Array.from(contributionsMap.values());
-
-        // --- NAYI LOGIC KHATAM ---
-
-        // Ab 'allContributionsToDraw' ko draw karein
-        allContributionsToDraw.forEach((contribution:any) => {
-            if (contribution?.strokes?.length > 0) {
-                const konvaData = memoizedTransformContributionForKonva(contribution);
-                konvaData.lines.forEach((line:any) => {
-                    if (!line.points || line.points.length < 2) return;
-                    ctx.beginPath();
-                    ctx.moveTo(line.points[0], line.points[1]);
-                    for (let i = 2; i < line.points.length; i += 2) ctx.lineTo(line.points[i], line.points[i + 1]);
-                    ctx.strokeStyle = line.stroke;
-                    ctx.lineWidth = line.strokeWidth;
-                    ctx.lineCap = 'round';
-                    ctx.lineJoin = 'round';
-                    ctx.globalCompositeOperation = line.globalCompositeOperation;
-                    ctx.stroke();
-                });
-            }
-        });
-
-        const image = new window.Image();
-        image.src = offscreenCanvas.toDataURL();
-        image.onload = () => setBakedImage(image);
-
-    }, [savedStrokes, pendingStrokes, virtualWidth, virtualHeight, memoizedTransformContributionForKonva, user]);
 
     const drawAllStrokes = useCallback((ctx: any) => {
         if (!ctx) return;
@@ -169,109 +114,20 @@ const KonvaCanvas = ({
         });
     }, [savedStrokes, width, height, memoizedTransformContributionForKonva]);
 
-    useEffect(() => {
-        // Yeh effect har baar chalta hai jab "bakedImage" update hoti hai.
-        // Iska matlab hai ke canvas ki "baking" mukammal ho chuki hai.
 
-        // Agar hum is waqt drawing nahi kar rahe, to iska matlab hai ke
-        // pichli 'activeLine' ab baked image ka hissa ban chuki hai,
-        // isliye ab usay screen se hatana safe hai.
-        if (!isDrawing) {
-            setActiveLine({ points: [] });
-        }
-    }, [bakedImage, isDrawing]); // bakedImage par depend karna zaroori ha
-    // --- Data Fetching ---
+
+
     useEffect(() => {
         if (projectId) {
             dispatch(getContributionsByProject({ projectId }));
         }
     }, [projectId, dispatch]);
 
-    // --- CORE LOGIC: Offscreen Canvas Caching ---
-    useEffect(() => {
-        if (width === 0 || height === 0) return; // Agar canvas ka size nahi hai to kuch na karein
-
-        const offscreenCanvas = document.createElement('canvas');
-        offscreenCanvas.width = width;
-        offscreenCanvas.height = height;
-        const ctx = offscreenCanvas.getContext('2d');
-        if (!ctx) return;
-
-        ctx.fillStyle = 'white';
-        ctx.fillRect(0, 0, width, height);
-        // 1. Create a sorted copy of the strokes array
-        const sortedStrokes = savedStrokes
-            ? [...savedStrokes].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
-            : [];
-
-        if (savedStrokes && savedStrokes.length > 0) {
-            sortedStrokes.forEach((contribution: any) => {
-                const konvaData = transformContributionForKonva(contribution);
-                konvaData.lines.forEach((line: any) => {
-                    if (!line.points || line.points.length < 2) return;
-                    ctx.beginPath();
-                    ctx.moveTo(line.points[0], line.points[1]);
-                    for (let i = 2; i < line.points.length; i += 2) {
-                        ctx.lineTo(line.points[i], line.points[i + 1]);
-                    }
-                    ctx.strokeStyle = line.stroke;
-                    ctx.lineWidth = line.strokeWidth;
-                    ctx.lineCap = 'round';
-                    ctx.lineJoin = 'round';
-                    ctx.globalCompositeOperation = line.globalCompositeOperation;
-                    ctx.stroke();
-                });
-            });
-        }
-
-        const image = new window.Image();
-        image.src = offscreenCanvas.toDataURL();
-        image.onload = () => {
-            setBakedImage(image);
-        };
-    }, [savedStrokes, width, height]);
-
-    // --- Event Handlers ---
-    // Use a `useEffect` to keep the ref in sync with the state.
-    // This is a standard React pattern.
     useEffect(() => {
         isDrawingRef.current = isDrawing;
     }, [isDrawing]);
 
 
-    // const sendBatchToServer = useCallback(() => {
-
-    //     // Check the LATEST value of isDrawing using the ref.
-    //     if (isDrawingRef.current) {
-    //         console.log("User is still drawing, delaying batch send.");
-    //         if (batchTimerRef.current) clearTimeout(batchTimerRef.current);
-    //         batchTimerRef.current = setTimeout(sendBatchToServer, 3000); // Dobara 3 sec ka timer lagayein
-    //         return;
-    //     }
-    //     if (strokeQueueRef.current.length > 0) {
-
-    //         const contributionsToSend = [...strokeQueueRef.current];
-    //         strokeQueueRef.current = [];
-    //         dispatch(batchCreateContributions({ projectId, contributions: contributionsToSend }))
-    //             .unwrap()
-    //             .then((savedContributions: any[]) => {
-    //                 savedContributions.forEach((contribution: any) => {
-    //                     if (socket) socket.emit('new_drawing', { projectId, contribution });
-    //                 });
-    //                 setIsContributionSaving(false)
-    //                 setActiveLine({ points: [] });
-    //             })
-    //             .catch((err: any) => {
-    //                 toast.error(err || "Could not save your drawing.");
-    //                 setActiveLine({ points: [] });
-    //                 setIsContributionSaving(false)
-
-    //             });
-    //     }
-    // }, [dispatch, projectId, socket]);
-
-
-    // src/components/common/KonvaCanvas.js
 
     const sendBatchToServer = useCallback(() => {
         // Agar queue khaali hai ya koi contribution active nahi hai, to kuch na karein
@@ -301,6 +157,118 @@ const KonvaCanvas = ({
 
     }, [dispatch, activeContributionId]); // Dependency array ko update karein
 
+    const startDrawing = (pos) => {
+        if (isReadOnly || !isContributor || brushState.mode === 'move') return;
+        if (!user) { onGuestInteraction(); return; }
+        if (onClearHighlight) onClearHighlight();
+
+        setIsDrawing(true);
+        const { r, g, b, a } = brushState.color;
+        const colorString = `rgba(${r},${g},${b},${a || 1})`;
+
+        currentStrokePathRef.current = [];
+        if (brushState.mode === 'line') {
+            lineStartPointRef.current = pos;
+            setActiveLine({ points: [pos.x, pos.y, pos.x, pos.y], tool: 'brush', stroke: colorString, strokeWidth: brushState.size });
+        } else {
+            setActiveLine({ points: [pos.x, pos.y], tool: brushState.mode, stroke: colorString, strokeWidth: brushState.size });
+        }
+    };
+
+    const draw = (point) => {
+        if (!isDrawing) return;
+
+        if (brushState.mode === 'line') {
+            setActiveLine(prev => ({ ...prev, points: [lineStartPointRef.current.x, lineStartPointRef.current.y, point.x, point.y] }));
+        } else {
+            setActiveLine(prev => ({ ...prev, points: [...prev.points, point.x, point.y] }));
+            const lastPoints = activeLine.points;
+            if (lastPoints.length >= 2) {
+                const last = { x: lastPoints[lastPoints.length - 2], y: lastPoints[lastPoints.length - 1] };
+                currentStrokePathRef.current.push({ fromX: last.x, fromY: last.y, toX: point.x, toY: point.y });
+            }
+        }
+    };
+
+    const stopDrawing = () => {
+        // This is the complete logic for what happens when a drawing action ends.
+        if (!isDrawing) return;
+        setIsDrawing(false);
+
+        // Line tool ke liye stroke path ko final karein
+        if (brushState.mode === 'line' && lineStartPointRef.current) {
+            const startPoint = lineStartPointRef.current;
+            const endPoint = activeLine.points.length > 2 ? { x: activeLine.points[2], y: activeLine.points[3] } : startPoint;
+            currentStrokePathRef.current = [{ fromX: startPoint.x, fromY: startPoint.y, toX: endPoint.x, toY: endPoint.y }];
+            lineStartPointRef.current = null;
+        }
+
+        if (currentStrokePathRef.current.length === 0) {
+            setActiveLine({ points: [] });
+            return;
+        }
+        if (!activeContributionId) {
+            toast.error("Please create or select a contribution first.");
+            setActiveLine({ points: [] });
+            currentStrokePathRef.current = [];
+            return;
+        }
+
+        // --- YEH HAI NAYA "INSTANT DRAW" LOGIC ---
+        // Step 1: Ek temporary canvas banayein
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = virtualWidth;
+        tempCanvas.height = virtualHeight;
+        const ctx = tempCanvas.getContext('2d');
+        if (!ctx) return;
+
+        // Step 2: Us par purani, "baked" image draw karein (agar mojood hai)
+        if (bakedImage) {
+            ctx.drawImage(bakedImage, 0, 0);
+        } else {
+            // Agar pehli drawing hai, to safed background banayein
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, virtualWidth, virtualHeight);
+        }
+
+        // Step 3: Ab iske UPAR nayi, "activeLine" (jo user ne abhi draw ki) ko draw karein
+        ctx.beginPath();
+        ctx.moveTo(activeLine.points[0], activeLine.points[1]);
+        for (let i = 2; i < activeLine.points.length; i += 2) {
+            ctx.lineTo(activeLine.points[i], activeLine.points[i + 1]);
+        }
+        ctx.strokeStyle = activeLine.stroke;
+        ctx.lineWidth = activeLine.strokeWidth;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.globalCompositeOperation = activeLine.tool === 'eraser' ? 'destination-out' : 'source-over';
+        ctx.stroke();
+
+        // Step 4: Is naye canvas se ek nayi image banayein aur usay foran 'bakedImage' state set kar dein
+        const newImage = new window.Image();
+        newImage.src = tempCanvas.toDataURL();
+        newImage.onload = () => {
+            setBakedImage(newImage);
+        };
+        // --- INSTANT DRAW MUKAMMAL ---
+
+        // Preview line ko screen se foran saaf kar dein
+        setActiveLine({ points: [] });
+
+        // --- Ab Backend ke liye data tayar karein (Batching) ---
+        const strokeData = {
+            strokePath: [...currentStrokePathRef.current],
+            brushSize: brushState.size,
+            color: brushState.color,
+            mode: brushState.mode,
+        };
+
+        strokeQueueRef.current.push(strokeData);
+        currentStrokePathRef.current = [];
+
+        if (batchTimerRef.current) clearTimeout(batchTimerRef.current);
+        batchTimerRef.current = setTimeout(sendBatchToServer, 3000);
+    };
 
     const handleWheel = (e: any) => {
         e.evt.preventDefault();
@@ -314,10 +282,6 @@ const KonvaCanvas = ({
         };
 
         let newScale = e.evt.deltaY > 0 ? oldScale / scaleBy : oldScale * scaleBy;
-
-        // --- YEH NAYI LOGIC HAI ---
-        // Math.max yeh yaqeeni banata hai ke scale MIN_ZOOM se neeche na jaye.
-        // Math.min yeh yaqeeni banata hai ke scale MAX_ZOOM se upar na jaye.
         newScale = Math.max(MIN_ZOOM, Math.min(newScale, MAX_ZOOM));
 
         const newState = {
@@ -329,7 +293,18 @@ const KonvaCanvas = ({
         setStageState(newState);
         onStateChange({ zoom: newState.scale });
     };
+
     const handleMouseDown = (e: any) => {
+        const stage = stageRef.current;
+        if (!stage) return;
+
+        if (e.evt.button === 2) { // Right-click for panning
+            setIsPanning(true);
+            panStartPointRef.current = stage.getPointerPosition();
+            return;
+        }
+        startDrawing(e.target.getStage().getRelativePointerPosition());
+
         if (isReadOnly || !user) {
             if (!user) onGuestInteraction();
             return;
@@ -343,7 +318,6 @@ const KonvaCanvas = ({
             onClearHighlight();
         }
         setIsDrawing(true);
-        const stage = e.target.getStage();
         // const pos = stage.getPointerPosition();
         const pos = getCanvasPointerPosition(stage); // <-- NAYI AUR THEEK LINE
         const { r, g, b, a } = brushState.color;
@@ -382,165 +356,111 @@ const KonvaCanvas = ({
     };
 
     const handleMouseMove = (e: any) => {
-        const stage = e.target.getStage();
-        // onStateChange({ worldPos: stage.getPointerPosition() });
-        const worldPos = getCanvasPointerPosition(stage);
-        onStateChange({ worldPos });
-        if (!isDrawing) return;
-        setIsContributionSaving(true)
+        const stage = stageRef.current;
+        if (!stage) return;
 
-        // const point = stage.getPointerPosition();
-        const point = getCanvasPointerPosition(stage); // <-- NAYI AUR THEEK LINE
-
-        if (brushState.mode === 'brush' || brushState.mode === 'eraser') {
-            const lastPoints = activeLine.points;
-            setActiveLine((prev: any) => ({ ...prev, points: [...prev.points, point.x, point.y] }));
-
-            if (lastPoints.length >= 2) {
-                const lastPoint = { x: lastPoints[lastPoints.length - 2], y: lastPoints[lastPoints.length - 1] };
-                currentStrokePathRef.current.push({ fromX: lastPoint.x, fromY: lastPoint.y, toX: point.x, toY: point.y });
-            }
+        if (isPanning) {
+            const newPoint = stage.getPointerPosition();
+            const newPos = {
+                x: stage.x() + (newPoint.x - panStartPointRef.current.x),
+                y: stage.y() + (newPoint.y - panStartPointRef.current.y),
+            };
+            stage.position(newPos);
+            panStartPointRef.current = newPoint;
+            handleStageChange();
+            return;
         }
-        // --- NAYA LOGIC FOR STRAIGHT LINE PREVIEW ---
-        if (brushState.mode === 'line' && lineStartPointRef.current) {
-            const startPoint = lineStartPointRef.current;
-            // Line ko update karein: start point se current mouse position tak
-            setActiveLine((prev: any) => ({
-                ...prev,
-                points: [startPoint.x, startPoint.y, point.x, point.y]
-            }));
+        draw(e.target.getStage().getRelativePointerPosition());
+
+        onStateChange({ worldPos: stage.getRelativePointerPosition() });
+
+        if (!isDrawing) return;
+        const point = stage.getRelativePointerPosition();
+
+        if (brushState.mode === 'line') {
+            setActiveLine((prev:any) => ({ ...prev, points: [lineStartPointRef.current.x, lineStartPointRef.current.y, point.x, point.y] }));
+        } else {
+            setActiveLine((prev: any) => ({ ...prev, points: [...prev.points, point.x, point.y] }));
+            const lastPoints = activeLine.points;
+            if (lastPoints.length >= 2) {
+                const last = { x: lastPoints[lastPoints.length - 2], y: lastPoints[lastPoints.length - 1] };
+                currentStrokePathRef.current.push({ fromX: last.x, fromY: last.y, toX: point.x, toY: point.y });
+            }
         }
     };
 
 
-    // const handleMouseUp = () => {
-    //     if (!isDrawing) return;
-
-    //     // Step 1: Check if the tool was 'line' and create the final stroke path
-    //     if (brushState.mode === 'line' && lineStartPointRef.current) {
-    //         const startPoint = lineStartPointRef.current;
-    //         const endPoint = { x: activeLine.points[2], y: activeLine.points[3] };
-
-    //         // Create the stroke path data for the backend
-    //         currentStrokePathRef.current = [{
-    //             fromX: startPoint.x,
-    //             fromY: startPoint.y,
-    //             toX: endPoint.x,
-    //             toY: endPoint.y,
-    //         }];
-    //         lineStartPointRef.current = null; // Reset the ref
-    //     }
-
-    //     // Step 2: Ab check karein ke kya waqai koi drawing save karne ke liye hai
-    //     // Yeh check ab freehand aur straight line dono ke liye kaam karega
-    //     if (currentStrokePathRef.current.length === 0) {
-    //         setIsDrawing(false);
-    //         setActiveLine({ points: [] }); // Preview line ko saaf karein (agar hai)
-    //         return;
-    //     }
-    //     // Ab jab humein pata hai ke kuch save karna hai, to hi 'isDrawing' ko false karein
-    //     setIsDrawing(false);
-
-
-    //     // --- NAYA LOGIC FOR INSTANT DRAW ---
-    //     // 1. Agar bakedImage mojood hai, to usay ek naye (temporary) canvas par draw karein
-    //     const tempCanvas = document.createElement('canvas');
-    //     tempCanvas.width = width;
-    //     tempCanvas.height = height;
-    //     const ctx = tempCanvas.getContext('2d');
-    //     if (!ctx) return;
-
-    //     if (bakedImage) {
-    //         ctx.drawImage(bakedImage, 0, 0);
-    //     } else {
-    //         // Agar pehli drawing hai, to safed background banayein
-    //         ctx.fillStyle = 'white';
-    //         ctx.fillRect(0, 0, width, height);
-    //     }
-
-    //     // 2. Ab 'activeLine' ko is temporary canvas par draw karein
-    //     ctx.beginPath();
-    //     ctx.moveTo(activeLine.points[0], activeLine.points[1]);
-    //     for (let i = 2; i < activeLine.points.length; i += 2) {
-    //         ctx.lineTo(activeLine.points[i], activeLine.points[i + 1]);
-    //     }
-    //     ctx.strokeStyle = activeLine.stroke;
-    //     ctx.lineWidth = activeLine.strokeWidth;
-    //     ctx.lineCap = 'round';
-    //     ctx.lineJoin = 'round';
-    //     ctx.globalCompositeOperation = activeLine.tool === 'eraser' ? 'destination-out' : 'source-over';
-    //     ctx.stroke();
-
-    //     // 3. Is naye canvas se ek nayi image banayein aur usay foran 'bakedImage' set kar dein
-    //     const newImage = new window.Image();
-    //     newImage.src = tempCanvas.toDataURL();
-    //     newImage.onload = () => {
-    //         setBakedImage(newImage);
-    //     };
-    //     // --- INSTANT DRAW MUKAMMAL ---
-
-    //     // 4. activeLine ko foran saaf kar dein
-    //     setActiveLine({ points: [] });
-
-    //     // 5. Backend ke liye data tayar karein (yeh logic waisa hi rahega)
-    //     const backendContribution = {
-    //         projectId: projectId,
-    //         userId: userId,
-    //         strokes: [{
-    //             strokePath: [...currentStrokePathRef.current],
-    //             brushSize: brushState.size,
-    //             color: brushState.color,
-    //             mode: brushState.mode === 'line' ? 'brush' : brushState.mode
-    //         }],
-    //     };
-    //     strokeQueueRef.current.push(backendContribution);
-    //     currentStrokePathRef.current = [];
-
-    //     // 6. API call ke liye timer set karein
-    //     if (batchTimerRef.current) clearTimeout(batchTimerRef.current);
-    //     batchTimerRef.current = setTimeout(sendBatchToServer, 3000);
-    // };
-
     const handleMouseUp = () => {
-        // If the mouse was released but we weren't in a drawing state, do nothing.
-        if (!isDrawing) return;
+        if (isPanning) {
+            setIsPanning(false);
+            return;
+        }
+        stopDrawing();
 
-        // The drawing process is now finished.
+        if (!isDrawing) return;
         setIsDrawing(false);
 
-        // Step 1: Finalize the stroke path data.
-        // For the 'line' tool, we create this data now from the preview line.
-        // For the 'brush' tool, this data was already created in handleMouseMove.
+        // Line tool ke liye stroke path ko final karein
         if (brushState.mode === 'line' && lineStartPointRef.current) {
             const startPoint = lineStartPointRef.current;
-            const endPoint = { x: activeLine.points[2], y: activeLine.points[3] };
-
-            currentStrokePathRef.current = [{
-                fromX: startPoint.x,
-                fromY: startPoint.y,
-                toX: endPoint.x,
-                toY: endPoint.y,
-            }];
-            lineStartPointRef.current = null; // Reset the ref
+            const endPoint = activeLine.points.length > 2 ? { x: activeLine.points[2], y: activeLine.points[3] } : startPoint;
+            currentStrokePathRef.current = [{ fromX: startPoint.x, fromY: startPoint.y, toX: endPoint.x, toY: endPoint.y }];
+            lineStartPointRef.current = null;
         }
 
-        // Step 2: Validate if a stroke was actually made.
-        // If the path is empty (e.g., user just clicked without dragging), stop here.
         if (currentStrokePathRef.current.length === 0) {
-            setActiveLine({ points: [] }); // Clear any visual artifacts from a simple click
+            setActiveLine({ points: [] });
+            return;
+        }
+        if (!activeContributionId) {
+            toast.error("Please create or select a contribution first.");
+            setActiveLine({ points: [] });
+            currentStrokePathRef.current = [];
             return;
         }
 
-        // --- NEW "CONTAINER" LOGIC ---
-        // Step 3: Check if there is an active contribution "folder" selected.
-        if (!activeContributionId) {
-            toast.error("Please create or select a contribution first before drawing.");
-            setActiveLine({ points: [] }); // Clear the visual line
-            currentStrokePathRef.current = []; // Clear the data
-            return;
+        // --- YEH HAI NAYA "INSTANT DRAW" LOGIC ---
+        // Step 1: Ek temporary canvas banayein
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = virtualWidth;
+        tempCanvas.height = virtualHeight;
+        const ctx = tempCanvas.getContext('2d');
+        if (!ctx) return;
+
+        // Step 2: Us par purani, "baked" image draw karein (agar mojood hai)
+        if (bakedImage) {
+            ctx.drawImage(bakedImage, 0, 0);
+        } else {
+            // Agar pehli drawing hai, to safed background banayein
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, virtualWidth, virtualHeight);
         }
-        // --- BATCHING LOGIC ---
-        // Step 1: Stroke ka data tayar karein
+
+        // Step 3: Ab iske UPAR nayi, "activeLine" (jo user ne abhi draw ki) ko draw karein
+        ctx.beginPath();
+        ctx.moveTo(activeLine.points[0], activeLine.points[1]);
+        for (let i = 2; i < activeLine.points.length; i += 2) {
+            ctx.lineTo(activeLine.points[i], activeLine.points[i + 1]);
+        }
+        ctx.strokeStyle = activeLine.stroke;
+        ctx.lineWidth = activeLine.strokeWidth;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.globalCompositeOperation = activeLine.tool === 'eraser' ? 'destination-out' : 'source-over';
+        ctx.stroke();
+
+        // Step 4: Is naye canvas se ek nayi image banayein aur usay foran 'bakedImage' state set kar dein
+        const newImage = new window.Image();
+        newImage.src = tempCanvas.toDataURL();
+        newImage.onload = () => {
+            setBakedImage(newImage);
+        };
+        // --- INSTANT DRAW MUKAMMAL ---
+
+        // Preview line ko screen se foran saaf kar dein
+        setActiveLine({ points: [] });
+
+        // --- Ab Backend ke liye data tayar karein (Batching) ---
         const strokeData = {
             strokePath: [...currentStrokePathRef.current],
             brushSize: brushState.size,
@@ -548,27 +468,13 @@ const KonvaCanvas = ({
             mode: brushState.mode,
         };
 
-        // Foran UI update ke liye, naye reducer ko dispatch karein
-        dispatch(addPendingStrokes({
-            contributionId: activeContributionId,
-            newStrokes: [strokeData] // Isay ek array mein bhejein
-        }));
-        // Step 2: Stroke ko queue mein daal dein
         strokeQueueRef.current.push(strokeData);
-
-        // Step 3: Agle stroke ke liye ref ko khaali karein
         currentStrokePathRef.current = [];
 
-        // (Optional) Optimistic UI ke liye stroke ko foran Redux mein daal dein
-        // dispatch(addPendingStroke(...));
-
-        // Preview line ko screen se saaf karein
-        setActiveLine({ points: [] });
-
-        // Step 4: Batch bhejne ke liye timer ko reset karein
         if (batchTimerRef.current) clearTimeout(batchTimerRef.current);
-        batchTimerRef.current = setTimeout(sendBatchToServer, 3000); // 3 second ke baad bhejein
+        batchTimerRef.current = setTimeout(sendBatchToServer, 3000);
     };
+
 
 
     const handleDrawEnd = () => {
@@ -686,10 +592,10 @@ const KonvaCanvas = ({
 
         const point = stage.getRelativePointerPosition();
         if (brushState.mode === 'line' && lineStartPointRef.current) {
-            setActiveLine(prev => ({ ...prev, points: [lineStartPointRef.current!.x, lineStartPointRef.current!.y, point.x, point.y] }));
+            setActiveLine((prev: any) => ({ ...prev, points: [lineStartPointRef.current!.x, lineStartPointRef.current!.y, point.x, point.y] }));
         } else {
             const lastPoints = activeLine.points;
-            setActiveLine(prev => ({ ...prev, points: [...prev.points, point.x, point.y] }));
+            setActiveLine((prev: any) => ({ ...prev, points: [...prev.points, point.x, point.y] }));
             if (lastPoints.length >= 2) {
                 const last = { x: lastPoints[lastPoints.length - 2], y: lastPoints[lastPoints.length - 1] };
                 currentStrokePathRef.current.push({ fromX: last.x, fromY: last.y, toX: point.x, toY: point.y });
@@ -705,6 +611,76 @@ const KonvaCanvas = ({
             });
         }
     };
+    
+    // --- TOUCH EVENT HANDLERS ---
+    const handleTouchStart = (e) => {
+        const stage = e.target.getStage();
+        if (!stage) return;
+
+        const touches = e.evt.touches;
+
+        if (touches.length === 1) {
+            // Agar ek ungli hai, to drawing shuru karein
+            setIsDrawing(true);
+            startDrawing(stage.getRelativePointerPosition());
+        } else if (touches.length >= 2) {
+            // Agar do ya do se zyada ungliyan hain, to drawing ko foran rokein
+            // aur panning ke liye tayar ho jayein
+            setIsDrawing(false);
+
+            const touch1 = touches[0];
+            const touch2 = touches[1];
+
+            // Dono ungliyon ke darmiyan center point ko yaad karein
+            lastPanPointRef.current = {
+                x: (touch1.clientX + touch2.clientX) / 2,
+                y: (touch1.clientY + touch2.clientY) / 2,
+            };
+        }
+    };
+    const handleTouchMove = (e) => {
+        const stage = e.target.getStage();
+        if (!stage) return;
+
+        const touches = e.evt.touches;
+
+        // --- YEH HAI ASAL NAYI LOGIC ---
+        if (touches.length >= 2 && lastPanPointRef.current) {
+            // Case A: Agar do ungliyan hain, to PAN karein
+            const touch1 = touches[0];
+            const touch2 = touches[1];
+
+            const newCenter = {
+                x: (touch1.clientX + touch2.clientX) / 2,
+                y: (touch1.clientY + touch2.clientY) / 2,
+            };
+
+            const dx = newCenter.x - lastPanPointRef.current.x;
+            const dy = newCenter.y - lastPanPointRef.current.y;
+
+            const newPos = {
+                x: stage.x() + dx,
+                y: stage.y() + dy,
+            };
+
+            stage.position(newPos);
+            lastPanPointRef.current = newCenter;
+            handleStageChange(); // Parent ko nayi position batayein
+
+        } else if (touches.length === 1 && isDrawing) {
+            // Case B: Agar ek ungli hai, to DRAW karein
+            onStateChange({ worldPos: stage.getRelativePointerPosition() });
+            draw(stage.getRelativePointerPosition());
+        }
+    };
+
+    const handleTouchEnd = () => {
+        lastPanPointRef.current = null;
+        if (isDrawing) {
+            stopDrawing();
+        }
+    };
+    
     const highlightedLines = useMemo(() => {
         if (!selectedContributionId) return [];
         const selected = savedStrokes.find((c: any) => c._id === selectedContributionId);
@@ -713,87 +689,56 @@ const KonvaCanvas = ({
 
     return (
         <Stage
+            ref={stageRef}
             width={width}
             height={height}
-            scaleX={stageState.scale}
-            scaleY={stageState.scale}
-            x={stageState.x}
-            y={stageState.y}
-            // draggable={brushState.mode === 'move'}
-            draggable={isReadOnly || brushState.mode === 'move'}
-
-            // style={{ cursor: brushState.mode === 'move' ? 'grab' : 'crosshair' }}
+            draggable={false} // We handle drag/pan manually
             style={{
                 backgroundColor: '#F0F0F0',
-                cursor: isReadOnly
-                    ? 'grab' // Agar read-only hai, to aam cursor
-                    : brushState.mode === 'move'
-                        ? 'grab' // Agar move tool hai, to 'grab'
-                        : 'crosshair' // Warna drawing wala 'crosshair'
+                cursor: isReadOnly ? 'grab' : (isPanning ? 'grabbing' : (brushState.mode === 'move' ? 'grab' : 'crosshair'))
             }}
             onWheel={(e) => {
                 e.evt.preventDefault();
                 const stage = stageRef.current;
                 if (!stage) return;
-
                 const oldScale = stage.scaleX();
                 const pointer = stage.getPointerPosition();
                 const mousePointTo = {
                     x: (pointer.x - stage.x()) / oldScale,
                     y: (pointer.y - stage.y()) / oldScale,
                 };
-
                 let newScale = e.evt.deltaY > 0 ? oldScale / 1.1 : oldScale * 1.1;
                 newScale = Math.max(MIN_ZOOM, Math.min(newScale, MAX_ZOOM));
-
                 const newPos = {
                     x: pointer.x - mousePointTo.x * newScale,
                     y: pointer.y - mousePointTo.y * newScale,
                 };
-
                 stage.scale({ x: newScale, y: newScale });
                 stage.position(newPos);
                 handleStageChange();
             }}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={() => {
+                if (isPanning) setIsPanning(false);
+                if (isDrawing) stopDrawing(); // Ab 'stopDrawing' istemal karein
+            }}
+            onContextMenu={(e) => e.evt.preventDefault()}
+
+            // --- TOUCH EVENTS ---
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+
         >
-            <Layer>
-                {bakedImage && <KonvaImage image={bakedImage} listening={false} />}
-                {isDrawing && (
-                    <Line
-                        points={activeLine.points}
-                        stroke={activeLine.stroke}
-                        strokeWidth={activeLine.strokeWidth}
-                        tension={brushState.mode === 'line' ? 0 : 0.5}
-                        lineCap="round" lineJoin="round"
-                        globalCompositeOperation={activeLine.tool === 'eraser' ? 'destination-out' : 'source-over'}
-                        listening={false}
-                    />
-                )}
-            </Layer>
-
             <Layer listening={false}>
-                {highlightedLines.map((line: any, i: number) => (
-                    <Line key={`highlight-${i}`} {...line} shadowColor="rgba(0, 102, 255, 0.8)" shadowBlur={15} shadowOpacity={0.9}
-                    />
-                ))}
+                <Rect x={0} y={0} width={virtualWidth} height={virtualHeight} fill="white" stroke="#E0E0E0" strokeWidth={4 / (stageRef.current?.scaleX() || 1)} />
+                {bakedImage && <KonvaImage image={bakedImage} x={0} y={0} width={virtualWidth} height={virtualHeight} listening={false} />}
+                {isDrawing && <Line points={activeLine.points} stroke={activeLine.stroke} strokeWidth={activeLine.strokeWidth} tension={brushState.mode === 'line' ? 0 : 0.5} lineCap="round" lineJoin="round" globalCompositeOperation={activeLine.tool === 'eraser' ? 'destination-out' : 'source-over'} listening={false} />}
             </Layer>
-
-            <Layer>
-                <Rect
-                    // width={width} height={height}
-                    width={virtualWidth}
-                    height={virtualHeight}
-                    fill="transparent"
-                    onWheel={handleWheel}
-                    onMouseDown={handleMouseDown}
-                    onMouseMove={handleMouseMove}
-                    onMouseUp={handleMouseUp}
-                    onMouseLeave={handleMouseUp} // Agar user canvas se bahar chala jaye to bhi drawing band kar do'    onTouchStart={handleDrawingStart}
-                    // Touch Events
-                    onTouchStart={handleDrawStart}
-                    onTouchMove={handleDrawMove}
-                    onTouchEnd={handleDrawEnd}
-                />
+            <Layer listening={false}>
+                {highlightedLines.map((line: any, i: any) => <Line key={`highlight-${i}`} {...line} shadowColor="rgba(0, 102, 255, 0.8)" shadowBlur={15} shadowOpacity={0.9} />)}
             </Layer>
         </Stage>
     );

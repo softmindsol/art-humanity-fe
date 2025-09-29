@@ -183,20 +183,6 @@ const paintPixelSlice = createSlice({
 
       state.canvasData = newCanvasData;
     },
-    //   updateContributionInState: (state: any, action) => {
-    //     // `action.payload` will be the full, updated contribution object from the socket event
-    //     const updatedContribution = action.payload;
-
-    //     // Find the index of the contribution that needs to be updated
-    //     const index = state.canvasData.findIndex(
-    //       (c: any) => c._id === updatedContribution._id
-    //     );
-
-    //     // If found, replace it with the new version
-    //     if (index !== -1) {
-    //       state.canvasData[index] = updatedContribution;
-    //     }
-    //   },
     addPendingStrokes: (state: any, action) => {
       const { contributionId, newStrokes } = action.payload;
       // Pehle se mojood pending contribution ko dhoondein ya ek nayi banayein
@@ -213,6 +199,31 @@ const paintPixelSlice = createSlice({
         });
       }
     },
+    appendStrokesToContribution: (state:any, action) => {
+     const { contributionId, newStrokes } = action.payload;
+    
+    // Step 1: Find the index of the contribution that needs to be updated.
+    const index = state.canvasData.findIndex((c:any) => c._id === contributionId);
+
+    // Step 2: If the contribution is found...
+    if (index !== -1) {
+        // Step 3: Create a NEW contribution object.
+        const updatedContribution = {
+            // Copy all the old properties from the existing contribution
+            ...state.canvasData[index],
+            // Create a NEW strokes array by combining the old strokes and the new ones
+            strokes: [...state.canvasData[index].strokes, ...newStrokes],
+        };
+
+        // Step 4: Create a NEW canvasData array and replace the old
+        // contribution at the correct index with our new, updated version.
+        state.canvasData = [
+            ...state.canvasData.slice(0, index), // All items before the one we're updating
+            updatedContribution,                 // Our updated item
+            ...state.canvasData.slice(index + 1),  // All items after the one we're updating
+        ];
+    }
+  }
   },
 
   extraReducers: (builder) => {
@@ -252,57 +263,6 @@ const paintPixelSlice = createSlice({
         state.loading.batchCreateContributions = true;
         state.error.batchCreateContributions = null;
       })
-      // .addCase(
-      //   batchCreateContributions.fulfilled,
-      //   (state: any, action: any) => {
-      //     state.loading.batchCreateContributions = false; // <-- YEH NAYI LINE HAI
-
-      //     const savedContributions = action.payload; // These are the real contributions from the server
-
-      //     // 1. Find and remove the temporary optimistic updates
-      //     const tempIds = new Set(savedContributions.map((c: any) => c.tempId));
-      //     state.canvasData = state.canvasData.filter(
-      //       (c: any) => !tempIds.has(c._id)
-      //     );
-
-      //     // 2. Add the final, saved contributions from the server
-      //     state.canvasData.push(...savedContributions);
-      //   }
-      // )
-      // .addCase(batchCreateContributions.rejected, (state, action: any) => {
-      //   state.loading.batchCreateContributions = false; // <-- YEH NAYI LINE HAI
-
-      //   // we should roll back the optimistic update.
-      //   const failedTempIds = new Set(
-      //     action.meta.arg.contributions.map((c: any) => c.tempId)
-      //   );
-      //   state.canvasData = state.canvasData.filter(
-      //     (c: any) => !failedTempIds.has(c._id)
-      //   );
-      // });
-      // .addCase(batchCreateContributions.fulfilled, (state: any, action) => {
-      //   // `action.payload` is the array of real contributions from the server,
-      //   // and each one has a `tempId`.
-      //   const savedContributions = action.payload;
-
-      //   savedContributions.forEach((realContrib: any) => {
-      //     // Find the index of the temporary, optimistic contribution in our state
-      //     const index = state.canvasData.findIndex(
-      //       (optimisticContrib: any) =>
-      //         optimisticContrib._id === realContrib.tempId
-      //     );
-
-      //     if (index !== -1) {
-      //       // If we found it, replace the temporary one with the real one
-      //       state.canvasData[index] = realContrib;
-      //     } else {
-      //       // As a fallback (in case the optimistic one wasn't found), add it.
-      //       state.canvasData.push(realContrib);
-      //     }
-      //   });
-
-      //   state.loading.saving = false; // Or whatever your loading state is
-      // })
 
       .addCase(batchCreateContributions.fulfilled, (state: any, action) => {
         // action.payload mein server se anay wali contributions hain
@@ -478,6 +438,7 @@ export const {
   addContributionToState,
   updateContributionInState,
   addPendingStrokes,
+  appendStrokesToContribution
 } = paintPixelSlice.actions;
 
 // Selectors
