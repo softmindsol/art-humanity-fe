@@ -172,6 +172,8 @@ const paintPixelSlice = createSlice({
     },
     clearAllContributionsFromState: (state) => {
       state.canvasData = [];
+          state.activeContributionId = null;
+      state.pendingStrokes = [];
     },
     removeMultipleContributionsFromState: (state, action) => {
       const idsToRemove = new Set(action.payload);
@@ -367,7 +369,12 @@ const paintPixelSlice = createSlice({
       })
       .addCase(clearCanvas.fulfilled, (state) => {
         state.loading.clearCanvas = false;
+        // Canvas data ko khaali karein
         state.canvasData = [];
+        // Pending strokes ko bhi saaf karein
+        state.pendingStrokes = [];
+       
+        state.activeContributionId = null;
       })
       .addCase(clearCanvas.rejected, (state, action) => {
         state.loading.clearCanvas = false;

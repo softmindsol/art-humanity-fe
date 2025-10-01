@@ -161,6 +161,10 @@ const KonvaCanvas = ({
 
     const startDrawing = (pos: any) => {
 
+        // if (!activeContributionId) {
+        //     toast.error("Please create or select a contribution first before drawing.");
+        //     return; // Stop immediately if no container is active
+        // }
 
         if (isReadOnly || !isContributor || brushState.mode === 'move') return;
         if (!user) { onGuestInteraction(); return; }
@@ -183,7 +187,9 @@ const KonvaCanvas = ({
 
     const draw = (point: any) => {
         if (!isDrawing) return;
-        if (!isPointerInsideCanvas(point)) return; // Agar pointer canvas ke bahar hai, drawing stop
+        if (!isPointerInsideCanvas(point)) {
+            return
+        }; // Agar pointer canvas ke bahar hai, drawing stop
 
         if (brushState.mode === 'line') {
             setActiveLine((prev: any) => ({ ...prev, points: [lineStartPointRef.current.x, lineStartPointRef.current.y, point.x, point.y] }));
@@ -284,7 +290,7 @@ const KonvaCanvas = ({
         // Yeh sirf 'stopDrawing' ko call karega
         stopDrawing();
     };
-   
+
 
     const handleMouseDown = (e: any) => {
         const stage = stageRef.current;
@@ -383,7 +389,7 @@ const KonvaCanvas = ({
     };
 
 
-    
+
 
     const handleStageChange = () => {
         if (stageRef.current) {
