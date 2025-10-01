@@ -33,7 +33,6 @@ const KonvaCanvas = ({
 
     // --- State ---
     const [isDrawing, setIsDrawing] = useState(false);
-    const [_, setStageState] = useState({ scale: 1, x: 0, y: 0 });
     const [activeLine, setActiveLine] = useState<any>({ points: [] });
     const [bakedImage, setBakedImage] = useState<HTMLImageElement | null>(null);
     const lineStartPointRef = useRef<{ x: number; y: number } | any>(null);

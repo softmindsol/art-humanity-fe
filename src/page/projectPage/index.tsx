@@ -17,7 +17,7 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { useCanvasState } from '@/hook/useCanvasState';
-import { clearCanvas, fetchContributionsByTiles, generateTimelapseVideo, getContributionsByProject } from '@/redux/action/contribution';
+import { clearCanvas, fetchContributionsByTiles, generateTimelapseVideo } from '@/redux/action/contribution';
 import InfoBox from '@/components/toolbox/InfoBox';
 import { appendStrokesToContribution, clearAllContributionsFromState, clearCanvasData, clearTimelapseUrl, removeContributionFromState, removeContributionOptimistically, removeMultipleContributionsFromState, selectCanvasData, selectErrorForOperation, selectIsLoadingOperation, selectTimelapseUrl, updateContributionInState } from '@/redux/slice/contribution';
 import ContributionSidebar from '@/components/canvas/ContributionSidebar';
@@ -145,13 +145,6 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
         setSelectedContributionId(contributionId);
         // Sidebar pehle se khula hai, usay dobara kholne ki zaroorat nahi
     }, []);
-
-
-    // --- DYNAMIC VALUES ---
-    const totalCanvasPixels = useMemo(() => {
-        if (!currentProject?.width || !currentProject?.height) return 1;
-        return currentProject.width * currentProject.height;
-    }, [currentProject]);
 
 
     // --- TILING DATA FETCHING LOGIC ---

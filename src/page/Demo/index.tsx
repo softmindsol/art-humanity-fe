@@ -106,8 +106,7 @@ const DemoCanvas: React.FC = () => {
 
     const {
         setIsModalOpen,
-        // Refs
-        containerRef,
+    
         viewportCanvasRef,
         tilesRef,
         // setCanvasState,
@@ -147,9 +146,7 @@ const DemoCanvas: React.FC = () => {
     const savedStrokes = useSelector(selectCanvasData);
     // ===== YEH NAYI STATES ADD KAREIN =====
     const [lineStartPos, setLineStartPos] = useState<Position | null>(null);
-    // useEffect(() => {
-    //     console.log("currentStrokePath:", currentStrokePath)
-    // }, [currentStrokePath])
+   
     useEffect(() => {
         saveStateToHistory();
     }, []);
@@ -188,17 +185,6 @@ const DemoCanvas: React.FC = () => {
             saveStateToHistory();
         }
     }, [savedStrokes]); // Yeh effect tab chalega jab `savedStrokes` Redux se aayega
-
-
-    // useEffect(() => {
-    //     if (isCanvasHovered) {
-    //         document.body.style.overflow = 'hidden';
-    //     } else {
-    //         document.body.style.overflow = '';
-    //     }
-    //     return () => { document.body.style.overflow = ''; };
-    // }, [isCanvasHovered]);
-
 
     // --- HISTORY MANAGEMENT ---
     const saveStateToHistory = useCallback(() => {
@@ -239,18 +225,6 @@ const DemoCanvas: React.FC = () => {
             restoreStateFromHistory(historyIndex + 1);
         }
     }, [historyIndex, history.length, restoreStateFromHistory]);
-
-
-    // const handleGenerateTimelapse = () => {
-    //     if (!sessionId) {
-    //         alert("Session ID is not available.");
-    //         return;
-    //     }
-    //     console.log(`Requesting timelapse for session: ${sessionId}`);
-    //     dispatch(generateTimelapseVideo({ sessionId }) as any);
-    // };
-    // Keyboard Shortcuts for Undo/Redo
-
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -502,13 +476,6 @@ const DemoCanvas: React.FC = () => {
         dispatch(setCanvasOffset({ x: mouseX - worldX * newZoom, y: mouseY - worldY * newZoom }));
     };
 
-    const startPan = (e: React.MouseEvent) => { setIsPanning(true); setPanStart({ x: e.clientX - canvasState.offset.x, y: e.clientY - canvasState.offset.y }); };
-    const pan = (e: React.MouseEvent) => {
-        if (isPanning) {
-            dispatch(setCanvasOffset({ x: e.clientX - panStart.x, y: e.clientY - panStart.y }));
-        }
-    };
-    const stopPan = () => setIsPanning(false);
 
     // --- OTHER ACTIONS ---
     const handleClearCanvas = () => {
