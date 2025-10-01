@@ -122,6 +122,27 @@ const projectSlice = createSlice({
           );
       }
     },
+    incrementPixelCount: (state, action) => {
+      const { pixelCountToAdd } = action.payload;
+
+      // Sirf tab update karein jab currentProject mojood ho
+      if (state.currentProject && state.currentProject.stats) {
+        // Purane count mein naye pixels add karein
+        state.currentProject.stats.pixelCount += pixelCountToAdd;
+
+        // (Optional, but good) Percentage ko bhi foran update karein
+        const totalPixels =
+          state.currentProject.width * state.currentProject.height;
+        if (totalPixels > 0) {
+          const newPercentage =
+            (state.currentProject.stats.pixelCount / totalPixels) * 100;
+          state.currentProject.stats.percentComplete = Math.min(
+            100,
+            newPercentage
+          );
+        }
+      }
+    },
 
     updateProjectStatusInState: (state, action) => {
       const { projectId, status } = action.payload;
@@ -389,6 +410,7 @@ export const {
   setSearchTerm,
   updateProjectStatusInState,
   removeProjectFromList,
+  incrementPixelCount,
 } = projectSlice.actions;
 
 // Selectors

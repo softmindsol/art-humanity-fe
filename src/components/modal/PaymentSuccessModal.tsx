@@ -55,7 +55,7 @@ const PaymentSuccessModal: React.FC<PaymentSuccessModalProps> = ({
                         </Button>
                     ) : (
                         // Agar donation hai, to "Close" button dikhayein
-                        <Button onClick={onClose} className="cursor-pointer">
+                        <Button onClick={onClose} className=" cursor-pointer border-white bg-[#8b795e] text-white hover:bg-[#a1887f]">
                             Close
                         </Button>
                     )}

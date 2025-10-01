@@ -185,7 +185,7 @@ const ActiveProjects: React.FC = () => {
 
                                     return (
                                         <div key={project._id} className="project-card active">
-                                            <div className="project-image relative">
+                                            <div className="project-image relatve">
                                                 <img
                                                     src={getImageUrl(project.thumbnailUrl) || 'https://via.placeholder.com/400x250'}
                                                     alt={project.title}
@@ -230,7 +230,7 @@ const ActiveProjects: React.FC = () => {
                                                         <span className="stat-label !text-[#8d6e63]">Pixels Painted</span>
                                                     </div>
                                                 </div>
-                                                {project.status === 'Completed' ? (
+                                                {project.status === 'Completed' ? ( 
                                                     // --- AGAR PROJECT COMPLETED HAI ---
                                                     <Link
                                                         to={`/project/${project?.canvasId}?view=gallery`}

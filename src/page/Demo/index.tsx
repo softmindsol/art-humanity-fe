@@ -105,7 +105,7 @@ const DemoCanvas: React.FC = () => {
     const mainContentRef = useRef<HTMLDivElement>(null);
 
     const {
-         setIsModalOpen,
+        setIsModalOpen,
         // Refs
         containerRef,
         viewportCanvasRef,
@@ -250,8 +250,8 @@ const DemoCanvas: React.FC = () => {
     //     dispatch(generateTimelapseVideo({ sessionId }) as any);
     // };
     // Keyboard Shortcuts for Undo/Redo
-   
-   
+
+
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.ctrlKey || e.metaKey) { // metaKey for Command on Mac
@@ -299,7 +299,7 @@ const DemoCanvas: React.FC = () => {
         return tile;
     };
 
-   
+
     const renderVisibleTiles = useCallback(() => {
         const viewportCanvas = viewportCanvasRef.current;
         if (!viewportCanvas) return;
@@ -355,7 +355,7 @@ const DemoCanvas: React.FC = () => {
 
         ctx.restore();
     }, [canvasState, showGrid, isDrawing, lineStartPos, mousePos, brushState]); // <-- Dependencies update karein
-  
+
     useEffect(() => {
         renderVisibleTiles();
     }, [canvasState, renderVisibleTiles]);
@@ -366,9 +366,9 @@ const DemoCanvas: React.FC = () => {
             setIsModalOpen(true);
         }
     }, [timelapseUrl]);
-   
+
     // --- MOUSE AND DRAWING HANDLERS ---
-   
+
     const getMousePosInWorld = (e: MouseEvent | React.MouseEvent): Position => {
         const viewport = viewportCanvasRef.current!;
         const rect = viewport.getBoundingClientRect();
@@ -430,7 +430,7 @@ const DemoCanvas: React.FC = () => {
         setCurrentStrokePath([]);
         setStrokeStartTime(new Date());
     };
-    
+
     const draw = (e: React.MouseEvent) => {
         // Agar line tool active hai aur drawing ho rahi hai
         if (brushState.mode === 'line' && isDrawing) {
@@ -541,6 +541,25 @@ const DemoCanvas: React.FC = () => {
         renderVisibleTiles();
     };
 
+    // ----- Pan Handlers -----
+    const handleMouseDown = (e: React.MouseEvent) => {
+        if (e.button === 2) { // Right click -> pan
+            setIsPanning(true);
+            setPanStart({ x: e.clientX - canvasState.offset.x, y: e.clientY - canvasState.offset.y });
+        } else if (e.button === 0) startDrawing(e);
+    };
+
+    const handleMouseMove = (e: React.MouseEvent) => {
+        const pos = getMousePosInWorld(e);
+        setMousePos({ x: Math.round(pos.x), y: Math.round(pos.y) });
+        if (isPanning) {
+            dispatch(setCanvasOffset({ x: e.clientX - panStart.x, y: e.clientY - panStart.y }));
+        } else if (isDrawing) draw(e);
+    };
+
+    const handleMouseUp = () => { if (isPanning) setIsPanning(false); if (isDrawing) stopDrawing(); };
+
+
     // --- TOOLBOX DRAG LOGIC ---
     const dragToolbox = useCallback((e: MouseEvent) => { if (isDraggingToolbox) setToolboxPos({ x: e.clientX - toolboxStart.x, y: e.clientY - toolboxStart.y }); }, [isDraggingToolbox, toolboxStart]);
     const stopToolboxDrag = useCallback(() => setIsDraggingToolbox(false), []);
@@ -571,7 +590,7 @@ const DemoCanvas: React.FC = () => {
     }, [hue, saturation, lightness]);
 
 
-    
+
     if (!brushState || !canvasState) {
         return <div>Loading Canvas...</div>;
     }
@@ -617,26 +636,22 @@ const DemoCanvas: React.FC = () => {
                     </div>
                 </div>
 
-                <div ref={containerRef} className="canvas-viewport-wrapper">
+                <div className="canvas-viewport-wrapper">
                     <canvas
-                        id="viewport-canvas"
                         ref={viewportCanvasRef}
                         width={VIEWPORT_WIDTH}
                         height={VIEWPORT_HEIGHT}
                         style={{
-                            cursor: brushState.mode === 'move'
-                                ? (isPanning ? 'grabbing' : 'grab')
-                                : (canvasState.zoomLevel < 1 ? 'not-allowed' : 'crosshair'),
+                            cursor: isPanning ? 'grabbing' : 'crosshair',
+                            border: '4px solid #4d2d2d', // <-- Add border here
+                            borderRadius: '4px', // optional: thoda rounded corner
+                            backgroundColor: '#ffffff', // optional: white background
                         }}
+                        onMouseDown={handleMouseDown}
+                        onMouseMove={handleMouseMove}
+                        onMouseUp={handleMouseUp}
+                        onMouseLeave={handleMouseUp}
                         onWheel={handleWheel}
-                        onMouseDown={(e) => { if (e.button === 2 || brushState.mode === 'move') startPan(e); else startDrawing(e); }}
-                        onMouseMove={(e) => {
-                            const pos = getMousePosInWorld(e);
-                            setMousePos({ x: Math.round(pos.x), y: Math.round(pos.y) });
-                            if (isPanning) pan(e); else if (isDrawing) draw(e);
-                        }}
-                        onMouseUp={() => { stopDrawing(); stopPan(); }}
-                        onMouseLeave={() => { stopDrawing(); stopPan(); }}
                         onContextMenu={(e) => e.preventDefault()}
                     />
                 </div>
