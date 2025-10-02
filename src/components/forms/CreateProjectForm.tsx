@@ -171,7 +171,7 @@ const AdminDashboard = () => {
                     </div>
 
                     {/* Dimensions */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="width" className="font-medium text-[#5d4037]">Width (px)</Label>
                         <Field
@@ -198,7 +198,7 @@ const AdminDashboard = () => {
                         />
                         <ErrorMessage name="height" component="div" className="text-red-500 text-sm" />
                       </div>
-                    </div>
+                    </div> */}
 
                     {/* Thumbnail Upload */}
                     <div className="space-y-2">

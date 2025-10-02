@@ -132,6 +132,17 @@ const KonvaCanvas = ({
 
 
     const sendBatchToServer = useCallback(() => {
+
+        if (isDrawingRef.current) {
+            // Agar user abhi bhi draw kar raha hai, to API call na bhejein
+            console.log("User is still drawing, delaying batch send.");
+
+            // Timer ko dobara 3 second ke liye set kar dein
+            if (batchTimerRef.current) clearTimeout(batchTimerRef.current);
+            batchTimerRef.current = setTimeout(sendBatchToServer, 3000);
+            return; // Function ko yahin rok dein
+        }
+    
         // Agar queue khaali hai ya koi contribution active nahi hai, to kuch na karein
         if (strokeQueueRef.current.length === 0 || !activeContributionId) {
             return;
@@ -153,8 +164,8 @@ const KonvaCanvas = ({
             .catch((err) => {
                 // Agar API call fail ho, to user ko batayein
                 toast.error(`Failed to save drawing: ${err}`);
-                // Optional: Failed strokes ko wapas queue mein daal dein taake dobara koshish ki ja sake
-                // strokeQueueRef.current.push(...strokesToSend); 
+                strokeQueueRef.current.push(...strokesToSend);
+
             });
 
     }, [dispatch, activeContributionId]); // Dependency array ko update karein

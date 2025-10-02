@@ -2,7 +2,7 @@ import useAuth from '@/hook/useAuth';
 import useAppDispatch from '@/hook/useDispatch';
 import { deleteContribution, voteOnContribution } from '@/redux/action/contribution';
 import { Trash2 } from 'lucide-react';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 // Helper to format date
@@ -24,32 +24,7 @@ const ContributionsList = ({
 }: any) => {
     const dispatch = useAppDispatch();
     const { user } = useAuth();
-
-    // const handleVote = async (e: any, contributionId: any, voteType: any) => {
-    //     e.stopPropagation();
-
-    //     if (!user) {
-    //         onGuestVoteAttempt();
-    //         return;
-    //     }
-
-    //     try {
-    //         // Dispatch vote action
-    //         await dispatch(voteOnContribution({ contributionId, voteType, userId: user?._id })).unwrap();
-
-    //         // Toast on success
-    //         toast.success(
-    //             voteType === 'up'
-    //                 ? 'You upvoted this contribution.'
-    //                 : 'You downvoted this contribution.'
-    //         );
-    //     } catch (err: any) {
-    //         console.error('Voting failed:', err);
-    //         toast.error('Failed to register your vote. Please try again.');
-    //     }
-    // };
-
-    // src/components/canvas/ContributionsList.js
+    const [isLoadingVoted, setIsLoadingVoted] = useState(false);
 
     const handleVote = async (e: any, contributionId: any, voteType: any) => {
         e.stopPropagation();
@@ -58,9 +33,8 @@ const ContributionsList = ({
             onGuestVoteAttempt();
             return;
         }
-
+        setIsLoadingVoted(true);
         try {
-            // --- YEH HAI ASAL NAYI LOGIC ---
 
             // Step 1: Action dispatch karne se pehle, purana vote status check karein
             const originalContribution = contributions.find((c: any) => c._id === contributionId);
@@ -102,6 +76,9 @@ const ContributionsList = ({
         } catch (err: any) {
             console.error('Voting failed:', err);
             toast.error(err.response?.data?.message || 'Failed to register your vote.');
+        }
+        finally {
+            setIsLoadingVoted(false);
         }
     };
     const handleDelete = (e: any, contributionId: any) => {
@@ -195,10 +172,10 @@ const ContributionsList = ({
                         {/* Voting and Actions */}
                         <div className="flex justify-between items-center bg-[#f8f0e3] p-1 rounded-[2px] mt-2">
                             <div className="flex items-center justify-center gap-3 w-full">
-                                <button onClick={(e) => handleVote(e, contrib._id, 'up')} className="flex text-[14px] items-center gap-1 text-[#5d4037] cursor-pointer">
+                                <button disabled={isLoadingVoted} onClick={(e) => handleVote(e, contrib._id, 'up')} className="flex text-[14px] items-center gap-1 text-[#5d4037] cursor-pointer">
                                     ▲ <span className="font-bold">{contrib.upvotes || 0}</span>
                                 </button>
-                                <button onClick={(e) => handleVote(e, contrib._id, 'down')} className="flex text-[14px] items-center gap-1 text-[#f44336] cursor-pointer">
+                                <button disabled={isLoadingVoted} onClick={(e) => handleVote(e, contrib._id, 'down')} className="flex text-[14px] items-center gap-1 text-[#f44336] cursor-pointer">
                                     ▼ <span className="font-bold">{contrib.downvotes || 0}</span>
                                     <span className=" text-[#654321] font-semibold">({downvotePercentage.toFixed(1)}%)</span>
                                 </button>
