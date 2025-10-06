@@ -679,7 +679,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
                             </div>
                         </div>
 
-                        <div className='w-full md:w-3xl lg:w-4xl xl:w-6xl mx-auto overflow-x-auto mt-6  flex items-center justify-center'>
+                        <div className='w-full md:w-2xl lg:w-4xl xl:w-6xl mx-auto overflow-x-auto mt-6  flex items-center justify-center'>
                             <div
                                 ref={canvasContainerRef}
                                 // className=' h-full w-[90%] xl:w-[1024px] min-h-[1024px] mt-6 bg-white relative overflow-hidden'
@@ -848,7 +848,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
             transition-all duration-300 ease-in-out
             ${isTimelapseFullscreen
                         ? 'fixed inset-0 w-full h-full max-w-full max-h-full rounded-none' // Fullscreen styles
-                        : 'sm:max-w-4xl md:max-w-5xl lg:max-w-6xl' // Default modal styles
+                        : 'sm:max-w-xl md:max-w-2xl lg:max-w-4xl' // Default modal styles
                     }
         `}>
                     <DialogHeader>
