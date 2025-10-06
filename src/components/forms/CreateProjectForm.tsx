@@ -29,7 +29,10 @@ const AdminDashboard = () => {
 
   // Validation Schema for Formik (using Yup)
   const validationSchema = Yup.object({
-    title: Yup.string().required("Project title is required"),
+    title: Yup.string()
+      .required("Project title is required")
+      .min(5, "Title must be at least 5 characters")
+      .max(100, "Title cannot exceed 100 characters"),
     description: Yup.string()
       .required("Description is required")
       .test("wordCount", "Description must be no more than 50 words", (value: any) => {

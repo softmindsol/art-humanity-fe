@@ -380,7 +380,8 @@ nav ul li a.active {
   background-color: var(--primary);
   color: var(--text-light);
   transition: all 0.3s ease;
-  margin: 0 20px 20px;
+  /* margin: 0 20px 20px; */
+  margin-top: 10px;
   border-radius: 3px;
 }
 

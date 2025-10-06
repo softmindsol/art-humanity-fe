@@ -108,23 +108,16 @@ const ActiveProjects: React.FC = () => {
         }
 
 
-        console.log("[Socket] Setting up listeners for ActiveProjects page...");
-
         const handleProjectDeleted = (data: { projectId: string, message: string }) => {
             dispatch(removeProjectFromList({ projectId: data.projectId }));
             toast.error(data.message);
         };
-
-
-
         socket.on('project_deleted', handleProjectDeleted);
 
         // This `return` function is the CLEANUP function.
         // React runs this when the component unmounts. This is the ONLY correct place for `socket.off`.
         return () => {
-            console.log("[Socket] Cleaning up listeners for ActiveProjects page.");
             socket.off('project_deleted', handleProjectDeleted);
-
         };
     }, [socket, dispatch]); // Dependencies are correct
 

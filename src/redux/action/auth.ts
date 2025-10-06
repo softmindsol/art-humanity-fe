@@ -70,7 +70,7 @@ export const updateUser = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const response = await api.put(
+      const response = await api.patch(
         `${config?.endpoints?.UPDATE_USER}/${userId}`,
         formData,
         {
@@ -84,6 +84,68 @@ export const updateUser = createAsyncThunk(
     }
   }
 );
+
+export const changePassword = createAsyncThunk(
+  "user/changePassword",
+  async (
+    {
+      userId,
+      oldPassword,
+      newPassword,
+    }: { userId: string; oldPassword: string; newPassword: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      // Endpoint ka path config se lein (e.g., /users/change-password)
+      const endpoint = `${config?.endpoints?.CHANGE_PASSWORD}/${userId}`;
+
+      const response = await api.patch(
+        // PATCH method behtar hai password update ke liye
+        endpoint,
+        { oldPassword, newPassword }, // Dono passwords body mein bhejें
+        {
+          withCredentials: true, // Session/cookie ke liye zaroori
+        }
+      );
+
+      return response.data; // Success response return karein
+    } catch (err: any) {
+      // Error ko rejectWithValue ke zariye handle karein
+      return rejectWithValue(
+        err.response?.data?.message || "Failed to change password"
+      );
+    }
+  }
+);
+
+export const verifyPassword = createAsyncThunk(
+  "user/verifyPassword",
+  async (
+    { userId, oldPassword }: { userId: string; oldPassword: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      // Endpoint ka path config se lein (e.g., /users/verify-password)
+      const endpoint = `${config?.endpoints?.VERIFY_PASSWORD}/${userId}`;
+
+      const response = await api.post(
+        endpoint,
+        { oldPassword }, // Sirf 'oldPassword' body mein bhejें
+        {
+          withCredentials: true, // Session/cookie ke liye zaroori
+        }
+      );
+
+      return response.data; // Success response return karein
+    } catch (err: any) {
+      // Error ko rejectWithValue ke zariye handle karein
+      return rejectWithValue(
+        err.response?.data?.message || "Password verification failed"
+      );
+    }
+  }
+);
+
 
 type Req = { userId: string; newEmail: string; currentPassword: string };
 

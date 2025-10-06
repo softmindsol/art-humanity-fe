@@ -3,6 +3,7 @@ const config = {
     LOGOUT: "/auth/logout",
     LOGIN: "/auth/login",
     UPDATE_USER: "/auth/update-profile",
+    VERIFY_PASSWORD: "/auth/verify-password", // Yeh add karein
     CHANGE_PASSWORD: "/auth/change-password",
     CHANGE_EMAIL: "/auth/change-email",
     GET_USER: "/auth",

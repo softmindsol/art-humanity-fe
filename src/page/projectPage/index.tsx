@@ -53,7 +53,6 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
     const { user } = useAuth();
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
-    // --- STATES ---
     const [socket, setSocket] = useState<any>(null);
     const [canvasStats, setCanvasStats] = useState({
         zoom: 1,
@@ -586,7 +585,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
                             </button> */}
                             <button
                                 onClick={handleToggleCanvasSize}
-                                className="bg-blue-500 text-white border-none text-[12px] md:text-[16px] px-2 py-2 md:px-4 md:py-2 rounded cursor-pointer flex items-center gap-2"
+                                className="bg-blue-500 hidden text-white border-none text-[12px] md:text-[16px] px-2 py-2 md:px-4 md:py-2 rounded cursor-pointer xl:flex items-center gap-2"
                                 title={`Current display size: ${displaySize}px. Click to toggle.`}
                             >
                                 <Square size={16} />
@@ -680,17 +679,16 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
                             </div>
                         </div>
 
-                        <div className='w-full max-w-7xl mx-auto overflow-x-auto mt-6  flex items-center justify-center'>
+                        <div className='w-full md:w-3xl lg:w-4xl xl:w-6xl mx-auto overflow-x-auto mt-6  flex items-center justify-center'>
                             <div
                                 ref={canvasContainerRef}
                                 // className=' h-full w-[90%] xl:w-[1024px] min-h-[1024px] mt-6 bg-white relative overflow-hidden'
                                 className='relative mt-6 overflow-hidden bg-white'
                                 style={{
-                                    // --- YEH HAI ASAL FIX ---
-                                    // 'div' ka on-screen size ab hamari local 'displaySize' state se control hoga
+                                  
                                     width: `${displaySize}px`,
                                     height: `${displaySize}px`,
-                                    // -----------------------
+                                   
                                     border: '4px solid #4d2d2d',
                                     maxWidth: '100%',
                                 }}

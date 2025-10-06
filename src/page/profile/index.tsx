@@ -2,7 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 
 import { useSelector } from "react-redux";
 import type { RootState } from "@/redux/store";
-import { getUserById, updateUser /* add your thunk below */ } from "@/redux/action/auth";
+import { changePassword, getUserById, updateUser, /* add your thunk below */ 
+verifyPassword} from "@/redux/action/auth";
 import useAppDispatch from "@/hook/useDispatch";
 import { toast } from "sonner";
 import { Eye, EyeOff } from "lucide-react";
@@ -24,20 +25,29 @@ import { requestEmailChange } from "@/redux/action/auth"; // <-- make sure this 
 const MIN_PASSWORD_LEN = 6;
 
 const ProfilePage = () => {
-    const { profile } = useSelector((state: RootState) => state.auth);
+    const { profile } = useSelector((state: RootState) => state?.auth);
     const dispatch = useAppDispatch();
 
     const [loader, setLoader] = useState(false);
-    const [showPassword, setShowPassword] = useState(false);
-    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
+ 
     const [formData, setFormData] = useState({
         fullName: "",
         email: "",
         profileImage: null as File | null,
+      
+
+    });
+
+    const [showPasswordModal, setShowPasswordModal] = useState(false);
+    const [passwordStep, setPasswordStep] = useState(1); // 1: Verify old password, 2: Set new password
+    const [passwordForm, setPasswordForm] = useState({
+        oldPassword: "",
         newPassword: "",
         confirmPassword: "",
     });
+    const [passwordLoader, setPasswordLoader] = useState(false);
+    const [showOldPassword, setShowOldPassword] = useState(false);
+    const [showNewPassword, setShowNewPassword] = useState(false);
 
     // Email-change modal state
     const [showEmailModal, setShowEmailModal] = useState(false);
@@ -55,6 +65,10 @@ const ProfilePage = () => {
         }
     }, [profile]);
 
+    const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { name, value } = e.target;
+        setPasswordForm((prev) => ({ ...prev, [name]: value }));
+    };
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value, files } = e.target;
         if (name === "profileImage" && files) {
@@ -90,31 +104,15 @@ const ProfilePage = () => {
 
     // enable button only if something changed meaningfully
     const isChanged =
-        formData.fullName !== (profile?.fullName || "") ||
-        !!formData.profileImage ||
-        (formData.newPassword.length > 0 && formData.confirmPassword.length > 0);
+        formData.fullName !== (profile?.fullName || "") || !!formData.profileImage;
 
     const handleUpdate = () => {
-        // password validations
-        if (formData.newPassword || formData.confirmPassword) {
-            if (formData.newPassword.length < MIN_PASSWORD_LEN) {
-                toast.error(`Password must be at least ${MIN_PASSWORD_LEN} characters.`);
-                return;
-            }
-            if (formData.newPassword !== formData.confirmPassword) {
-                toast.error("Passwords do not match.");
-                return;
-            }
-        }
-
         setLoader(true);
-
         const data = new FormData();
         data.append("fullName", formData.fullName);
-        if (formData.newPassword) data.append("password", formData.newPassword);
-        if (formData.profileImage) data.append("profileImage", formData.profileImage);
-
-        // NOTE: confirm your id field: many apps use _id
+        if (formData.profileImage) {
+            data.append("profileImage", formData.profileImage);
+        }
         const userId = (profile as any)?.id ?? (profile as any)?._id;
 
         dispatch(updateUser({ userId, formData: data }))
@@ -122,22 +120,61 @@ const ProfilePage = () => {
             .then(() => {
                 dispatch(getUserById(userId));
                 setLoader(false);
-
-                // reset sensitive fields
-                setFormData((prev) => ({
-                    ...prev,
-                    profileImage: null,
-                    newPassword: "",
-                    confirmPassword: "",
-                }));
-
+                setFormData((prev) => ({ ...prev, profileImage: null }));
                 toast.success("Profile updated successfully.");
             })
             .catch((error) => {
                 setLoader(false);
                 console.error("Failed to update profile:", error);
-                toast.error("Failed to update profile.");
+                toast.error(error?.message || "Failed to update profile.");
             });
+    };
+    // --- Password Verification (Step 1) ---
+    const handleVerifyPassword = async () => {
+        if (passwordForm.oldPassword.length < MIN_PASSWORD_LEN) {
+            return toast.error("Please enter your current password.");
+        }
+        setPasswordLoader(true);
+        try {
+            const userId = (profile as any)?.id ?? (profile as any)?._id;
+            // Aapko ek new thunk `verifyPassword` banana hoga jo sirf password check kare
+            await dispatch(verifyPassword({ userId, oldPassword: passwordForm.oldPassword })).unwrap();
+            setPasswordStep(2); // Move to the next step
+            toast.success("Password verified. You can now set a new password.");
+        } catch (err: any) {
+            toast.error(err?.message || "Incorrect old password.");
+        } finally {
+            setPasswordLoader(false);
+        }
+    };
+
+    // --- New Password Submission (Step 2) ---
+    const handleChangePasswordSubmit = async () => {
+        if (passwordForm.newPassword.length < MIN_PASSWORD_LEN) {
+            return toast.error(`New password must be at least ${MIN_PASSWORD_LEN} characters.`);
+        }
+        if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+            return toast.error("New passwords do not match.");
+        }
+        setPasswordLoader(true);
+        try {
+            const userId = (profile as any)?.id ?? (profile as any)?._id;
+            // Yeh `updateUser` thunk ko call karega sirf password ke saath
+            await dispatch(changePassword({
+                userId,
+                oldPassword: passwordForm.oldPassword,
+                newPassword: passwordForm.newPassword,
+            })).unwrap();
+
+            toast.success("Password changed successfully!");
+            setShowPasswordModal(false);
+            setPasswordForm({ oldPassword: "", newPassword: "", confirmPassword: "" });
+            setPasswordStep(1);
+        } catch (err: any) {
+            toast.error(err || "Failed to change password.");
+        } finally {
+            setPasswordLoader(false);
+        }
     };
 
     // Email-change submit
@@ -228,83 +265,19 @@ const ProfilePage = () => {
                     <div className="profile-details">
                         <div className="profile-section">
                             <h3>Account Information</h3>
-
                             <form id="profile-form" onSubmit={(e) => { e.preventDefault(); handleUpdate(); }}>
+                                {/* Display Name */}
                                 <div className="form-group">
                                     <label htmlFor="profile-display-name">Display Name</label>
-                                    <input
-                                        type="text"
-                                        id="profile-display-name"
-                                        name="fullName"
-                                        value={formData.fullName}
-                                        onChange={handleChange}
-                                        required
-                                    />
+                                    <input type="text" id="profile-display-name" name="fullName" value={formData.fullName} onChange={handleChange} required />
                                 </div>
 
+                                {/* Email */}
                                 <div className="form-group">
                                     <label htmlFor="profile-email">Email</label>
                                     <div className="input-with-button">
-                                        <input
-                                            type="email"
-                                            id="profile-email"
-                                            name="email"
-                                            value={formData.email}
-                                            onChange={handleChange}
-                                            disabled
-                                        />
-                                        <button
-                                            type="button"
-                                            id="change-email-btn"
-                                            className="btn-secondary"
-                                            onClick={() => setShowEmailModal(true)}
-                                        >
-                                            Change Email
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div className="form-group">
-                                    <label htmlFor="profile-password">Password</label>
-
-                                    <div className="input-with-button">
-                                        <input
-                                            type={showPassword ? "text" : "password"}
-                                            id="profile-password"
-                                            value={formData.newPassword}
-                                            onChange={handleChange}
-                                            name="newPassword"
-                                            placeholder="Enter new password"
-                                            minLength={MIN_PASSWORD_LEN}
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowPassword((v) => !v)}
-                                            className="btn-secondary"
-                                            aria-label={showPassword ? "Hide password" : "Show password"}
-                                        >
-                                            {showPassword ? <EyeOff /> : <Eye />}
-                                        </button>
-                                    </div>
-
-                                    <div className="input-with-button">
-                                        <input
-                                            type={showConfirmPassword ? "text" : "password"}
-                                            id="profile-confirm-password"
-                                            value={formData.confirmPassword}
-                                            onChange={handleChange}
-                                            name="confirmPassword"
-                                            placeholder="Confirm new password"
-                                            minLength={MIN_PASSWORD_LEN}
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowConfirmPassword((v) => !v)}
-                                            className="btn-secondary"
-                                            aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                                        >
-                                            {showConfirmPassword ? <EyeOff /> : <Eye />}
-                                        </button>
+                                        <input type="email" id="profile-email" name="email" value={formData.email} disabled />
+                                        <button type="button" id="change-email-btn" className="btn-secondary" onClick={() => setShowEmailModal(true)}>Change Email</button>
                                     </div>
                                 </div>
 
@@ -313,10 +286,114 @@ const ProfilePage = () => {
                                 </button>
                             </form>
                         </div>
+
+                        <div className="profile-section">
+                            <h3>Security</h3>
+                            <div className="form-group">
+                                <label>Password</label>
+                                <p>Set a unique password to protect your account.</p>
+                                <button
+                                    type="button"
+                                    className="btn-secondary"
+                                    onClick={() => {
+                                        setShowPasswordModal(true);
+                                        setPasswordStep(1);
+                                        setPasswordForm({ oldPassword: "", newPassword: "", confirmPassword: "" });
+                                    }}
+                                >
+                                    Change Password
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </section>
             </main>
 
+
+            <Dialog open={showPasswordModal} onOpenChange={setShowPasswordModal}>
+                <DialogContent className="bg-[#5d4037] border-2 border-[#3e2723] text-white font-[Georgia, serif]">
+                    <DialogHeader>
+                        <DialogTitle className="!text-white">Change Password</DialogTitle>
+                        <DialogDescription>
+                            {passwordStep === 1
+                                ? "To continue, please enter your current password."
+                                : "Your old password is correct. Please enter a new password."}
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    {passwordStep === 1 ? (
+                        // Step 1: Verify Old Password
+                        <form 
+                        onSubmit={(e) => { e.preventDefault(); handleVerifyPassword(); }}
+                         className="space-y-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="oldPassword">Current Password</Label>
+                                <div className="relative">
+                                    <Input
+                                        id="oldPassword"
+                                        name="oldPassword"
+                                        type={showOldPassword ? "text" : "password"}
+                                        value={passwordForm.oldPassword}
+                                        onChange={handlePasswordChange}
+                                        required
+                                        minLength={MIN_PASSWORD_LEN}
+                                    />
+                                    <button type="button" 
+                                    onClick={() => setShowOldPassword((v) => !v)} className="absolute inset-y-0 right-0 px-3 flex items-center">
+                                        {showOldPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                    </button>
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <Button type="submit" disabled={passwordLoader} className="cursor-pointer border-white bg-[#8b795e] text-white hover:bg-[#a1887f] disabled:opacity-50">
+                                    {passwordLoader ? "Verifying..." : "Verify Password"}
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    ) : (
+                        // Step 2: Set New Password
+                        <form onSubmit={(e) => {
+                             e.preventDefault(); 
+                        handleChangePasswordSubmit();
+                         }} className="space-y-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="newPassword">New Password</Label>
+                                <div className="relative">
+                                    <Input
+                                        id="newPassword"
+                                        name="newPassword"
+                                        type={showNewPassword ? "text" : "password"}
+                                        value={passwordForm.newPassword}
+                                        onChange={handlePasswordChange}
+                                        required
+                                        minLength={MIN_PASSWORD_LEN}
+                                    />
+                                    <button type="button" onClick={() => setShowNewPassword((v) => !v)} className="absolute inset-y-0 right-0 px-3 flex items-center">
+                                        {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                                <Input
+                                    id="confirmPassword"
+                                    name="confirmPassword"
+                                    type={showNewPassword ? "text" : "password"}
+                                    value={passwordForm.confirmPassword}
+                                    onChange={handlePasswordChange}
+                                    required
+                                    minLength={MIN_PASSWORD_LEN}
+                                />
+                            </div>
+                            <DialogFooter>
+                                    <Button type="submit" disabled={passwordLoader} className="cursor-pointer border-white bg-[#8b795e] text-white hover:bg-[#a1887f] disabled:opacity-50">
+                                    {passwordLoader ? "Saving..." : "Save New Password"}
+                                </Button>
+                            </DialogFooter>
+                        </form>
+                    )}
+                </DialogContent>
+            </Dialog>
             {/* Change Email Modal (very lightweight, no extra deps) */}
             <Dialog open={showEmailModal} onOpenChange={setShowEmailModal}>
                 <DialogContent className="bg-[#5d4037] border-2 border-[#3e2723] text-white font-[Georgia, serif]">
