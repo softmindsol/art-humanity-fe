@@ -57,15 +57,15 @@ const ProjectTitle: React.FC<ProjectTitleProps> = ({ project, isAdmin }) => {
     }
 
     return (
-        <div className="flex items-center gap-2 group">
-            <h3 className='!text-[#5d4037]'>{project.title}</h3>
+        <div className="flex items-center justify-between gap-2 group">
+            <h3 className='!text-[#]'>{project.title}</h3>
             {isAdmin && (
                 <button
                     onClick={() => setIsEditing(true)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                    className=" transition-opacity"
                     title="Edit Title"
                 >
-                    <Edit2 size={16} className="text-gray-500" />
+                    <Edit2 size={16} className="text-gray-500 cursor-pointer" />
                 </button>
             )}
         </div>
