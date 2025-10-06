@@ -10,6 +10,7 @@ import {
   joinProject,
   removeContributor,
   updateProjectStatus,
+  updateProjectTitle,
 } from "../action/project";
 import type { RootState } from "../store";
 
@@ -143,7 +144,15 @@ const projectSlice = createSlice({
         }
       }
     },
-
+    updateProjectInList: (state, action) => {
+      const updatedProject = action.payload;
+      const index = state.projects.findIndex(
+        (p:any) => p._id === updatedProject._id
+      );
+      if (index !== -1) {
+        state.projects[index] = updatedProject;
+      }
+    },
     updateProjectStatusInState: (state, action) => {
       const { projectId, status } = action.payload;
 
@@ -385,8 +394,6 @@ const projectSlice = createSlice({
             }
           );
 
-          // 'currentProject' ko ek bilkul naye object se update karein
-          // Yeh 'useMemo' ko trigger karne ke liye zaroori hai
           state.currentProject = {
             ...state.currentProject,
             contributors: newContributors,
@@ -397,6 +404,18 @@ const projectSlice = createSlice({
         state.loading.removingContributor = false;
         state.error.removingContributor = action.payload as any;
       });
+
+      // === UPDATE PROJECT TITLE ke liye extraReducers ADD KAREIN ===
+       builder
+       .addCase(updateProjectTitle.fulfilled, (state, action) => {
+         const updatedProject = action.payload;
+         const index = state.projects.findIndex(
+           (p:any) => p._id === updatedProject._id
+         );
+         if (index !== -1) {
+           state.projects[index] = updatedProject;
+         }
+       });
   },
 });
 

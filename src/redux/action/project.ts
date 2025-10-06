@@ -28,7 +28,6 @@ interface FetchActiveProjectsArgs {
   status?: "active" | "paused" | "all";
   search?: string;
 }
- 
 
 // Saare active projects laane ke liye
 export const fetchActiveProjects = createAsyncThunk(
@@ -38,7 +37,8 @@ export const fetchActiveProjects = createAsyncThunk(
       const params = new URLSearchParams();
       if (args.page) params.append("page", args.page.toString());
       if (args.limit) params.append("limit", args.limit.toString());
-      if (args.status && args.status !== "all") params.append("status", args.status);
+      if (args.status && args.status !== "all")
+        params.append("status", args.status);
       if (args.search) params.append("search", args.search);
       // Aapke route `/` ko call karega
       const response = await api.get(config.endpoints.FETCH_ACTIVE_PROJECT, {
@@ -98,51 +98,52 @@ export const joinProject = createAsyncThunk(
   }
 );
 
-// export const updateProjectStatus = createAsyncThunk(
-//   "projects/updateStatus",
-//   async (
-//     {
-//       projectId,
-//       statusUpdate,
-//     }: {
-//       projectId: string;
-//       statusUpdate: { isPaused?: boolean; isClosed?: boolean };
-//     },
-//     { rejectWithValue }
-//   ) => {
-//     try {
-//       const response = await api.patch(
-//         `${config?.endpoints?.FETCH_PROJECT_BY_ID}/${projectId}/status`,
-//         statusUpdate
-//       );
-//       return response.data.data; // Return the updated project object
-//     } catch (error: any) {
-//       return rejectWithValue(
-//         error.response.data.message || "Failed to update project status"
-//       );
-//     }
-//   }
-// );
-
+export const updateProjectTitle = createAsyncThunk(
+  "projects/updateTitle",
+  async (
+    {
+      projectId,
+      title,
+      userId,
+    }: { projectId: string; title: string; userId: string | undefined | null },
+    { rejectWithValue }
+  ) => {
+    try {
+      const payload = { title, userId };
+      console.log("payload:", payload);
+      const response = await api.patch(
+        `${config?.endpoints?.FETCH_CONTRIBUTORS}/${projectId}/title`,
+        {
+          payload,
+        }
+      );
+      return response.data.data; // Updated project object wapas aayega
+    } catch (error: any) {
+      return rejectWithValue(error.response.data.message);
+    }
+  }
+);
 interface UpdateStatusArgs {
-projectId: string;
-status: 'Active' | 'Paused' | 'Completed';
+  projectId: string;
+  status: "Active" | "Paused" | "Completed";
 }
 // Purane 'updateProjectStatus' ko isse replace karein
 export const updateProjectStatus = createAsyncThunk(
-'project/updateStatus',
-async ({ projectId, status }: UpdateStatusArgs, { rejectWithValue }) => {
-try {
-// Ab hum sirf 'status' bhejenge
-const response = await api.patch(
-  `${config?.endpoints?.FETCH_PROJECT_BY_ID}/${projectId}/status`,
-  { status }
-);
-return response.data.data; // Updated project object return karein
-} catch (error: any) {
-return rejectWithValue(error.response?.data?.message || "Could not update status.");
-}
-}
+  "project/updateStatus",
+  async ({ projectId, status }: UpdateStatusArgs, { rejectWithValue }) => {
+    try {
+      // Ab hum sirf 'status' bhejenge
+      const response = await api.patch(
+        `${config?.endpoints?.FETCH_PROJECT_BY_ID}/${projectId}/status`,
+        { status }
+      );
+      return response.data.data; // Updated project object return karein
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Could not update status."
+      );
+    }
+  }
 );
 interface FetchGalleryProjectsArgs {
   page?: number;
@@ -155,9 +156,9 @@ export const fetchGalleryProjects = createAsyncThunk(
     try {
       // Naya API endpoint: GET /api/projects/view/gallery
 
-       const params = new URLSearchParams();
-       if (args.page) params.append("page", args.page.toString());
-       if (args.limit) params.append("limit", args.limit.toString());
+      const params = new URLSearchParams();
+      if (args.page) params.append("page", args.page.toString());
+      if (args.limit) params.append("limit", args.limit.toString());
       const response = await api.get(
         `${
           config?.endpoints?.FETCH_PROJECT_BY_ID
@@ -175,7 +176,7 @@ export const fetchGalleryProjects = createAsyncThunk(
 
 export const fetchContributors = createAsyncThunk(
   "projects/fetchContributors",
-  async ({projectId}:{projectId: string}, thunkAPI) => {
+  async ({ projectId }: { projectId: string }, thunkAPI) => {
     try {
       const response = await api.get(`/projects/${projectId}/contributors`);
       return response.data.data;
@@ -202,7 +203,7 @@ export const deleteProject = createAsyncThunk(
 interface AddContributorsArgs {
   projectId: string;
   userIdsToAdd: string[];
-  ownerId:string
+  ownerId: string;
 }
 
 export const addContributors = createAsyncThunk(
@@ -238,18 +239,17 @@ export const removeContributor = createAsyncThunk(
     thunkAPI
   ) => {
     try {
-
       // NOTE: Humne backend route `PATCH /projects/contributors/remove` banaya tha.
-       const response = await api.patch(
-         `${config?.endpoints?.REMOVE_CONTRIBUTOR}/remove-contributor`,
-         {
-           projectId,
-           userIdToRemove,
-           userId,
-         }
-       );
+      const response = await api.patch(
+        `${config?.endpoints?.REMOVE_CONTRIBUTOR}/remove-contributor`,
+        {
+          projectId,
+          userIdToRemove,
+          userId,
+        }
+      );
       // Hum sirf remove kiye gaye user ki ID wapas bhejenge taake slice usay state se nikaal sake
-      return response.data.data; 
+      return response.data.data;
     } catch (error: any) {
       console.log("Error in removeContributor:", error);
       return thunkAPI.rejectWithValue(error.response?.data?.message);

@@ -34,6 +34,7 @@ import { ProjectStatusFilter } from '@/components/common/ProjectStatusFilter';
 import { Pagination } from '@/components/common/Pagination';
 import { toast } from 'sonner';
 import { useSocket } from '@/context/SocketContext';
+import ProjectTitle from '@/components/common/ProjectTitle';
 
 const ActiveProjects: React.FC = () => {
     const { user } = useAuth();
@@ -212,7 +213,7 @@ const ActiveProjects: React.FC = () => {
                                                 </div>
                                             </div>
                                             <div className="project-info">
-                                                <h3 className='!text-[#5d4037]'>{project.title}</h3>
+                                                <ProjectTitle project={project} isAdmin={user?.role === 'admin'} />
                                                 <div className="project-stats">
                                                     <div className="stat">
                                                         <span className="stat-value !text-[#8d6e63] !text-[12.8px]">{project.contributors?.length || 0}</span>
