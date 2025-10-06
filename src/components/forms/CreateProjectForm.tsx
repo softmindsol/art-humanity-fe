@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { createProject } from "@/redux/action/project";
-import  useAppDispatch  from "@/hook/useDispatch";
+import useAppDispatch from "@/hook/useDispatch";
 import { toast } from "sonner";
 import useAuth from "@/hook/useAuth";
 
@@ -41,19 +41,19 @@ const AdminDashboard = () => {
           return wordCount <= 50; // Validate that word count is 50 or fewer
         }
         return true; // Allow empty field, since it's already validated by `.required()`
-      }),    canvasId: Yup.string().required("Canvas ID is required"),
+      }), canvasId: Yup.string().required("Canvas ID is required"),
     width: Yup.number().required("Width is required").min(1, "Width must be a positive number"),
     height: Yup.number().required("Height is required").min(1, "Height must be a positive number"),
-   thumbnail: Yup.mixed()
-    .required("Thumbnail image is required")
-    .test("fileType", "Invalid type (only PNG, JPEG, WebP allowed)", (value: any) => {
-      // Check if file type is PNG, JPEG, or WebP
-      return value && (value.type === "image/jpeg" || value.type === "image/png" || value.type === "image/webp");
-    })
-    .test("fileSize", "File size is too large. Maximum size is 2MB", (value: any) => {
-      // Optional file size validation, if needed
-      return value && value.size <= 2 * 1024 * 1024; // Limit to 2MB
-    }),
+    thumbnail: Yup.mixed()
+      .required("Thumbnail image is required")
+      .test("fileType", "Invalid type (only PNG, JPEG, WebP allowed)", (value: any) => {
+        // Check if file type is PNG, JPEG, or WebP
+        return value && (value.type === "image/jpeg" || value.type === "image/png" || value.type === "image/webp");
+      })
+      .test("fileSize", "File size is too large. Maximum size is 2MB", (value: any) => {
+        // Optional file size validation, if needed
+        return value && value.size <= 2 * 1024 * 1024; // Limit to 2MB
+      }),
   });
 
   // Form submission handler

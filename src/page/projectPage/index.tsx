@@ -77,6 +77,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
     const [cursors, setCursors] = useState<Record<string, any>>({});
     const mainContentRef = useRef<HTMLDivElement>(null);
     const loadedTilesRef = useRef(new Set()); // Keep track of loaded tiles
+  const topControlsRef = useRef<HTMLDivElement>(null);
 
     // --- REDUX SELECTORS ---
     const currentProject = useSelector(selectCurrentProject);
@@ -552,7 +553,11 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
         };
     }, [socket, dispatch, user]);
 
-
+    useLayoutEffect(() => {
+        if (topControlsRef.current) {
+            topControlsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }, []);
     return (
         // Design ke mutabiq page ka background color
         <div ref={mainContentRef} className="relative  min-h-screen p-4 sm:p-6 lg:p-8">

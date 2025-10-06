@@ -52,6 +52,7 @@ const ProjectTitle: React.FC<ProjectTitleProps> = ({ project, isAdmin }) => {
                 className="text-xl font-bold text-gray-800 w-full p-1 border rounded"
                 autoFocus
                 disabled={isLoading}
+                maxLength={20}
             />
         );
     }
