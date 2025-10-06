@@ -18,7 +18,7 @@ export default defineConfig({
     allowedHosts: [
       "localhost",
       "127.0.0.1",
-      "a795baa672f2.ngrok-free.app", // <-- yahan ngrok URL add karein
+      "murart.io"
     ],
   },
 });
