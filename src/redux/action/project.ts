@@ -110,7 +110,6 @@ export const updateProjectTitle = createAsyncThunk(
   ) => {
     try {
       const payload = { title, userId };
-      console.log("payload:", payload);
       const response = await api.patch(
         `${config?.endpoints?.FETCH_CONTRIBUTORS}/${projectId}/title`,
         {
