@@ -18,7 +18,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({ onBackToSignIn 
         dispatch(forgotPassword({ email }))
             .unwrap()
             .then((_) => {
-                setLoading(false)
+                setLoading(false) 
                 setSubmitted(true);
                 toast.success("Reset link sent to email");
             })

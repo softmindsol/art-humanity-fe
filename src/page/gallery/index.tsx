@@ -197,7 +197,6 @@ const GalleryPage: React.FC = () => {
                                             View Artwork
                                         </Link>
 
-                                        {/* --- YAHAN CONDITIONAL BUTTON HAI --- */}
                                         {hasPurchased ? (
                                             <Button
                                                 onClick={() => handleDownload(project)}
