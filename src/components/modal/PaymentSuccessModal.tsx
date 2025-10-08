@@ -23,7 +23,7 @@ const PaymentSuccessModal: React.FC<PaymentSuccessModalProps> = ({
 }) => {
 
     // Purchase ke liye title aur description
-    const title = paymentType === 'purchase' ? 'Purchase Successful!' : 'Thank You!';
+    const title = paymentType === 'purchase' ? 'Purchase Successful.' : 'Thank You.';
     const description = paymentType === 'purchase'
         ? `You have successfully purchased "${project?.title}". You can download the artwork now.`
         : 'Your generous donation helps us keep the art alive. We truly appreciate your support!';

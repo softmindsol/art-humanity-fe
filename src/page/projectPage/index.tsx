@@ -77,7 +77,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
     const [cursors, setCursors] = useState<Record<string, any>>({});
     const mainContentRef = useRef<HTMLDivElement>(null);
     const loadedTilesRef = useRef(new Set()); // Keep track of loaded tiles
-  const topControlsRef = useRef<HTMLDivElement>(null);
+    const topControlsRef = useRef<HTMLDivElement>(null);
 
     // --- REDUX SELECTORS ---
     const currentProject = useSelector(selectCurrentProject);
@@ -228,25 +228,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
     }, []); // Empty dependency array, yeh function kabhi nahi badlega
 
 
-    // const loadReferenceImage = () => {
-    // const tile = getTile(0, 0);
-    // const ctx = tile.context;
-    // ctx.save();
-    // const scale = 0.5, offsetX = 60, offsetY = 80;
-    // ctx.fillStyle = '#8B4513';
-    // ctx.fillRect(100 * scale + offsetX, 150 * scale + offsetY, 80 * scale, 60 * scale);
-    // ctx.fillStyle = '#CD5C5C';
-    // ctx.beginPath();
-    // ctx.moveTo(90 * scale + offsetX, 150 * scale + offsetY);
-    // ctx.lineTo(140 * scale + offsetX, 120 * scale + offsetY);
-    // ctx.lineTo(190 * scale + offsetX, 150 * scale + offsetY);
-    // ctx.closePath();
-    // ctx.fill();
-    // ctx.restore();
-    // tile.isDirty = true;
-    // renderVisibleTiles();
-    // };
-
+   
     const showLoginDialog = !!currentProject && !user && !loginDialogDismissed;
     const showJoinDialog = isJoinDialogOpen && !showLoginDialog;
 
@@ -523,7 +505,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
         const onProjectPaused = handleStatusUpdate('Paused');
         const onProjectCompleted = handleStatusUpdate('Completed');
         const onProjectResumed = handleStatusUpdate('Active');
-        
+
         socket.on('strokes_added', handleStrokesAdded);
         socket.on('vote_updated', handleVoteUpdate);
         socket.on('project_paused', onProjectPaused);
@@ -690,10 +672,10 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
                                 // className=' h-full w-[90%] xl:w-[1024px] min-h-[1024px] mt-6 bg-white relative overflow-hidden'
                                 className='relative mt-6 overflow-hidden bg-white'
                                 style={{
-                                  
+
                                     width: `${displaySize}px`,
                                     height: `${displaySize}px`,
-                                   
+
                                     border: '4px solid #4d2d2d',
                                     maxWidth: '100%',
                                 }}
