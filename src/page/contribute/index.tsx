@@ -170,7 +170,7 @@ const ActiveProjects: React.FC = () => {
 
                             projects.length === 0 ? (
                                 <div className="text-center w-full py-20 col-span-full">
-                                    <h3 className="text-2xl !text-[#5d4037]">No active projects found.</h3>
+                                    <h3 className="text-2xl !text-[#5d4037]">No projects found.</h3>
                                     {user?.role === 'admin' && <p className="!text-[#5d4037]">You can create the first one from the Admin Dashboard.</p>}
                                 </div>
                             ) : (
@@ -224,7 +224,7 @@ const ActiveProjects: React.FC = () => {
                                                         <span className="stat-label !text-[#8d6e63]">Pixels Painted</span>
                                                     </div>
                                                 </div>
-                                                {project.status === 'Completed' ? ( 
+                                                {project.status === 'Completed' ? (
                                                     // --- AGAR PROJECT COMPLETED HAI ---
                                                     <Link
                                                         to={`/project/${project?.canvasId}?view=gallery`}
