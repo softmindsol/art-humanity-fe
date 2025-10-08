@@ -164,10 +164,6 @@ const ActiveProjects: React.FC = () => {
 
                     <section className="projects-grid mt-5">
                         {
-
-
-
-
                             projects.length === 0 ? (
                                 <div className="text-center w-full py-20 col-span-full">
                                     <h3 className="text-2xl !text-[#5d4037]">No projects found.</h3>

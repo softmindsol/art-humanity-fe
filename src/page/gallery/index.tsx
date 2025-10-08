@@ -165,7 +165,7 @@ const GalleryPage: React.FC = () => {
                 <p className='!text-[14px] !w-full md:!text-[19.2px]' style={{ color: '#8d6e63' }}>Explore our collection of completed collaborative canvases.</p>
             </section>
             {
-                (isLoading) && <div className="flex justify-center items-center h-full w-full py-20">
+                (isLoading &&projects.length === 0) && <div className="flex justify-center items-center h-full w-full py-20">
                     <div className="w-16 h-16 border-4 border-[#d29000] border-t-transparent rounded-full animate-spin"></div>
                 </div>
             }
