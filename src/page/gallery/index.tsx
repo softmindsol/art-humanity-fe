@@ -176,7 +176,6 @@ const GalleryPage: React.FC = () => {
                     </div>
                 ) : (
                     projects.map((project: any) => {
-                        // --- YEH HAI ASAL NAYI LOGIC ---
                         const hasPurchased = purchasedProjectIds.has(project._id);
 
 
