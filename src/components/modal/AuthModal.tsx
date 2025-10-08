@@ -5,6 +5,7 @@ import { Eye, EyeOff } from 'lucide-react';
 import ForgotPasswordForm from './ForgotPasswordForm';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/redux/store';
+import AnimatedDots from '../common/AnimatedDots';
 
 interface AuthModalProps {
     isOpen: boolean;
@@ -48,7 +49,10 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 {/* Overlay while loading */}
                 {isModalDisabled && (
                     <div className="absolute inset-0 bg-black/20 z-50 flex items-center justify-center">
-                        <p className="text-white text-lg">Processing...</p>
+                        <p className="text-white text-lg flex items-center gap-2">
+                            Processing
+                            <AnimatedDots />
+                        </p>
                     </div>
                 )}
 
