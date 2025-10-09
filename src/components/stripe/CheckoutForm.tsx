@@ -56,7 +56,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ clientSecret, projectPrice,
             toast.error(error.message ?? "Payment failed. Please try again.");
             setIsProcessing(false);
         } else if (paymentIntent?.status === 'succeeded') {
-            toast.success("Payment successful!");
+            toast.success("Payment successful.");
             onPaymentSuccess();
         }
     };

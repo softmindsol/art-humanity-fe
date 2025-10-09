@@ -151,7 +151,7 @@ const InfoBox = ({ zoom, worldPos, isSaving, saveError, boundaryRef }: any) => {
                 <>
                     <div>Zoom: {Math.round(zoom * 100)}%</div>
                     <div>World Pos: ({Math.round(worldPos.x)}, {Math.round(worldPos.y)})</div>
-                    <div>Strokes: {savedStrokeCount}</div>
+                    <div>Contributions: {savedStrokeCount}</div>
                     {isSaving && <div className="text-orange-500 font-semibold mt-1">Saving...</div>}
                     {saveError && <div className="text-red-600 font-semibold mt-1">{saveError}</div>}
                 </>

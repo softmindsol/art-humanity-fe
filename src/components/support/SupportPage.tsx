@@ -24,7 +24,7 @@ const SupportPage = () => {
 
     const handlePaymentSuccess = () => {
         // Yahan aap "Thank you" ka message dikha sakte hain
-        toast.success("Thank you for your generous donation!");
+        toast.success("Thank you for your generous donation.");
         setPaymentState({ isOpen: false, clientSecret: null, amount: 0 });
     };
 

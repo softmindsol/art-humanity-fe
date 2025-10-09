@@ -125,7 +125,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                                 className="w-full px-3 py-2 border rounded"
                             />
                             <span
-                                className="eye-icon absolute right-3 top-10 cursor-pointer"
+                                className="eye-icon absolute right-3 top-11.5 cursor-pointer"
                                 onClick={() => setShowSigninPassword(!showSigninPassword)}
                             >
                                 {showSigninPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -211,7 +211,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                                 className="w-full px-3 py-2 border rounded"
                             />
                             <span
-                                className="eye-icon absolute right-3 top-10 cursor-pointer"
+                                        className="eye-icon absolute right-3 top-11.5 cursor-pointer"
                                 onClick={() => setShowPassword(!showPassword)}
                             >
                                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -231,7 +231,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                                 className="w-full px-3 py-2 border rounded"
                             />
                             <span
-                                className="eye-icon absolute right-3 top-10 cursor-pointer"
+                                className="eye-icon absolute right-3 top-11.5 cursor-pointer"
                                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                             >
                                 {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}

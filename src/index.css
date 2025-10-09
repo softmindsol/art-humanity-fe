@@ -2026,3 +2026,13 @@ footer {
   border-radius: var(--border-radius-md);
 }
 }
+
+[data-radix-overlay-wrapper] > [data-state="closed"] {
+  /* 
+    Sab se Ahem Property: pointer-events: none;
+    Yeh browser ko kehta hai ke is "ghost" overlay par hone walay tamam
+    mouse clicks ko "ignore" karo aur unhein iske peeche walay elements
+    (aapke buttons, links, etc.) par jaane do.
+  */
+  pointer-events: none;
+}
