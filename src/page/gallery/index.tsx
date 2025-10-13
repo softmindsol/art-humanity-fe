@@ -255,7 +255,7 @@ const GalleryPage: React.FC = () => {
                 onClose={() => setSuccessState({ isOpen: false, project: null })}
                 paymentType="purchase"
                 project={successState.project}
-                onDownload={handleDownload} // Download function pass karein
+                onDownload={handleDownload} 
             />
         </div>
     );

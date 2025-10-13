@@ -23,7 +23,7 @@ const HeroSection: React.FC = () => {
               Join the World's Largest Collaborative Art Project
             </h2>
             <p className="text-base md:text-lg mb-8 xs:mt-14 max-w-3xl mx-auto">
-              Project Art of Humanity provides enormous digital canvases that would be nearly impossible to fully paint
+              Project MurArt provides enormous digital canvases that would be nearly impossible to fully paint
               by one person. We have developed a collaboration system that will allow the creation of the most stunning
               art pieces the world has ever seen. Anyone can paint a part of the canvas and solidify your spot in
               history!
@@ -32,7 +32,6 @@ const HeroSection: React.FC = () => {
         </section>
 
         {/* Features Section */}
-        {/* Responsive grid: 1 column on small screens, 3 on medium screens and up */}
         <section className="my-16 grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Feature Card 1 */}
           <div className="bg-[#f5f5dc] p-8 text-center rounded-md shadow-lg border border-[#a1887f] transition-transform duration-300 ease-in-out hover:-translate-y-2.5">
