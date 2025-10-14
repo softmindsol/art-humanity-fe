@@ -23,6 +23,7 @@ import DonationPromptModal from './components/modal/DonationPromptModal';
 import { useSelector } from 'react-redux';
 import { openDonationForm, resetDonationPrompt, selectIsDonationPromptModalOpen } from './redux/slice/opeModal';
 import { useDispatch } from 'react-redux';
+import ContactUs from './page/contact/ContactPage';
 function App() {
   const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
   const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
@@ -61,6 +62,7 @@ function App() {
               <Route path="/gallery" element={<><GalleryPage /></>} />
               <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
               <Route path="/create-project" element={<CreateProjectPage />} />
+                <Route path="/contact-us" element={<><ContactUs /></>} />
 
               <Route path="/projects" element={<><ActiveProjects /></>} />
               <Route path="/demo" element={<Demo />} />
