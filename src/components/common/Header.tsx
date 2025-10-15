@@ -183,8 +183,8 @@ const Header = () => {
 
   return (
     <>
-      <div className="header-container">
-        <header className='z-10 '>
+      <div className="header-container ">
+        <header className='  !z-[1000] '>
           <div className="logo-container">
             <Link to="/" className="logo-link">
               <img src="/favicon.PNG" alt="Logo" className="logo" />

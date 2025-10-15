@@ -34,7 +34,7 @@ const SupportPage = () => {
 
             {/* --- PAYMENT MODAL (Bilkul pehle jaisa) --- */}
             <Dialog open={paymentState.isOpen} onOpenChange={() => setPaymentState({ ...paymentState, isOpen: false })}>
-                <DialogContent className="!bg-[#5d4037] border-2 border-[#3e2723] text-white font-[Georgia, serif] max-w-3xl">
+                <DialogContent className="!bg-[#5d4037] border-2 border-[#3e2723] text-white font-[Georgia, serif] max-w-3xl z-[1050]">
                     <DialogHeader>
                         <DialogTitle className='!text-white'>Confirm Your Donation</DialogTitle>
                     </DialogHeader>

@@ -123,7 +123,6 @@ const ActiveProjects: React.FC = () => {
     }, [socket, dispatch]); // Dependencies are correct
 
 
-
     return (
         <div id="projects-content" className="projects-content">
             <section className="projects-header page-header">
@@ -303,11 +302,11 @@ const ActiveProjects: React.FC = () => {
                     </section>}
 
             <div className="mt-8">
-                <Pagination
+                {!isLoading &&  <Pagination
                     currentPage={currentPage}
                     totalPages={totalPages}
                     onPageChange={setCurrentPage}
-                />
+                />}
             </div>
             <AlertDialog open={dialogState.isOpen} onOpenChange={(isOpen) => setDialogState({ ...dialogState, isOpen })}>
                 <AlertDialogContent className="bg-[#5d4037] border-2 border-[#3e2723] text-white font-[Georgia, serif]">

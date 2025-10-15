@@ -71,6 +71,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
     const [isGeneratingTimelapse, _] = useState(false);
     const [isTimelapseFullscreen, setIsTimelapseFullscreen] = useState(false);
 
+    console.log("canvasSize:", canvasSize)
     // --- REFS ---
     const canvasContainerRef = useRef<any>(null);
     const listItemRefs = useRef<any>({});
@@ -407,7 +408,19 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
         }
     }, [selectedContributionId]);
 
-
+    useLayoutEffect(() => {
+        const updateSize = () => {
+            if (canvasContainerRef.current) {
+                setCanvasSize({
+                    width: canvasContainerRef.current.offsetWidth,
+                    height: canvasContainerRef.current.offsetHeight,
+                });
+            }
+        };
+        updateSize();
+        window.addEventListener('resize', updateSize);
+        return () => window.removeEventListener('resize', updateSize);
+    }, []);
     useEffect(() => {
         if (!socket) return;
 
@@ -540,6 +553,8 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
             topControlsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
     }, []);
+
+    console.log(currentProject)
     return (
         // Design ke mutabiq page ka background color
         <div ref={mainContentRef} className="relative  min-h-screen p-4 sm:p-6 lg:p-8">
@@ -686,8 +701,8 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
                                         socket={socket} // Naya prop
                                         projectId={projectId}
                                         userId={user?._id}
-                                        width={currentProject.width}
-                                        height={currentProject.height}
+                                        width={2560}
+                                        height={2560}
                                         virtualWidth={currentProject.width}
                                         virtualHeight={currentProject.height}
                                         onStateChange={handleCanvasStateChange} // Callback function pass karein

@@ -19,6 +19,7 @@ const DonationForm: React.FC<DonationFormProps> = ({ onDonate }) => {
     const [isLoading, setIsLoading] = useState(false);
     const { user } = useAuth()
     const dispatch = useAppDispatch();
+    
     const handleDonateClick = async () => {
         const numericAmount = Number(amount);
         if (isNaN(numericAmount) || numericAmount < 1) {
@@ -41,6 +42,8 @@ const DonationForm: React.FC<DonationFormProps> = ({ onDonate }) => {
             dispatch(closeDonationForm())
         }
     };
+
+    
 
     return (
         <div className="">

@@ -15,9 +15,9 @@ const ResetPassword = () => {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
 
+    console.log(password == confirmPassword)
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoader(true)
         if (!password || !confirmPassword) {
             toast.error("Please fill all fields");
             return;
@@ -27,12 +27,13 @@ const ResetPassword = () => {
             toast.error("Passwords do not match");
             return;
         }
+        setLoader(true)
 
         try {
             await dispatch(resetPassword({ token: token as string, password })).unwrap();
             toast.success("Password reset successfully. You can now sign in.");
             navigate("/"); // or "/login"
-            setLoader(true)
+            setLoader(false)
 
         } catch (err: any) {
             setLoader(false)

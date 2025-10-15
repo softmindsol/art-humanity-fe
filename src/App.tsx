@@ -53,9 +53,12 @@ function App() {
     <Elements stripe={stripePromise}>
     <Router>
       <SocketProvider>
+          {/* <div className="app-root"> */}
+
+        
           <Header  />
         <ProjectProvider>
-          <main>
+            <main className=''>
             <Routes>
               <Route path="/" element={<HeroSection />} />
               <Route path="/guideline" element={<GuidelinePage />} />
@@ -74,7 +77,7 @@ function App() {
             </Routes>
           </main>
         </ProjectProvider>
-        <Footer />
+       
 
           <DonationPromptModal
                 isOpen={isPromptModalOpen}
@@ -83,6 +86,8 @@ function App() {
                   dispatch(openDonationForm())
                 }}
             />
+          <Footer />
+            {/* </div> */}
       </SocketProvider>
     </Router>
     </Elements>

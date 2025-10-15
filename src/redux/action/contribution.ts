@@ -146,8 +146,7 @@ export const generateTimelapseVideo = createAsyncThunk(
       const response = await api.get(`/timelapse/${projectId}`);
       console.log("Timelapse generation response:", response.data);
       
-      // Response mein { success: true, data: { videoUrl: '...' } } aayega
-      return response.data; 
+      return response?.data?.data; 
     } catch (error: any) {
       return thunkAPI.rejectWithValue(
         error.response?.data?.message || "Failed to generate timelapse"
