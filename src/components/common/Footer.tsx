@@ -5,12 +5,19 @@ const Footer = () => {
     <footer className="flex flex-col justify-end ">
 
 
-      <div className="flex flex-col lg:flex-row items-start w-[90%] lg:w-[900px]  m-auto lg:items-start lg:justify-between gap-10 lg:gap-[110px]   lg:pb-5 xl:pb-8">
-        <div className="">
-          <h2 className="text-[1.8rem] sm:!text-[2rem] !text-[#efebe9]  ">MurArt</h2>
+      <div className="flex flex-col lg:flex-row justify-center items-start  lg:gap-[13.5rem] xl:gap-[30rem]">
+        {/* <div className="">
+          <h2 className="text-[1.8rem] sm:!text-[2rem] !text-[#efebe9]  "> MurArt</h2>
           <p className="text-[14px] md:text-[16px] !italic">Collaborative Canvases of Human Expression</p>
-        </div>
-        <div className="flex !items-start gap-14  mb-2 ">
+        </div> */}
+        <span  className="logo-link-footer">
+          <img src="/favicon.PNG" alt="Logo" className="logo -ml-4 md:-ml-0 lg:-ml-4" />
+          <div className=" ">
+            <h1 className='text-[1.8rem] sm:!text-[2rem] !text-[#efebe9]  '>MurArt</h1>
+            <p className="text-[14px] md:text-[16px] !italic !text-[#efebe9]">Collaborative Canvases of Human Expression</p>
+          </div>
+        </span>
+        <div className="flex lg:!items-start md:gap-14  mb-2 ">
           <div className="footer-column ">
             <h3>Explore</h3>
             <ul>

@@ -24,6 +24,7 @@ import { useSelector } from 'react-redux';
 import { openDonationForm, resetDonationPrompt, selectIsDonationPromptModalOpen } from './redux/slice/opeModal';
 import { useDispatch } from 'react-redux';
 import ContactUs from './page/contact/ContactPage';
+import ScrollToTop from './components/common/ScrollToTop';
 function App() {
   const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
   const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
@@ -49,6 +50,7 @@ function App() {
       dispatch(resetDonationPrompt());
     }
   }, [shouldShow, dispatch]);
+
   return (
     <Elements stripe={stripePromise}>
     <Router>
@@ -59,6 +61,8 @@ function App() {
           <Header  />
         <ProjectProvider>
             <main className=''>
+              <ScrollToTop />
+
             <Routes>
               <Route path="/" element={<HeroSection />} />
               <Route path="/guideline" element={<GuidelinePage />} />

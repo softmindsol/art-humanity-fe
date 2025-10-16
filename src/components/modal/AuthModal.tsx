@@ -13,7 +13,9 @@ interface AuthModalProps {
 }
 
 const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
-    const [activeTab, setActiveTab] = useState<'sign-in' | 'sign-up'>('sign-in');
+    const [activeTab, setActiveTab] = useState<'sign-in' | 'sign-up' | `forget-password`>('sign-in');
+    const [submitted, setSubmitted] = useState(false);
+
     const [showForgotPassword, setShowForgotPassword] = useState(false);
     const { googleLoading } = useSelector((state: RootState) => state.auth);
 
@@ -40,6 +42,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     // Disable modal if either login or sign-up is loading
     const isModalDisabled = loginLoading || loading;
 
+    console.log(activeTab)
     if (!isOpen) return null;
 
     return (
@@ -66,10 +69,26 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
                 {/* Header */}
                 <div className="auth-modal-header mb-4">
-                    <h2 className="text-xl font-bold">Join MurArt</h2>
-                    <p className="text-sm text-gray-600 dark:text-gray-300">
-                        Create an account to contribute to the world's largest collaborative art project
-                    </p>
+                    {(showForgotPassword && !submitted && activeTab === `forget-password`) && <>
+                        <h2 className="text-xl font-bold">Forgot Password</h2>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">
+                            Enter your email address below and we’ll send you a link to
+                            reset your password.
+                        </p>
+                    </>}
+                    {(!showForgotPassword && activeTab === `sign-up`) && <><h2 className="text-xl font-bold">Join MurArt</h2>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">
+                            Create an account to contribute to the world's largest collaborative art project
+                        </p></>}
+
+                    {activeTab === `sign-in` && <>
+                        <h2 className="text-xl font-bold">Welcome Back</h2>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">
+                            Sign in to continue contributing to the world's largest
+                            collaborative art project.
+                        </p>
+                    </>}
+
                 </div>
 
                 {/* Tabs */}
@@ -92,7 +111,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
                 {/* Forgot Password */}
                 {showForgotPassword ? (
-                    <ForgotPasswordForm onBackToSignIn={() => setShowForgotPassword(false)} />
+                    <ForgotPasswordForm setActiveTab={setActiveTab} submitted={submitted} setSubmitted={setSubmitted} onBackToSignIn={() => setShowForgotPassword(false)} />
                 ) : activeTab === 'sign-in' ? (
                     <form className="auth-form" onSubmit={handleLoginSubmit}>
                         {/* Email */}
@@ -160,7 +179,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                         <div className="auth-footer text-center mt-2">
                             <button
                                 type="button"
-                                onClick={() => setShowForgotPassword(true)}
+                                onClick={() => { setShowForgotPassword(true); setActiveTab(`forget-password`) }}
                                 className="text-[#5d4037] hover:underline cursor-pointer"
                                 disabled={isModalDisabled}
                             >
@@ -211,7 +230,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                                 className="w-full px-3 py-2 border rounded"
                             />
                             <span
-                                        className="eye-icon absolute right-3 top-11.5 cursor-pointer"
+                                className="eye-icon absolute right-3 top-11.5 cursor-pointer"
                                 onClick={() => setShowPassword(!showPassword)}
                             >
                                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}

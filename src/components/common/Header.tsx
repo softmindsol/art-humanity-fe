@@ -184,7 +184,7 @@ const Header = () => {
   return (
     <>
       <div className="header-container ">
-        <header className='  !z-[1000] '>
+        <header className=' !max-w-7xl  !z-[1000]  '>
           <div className="logo-container">
             <Link to="/" className="logo-link">
               <img src="/favicon.PNG" alt="Logo" className="logo" />
@@ -192,8 +192,10 @@ const Header = () => {
                 <h1 className='text-[24px] text-[#333] font-bold'>MurArt</h1>
                 <p className="tagline">Collaborative Canvases of Human Expression</p>
               </div>
-            </Link>
+            </Link> 
           </div>
+
+
           <div className="header-right flex items-center">
             <nav>
               <ul className=''>
@@ -382,6 +384,13 @@ const Header = () => {
               <li><NavLink to="/gallery" onClick={handleLinkClick} className="text-2xl font-semibold font-playfair text-[#3e2723]">Gallery</NavLink></li>
               <li><NavLink to="/projects" onClick={handleLinkClick} className="text-2xl font-semibold font-playfair text-[#3e2723]">Contribute</NavLink></li>
               <li><NavLink to="/demo" onClick={handleLinkClick} className="text-2xl font-semibold font-playfair text-[#3e2723]">Demo</NavLink></li>
+              <span
+                // onClick={() => setDonationState({ ...donationState, isFormOpen: true })}
+                onClick={handleSupportClick}
+                className="cursor-pointer text-[#5d4037] hover:bg-[#f1e6da] transition-colors flex items-center gap-2"
+              >
+                <span>Support Us</span>
+              </span>
             </ul>
           </nav>
 

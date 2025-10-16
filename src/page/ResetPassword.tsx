@@ -40,7 +40,7 @@ const ResetPassword = () => {
             toast.error(err?.message || "Failed to reset password");
         }
     };
-
+ 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen  px-4">
             <div className="max-w-md w-full rounded-lg p-6 ">

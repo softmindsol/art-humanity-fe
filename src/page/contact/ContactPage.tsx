@@ -55,7 +55,7 @@ const ContactUs: React.FC = () => {
                 </div>
 
                 {/* Extra Info Section */}
-                <div className="mt-16 grid md:grid-cols-2 gap-8 max-w-4xl mx-auto text-left">
+                <div className="mt-16 grid md:grid-cols-2 gap-8  md:w-2xl lg:w-4xl py-10 md:py-0  mx-auto text-left">
                     <div className="bg-white/50 p-6 rounded-lg">
                         <MessageSquare size={28} className="text-[#d4af37] mb-3" />
                         <h3 className="font-bold text-xl text-[#3e2723] mb-2">Feedback & Ideas</h3>
