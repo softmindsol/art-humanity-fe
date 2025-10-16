@@ -39,6 +39,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         handleGoogleLogin
     } = useRegisterForm({ onClose });
 
+    console.log(googleLoading)
     // Disable modal if either login or sign-up is loading
     const isModalDisabled = loginLoading || loading;
 
