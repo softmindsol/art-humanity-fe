@@ -5,7 +5,7 @@ const Footer = () => {
     <footer className="flex flex-col justify-end ">
 
 
-      <div className="flex flex-col lg:flex-row items-start w-[90%] lg:w-[900px]  m-auto lg:items-start lg:justify-between gap-10 lg:gap-[110px]  pt-3 lg:pb-8">
+      <div className="flex flex-col lg:flex-row items-start w-[90%] lg:w-[900px]  m-auto lg:items-start lg:justify-between gap-10 lg:gap-[110px]   lg:pb-5 xl:pb-8">
         <div className="">
           <h2 className="text-[1.8rem] sm:!text-[2rem] !text-[#efebe9]  ">MurArt</h2>
           <p className="text-[14px] md:text-[16px] !italic">Collaborative Canvases of Human Expression</p>

@@ -1,29 +1,30 @@
-import React, { useEffect, useCallback, useRef, useState } from 'react';
-import { Grid } from 'lucide-react'; // Grid icon imported
+import React, { useEffect, useCallback, useRef, useState, useMemo } from 'react';
+import { Grid, Minus, Plus } from 'lucide-react';
 import { useCanvasState } from '@/hook/useCanvasState';
 import type { Position, Tile } from '@/types/canvas';
 import { useSelector } from 'react-redux';
 
 import {
     selectCurrentBrush, selectCurrentCanvas, setBrushColor, setCanvasOffset, setZoomLevel, selectTimelapseUrl,
-
     selectCanvasData,
 } from '@/redux/slice/contribution';
 import useAppDispatch from '@/hook/useDispatch';
 import Toolbox from '@/components/toolbox/Toolbox';
-
+import { useMediaQuery } from '@/hook/useMediaQuery';
 
 // --- CONSTANTS ---
-const TILE_SIZE = 512; // Optimal tile size for performance
-const VIEWPORT_WIDTH = 1024; // Fixed viewport width
-const VIEWPORT_HEIGHT = 1024; // Fixed viewport height
+const TILE_SIZE = 512;
+const VIEWPORT_WIDTH = 1024;
+const VIEWPORT_HEIGHT = 1024;
+const MIN_ZOOM_LEVEL = 1.0; // <-- ZOOMLIMIT: 100% se kam nahi hoga
+const MAX_ZOOM_LEVEL = 4.0;
 const styles = `
     .canvas-container {
         font-family: 'Georgia, serif';
         position: relative;
         width: 100%;
         min-height: 100vh;
-        overflow-x: hidden; /* Prevent horizontal scroll */
+        overflow-x: hidden; 
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -52,17 +53,17 @@ const styles = `
 
     .canvas-controls {
         display: flex;
-        flex-wrap: wrap; /* Allow buttons to wrap on small screens */
+        flex-wrap: wrap; 
         justify-content: center;
         gap: 0.75rem; /* 12px */
     }
 
     .control-button {
         border: none;
-        padding: 0.5rem 1rem; /* 8px 16px */
-        border-radius: 0.25rem; /* 4px */
+        padding: 0.5rem 1rem;
+        border-radius: 0.25rem;
         cursor: pointer;
-        font-size: 0.875rem; /* 14px */
+        font-size: 0.875rem;
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
@@ -71,24 +72,38 @@ const styles = `
 
     .canvas-viewport-wrapper {
         width: 100%;
-        max-width: ${VIEWPORT_WIDTH}px; /* Canvas won't exceed its drawing size */
-        margin: auto; /* Center the canvas */
+        max-width: ${VIEWPORT_WIDTH}px;
+        margin: auto;
+        position: relative; 
     }
 
     #viewport-canvas {
         width: 100%;
-        height: auto; /* Maintain aspect ratio */
+        height: auto;
         border: 4px solid #4d2d2d;
-        display: block; /* Remove extra space below canvas */
+        display: block;
+    }
+    
+    /* InfoBox Style */
+    .zoom-info-box { 
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: rgba(255, 255, 255, 0.8);
+        padding: 5px 10px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 0.8rem;
+        z-index: 10;
     }
 
     /* Media Queries for different screen sizes */
-    @media (min-width: 768px) { /* md breakpoint */
+    @media (min-width: 768px) { 
         .canvas-title {
-            font-size: 2.5rem; /* 40px */
+            font-size: 2.5rem; 
         }
         .control-button {
-            font-size: 1rem; /* 16px */
+            font-size: 1rem; 
         }
     }
 `;
@@ -97,8 +112,7 @@ const styles = `
 const DemoCanvas: React.FC = () => {
     const dispatch = useAppDispatch();
 
-    // --- REDUX STATE ---
-    // Get state directly from the Redux store
+    // --- REDUX STATE & LOCAL STATE ---
     const brushState = useSelector(selectCurrentBrush);
     const canvasState = useSelector(selectCurrentCanvas);
     const timelapseUrl = useSelector(selectTimelapseUrl);
@@ -106,11 +120,8 @@ const DemoCanvas: React.FC = () => {
 
     const {
         setIsModalOpen,
-    
         viewportCanvasRef,
         tilesRef,
-        // setCanvasState,
-        // setBrushState,
         isDrawing,
         setIsDrawing,
         lastPos,
@@ -125,7 +136,6 @@ const DemoCanvas: React.FC = () => {
         isDraggingToolbox,
         setIsDraggingToolbox,
         toolboxStart,
-        // setIsCanvasHovered,
         showGrid,
         setShowGrid,
         hue,
@@ -134,113 +144,18 @@ const DemoCanvas: React.FC = () => {
         currentStrokePath,
         setCurrentStrokePath,
         setTotalTiles,
-        // sessionId,
         setStrokeStartTime,
-        // History
         history,
         setHistory,
         historyIndex,
         setHistoryIndex,
     } = useCanvasState();
 
-    const savedStrokes = useSelector(selectCanvasData);
-    // ===== YEH NAYI STATES ADD KAREIN =====
     const [lineStartPos, setLineStartPos] = useState<Position | null>(null);
-   
-    useEffect(() => {
-        saveStateToHistory();
-    }, []);
+
+    useEffect(() => { saveStateToHistory(); }, []);
 
 
-    useEffect(() => {
-        // Yeh effect tab he chalega jab strokes fetch ho chuke honge
-        if (savedStrokes && savedStrokes.length > 0) {
-            console.log(`Rendering ${savedStrokes.length} saved strokes.`);
-
-            // Ek ek karke har stroke ko canvas par dobara draw karein
-            savedStrokes.forEach((stroke: any) => {
-                if (!stroke.strokePath || stroke.strokePath.length === 0) return;
-
-                // Har stroke ke har hisse (segment) ko draw karein
-                stroke.strokePath.forEach((pathSegment: any) => {
-                    const fromCoords = worldToTileCoords(pathSegment.fromX, pathSegment.fromY);
-                    const toCoords = worldToTileCoords(pathSegment.toX, pathSegment.toY);
-
-                    // Cross-tile drawing ko handle karein
-                    for (let y = Math.min(fromCoords.tileY, toCoords.tileY); y <= Math.max(fromCoords.tileY, toCoords.tileY); y++) {
-                        for (let x = Math.min(fromCoords.tileX, toCoords.tileX); x <= Math.max(fromCoords.tileX, toCoords.tileX); x++) {
-                            const tile = getTile(x, y);
-
-
-
-                            drawOnTile(tile, pathSegment.fromX - x * TILE_SIZE, pathSegment.fromY - y * TILE_SIZE, pathSegment.toX - x * TILE_SIZE, pathSegment.toY - y * TILE_SIZE);
-                        }
-                    }
-                });
-            });
-
-            // Saari tiles draw hone ke baad, final viewport ko render karein
-            renderVisibleTiles();
-            // History ko is loaded state ke saath save karein
-            saveStateToHistory();
-        }
-    }, [savedStrokes]); // Yeh effect tab chalega jab `savedStrokes` Redux se aayega
-
-    // --- HISTORY MANAGEMENT ---
-    const saveStateToHistory = useCallback(() => {
-        const snapshot = new Map();
-        tilesRef.current.forEach((tile, key) => {
-            snapshot.set(key, tile.context.getImageData(0, 0, TILE_SIZE, TILE_SIZE));
-        });
-
-        const newHistory = history.slice(0, historyIndex + 1);
-        setHistory([...newHistory, snapshot]);
-        setHistoryIndex(newHistory.length);
-    }, [history, historyIndex]);
-
-    const restoreStateFromHistory = useCallback((index: number) => {
-        if (index < 0 || index >= history.length) return;
-
-        const snapshot = history[index];
-        tilesRef.current.clear(); // Clear current tiles to handle undoing tile creation
-
-        snapshot.forEach((imageData: any, key: any) => {
-            const [tileX, tileY] = key.split(',').map(Number);
-            const tile = getTile(tileX, tileY);
-            tile.context.putImageData(imageData, 0, 0);
-        });
-
-        setHistoryIndex(index);
-        renderVisibleTiles();
-    }, [history]);
-
-    const handleUndo = useCallback(() => {
-        if (historyIndex > 0) {
-            restoreStateFromHistory(historyIndex - 1);
-        }
-    }, [historyIndex, restoreStateFromHistory]);
-
-    const handleRedo = useCallback(() => {
-        if (historyIndex < history.length - 1) {
-            restoreStateFromHistory(historyIndex + 1);
-        }
-    }, [historyIndex, history.length, restoreStateFromHistory]);
-
-    useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.ctrlKey || e.metaKey) { // metaKey for Command on Mac
-                if (e.key === 'z') {
-                    e.preventDefault();
-                    handleUndo();
-                } else if (e.key === 'y') {
-                    e.preventDefault();
-                    handleRedo();
-                }
-            }
-        };
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [handleUndo, handleRedo]);
 
     // --- TILE MANAGEMENT ---
     const getTileKey = (tileX: number, tileY: number): string => `${tileX},${tileY}`;
@@ -279,7 +194,6 @@ const DemoCanvas: React.FC = () => {
         if (!viewportCanvas) return;
         const ctx = viewportCanvas.getContext('2d')!;
         ctx.save();
-        // ... (baqi tile rendering ki logic waisi hi rahegi) ...
         ctx.clearRect(0, 0, VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, VIEWPORT_WIDTH, VIEWPORT_HEIGHT);
@@ -309,11 +223,8 @@ const DemoCanvas: React.FC = () => {
             }
         }
 
-        // ===== YEH NAYA CODE ADD KIYA GAYA HAI =====
-        // Agar line tool active hai aur drag ho raha hai, to preview dikhayein
         if (brushState.mode === 'line' && isDrawing && lineStartPos) {
             ctx.beginPath();
-            // World coordinates ko viewport coordinates mein convert karein
             const startX = (lineStartPos.x * zoomLevel) + offset.x;
             const startY = (lineStartPos.y * zoomLevel) + offset.y;
             const endX = (mousePos.x * zoomLevel) + offset.x;
@@ -328,18 +239,11 @@ const DemoCanvas: React.FC = () => {
         }
 
         ctx.restore();
-    }, [canvasState, showGrid, isDrawing, lineStartPos, mousePos, brushState]); // <-- Dependencies update karein
+    }, [canvasState, showGrid, isDrawing, lineStartPos, mousePos, brushState, viewportCanvasRef, getTile]);
 
-    useEffect(() => {
-        renderVisibleTiles();
-    }, [canvasState, renderVisibleTiles]);
-    useEffect(() => {
-        // Agar `timelapseUrl` mein koi value aayi hai (null nahi hai),
-        // to modal ko open kar do.
-        if (timelapseUrl) {
-            setIsModalOpen(true);
-        }
-    }, [timelapseUrl]);
+    useEffect(() => { renderVisibleTiles(); }, [canvasState, renderVisibleTiles]);
+    useEffect(() => { if (timelapseUrl) setIsModalOpen(true); }, [timelapseUrl]);
+
 
     // --- MOUSE AND DRAWING HANDLERS ---
 
@@ -353,11 +257,8 @@ const DemoCanvas: React.FC = () => {
     };
 
 
-
     const drawOnTile = (tile: any, fromX: any, fromY: any, toX: any, toY: any) => {
         const ctx = tile.context;
-
-        // Common settings
         ctx.lineWidth = brushState.size;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
@@ -366,38 +267,27 @@ const DemoCanvas: React.FC = () => {
         ctx.lineTo(toX, toY);
 
         if (brushState.mode === 'eraser') {
-
-            // Step 1: Pehle, purani drawing ke PEECHE ek safed line draw karo.
-            // Isse jab aage se drawing mitegi, to peeche safed color dikhega.
             ctx.globalCompositeOperation = 'destination-over';
-            ctx.strokeStyle = '#ffffff'; // Background color
-            ctx.stroke(); // Yahan stroke() call karna zaroori hai
-
-            // Step 2: Ab, purani drawing ke UPAR se pixels ko mitao.
+            ctx.strokeStyle = '#ffffff';
+            ctx.stroke();
             ctx.globalCompositeOperation = 'destination-out';
-            ctx.strokeStyle = 'rgba(0,0,0,1)'; // Koi bhi opaque color
-            ctx.stroke(); // Yahan dobara stroke() call karna zaroori hai
-
+            ctx.strokeStyle = 'rgba(0,0,0,1)';
+            ctx.stroke();
         } else {
-            // Brush ka logic same rahega
             ctx.globalCompositeOperation = 'source-over';
             ctx.strokeStyle = `rgba(${brushState.color.r}, ${brushState.color.g}, ${brushState.color.b}, ${brushState.color.a})`;
             ctx.stroke();
         }
-
         tile.isDirty = true;
     };
 
     const startDrawing = (e: React.MouseEvent) => {
-        // Agar line tool active hai
         if (brushState.mode === 'line') {
             const pos = getMousePosInWorld(e);
-            setLineStartPos(pos); // Sirf line ka start point save karein
-            setIsDrawing(true); // Drawing shuru karein
-            return; // Brush wali logic ko rokein
+            setLineStartPos(pos);
+            setIsDrawing(true);
+            return;
         }
-
-        // Baqi tools ke liye purani logic
         if (brushState.mode === 'move' || canvasState.zoomLevel < 1) return;
         setIsDrawing(true);
         setLastPos(getMousePosInWorld(e));
@@ -406,18 +296,12 @@ const DemoCanvas: React.FC = () => {
     };
 
     const draw = (e: React.MouseEvent) => {
-        // Agar line tool active hai aur drawing ho rahi hai
         if (brushState.mode === 'line' && isDrawing) {
-            // Har mouse move par poora canvas dobara render karein
-            // taake humein live preview dikhe
             renderVisibleTiles();
-            return; // Brush wali logic ko rokein
+            return;
         }
-
-        // Baqi tools ke liye purani logic
         if (!isDrawing || brushState.mode === 'move' || canvasState.zoomLevel < 1) return;
         const pos = getMousePosInWorld(e);
-        // ... baqi freehand drawing ki logic ...
         setCurrentStrokePath((prev: any) => [...prev, { fromX: lastPos.x, fromY: lastPos.y, toX: pos.x, toY: pos.y }]);
         const fromCoords = worldToTileCoords(lastPos.x, lastPos.y);
         const toCoords = worldToTileCoords(pos.x, pos.y);
@@ -430,11 +314,33 @@ const DemoCanvas: React.FC = () => {
         setLastPos(pos);
         renderVisibleTiles();
     };
+    const saveStateToHistory = useCallback(() => {
+        const snapshot = new Map();
+        tilesRef.current.forEach((tile, key) => {
+            snapshot.set(key, tile.context.getImageData(0, 0, TILE_SIZE, TILE_SIZE));
+        });
+        const newHistory = history.slice(0, historyIndex + 1);
+        setHistory([...newHistory, snapshot]);
+        setHistoryIndex(newHistory.length);
+    }, [history, historyIndex, tilesRef, setHistory, setHistoryIndex]);
+
+    const restoreStateFromHistory = useCallback((index: number) => {
+        if (index < 0 || index >= history.length) return;
+        const snapshot = history[index];
+        tilesRef.current.clear();
+        snapshot.forEach((imageData: any, key: any) => {
+            const [tileX, tileY] = key.split(',').map(Number);
+            const tile = getTile(tileX, tileY);
+            tile.context.putImageData(imageData, 0, 0);
+        });
+        setHistoryIndex(index);
+        renderVisibleTiles();
+    }, [history, tilesRef, setHistoryIndex, renderVisibleTiles, getTile]);
+
+
     const stopDrawing = async () => {
-        // Agar line tool active tha
         if (brushState.mode === 'line' && isDrawing && lineStartPos) {
-            // Mouse chhorne par line ko permanent draw karein
-            const endPos = mousePos; // Current mouse position
+            const endPos = mousePos;
             const fromCoords = worldToTileCoords(lineStartPos.x, lineStartPos.y);
             const toCoords = worldToTileCoords(endPos.x, endPos.y);
 
@@ -447,17 +353,14 @@ const DemoCanvas: React.FC = () => {
             renderVisibleTiles();
             saveStateToHistory();
 
-            // States ko reset karein
             setIsDrawing(false);
             setLineStartPos(null);
-            return; // Brush wali logic ko rokein
+            return;
         }
 
-        // Baqi tools ke liye purani logic
         if (!isDrawing || currentStrokePath.length === 0) { setIsDrawing(false); return; }
         setIsDrawing(false);
         saveStateToHistory();
-        // ... stroke save karne ki logic ...
         setCurrentStrokePath([]);
     };
 
@@ -469,7 +372,12 @@ const DemoCanvas: React.FC = () => {
         const mouseX = e.clientX - rect.left;
         const mouseY = e.clientY - rect.top;
         const zoomFactor = e.deltaY < 0 ? 1.1 : 1 / 1.1;
-        const newZoom = Math.min(Math.max(canvasState.zoomLevel * zoomFactor, 0.05), 4);
+
+        let newZoom = canvasState.zoomLevel * zoomFactor;
+
+        // **ZOOMLIMIT (100% se kam nahi)**
+        newZoom = Math.min(Math.max(newZoom, MIN_ZOOM_LEVEL), MAX_ZOOM_LEVEL);
+
         const worldX = (mouseX - canvasState.offset.x) / canvasState.zoomLevel;
         const worldY = (mouseY - canvasState.offset.y) / canvasState.zoomLevel;
         dispatch(setZoomLevel(newZoom));
@@ -510,6 +418,9 @@ const DemoCanvas: React.FC = () => {
 
     // ----- Pan Handlers -----
     const handleMouseDown = (e: React.MouseEvent) => {
+        // Agar Toolbox Drag ho raha hai, to canvas interaction ko rok dein
+        if (isDraggingToolbox) return;
+
         if (e.button === 2) { // Right click -> pan
             setIsPanning(true);
             setPanStart({ x: e.clientX - canvasState.offset.x, y: e.clientY - canvasState.offset.y });
@@ -517,6 +428,9 @@ const DemoCanvas: React.FC = () => {
     };
 
     const handleMouseMove = (e: React.MouseEvent) => {
+        // Agar Toolbox Drag ho raha hai, to canvas interaction ko rok dein
+        if (isDraggingToolbox) return;
+
         const pos = getMousePosInWorld(e);
         setMousePos({ x: Math.round(pos.x), y: Math.round(pos.y) });
         if (isPanning) {
@@ -524,12 +438,36 @@ const DemoCanvas: React.FC = () => {
         } else if (isDrawing) draw(e);
     };
 
-    const handleMouseUp = () => { if (isPanning) setIsPanning(false); if (isDrawing) stopDrawing(); };
+    const handleMouseUp = () => {
+        // Agar Toolbox Drag ho raha hai, to canvas interaction ko rok dein
+        if (isDraggingToolbox) return;
+
+        if (isPanning) setIsPanning(false);
+        if (isDrawing) stopDrawing();
+    };
+
+    // <-- Canvas Hover Effects (Overflow Hidden) -->
+    const handleCanvasMouseEnter = () => {
+        document.body.style.overflow = 'hidden';
+    };
+
+    const handleCanvasMouseLeave = () => {
+        document.body.style.overflow = 'auto';
+        if (isPanning) setIsPanning(false);
+        if (isDrawing) stopDrawing();
+    };
 
 
-    // --- TOOLBOX DRAG LOGIC ---
-    const dragToolbox = useCallback((e: MouseEvent) => { if (isDraggingToolbox) setToolboxPos({ x: e.clientX - toolboxStart.x, y: e.clientY - toolboxStart.y }); }, [isDraggingToolbox, toolboxStart]);
-    const stopToolboxDrag = useCallback(() => setIsDraggingToolbox(false), []);
+    // --- TOOLBOX DRAG LOGIC (Already present, ensuring dependencies) ---
+    const dragToolbox = useCallback((e: MouseEvent) => {
+        if (isDraggingToolbox) {
+            setToolboxPos({ x: e.clientX - toolboxStart.x, y: e.clientY - toolboxStart.y });
+        }
+    }, [isDraggingToolbox, toolboxStart, setToolboxPos]);
+
+    const stopToolboxDrag = useCallback(() => {
+        setIsDraggingToolbox(false);
+    }, [setIsDraggingToolbox]);
 
     useEffect(() => {
         if (isDraggingToolbox) {
@@ -542,6 +480,33 @@ const DemoCanvas: React.FC = () => {
         };
     }, [isDraggingToolbox, dragToolbox, stopToolboxDrag]);
 
+    const handleUndo = useCallback(() => {
+        if (historyIndex > 0) {
+            restoreStateFromHistory(historyIndex - 1);
+        }
+    }, [historyIndex, restoreStateFromHistory]);
+
+    const handleRedo = useCallback(() => {
+        if (historyIndex < history.length - 1) {
+            restoreStateFromHistory(historyIndex + 1);
+        }
+    }, [historyIndex, history.length, restoreStateFromHistory]);
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.ctrlKey || e.metaKey) {
+                if (e.key === 'z') {
+                    e.preventDefault();
+                    handleUndo();
+                } else if (e.key === 'y') {
+                    e.preventDefault();
+                    handleRedo();
+                }
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [handleUndo, handleRedo]);
     // --- COLOR CONVERSION ---
     useEffect(() => {
         const hslToRgb = (h: number, s: number, l: number) => {
@@ -552,10 +517,23 @@ const DemoCanvas: React.FC = () => {
             else if (h < 240) { g = x; b = c; } else if (h < 300) { r = x; b = c; } else { r = c; b = x; }
             return { r: Math.round((r + m) * 255), g: Math.round((g + m) * 255), b: Math.round((b + m) * 255), a: 1 };
         };
-        // setBrushState(prev => ({ ...prev, color: hslToRgb(hue, saturation, lightness) }));
         dispatch(setBrushColor(hslToRgb(hue, saturation, lightness)));
     }, [hue, saturation, lightness]);
 
+    // <-- Canvas Hover Effects Setup -->
+    useEffect(() => {
+        const canvasElement = viewportCanvasRef.current;
+        if (canvasElement) {
+            canvasElement.addEventListener('mouseenter', handleCanvasMouseEnter);
+            canvasElement.addEventListener('mouseleave', handleCanvasMouseLeave);
+        }
+        return () => {
+            if (canvasElement) {
+                canvasElement.removeEventListener('mouseenter', handleCanvasMouseEnter);
+                canvasElement.removeEventListener('mouseleave', handleCanvasMouseLeave);
+            }
+        };
+    }, [viewportCanvasRef.current, isDrawing, isPanning]);
 
 
     if (!brushState || !canvasState) {
@@ -573,13 +551,13 @@ const DemoCanvas: React.FC = () => {
                     </p>
 
                     <div className="canvas-controls">
-                        <button
+                        {/* <button
                             onClick={loadReferenceImage}
                             className="control-button"
                             style={{ backgroundColor: '#8b795e', color: 'white' }}
                         >
                             Load Image
-                        </button>
+                        </button> */}
 
                         <button
                             onClick={handleClearCanvas}
@@ -603,23 +581,31 @@ const DemoCanvas: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="canvas-viewport-wrapper">
+                <div className="canvas-viewport-wrapper justify-center items-center flex">
                     <canvas
+                        className='w-[90%] xl:w-[95%] justify-center items-center flex'
                         ref={viewportCanvasRef}
                         width={VIEWPORT_WIDTH}
                         height={VIEWPORT_HEIGHT}
                         style={{
-                            cursor: isPanning ? 'grabbing' : 'crosshair',
-                            border: '4px solid #4d2d2d', // <-- Add border here
-                            borderRadius: '4px', // optional: thoda rounded corner
-                            backgroundColor: '#ffffff', // optional: white background
+                            cursor: isPanning ? 'grabbing' : brushState.mode === 'move' ? 'grab' : 'crosshair',
+                            border: '4px solid #4d2d2d',
+                            borderRadius: '4px',
+                            backgroundColor: '#ffffff',
                         }}
                         onMouseDown={handleMouseDown}
                         onMouseMove={handleMouseMove}
                         onMouseUp={handleMouseUp}
-                        onMouseLeave={handleMouseUp}
+                        onMouseEnter={handleCanvasMouseEnter}
                         onWheel={handleWheel}
                         onContextMenu={(e) => e.preventDefault()}
+                    />
+
+                    {/* InfoBox Integration */}
+                    <InfoBox
+                        zoom={canvasState.zoomLevel}
+                        worldPos={mousePos}
+                        boundaryRef={mainContentRef}
                     />
                 </div>
 
@@ -629,5 +615,144 @@ const DemoCanvas: React.FC = () => {
     );
 };
 
-export default DemoCanvas;
+const InfoBox = ({ zoom, worldPos, boundaryRef }: any) => {
+    const isSmallScreen = useMediaQuery(1440);
+    const [isMinimized, setIsMinimized] = useState(isSmallScreen);
+    const [position, setPosition] = useState({ x: 0, y: 0 });
+    const [isDragging, setIsDragging] = useState(false);
+    const dragOffsetRef = useRef({ x: 0, y: 0 });
+    const infoBoxRef = useRef<HTMLDivElement>(null);
 
+    
+    useEffect(() => {
+        setIsMinimized(isSmallScreen);
+    }, [isSmallScreen]);
+
+    // Initial/Programmatic positioning
+    useEffect(() => {
+        if (boundaryRef.current && infoBoxRef.current) {
+            const boundaryRect = boundaryRef.current.getBoundingClientRect();
+
+            const timeoutId = setTimeout(() => {
+                if (!infoBoxRef.current) return;
+                const infoBoxRect = infoBoxRef.current.getBoundingClientRect();
+                let newX, newY;
+
+                if (isMinimized) {
+                    newX = boundaryRect.width - infoBoxRect.width - 20;
+                    newY = 20;
+                } else {
+                    if (isSmallScreen) {
+                        newX = 20;
+                        newY = boundaryRect.height - infoBoxRect.height - 20;
+                    } else {
+                        newX = boundaryRect.width - infoBoxRect.width - 20;
+                        newY = (boundaryRect.height / 2) - (infoBoxRect.height / 2);
+                    }
+                }
+                setPosition({ x: newX, y: newY });
+            }, 50);
+
+            return () => clearTimeout(timeoutId);
+        }
+    }, [boundaryRef, isSmallScreen, isMinimized]);
+
+
+    const handleDragMouseDown = useCallback((e: React.MouseEvent) => {
+        if (isMinimized || !infoBoxRef.current || e.button !== 0) return;
+
+        const infoBoxRect = infoBoxRef.current.getBoundingClientRect();
+        setIsDragging(true);
+
+        dragOffsetRef.current = {
+            x: e.clientX - infoBoxRect.left,
+            y: e.clientY - infoBoxRect.top,
+        };
+        e.preventDefault();
+    }, [isMinimized]);
+
+    useEffect(() => {
+        const handleDragMouseMove = (e: MouseEvent) => {
+            if (!isDragging || !boundaryRef.current || !infoBoxRef.current) return;
+
+            const boundaryRect = boundaryRef.current.getBoundingClientRect();
+            const infoBoxNode = infoBoxRef.current;
+
+            const newX_viewport = e.clientX - dragOffsetRef.current.x;
+            const newY_viewport = e.clientY - dragOffsetRef.current.y;
+
+            let newX = newX_viewport - boundaryRect.left;
+            let newY = newY_viewport - boundaryRect.top;
+
+            newX = Math.max(0, newX);
+            newY = Math.max(0, newY);
+            newX = Math.min(newX, boundaryRect.width - infoBoxNode.offsetWidth);
+            newY = Math.min(newY, boundaryRect.height - infoBoxNode.offsetHeight);
+
+            setPosition({ x: newX, y: newY });
+        };
+
+        const handleDragMouseUp = () => {
+            setIsDragging(false);
+        };
+
+        if (isDragging) {
+            document.addEventListener('mousemove', handleDragMouseMove);
+            document.addEventListener('mouseup', handleDragMouseUp);
+        }
+
+        return () => {
+            document.removeEventListener('mousemove', handleDragMouseMove);
+            document.removeEventListener('mouseup', handleDragMouseUp);
+        };
+    }, [isDragging, boundaryRef]);
+
+    // --- RENDER ---
+    return (
+        <div
+            ref={infoBoxRef}
+            className="absolute bg-white/90 p-3 top-0 -right-60 rounded-lg text-base text-[#5d4e37] border border-[#3e2723] shadow-lg select-none z-50"
+            style={{
+
+                width: isMinimized ? 'auto' : '200px',
+                transition: isDragging ? 'none' : 'top 0.3s ease-in-out, left 0.3s ease-in-out, width 0.3s ease-in-out',
+            }}
+        >
+            <div
+                className="w-full flex justify-between items-center gap-2"
+                style={{ cursor: isMinimized ? 'default' : isDragging ? 'grabbing' : 'grab' }}
+                onMouseDown={handleDragMouseDown}
+            >
+                <p className="text-[#3e2723] text-lg font-bold m-0 whitespace-nowrap">Infobox</p>
+                <div className='flex text-[#3e2723] items-center gap-2'>
+                    {isSmallScreen && (
+                        <button
+                            onClick={() => setIsMinimized(!isMinimized)}
+                            className="p-1 hover:bg-gray-200 rounded-full transition-colors"
+                            title={isMinimized ? "Maximize" : "Minimize"}
+                        >
+                            {isMinimized ? <Plus size={16} /> : <Minus size={16} />}
+                        </button>
+                    )}
+                    {/* Drag Handle Icon (Dots) */}
+                    <div className='cursor-grab active:cursor-grabbing' onMouseDown={(e) => e.stopPropagation()}>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="19" r="1"></circle>
+                            <circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="19" r="1"></circle>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+
+            <div className='pt-1'>
+                <div>Zoom: {Math.round(zoom * 100)}%</div>
+                <div>World Pos: ({Math.round(worldPos.x)}, {Math.round(worldPos.y)})</div>
+
+            </div>
+
+        </div>
+    );
+};
+
+export default DemoCanvas;

@@ -130,8 +130,7 @@ const ActiveProjects: React.FC = () => {
                 <p style={{ color: '#8d6e63' }}>Enter a project, or sign up to contribute!</p>
             </section>
 
-            {/* "Create Project" button ab "/admin/dashboard" par link karega */}
-            {user?.role === 'admin' && (
+3            {user?.role === 'admin' && (
                 <section className='flex items-center justify-center my-6'>
                     <Link to="/create-project">
                         <Button className="bg-[#d29000] cursor-pointer hover:bg-[#b38f2c] text-white font-bold py-2 px-4 rounded shadow-lg !border !border-[#5d4037]">
