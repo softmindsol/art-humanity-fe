@@ -724,24 +724,7 @@ const InfoBox = ({ zoom, worldPos, boundaryRef }: any) => {
                 onMouseDown={handleDragMouseDown}
             >
                 <p className="text-[#3e2723] text-lg font-bold m-0 whitespace-nowrap">Infobox</p>
-                <div className='flex text-[#3e2723] items-center gap-2'>
-                    {isSmallScreen && (
-                        <button
-                            onClick={() => setIsMinimized(!isMinimized)}
-                            className="p-1 hover:bg-gray-200 rounded-full transition-colors"
-                            title={isMinimized ? "Maximize" : "Minimize"}
-                        >
-                            {isMinimized ? <Plus size={16} /> : <Minus size={16} />}
-                        </button>
-                    )}
-                    {/* Drag Handle Icon (Dots) */}
-                    <div className='cursor-grab active:cursor-grabbing' onMouseDown={(e) => e.stopPropagation()}>
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="19" r="1"></circle>
-                            <circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="19" r="1"></circle>
-                        </svg>
-                    </div>
-                </div>
+               
             </div>
 
 
