@@ -42,7 +42,7 @@ const DonationForm: React.FC<DonationFormProps> = ({ onDonate }) => {
             dispatch(closeDonationForm())
         }
     };
-
+ 
     
 
     return (

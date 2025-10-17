@@ -52,21 +52,18 @@ const InfoBox = ({ zoom, worldPos, isSaving, saveError, boundaryRef }: any) => {
     // --- SIMPLE & CORRECT DRAGGING LOGIC (UPDATED) ---
 
     const handleDragMouseDown = useCallback((e: React.MouseEvent) => {
-        if (isMinimized || !infoBoxRef.current) return;
 
-        // Get the box's current position on the screen (relative to the viewport)
+        // NAYA CODE: Ab yeh check nahi karega ke box minimized hai ya nahi
+        if (!infoBoxRef.current) return;
+
         const infoBoxRect = infoBoxRef.current.getBoundingClientRect();
-
         setIsDragging(true);
-
-        // Calculate and save the exact offset between the mouse click and the box's top-left corner.
-        // This is the key to preventing the "jump".
         dragOffsetRef.current = {
             x: e.clientX - infoBoxRect.left,
             y: e.clientY - infoBoxRect.top,
         };
         e.preventDefault();
-    }, [isMinimized]);
+    }, []); // Dependency array se `isMinimized` hata dein
 
     useEffect(() => {
         const handleDragMouseMove = (e: MouseEvent) => {

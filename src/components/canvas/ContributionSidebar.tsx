@@ -263,16 +263,9 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
                             isDropdownOpen={isContributorsDropdownOpen}
                             onDropdownOpenChange={setIsContributorsDropdownOpen}
                         />}
-                        {/* <div className='flex items-center justify-center mb-4'>
-                            {
-                                (activeTab === 'my' && user?.role === 'admin') && <button onClick={() => setIsModalOpen(true)} className="btn-primary  text-sm">
-                                    + Add Contributor
-                                </button>
-                            }
-
-                        </div> */}
+                      
                         <div className=" text-sm mb-1">
-                            <Button
+                            {user?._id && <Button
                                 onClick={handleCreateNewContribution}
                                 disabled={isCreateLoading || isLimitReached}
                                 title={isLimitReached ? `You have reached the limit of ${MAX_CONTRIBUTIONS_LIMIT} contributions.` : "Create a new contribution"}
@@ -280,7 +273,7 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
                             >
                                 <PlusCircle className="mr-2 h-4 w-4" />
                                 {isCreateLoading ? 'Creating...' : 'New Contribution'}
-                            </Button>
+                            </Button>}
                             {isLimitReached && (
                                 <p className="text-xs text-red-600 text-center mt-2">
                                     Contribution limit reached ({userContributionCount}/{MAX_CONTRIBUTIONS_LIMIT}).

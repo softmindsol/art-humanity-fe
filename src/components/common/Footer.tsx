@@ -1,15 +1,12 @@
 import { Link } from "react-router-dom";
 
-const Footer = () => {
+const Footer = () => { 
   return (
     <footer className="flex flex-col justify-end ">
 
 
-      <div className="flex flex-col lg:flex-row justify-center items-start  lg:gap-[13.5rem] xl:gap-[30rem]">
-        {/* <div className="">
-          <h2 className="text-[1.8rem] sm:!text-[2rem] !text-[#efebe9]  "> MurArt</h2>
-          <p className="text-[14px] md:text-[16px] !italic">Collaborative Canvases of Human Expression</p>
-        </div> */}
+      <div className="flex flex-col lg:flex-row justify-center items-start  lg:gap-[13.5rem] xl:gap-[28.5rem]">
+      
         <span  className="logo-link-footer">
           <img src="/favicon.PNG" alt="Logo" className="logo -ml-4 md:-ml-0 lg:-ml-4" />
           <div className=" ">

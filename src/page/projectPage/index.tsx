@@ -71,7 +71,6 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
     const [isGeneratingTimelapse, _] = useState(false);
     const [isTimelapseFullscreen, setIsTimelapseFullscreen] = useState(false);
 
-    console.log("canvasSize:", canvasSize)
     // --- REFS ---
     const canvasContainerRef = useRef<any>(null);
     const listItemRefs = useRef<any>({});
@@ -232,7 +231,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
    
     const showLoginDialog = !!currentProject && !user && !loginDialogDismissed;
     const showJoinDialog = isJoinDialogOpen && !showLoginDialog;
-
+    console.log(showLoginDialog)
     const isCurrentUserAContributor = useMemo(() => {
         if (!user || !currentProject?.contributors) {
             return false;
@@ -271,7 +270,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
     const handleGuestCanvasInteraction = useCallback(() => {
         console.log("A guest is trying to draw. Opening login modal.");
         setLoginDialogDismissed(false);
-        dispatch(openAuthModal()); // Auth modal ke liye
+        // dispatch(openAuthModal()); // Auth modal ke liye
     }, [dispatch]);
 
 
@@ -554,13 +553,11 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
         }
     }, []);
 
-    console.log(currentProject)
     return (
         // Design ke mutabiq page ka background color
         <div ref={mainContentRef} className="relative  min-h-screen p-4 sm:p-6 lg:p-8">
             <div className="max-w-screen-2xl mx-auto">
 
-                {/* Yahan aapka page header aur "Back" button aa sakta hai */}
                 <div className="mb-4 text-center">
                     <h1 className="text-[28px] lg:text-[44.8px]     font-serif text-[#3E2723]">{projectName}</h1>
                     <p className="text-[#8D6E63] italic lg:text-[19.2px]">{currentProject?.description}</p>
@@ -579,12 +576,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
                         {/* Top Action Buttons */}
 
                         <div className="flex justify-center gap-3">
-                            {/* <button
-                                onClick={loadReferenceImage}
-                                className="bg-[#8b795e] text-white border-none text-[12px] md:text-[16px] px-2 py-2 md:px-4 md:py-2 rounded cursor-pointer"
-                            >
-                                Load Image
-                            </button> */}
+                           
                             <button
                                 onClick={handleToggleCanvasSize}
                                 className="bg-blue-500 hidden text-white border-none text-[12px] md:text-[16px] px-2 py-2 md:px-4 md:py-2 rounded cursor-pointer xl:flex items-center gap-2"
@@ -651,17 +643,8 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
                                 </AlertDialogContent>
                             </AlertDialog>}
 
-                            {/* <button
-                                // onClick={() => setShowGrid(!showGrid)}
-                                className={`${true ? 'bg-[#5d4037]' : 'bg-[#8b795e]'
-                                    } text-white border-none text-[12px] md:text-[16px] px-2 py-2 md:px-4 md:py-2  rounded cursor-pointer flex items-center gap-2`}
-                            >
-                                <Grid size={16} />
-                                {true ? 'Hide Grid' : 'Show Grid'}
-                            </button> */}
-
+                           
                         </div>
-                        {/* Canvas Container (Aapki CSS classes ke sath) */}
 
                         <div className='text-[1rem] w-[90%] xl:w-full bg-[#F5F5DC] text-[#5D4037] px-4 py-4 rounded-[5px] shadow-md mt-4 mb-6'>
                             <p>Use the mouse wheel to zoom, right-click to pan, and left click to draw when zoomed in to at least 100%. <span className=''>Drag the drawings tools and canvas info boxes to wherever you like. Use the scale reference on the right and bottom sides of the viewport to keep scale while drawing.</span> </p>

@@ -1,20 +1,18 @@
 // src/components/modal/ConfirmationModal.tsx
 
-import React from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import React, { useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { LogOut } from 'lucide-react'; // Ek munasib icon
+import { LogOut } from 'lucide-react'; // Icon for confirmation
 
-// Props ke liye interface
 interface ConfirmationModalProps {
     isOpen: boolean;
     onClose: () => void;
     onConfirm: () => void;
     title: string;
     description: string;
-    confirmText?: string; // Optional: "Confirm" button ka text
-    cancelText?: string;  // Optional: "Cancel" button ka text
-    isLoading?: boolean; // Optional: Loading state ke liye
+    confirmText?: string; // Optional: "Confirm" button text
+    cancelText?: string;  // Optional: "Cancel" button text
+    isLoading?: boolean; // Optional: Loading state for confirmation
 }
 
 const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
@@ -27,32 +25,35 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
     cancelText = "Cancel",
     isLoading = false,
 }) => {
+    // Disable body scroll when the modal is open
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'auto';
+        }
+        return () => {
+            document.body.style.overflow = 'auto';
+        };
+    }, [isOpen]);
+
+    if (!isOpen) return null; // Do not render the modal if it's not open
+
     return (
-        <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="bg-[#5d4037] border-2 border-[#3e2723] text-white font-[Georgia, serif]">
-                <DialogHeader>
-                    <div className="flex justify-center items-center mb-4">
-                        <LogOut className="text-red-400" size={48} />
-                    </div>
-                    <DialogTitle className="text-2xl !text-white text-center">{title}</DialogTitle>
-                    <DialogDescription className="pt-4 text-base text-gray-300 text-center">
-                        {description}
-                    </DialogDescription>
-                </DialogHeader>
-                <DialogFooter className="mt-4 flex sm:justify-center">
-                    <Button onClick={onClose} variant="outline" className="cursor-pointer">
-                        {cancelText}
-                    </Button>
-                    <Button
-                        onClick={onConfirm}
-                        disabled={isLoading}
-                        className="cursor-pointer border-white bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
-                    >
-                        {isLoading ? "Logging out..." : confirmText}
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+        <div className="fixed inset-0 bg-black/40 bg-opacity-50 flex justify-center items-center z-50">
+            <div className="bg-[#5d4037] w-[90%] border-2 border-[#3e2723] text-white font-[Georgia, serif] p-6 rounded-lg shadow-lg  sm:w-[500px]">
+                <div className="flex justify-center items-center mb-4">
+                    <LogOut className="text-red-400" size={48} />
+                </div>
+                <h2 className="text-2xl !text-white text-center mb-4">{title}</h2>
+                <p className="text-white text-center mb-6">{description}</p>
+
+                {/* Buttons for Cancel and Confirm */}
+                <div className="flex justify-center space-x-4">
+                    <Button onClick={onClose} variant="outline" className="cursor-pointer"> {cancelText} </Button> <Button onClick={onConfirm} disabled={isLoading} className="cursor-pointer border-white bg-red-600 text-white hover:bg-red-700 disabled:opacity-50" > {isLoading ? "Logging out..." : confirmText} </Button>
+                </div>
+            </div>
+        </div>
     );
 };
 

@@ -82,13 +82,10 @@ export const joinProject = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      // Naya API endpoint: POST /api/projects/:projectId/join
       const response = await api.post(
         `${config?.endpoints?.JOIN_AS_CONTRIBUTOR}/${projectId}/join`,
         { userId }
       );
-
-      // Backend ab poora, updated project object wapas bhejega
       return response.data.data;
     } catch (error: any) {
       return rejectWithValue(

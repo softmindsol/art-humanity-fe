@@ -1,6 +1,5 @@
-// src/pages/SupportPage.tsx
 
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import DonationForm from '../stripe/DonationForm';
@@ -29,12 +28,10 @@ const SupportPage = () => {
     };
 
     return (
-        <div className="container mx-auto py-8">
+        <div className=" mx-auto py-8">
             <DonationForm onDonate={handleOnDonate} />
-
-            {/* --- PAYMENT MODAL (Bilkul pehle jaisa) --- */}
             <Dialog open={paymentState.isOpen} onOpenChange={() => setPaymentState({ ...paymentState, isOpen: false })}>
-                <DialogContent className="!bg-[#5d4037] border-2 border-[#3e2723] text-white font-[Georgia, serif] max-w-3xl z-[1050]">
+                <DialogContent className="!bg-[#037] border-2 border-[#3e2723] text-white font-[Georgia, serif] max-w-3xl">
                     <DialogHeader>
                         <DialogTitle className='!text-white'>Confirm Your Donation</DialogTitle>
                     </DialogHeader>

@@ -9,7 +9,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import { openAuthModal, closeAuthModal, selectIsAuthModalOpen, selectIsDonationModalOpen, closeDonationForm, openDonationForm } from '@/redux/slice/opeModal';
 import { useSocket } from '@/context/SocketContext';
 import { fetchNotifications, markNotificationsAsRead, markSingleNotificationRead } from '@/redux/action/notification';
-import { Bell, Heart, LogOut, Menu, UserCircle2, X } from 'lucide-react';
+import { Bell, FileText, Heart, Image, LogOut, Menu, PlayCircle, UserCircle2, Users, X } from 'lucide-react';
 import { addNotification } from '@/redux/slice/notification';
 import useOnClickOutside from '@/hook/useOnClickOutside';
 import { toast } from 'sonner';
@@ -18,6 +18,7 @@ import DonationForm from '../stripe/DonationForm';
 import CheckoutForm from '../stripe/CheckoutForm';
 import PaymentSuccessModal from '../modal/PaymentSuccessModal';
 import ConfirmationModal from '../modal/ConfirmationModal';
+import CustomModal from '../modal/CustomModal';
 
 const Header = () => {
   const isAuthModalOpen = useSelector(selectIsAuthModalOpen);
@@ -94,7 +95,7 @@ const Header = () => {
     //   onOpenDonationForm();
     // }
     // // Foran apne andar wala modal kholein
-    // setDonationState({ ...donationState, isFormOpen: true });
+    setDonationState({ ...donationState, isFormOpen: true });
     dispatch(openDonationForm())
   };
 
@@ -248,13 +249,13 @@ const Header = () => {
                           <ul className="space-y-1 flex flex-col ">
                             {notifications.map((notif: any) => (
                               <li
-                                key={notif._id}
+                                key={notif?._id}
                                 className={`p-2 rounded-md text-sm !mr-0 ${!notif.isRead ? 'bg-[#f1e6da] font-semibold ' : 'text-gray-600'} mb-2`}
                               >
                                 <Link to={`/project/${notif.project?.canvasId}`} onClick={() => handleNotificationClick(notif)}
                                 >
-                                  {notif.message}
-                                  <div className='text-xs text-gray-500 mt-1'>{new Date(notif.createdAt).toLocaleString()}</div>
+                                  {notif?.message}
+                                  <div className='text-xs text-gray-500 mt-1'>{new Date(notif?.createdAt).toLocaleString()}</div>
                                 </Link>
                               </li>
                             ))}
@@ -269,15 +270,15 @@ const Header = () => {
               </ul>
             </nav>
 
-            <div className="auth-buttons " style={{ zIndex: 2000 }}>
+            <div className="auth-buttons " style={{ zIndex: 2000 }} >
               {profile ? (
-                <>
+                <div >
 
                   <DropdownMenu >
                     <DropdownMenuTrigger asChild>
-                      {profile.avatar ? (
+                      {profile?.avatar ? (
                         <img
-                          src={profile.avatar}
+                          src={profile?.avatar}
                           alt="Avatar"
                           className="w-9 h-9 rounded-full object-cover cursor-pointer border-2 border-[#d4af37] shadow-md hover:scale-105 transition-transform"
                         />
@@ -285,7 +286,7 @@ const Header = () => {
                         <div
                           className="w-9 h-9 rounded-full bg-[#5d4037] text-white flex items-center justify-center font-bold cursor-pointer select-none transition-transform hover:scale-105 shadow-md"
                         >
-                          {profile.fullName.charAt(0).toUpperCase()}
+                          {profile?.fullName.charAt(0).toUpperCase()}
                         </div>
                       )}
                     </DropdownMenuTrigger>
@@ -294,8 +295,8 @@ const Header = () => {
                       className="w-60 bg-[#fef9f4] border border-[#d4af37] rounded-lg shadow-lg"
                     >
                       <DropdownMenuLabel>
-                        <div className="font-medium text-[#5d4037] ">{profile.fullName}</div>
-                        <div className="text-xs text-[#7e5d52]">{profile.email}</div>
+                        <div className="font-medium text-[#5d4037] ">{profile?.fullName}</div>
+                        <div className="text-xs text-[#7e5d52]">{profile?.email}</div>
                       </DropdownMenuLabel>
                       <DropdownMenuSeparator className="bg-[#d4af37]" />
 
@@ -326,7 +327,7 @@ const Header = () => {
                         <span>Logout</span>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
-                  </DropdownMenu></>
+                  </DropdownMenu></div>
               ) : (
                 <button
                   id="sign-in-btn"
@@ -379,16 +380,61 @@ const Header = () => {
 
           {/* Navigation Links */}
           <nav>
-            <ul className='flex flex-col gap-y-4'>
-              <li><NavLink to="/guideline" onClick={handleLinkClick} className="text-2xl font-semibold font-playfair text-[#3e2723]">Guideline</NavLink></li>
-              <li><NavLink to="/gallery" onClick={handleLinkClick} className="text-2xl font-semibold font-playfair text-[#3e2723]">Gallery</NavLink></li>
-              <li><NavLink to="/projects" onClick={handleLinkClick} className="text-2xl font-semibold font-playfair text-[#3e2723]">Contribute</NavLink></li>
-              <li><NavLink to="/demo" onClick={handleLinkClick} className="text-2xl font-semibold font-playfair text-[#3e2723]">Demo</NavLink></li>
+            <ul className="flex flex-col gap-y-4">
+              {/* Guideline Link with Icon */}
+              <li>
+                <NavLink
+                  to="/guideline"
+                  onClick={handleLinkClick}
+                  className="cursor-pointer text-[#5d4037] hover:bg-[#f1e6da] transition-colors !flex !items-center gap-2"
+                >
+                  <FileText size={24} />
+                  <span>Guideline</span>
+                </NavLink>
+              </li>
+
+              {/* Gallery Link with Icon */}
+              <li>
+                <NavLink
+                  to="/gallery"
+                  onClick={handleLinkClick}
+                  className="cursor-pointer text-[#5d4037] hover:bg-[#f1e6da] transition-colors !flex !items-center gap-2"
+                >
+                  <Image size={24} />
+                  <span>Gallery</span>
+                </NavLink>
+              </li>
+
+              {/* Contribute Link with Icon */}
+              <li>
+                <NavLink
+                  to="/projects"
+                  onClick={handleLinkClick}
+                  className="cursor-pointer text-[#5d4037] hover:bg-[#f1e6da] transition-colors !flex !items-center gap-2"
+                >
+                  <Users size={24} />
+                  <span>Contribute</span>
+                </NavLink>
+              </li>
+
+              {/* Demo Link with Icon */}
+              <li>
+                <NavLink
+                  to="/demo"
+                  onClick={handleLinkClick}
+                  className="cursor-pointer text-[#5d4037] hover:bg-[#f1e6da] transition-colors !flex !items-center gap-2"
+                >
+                  <PlayCircle size={24} />
+                  <span>Demo</span>
+                </NavLink>
+              </li>
+
+              {/* Support Us Link with Icon */}
               <span
-                // onClick={() => setDonationState({ ...donationState, isFormOpen: true })}
                 onClick={handleSupportClick}
-                className="cursor-pointer text-[#5d4037] hover:bg-[#f1e6da] transition-colors flex items-center gap-2"
+                className="cursor-pointer text-[#5d4037] hover:bg-[#f1e6da] transition-colors !flex !items-center gap-2"
               >
+                <Heart size={24} />
                 <span>Support Us</span>
               </span>
             </ul>
@@ -418,7 +464,7 @@ const Header = () => {
                   dispatch(openAuthModal()); // Auth modal kholein
                   handleLinkClick(); // Sidebar band karein
                 }}
-                className="w-full cursor-pointer py-2 bg-[#3e2723] text-[#ffff] rounded-lg font-semibold text-lg hover:opacity-75 transition-colors"
+                className="w-full cursor-pointer py-2 bg-[#3e2723] text-[#ffff] rounded-full font-semibold text-md hover:opacity-75 transition-colors"
               >
                 Sign In / Sign Up
               </button>
@@ -429,19 +475,23 @@ const Header = () => {
       </div>
 
 
-      {/* --- DONATION MODALS AB YAHAN HAIN --- */}
       {/* 1. Amount Input Wala Modal */}
-      <Dialog open={isDonationFormOpen}
+      {/* <Dialog open={isDonationFormOpen}
         onOpenChange={(isOpen) => {
           if (!isOpen) dispatch(closeDonationForm());
         }}>
         <DialogContent className="bg-[#5d4037] border-2 border-[#3e2723] text-white font-[Georgia, serif] max-w-3xl">
           <DonationForm onDonate={handleOnDonate} />
         </DialogContent>
-      </Dialog>
-
+      </Dialog> */}
+      <CustomModal
+        isOpen={donationState.isFormOpen}
+        onClose={() => { setDonationState({ ...donationState, isFormOpen :false}) }}
+      >
+        <DonationForm onDonate={handleOnDonate} />
+      </CustomModal>
       {/* 2. Card Input Wala Modal */}
-      <Dialog open={donationState.isCheckoutOpen} onOpenChange={(isOpen) => setDonationState({ ...donationState, isCheckoutOpen: isOpen })}>
+      {/* <Dialog open={donationState.isCheckoutOpen} onOpenChange={(isOpen) => setDonationState({ ...donationState, isCheckoutOpen: isOpen })}>
         <DialogContent className="!bg-[#5d4037] border-2 border-[#3e2723] text-white font-[Georgia, serif] max-w-3xl">
           <DialogHeader>
             <DialogTitle className='!text-white'>Confirm Your Donation</DialogTitle>
@@ -454,7 +504,19 @@ const Header = () => {
             />
           )}
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
+      <CustomModal
+        isOpen={donationState.isCheckoutOpen}
+        onClose={() => setDonationState({ ...donationState, isCheckoutOpen: false })}
+      >
+        {donationState.clientSecret && (
+          <CheckoutForm
+            clientSecret={donationState.clientSecret}
+            projectPrice={donationState.amount}
+            onPaymentSuccess={handlePaymentSuccess}
+          />
+        )}
+      </CustomModal>
       {/* Modal renders conditionally */}
       {isAuthModalOpen && <AuthModal isOpen={isAuthModalOpen} onClose={() => dispatch(closeAuthModal())} />}
       <PaymentSuccessModal

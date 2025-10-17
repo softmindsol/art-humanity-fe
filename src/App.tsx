@@ -55,12 +55,12 @@ function App() {
     <Elements stripe={stripePromise}>
     <Router>
       <SocketProvider>
-          {/* <div className="app-root"> */}
+          {/* <div className=""> */}
 
         
           <Header  />
         <ProjectProvider>
-            <main className=''>
+              <main className=''>
               <ScrollToTop />
 
             <Routes>
@@ -82,14 +82,19 @@ function App() {
           </main>
         </ProjectProvider>
        
+{
+  
 
-          <DonationPromptModal
+  
+            isPromptModalOpen && <div className='w-[90%] md:w-[100%]'><DonationPromptModal
                 isOpen={isPromptModalOpen}
                 onClose={() => setIsPromptModalOpen(false)}
                 onDonateClick={() => {
                   dispatch(openDonationForm())
                 }}
-            />
+              /></div>
+}
+       
           <Footer />
             {/* </div> */}
       </SocketProvider>

@@ -32,7 +32,8 @@ const AdminDashboard = () => {
     title: Yup.string()
       .required("Project title is required")
       .min(5, "Title must be at least 5 characters")
-      .max(20, "Title cannot exceed 20 characters"),
+      .max(20, "Title cannot exceed 20 characters")
+      .matches(/^[a-zA-Z0-9 ]*$/, "Title must not contain special characters"),
     description: Yup.string()
       .required("Description is required")
       .test("wordCount", "Description must be no more than 50 words", (value: any) => {
@@ -52,7 +53,7 @@ const AdminDashboard = () => {
       })
       .test("fileSize", "File size is too large. Maximum size is 2MB", (value: any) => {
         // Optional file size validation, if needed
-        return value && value.size <= 2 * 1024 * 1024; // Limit to 2MB
+        return value && value.size <= 1 * 1024 * 1024; // Limit to 2MB
       }),
   });
 
@@ -87,7 +88,7 @@ const AdminDashboard = () => {
       <div className="container mx-auto">
         {/* Header with Back Button */}
         <header className="flex items-center justify-between mb-6">
-          <h1 className="text-4xl font-bold text-[#5d4037]">Admin Dashboard</h1>
+          <h1 className="text-4xl font-bold text-[#5d4037]">Project Creation Panel </h1>
           <Button variant="outline" onClick={() => navigate("/projects")} className="bg-white/50 border-[#bcaaa4] hover:bg-white cursor-pointer text-[#3e2723]">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back

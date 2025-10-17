@@ -233,7 +233,6 @@ const KonvaCanvas = ({
             return;
         }
 
-        // Check karein ke koi contribution active hai ya nahi
         if (!activeContributionId) {
             toast.error("Please create or select a contribution first.");
             setActiveLine({ points: [] });
@@ -241,8 +240,7 @@ const KonvaCanvas = ({
             return;
         }
 
-        // --- INSTANT DRAW LOGIC ---
-        // (Aapka yeh code bilkul theek hai)
+     
         const tempCanvas = document.createElement('canvas');
         tempCanvas.width = virtualWidth;
         tempCanvas.height = virtualHeight;
@@ -271,8 +269,6 @@ const KonvaCanvas = ({
         // Preview line ko saaf karein
         setActiveLine({ points: [] });
 
-        // --- OPTIMISTIC PIXEL COUNT & BATCHING LOGIC ---
-        // (Aapka yeh code bhi bilkul theek hai)
         const strokeData = {
             strokePath: [...currentStrokePathRef.current],
             brushSize: brushState.size,
