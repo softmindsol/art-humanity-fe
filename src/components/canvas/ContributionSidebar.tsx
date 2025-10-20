@@ -255,7 +255,7 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
                             </div>
                         </div>
                         }
-                        {isAdmin && <ContributorsPanel
+                        {user?.role==='admin' && <ContributorsPanel
                             currentProject={currentProject}
                             loading={loading}
                             ref={contributorsDropdownRef}

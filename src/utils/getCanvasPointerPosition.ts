@@ -1,4 +1,3 @@
-// -------- YEH NAYA FUNCTION ADD KAREIN (KonvaCanvas.js ke andar) --------
 
 export const getCanvasPointerPosition = (stage:any) => {
   if (!stage) return { x: 0, y: 0 };

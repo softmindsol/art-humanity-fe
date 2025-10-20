@@ -707,11 +707,10 @@ const InfoBox = ({ zoom, worldPos, boundaryRef }: any) => {
         };
     }, [isDragging, boundaryRef]);
 
-    // --- RENDER ---
     return (
         <div
             ref={infoBoxRef}
-            className="absolute bg-white/90 p-3 top-0 -right-60 rounded-lg text-base text-[#5d4e37] border border-[#3e2723] shadow-lg select-none z-50"
+            className="absolute bg-white/90 p-3 top-0 -right-48 rounded-lg text-base text-[#5d4e37] border border-[#3e2723] shadow-lg select-none z-50"
             style={{
 
                 width: isMinimized ? 'auto' : '200px',
@@ -720,7 +719,6 @@ const InfoBox = ({ zoom, worldPos, boundaryRef }: any) => {
         >
             <div
                 className="w-full flex justify-between items-center gap-2"
-                style={{ cursor: isMinimized ? 'default' : isDragging ? 'grabbing' : 'grab' }}
                 onMouseDown={handleDragMouseDown}
             >
                 <p className="text-[#3e2723] text-lg font-bold m-0 whitespace-nowrap">Infobox</p>
