@@ -107,6 +107,12 @@ const ProfilePage = () => {
         formData.fullName !== (profile?.fullName || "") || !!formData.profileImage;
 
     const handleUpdate = () => {
+        const nameRegex = /^[a-zA-Z0-9\s\-_]+$/;
+
+        if (formData.fullName.trim() && !nameRegex.test(formData.fullName.trim())) {
+            toast.error("Display Name can only contain letters, numbers, spaces, hyphens, and underscores.");
+            return;
+        }
         setLoader(true);
         const data = new FormData();
         data.append("fullName", formData.fullName);
@@ -277,7 +283,7 @@ const ProfilePage = () => {
                                     <label htmlFor="profile-email">Email</label>
                                     <div className="input-with-button">
                                         <input type="email" id="profile-email" name="email" value={formData.email} disabled />
-                                        <button type="button" id="change-email-btn" className="btn-secondary" onClick={() => setShowEmailModal(true)}>Change Email</button>
+                                        <button type="button" id="change-email-btn" className="btn-secondary-profile" onClick={() => setShowEmailModal(true)}>Change Email</button>
                                     </div>
                                 </div>
 

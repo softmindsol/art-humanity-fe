@@ -39,15 +39,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         handleGoogleLogin
     } = useRegisterForm({ onClose });
 
-    console.log(googleLoading)
     // Disable modal if either login or sign-up is loading
     const isModalDisabled = loginLoading || loading;
 
-    console.log(activeTab)
     if (!isOpen) return null;
 
     return (
-        <div className="auth-modal fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+        <div className="auth-modal  fixed inset-0 z-50 flex items-center justify-center bg-black/30">
             <div className="auth-modal-content relative bg-white dark:bg-gray-900 p-6 rounded-lg w-full max-w-md">
 
                 {/* Overlay while loading */}
@@ -114,7 +112,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                 {showForgotPassword ? (
                     <ForgotPasswordForm setActiveTab={setActiveTab} submitted={submitted} setSubmitted={setSubmitted} onBackToSignIn={() => setShowForgotPassword(false)} />
                 ) : activeTab === 'sign-in' ? (
-                    <form className="auth-form" onSubmit={handleLoginSubmit}>
+                    <form className={` auth-form ${activeTab === 'sign-in' && '!max-h-[50vh] md:max-h-[80vh]'}   overflow-y-auto pr-2`} onSubmit={handleLoginSubmit}>
                         {/* Email */}
                         <div className="form-group mb-3">
                             <label>Email</label>
@@ -190,7 +188,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                     </form>
                 ) : (
                     /* Sign Up Form */
-                    <form className="auth-form h-[450px] !overflow-y-auto" onSubmit={handleSubmit}>
+                    <form className={`auth-form ${activeTab === 'sign-up' && '!max-h-[50vh] md:!max-h-[100vh]'} !overflow-y-auto`} onSubmit={handleSubmit}>
                         <div className="form-group mb-3">
                             <label>Display Name</label>
                             <input

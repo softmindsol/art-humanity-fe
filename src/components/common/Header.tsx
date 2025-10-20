@@ -193,7 +193,7 @@ const Header = () => {
                 <h1 className='text-[24px] text-[#333] font-bold'>MurArt</h1>
                 <p className="tagline">Collaborative Canvases of Human Expression</p>
               </div>
-            </Link> 
+            </Link>
           </div>
 
 
@@ -430,13 +430,13 @@ const Header = () => {
               </li>
 
               {/* Support Us Link with Icon */}
-              <span
+            {  user?._id && <span
                 onClick={handleSupportClick}
                 className="cursor-pointer text-[#5d4037] hover:bg-[#f1e6da] transition-colors !flex !items-center gap-2"
               >
                 <Heart size={24} />
                 <span>Support Us</span>
-              </span>
+              </span>}
             </ul>
           </nav>
 
@@ -452,7 +452,7 @@ const Header = () => {
                     handleLogout();
                     handleLinkClick(); // Sidebar band karein
                   }}
-                  className="w-full cursor-pointer py-2 bg-[#3e2723] text-white rounded-lg hover:opacity-75 transition-colors"
+                  className="w-full cursor-pointer py-2 bg-[#3e2723] text-white rounded-full hover:opacity-75 transition-colors"
                 >
                   Logout
                 </button>
@@ -486,7 +486,7 @@ const Header = () => {
       </Dialog> */}
       <CustomModal
         isOpen={donationState.isFormOpen}
-        onClose={() => { setDonationState({ ...donationState, isFormOpen :false}) }}
+        onClose={() => { setDonationState({ ...donationState, isFormOpen: false }) }}
       >
         <DonationForm onDonate={handleOnDonate} />
       </CustomModal>

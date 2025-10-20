@@ -65,7 +65,7 @@
 }
 
 .btn-secondary-profile {
-  background-color: var(--accent);
+  background-color: var(--primary);
   color: var(--primary-dark);
   padding: 8px 16px;
   border-radius: 4px;
@@ -73,6 +73,7 @@
   transition: all 0.3s ease;
   border: 1px solid var(--accent-dark);
   cursor: pointer;
+  color:white;
   font-family: "Source Serif Pro", Georgia, serif;
   font-size: 0.9rem;
 }
