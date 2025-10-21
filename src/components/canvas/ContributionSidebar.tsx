@@ -255,7 +255,7 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
                             </div>
                         </div>
                         }
-                        {user?.role==='admin' && <ContributorsPanel
+                        {user?.role === 'admin' && <ContributorsPanel
                             currentProject={currentProject}
                             loading={loading}
                             ref={contributorsDropdownRef}
@@ -263,7 +263,7 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
                             isDropdownOpen={isContributorsDropdownOpen}
                             onDropdownOpenChange={setIsContributorsDropdownOpen}
                         />}
-                      
+
                         <div className=" text-sm mb-1">
                             {user?._id && <Button
                                 onClick={handleCreateNewContribution}

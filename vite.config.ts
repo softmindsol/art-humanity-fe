@@ -19,7 +19,7 @@ export default defineConfig({
       "localhost",
       "127.0.0.1",
       "murart.io",
-      "d7791bf4ebcd.ngrok-free.app"
+      "4de6697eefe2.ngrok-free.app",
     ],
   },
 });

@@ -63,7 +63,7 @@ const CheckoutForm: React.FC<CheckoutFormProps> = ({ clientSecret, projectPrice,
 
     return (
         <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="p-3 border rounded-md bg-white">
+            <div className="p-3 border rounded-md bg-white mt-5">
                 <CardElement onChange={handleCardChange} />
             </div>
             <Button

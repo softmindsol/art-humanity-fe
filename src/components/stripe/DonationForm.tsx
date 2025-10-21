@@ -107,7 +107,7 @@ const DonationForm: React.FC<DonationFormProps> = ({ onDonate }) => {
                     placeholder="5.00"
                     min="1"
                     step="0.01" // Allow decimal input for cents
-                    className="text-lg"
+                    className="text-lg "
                 />
             </div>
             <div className='flex items-center justify-center mt-3 '>

@@ -188,7 +188,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                     </form>
                 ) : (
                     /* Sign Up Form */
-                    <form className={`auth-form ${activeTab === 'sign-up' && '!max-h-[50vh] md:!max-h-[100vh]'} !overflow-y-auto`} onSubmit={handleSubmit}>
+                    <form className={`auth-form ${activeTab === 'sign-up' && '!max-h-[50vh] md:!max-h-[60vh]'} !overflow-y-auto`} onSubmit={handleSubmit}>
                         <div className="form-group mb-3">
                             <label>Display Name</label>
                             <input

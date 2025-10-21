@@ -51,7 +51,7 @@ const AdminDashboard = () => {
         // Check if file type is PNG, JPEG, or WebP
         return value && (value.type === "image/jpeg" || value.type === "image/png" || value.type === "image/webp");
       })
-      .test("fileSize", "File size is too large. Maximum size is 2MB", (value: any) => {
+      .test("fileSize", "File size is too large. Maximum size is 1MB", (value: any) => {
         // Optional file size validation, if needed
         return value && value.size <= 1 * 1024 * 1024; // Limit to 2MB
       }),

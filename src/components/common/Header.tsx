@@ -6,14 +6,13 @@ import { getUserById, logoutUser } from '@/redux/action/auth';
 import type { RootState } from '@/redux/store';
 import useAppDispatch from '@/hook/useDispatch';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '../ui/dropdown-menu';
-import { openAuthModal, closeAuthModal, selectIsAuthModalOpen, selectIsDonationModalOpen, closeDonationForm, openDonationForm } from '@/redux/slice/opeModal';
+import { openAuthModal, closeAuthModal, selectIsAuthModalOpen, openDonationForm } from '@/redux/slice/opeModal';
 import { useSocket } from '@/context/SocketContext';
 import { fetchNotifications, markNotificationsAsRead, markSingleNotificationRead } from '@/redux/action/notification';
 import { Bell, FileText, Heart, Image, LogOut, Menu, PlayCircle, UserCircle2, Users, X } from 'lucide-react';
 import { addNotification } from '@/redux/slice/notification';
 import useOnClickOutside from '@/hook/useOnClickOutside';
 import { toast } from 'sonner';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../ui/dialog';
 import DonationForm from '../stripe/DonationForm';
 import CheckoutForm from '../stripe/CheckoutForm';
 import PaymentSuccessModal from '../modal/PaymentSuccessModal';
@@ -24,7 +23,6 @@ const Header = () => {
   const isAuthModalOpen = useSelector(selectIsAuthModalOpen);
   const dispatch = useAppDispatch();
   const { user, profile } = useSelector((state: RootState) => state.auth);
-  const isDonationFormOpen = useSelector(selectIsDonationModalOpen);
 
   const notificationRef = useRef<HTMLDivElement>(null);
   // --- DRAWER STATE ---
@@ -58,12 +56,12 @@ const Header = () => {
   const confirmLogout = async () => {
     setIsLoggingOut(true);
     try {
-      await dispatch(logoutUser()).unwrap();
-      // Logout kamyab hone par
       localStorage.clear();
       window.location.href = '/'; // Redirect to home page for a full refresh
+      await dispatch(logoutUser()).unwrap();
+
     } catch (err) {
-      toast.error("Logout failed. Please try again.");
+      // toast.error("Logout failed. Please try again.");
       console.error("Logout failed", err);
     } finally {
       setIsLoggingOut(false);
@@ -97,6 +95,7 @@ const Header = () => {
     // // Foran apne andar wala modal kholein
     setDonationState({ ...donationState, isFormOpen: true });
     dispatch(openDonationForm())
+    handleLinkClick();
   };
 
 
@@ -339,7 +338,7 @@ const Header = () => {
               )}
             </div>
           </div>
-          <div className='md:hidden mr-3'>
+          <div className='lg:hidden mr-3'>
             <button onClick={() => setIsSidebarOpen(true)}>
               <Menu size={28} className='cursor-pointer' />
             </button>
@@ -430,7 +429,7 @@ const Header = () => {
               </li>
 
               {/* Support Us Link with Icon */}
-            {  user?._id && <span
+              {user?._id && <span
                 onClick={handleSupportClick}
                 className="cursor-pointer text-[#5d4037] hover:bg-[#f1e6da] transition-colors !flex !items-center gap-2"
               >

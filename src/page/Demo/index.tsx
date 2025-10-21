@@ -535,7 +535,35 @@ const DemoCanvas: React.FC = () => {
         };
     }, [viewportCanvasRef.current, isDrawing, isPanning]);
 
+    useEffect(() => {
+        const canvasElement = viewportCanvasRef.current;
+        if (!canvasElement) return;
 
+        const preventDefault = (e: Event) => e.preventDefault();
+
+        const handleMouseEnter = () => {
+            document.body.style.overflow = 'hidden';
+            // Wheel event ko capture karke rokein taake page scroll na ho
+            // 'passive: false' zaroori hai taake preventDefault() kaam kare
+            window.addEventListener('wheel', preventDefault, { passive: false });
+        };
+
+        const handleMouseLeave = () => {
+            document.body.style.overflow = 'auto';
+            window.removeEventListener('wheel', preventDefault);
+        };
+
+        canvasElement.addEventListener('mouseenter', handleMouseEnter);
+        canvasElement.addEventListener('mouseleave', handleMouseLeave);
+
+        // Cleanup: Component unmount hone par listeners aur style ko reset karein
+        return () => {
+            canvasElement.removeEventListener('mouseenter', handleMouseEnter);
+            canvasElement.removeEventListener('mouseleave', handleMouseLeave);
+            window.removeEventListener('wheel', preventDefault);
+            document.body.style.overflow = 'auto';
+        };
+    }, []); // Sirf ek baar chalayei
     if (!brushState || !canvasState) {
         return <div>Loading Canvas...</div>;
     }
@@ -592,6 +620,8 @@ const DemoCanvas: React.FC = () => {
                             border: '4px solid #4d2d2d',
                             borderRadius: '4px',
                             backgroundColor: '#ffffff',
+                            maxWidth: '100%', // Responsive banayein
+                            maxHeight: '100%', // Responsive banayein
                         }}
                         onMouseDown={handleMouseDown}
                         onMouseMove={handleMouseMove}

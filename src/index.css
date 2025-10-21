@@ -92,6 +92,8 @@ a:hover {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   position: sticky;
   top: 0;
+  /* left: 0;
+  right: 0; */
   z-index: 40;
   border-bottom: 1px solid var(--accent-dark);
 }
@@ -503,18 +505,13 @@ nav ul li a.active {
 }
 
 /* Extra adjustments for bohat choti screens (480px se kam) */
-@media (max-width: 767px) {
-  /* .logo-text h1 {
-     display:none;
+@media (max-width: 768px) {
 
-}
-.tagline{
-    display: none;
-
-} */
   .header-right {
     display: none;
-  }
+  }}
+@media (max-width: 767px) {
+
   header {
     display: flex;
     flex-direction: row !important;
@@ -713,11 +710,11 @@ footer {
 }
 
 @media (max-width: 1024px) {
-  header {
+  /* header {
     flex-direction: column;
     align-items: center;
     min-width: 100%;
-  }
+  } */
   .canvas-drawing-area {
     width: 100%;
     max-width: 1024px;
