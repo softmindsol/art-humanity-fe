@@ -41,7 +41,7 @@ const AdminDashboard = () => {
           const wordCount = value.trim().split(/\s+/).length; // Split by spaces and count words
           return wordCount <= 50; // Validate that word count is 50 or fewer
         }
-        return true; // Allow empty field, since it's already validated by `.required()`
+        return true; 
       }), canvasId: Yup.string().required("Canvas ID is required"),
     width: Yup.number().required("Width is required").min(1, "Width must be a positive number"),
     height: Yup.number().required("Height is required").min(1, "Height must be a positive number"),
