@@ -2,11 +2,13 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
-import { Brush, Eraser, Move, Minus, Plus, Baseline } from 'lucide-react';
+import { Brush, Eraser, Move, Minus, Plus, Baseline, Pipette } from 'lucide-react';
 import {
     setBrushColor,
     setCurrentBrush,
-    setBrushSize
+    setBrushSize,
+    selectRecentColors,
+    addRecentColor
 } from '@/redux/slice/contribution';
 import { selectCurrentBrush } from '@/redux/slice/contribution';
 import useAppDispatch from '@/hook/useDispatch';
@@ -17,16 +19,23 @@ import { useMediaQuery } from '@/hook/useMediaQuery';
 const Toolbox = ({ boundaryRef }: any) => {
     const dispatch = useAppDispatch();
     const brushState = useSelector(selectCurrentBrush);
-
+    const recentColors = useSelector(selectRecentColors);
     const [position, setPosition] = useState({ x: 100, y: 400 });
     const [isDragging, setIsDragging] = useState(false);
     const dragOffsetRef = useRef({ x: 0, y: 0 });
     const toolboxRef = useRef<HTMLDivElement>(null);
-
     // --- MINIMIZE LOGIC ---
     const [isMinimized, setIsMinimized] = useState(false);
     const isSmallScreen = useMediaQuery(1440); // 1440px par check karega
 
+
+
+
+
+    const handleColorFinalized = (hslColor:any) => {
+        // Dispatch the action to add this color to the recent colors list
+        dispatch(addRecentColor(hslColor));
+    };
     const handleDragMouseDown = useCallback((e: React.MouseEvent) => {
         if (!toolboxRef.current) return;
         const toolboxRect = toolboxRef.current.getBoundingClientRect();
@@ -86,32 +95,40 @@ const Toolbox = ({ boundaryRef }: any) => {
         return { r: Math.round((r + m) * 255), g: Math.round((g + m) * 255), b: Math.round((b + m) * 255), a: 1 };
     };
 
-    const handleColorChange = (e: React.MouseEvent) => {
-        const rect = e.currentTarget.getBoundingClientRect();
 
-        // Step 1: Click ki position ko wheel ke center ke hisab se calculate karein
+    const handleHueChange = (e: React.MouseEvent) => {
+        const rect = e.currentTarget.getBoundingClientRect();
         const centerX = rect.left + rect.width / 2;
         const centerY = rect.top + rect.height / 2;
         const clickX = e.clientX - centerX;
         const clickY = e.clientY - centerY;
 
-        // ===== YEH NAYI AUR BEHTAR CALCULATION HAI =====
-        // Step 2: atan2 ko aisy coordinates dein jo top se shuru hon aur clockwise ghumein
         const angleInRadians = Math.atan2(clickX, -clickY);
-
-        // Step 3: Radians ko degrees mein convert karein
         let hue = (angleInRadians * 180) / Math.PI;
+        if (hue < 0) hue += 360;
 
-        // Step 4: Negative values ko positive banayein (0-360 range)
-        if (hue < 0) {
-            hue += 360;
-        }
+        // Ab sirf 'h' (hue) ko update karne ke liye dispatch karein
+        dispatch(setBrushColor({ h: hue }));
+        handleColorFinalized({ ...brushState.color, h: hue });
 
-        const newColor = hslToRgb(hue, 100, 50);
-        dispatch(setBrushColor(newColor));
     };
 
-    const currentColorString = `rgba(${brushState.color.r}, ${brushState.color.g}, ${brushState.color.b}, ${brushState.color.a})`;
+    const handleLightnessChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const lightness = Number(e.target.value);
+        dispatch(setBrushColor({ l: lightness }));
+        handleColorFinalized({ ...brushState.color, l: lightness });
+
+    };
+    const handleRecentColorClick = (hslColor:any) => {
+        dispatch(setBrushColor(hslColor));
+    };
+    // Mojooda HSL color ko RGB string mein convert karein taake preview mein dikha sakein
+    const rgbColor = hslToRgb(brushState.color.h, brushState.color.s, brushState.color.l);
+    const currentColorString = `rgba(${rgbColor.r}, ${rgbColor.g}, ${rgbColor.b}, 1)`;
+
+    // Lightness slider ke background ke liye dynamic gradient banayein
+    const lightnessGradient = `linear-gradient(to right, black, hsl(${brushState.color.h}, 100%, 50%), white)`;
+
 
     return (
         <div
@@ -146,10 +163,10 @@ const Toolbox = ({ boundaryRef }: any) => {
             </div>
 
            {!isMinimized &&
-            <div className=''>
+                <div className='flex flex-col gap-4'>
             <div className="flex gap-2">
-                {(['brush', 'eraser', 'line'] as const).map((mode) => {
-                    const Icon = { brush: Brush, eraser: Eraser, line: Baseline }[mode];
+                        {(['brush', 'eraser', 'line','picker'] as const).map((mode) => {
+                            const Icon = { brush: Brush, eraser: Eraser, line: Baseline, picker: Pipette }[mode];
                     const isActive = brushState.mode === mode;
                     return (
                         <button key={mode} onClick={() => dispatch(setCurrentBrush({ mode }))} title={mode.charAt(0).toUpperCase() + mode.slice(1)} className={`flex-1 p-2 border border-[#8b795e] rounded flex justify-center transition-colors ${isActive ? 'bg-[#8b795e] text-white' : 'bg-white text-[#8b795e] hover:bg-gray-200'}`}>
@@ -157,18 +174,35 @@ const Toolbox = ({ boundaryRef }: any) => {
                         </button>
                     );
                 })}
-                <button onClick={() => dispatch(setCurrentBrush({ mode: 'move' }))} title="Move" className={`flex-1 p-2 border border-[#8b795e] rounded flex justify-center transition-colors ${brushState.mode === 'move' ? 'bg-[#8b795e] text-white' : 'bg-white text-[#8b795e] hover:bg-gray-200'}`}>
-                    <Move size={18} />
-                </button>
+              
+                       
             </div>
-
+                    {recentColors.length > 0 && (
+                        <div>
+                            <label className="text-sm font-bold !text-[#212121] mb-2 block">Recent Colors</label>
+                            <div className="grid grid-cols-5 gap-2">
+                                {recentColors.map((hslColor: any, index: any) => {
+                                    const rgb = hslToRgb(hslColor.h, hslColor.s, hslColor.l);
+                                    const bgColor = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+                                    return (
+                                        <button
+                                            key={index}
+                                            onClick={() => handleRecentColorClick(hslColor)}
+                                            className="w-full h-8 rounded border border-gray-300 cursor-pointer"
+                                            style={{ backgroundColor: bgColor }}
+                                            title={`Select color (H:${Math.round(hslColor.h)}, S:${hslColor.s}, L:${hslColor.l})`}
+                                        />
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
             <div>
                 <label className="text-sm font-bold !text-[#212121] mb-2 block">Color</label>
                 <div
                     className="relative w-[150px] h-[150px] mx-auto rounded-full cursor-pointer border-2 border-gray-300"
-                    // Is CSS ko bilkul aisy hi rehne dein, red top par
                     style={{ background: 'conic-gradient(red, yellow, lime, cyan, blue, magenta, red)' }}
-                    onClick={handleColorChange}
+                            onClick={handleHueChange} // Yeh 'hue' set karega
                 >
                     <div
                         className="absolute w-[40px] h-[40px] rounded-full border-4 border-white shadow-md"
@@ -176,7 +210,18 @@ const Toolbox = ({ boundaryRef }: any) => {
                     />
                 </div>
             </div>
-
+                    <div>
+                        <label className="text-sm font-bold !text-[#212121] mb-2 block">Shade (Lightness)</label>
+                        <input
+                            type="range"
+                            min="0"  // 0% = Black
+                            max="100" // 100% = White
+                            value={brushState.color.l}
+                            onChange={handleLightnessChange}
+                            className="w-full shade-slider"
+                            style={{ background: lightnessGradient }}
+                        />
+                    </div>
             <div>
                 <label className="text-sm font-bold !text-[#212121] mb-2 block">Brush Size: {brushState.size}px</label>
                 <input
@@ -187,7 +232,23 @@ const Toolbox = ({ boundaryRef }: any) => {
                     onChange={(e) => dispatch(setBrushSize(Number(e.target.value)))}
                     className="w-full"
                 />
-            </div></div>}
+            </div>
+                    <style>{`
+                    .shade-slider {
+                        -webkit-appearance: none;
+                        appearance: none;
+                        width: 100%;
+                        height: 15px;
+                        border-radius: 5px;
+                        border: 1px solid #ccc;
+                        outline: none;
+                        cursor: pointer;
+                    }
+                    .shade-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 2px solid #5d4037; cursor: pointer; }
+                    .shade-slider::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 2px solid #5d4037; cursor: pointer; }
+                `}</style>
+            </div>}
+
         </div>
     );
 };

@@ -13,7 +13,7 @@ const formatDate = (dateString: any) => {
 };
 
 const ContributionsList = ({
-
+    isContributor,
     contributions,
     selectedContributionId,
     onContributionSelect,
@@ -104,7 +104,7 @@ const ContributionsList = ({
                 }
             }, 100); // 100ms ka chota sa delay
         }
-    }, [selectedContributionId, listItemRefs]);
+    }, [selectedContributionId, listItemRefs, activeContributionId]);
 
     if ((!contributions || contributions.length === 0) && !isLoading) {
         return <div className="p-4 text-center text-gray-500">No project contributions</div>;
@@ -115,7 +115,9 @@ const ContributionsList = ({
             {contributions?.map((contrib: any) => {
                 const isSelected = contrib?._id === selectedContributionId;
                 const isActive = contrib?._id === activeContributionId; // <-- Check if this is the active one
-
+                if (isActive) {
+                    console.log(`[List] Item ${contrib._id} IS ACTIVE.`);
+                }
                 const artistName = contrib.userId?.fullName || 'Artist';
                 const totalVotes = (contrib.upvotes || 0) + (contrib.downvotes || 0);
                 const downvotePercentage = totalVotes === 0 ? 0 : ((contrib.downvotes || 0) / totalVotes) * 100;
@@ -134,8 +136,12 @@ const ContributionsList = ({
                                 listItemRefs.current[contrib._id] = el;
                             }
                         }}
-                        className={`bg-white rounded-lg border transition-all shadow-sm p-2 cursor-pointer ${isActive ? 'border-2 border-blue-500' : 'border-gray-200'} ${isSelected ? 'border-[#a1887f] shadow-lg' : 'border-gray-200 hover:border-[#d7ccc8]'
-                            }`}
+                        className={`bg-white rounded-lg border transition-all shadow-sm p-2 cursor-pointer  ${isActive
+                                ? 'border-2 border-blue-500' // If it's ACTIVE, always apply this
+                                : isSelected
+                                    ? 'border-[#a1887f] shadow-lg' // Othewise, if it's SELECTED, apply this
+                                    : 'border-gray-200 hover:border-[#d7ccc8]' // Otherwise, apply the default
+        }`}
                         onClick={() => onContributionSelect(contrib._id)}
                     >
                         {/* Header */}
@@ -172,10 +178,10 @@ const ContributionsList = ({
                         {/* Voting and Actions */}
                         <div className="flex justify-between items-center bg-[#f8f0e3] p-1 rounded-[2px] mt-2">
                             <div className="flex items-center justify-center gap-3 w-full">
-                                <button disabled={isLoadingVoted} onClick={(e) => handleVote(e, contrib._id, 'up')} className="flex text-[14px] items-center gap-1 text-[#5d4037] cursor-pointer">
-                                    ▲ <span className="font-bold">{contrib.upvotes || 0}</span>
+                                <button title={!isContributor ? "Only contributors can vote" : "Upvote"} disabled={isLoadingVoted || !isContributor} onClick={(e) => handleVote(e, contrib._id, 'up')} className="flex text-[14px] items-center gap-1 text-[#5d4037] cursor-pointer cursor-pointer disabled:cursor-not-allowed disabled:opacity-50">
+                                    ▲ <span  className="font-bold" >{contrib.upvotes || 0}</span>
                                 </button>
-                                <button disabled={isLoadingVoted} onClick={(e) => handleVote(e, contrib._id, 'down')} className="flex text-[14px] items-center gap-1 text-[#f44336] cursor-pointer">
+                                <button disabled={isLoadingVoted || !isContributor} title={!isContributor ? "Only contributors can vote" : "Downvote"} onClick={(e) => handleVote(e, contrib._id, 'down')} className="flex text-[14px] items-center gap-1 text-[#f44336] cursor-pointer cursor-pointer disabled:cursor-not-allowed disabled:opacity-50">
                                     ▼ <span className="font-bold">{contrib.downvotes || 0}</span>
                                     <span className=" text-[#654321] font-semibold">({downvotePercentage.toFixed(1)}%)</span>
                                 </button>
@@ -198,3 +204,4 @@ const ContributionsList = ({
 };
 
 export default React.memo(ContributionsList);
+ 

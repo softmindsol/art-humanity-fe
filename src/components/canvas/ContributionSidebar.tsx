@@ -1,7 +1,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import ContributionsList from './ContributionsList';
-import { getContributionsByProject } from '@/redux/action/contribution';
+import { createEmptyContribution, getContributionsByProject } from '@/redux/action/contribution';
 import useAuth from '@/hook/useAuth';
 import useAppDispatch from '@/hook/useDispatch';
 import {
@@ -14,7 +14,6 @@ import { AddContributorModal } from '../modal/AddContributorModal';
 import useOnClickOutside from '@/hook/useOnClickOutside';
 import CustomSelect from '../common/CustomSelect';
 import { toast } from 'sonner';
-import api from '@/api/api';
 import { PlusCircle } from 'lucide-react';
 import { Button } from '../ui/button';
 
@@ -22,7 +21,7 @@ import { Button } from '../ui/button';
 const SIDEBAR_WIDTH = 350; // Sidebar ki width ko ek variable mein rakhein
 const MAX_CONTRIBUTIONS_LIMIT = 10; // Limit ko yahan define karein
 
-const ContributionSidebar = ({ projectId, selectedContributionId, onContributionSelect, listItemRefs, onGuestVoteAttempt, isOpen, setIsOpen }: any) => {
+const ContributionSidebar = ({ projectId,selectedContributionId, isContributor,onContributionSelect, listItemRefs, onGuestVoteAttempt, isOpen, setIsOpen }: any) => {
     const dispatch = useAppDispatch();
     const { user } = useAuth();
     const { currentProject } = useSelector((state: any) => state.projects); // Project ka data hasil karein
@@ -55,9 +54,7 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
     }, [contributions, user?._id]);
 
     const isLimitReached = userContributionCount >= MAX_CONTRIBUTIONS_LIMIT;
-    // -----------------------------
 
-    // --- YAHAN OPTIONS KA EK ARRAY BANAYEIN ---
     const filterOptions = [
         { value: 'newest', label: 'Newest First' },
         { value: 'oldest', label: 'Oldest First' },
@@ -74,7 +71,6 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
     });
 
     // === MASTER useEffect for Data Fetching ===
-    // Yeh useEffect ab filter, projectId, aur activeTab teeno par chalega.
     useEffect(() => {
         if (projectId) {
 
@@ -95,20 +91,14 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
     const handleCreateNewContribution = async () => {
         setIsCreateLoading(true);
         try {
-            // Call our new backend endpoint to create an empty contribution
-            const response = await api.post('/contributions', { projectId, userId: user?._id });
-            const newContribution = response.data.data;
-
-            // No need to dispatch addContributionToState, the socket event will handle it
-            // For now, let's add it manually for immediate feedback
-            dispatch(addContributionToState(newContribution));
-
-            // Automatically set the new contribution as the active one
-            dispatch(setActiveContribution(newContribution._id));
+        
+           await dispatch(createEmptyContribution({ projectId, userId: user?._id })).unwrap();
+            // dispatch(setActiveContribution(response._id));
 
             toast.success("New contribution created. You can start drawing!");
 
-        } catch (err: any) {
+        } 
+       catch (err: any) {
             toast.error(err.response?.data?.message || "Failed to create contribution.");
         } finally {
             setIsCreateEmptyContributionLoading(false);
@@ -267,12 +257,17 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
                         <div className=" text-sm mb-1">
                             {user?._id && <Button
                                 onClick={handleCreateNewContribution}
-                                disabled={isCreateLoading || isLimitReached}
-                                title={isLimitReached ? `You have reached the limit of ${MAX_CONTRIBUTIONS_LIMIT} contributions.` : "Create a new contribution"}
+                                disabled={isCreateLoading || isLimitReached || !isContributor}
+                                title={
+                                    !isContributor
+                                        ? "You must join as a contributor to create contributions."
+                                        : (isLimitReached ? `You have reached the limit of ${MAX_CONTRIBUTIONS_LIMIT} contributions.` : "Create a new contribution")
+                                }
                                 className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <PlusCircle className="mr-2 h-4 w-4" />
                                 {isCreateLoading ? 'Creating...' : 'New Contribution'}
+                                
                             </Button>}
                             {isLimitReached && (
                                 <p className="text-xs text-red-600 text-center mt-2">
@@ -287,12 +282,14 @@ const ContributionSidebar = ({ projectId, selectedContributionId, onContribution
                             selectedContributionId={selectedContributionId}
                             // onContributionSelect={onContributionSelect}
                             listItemRefs={listItemRefs}
+                            isContributor={isContributor} 
+                            onContributionSelect={onContributionSelect}
                             projectId={projectId}
                             onGuestVoteAttempt={onGuestVoteAttempt}
                             loading={loading} setLoading={setLoading}
                             isLoading={isLoading}
                             activeContributionId={activeContributionId} // <-- Pass the active ID
-                            onContributionSelect={handleContributionClick} // <-- Pass the new handler
+                            // onContributionSelect={handleContributionClick} // <-- Pass the new handler
 
                         />
                         {/* Loading Indicator */}

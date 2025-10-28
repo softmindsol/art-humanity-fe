@@ -483,7 +483,7 @@ const Header = () => {
           <DonationForm onDonate={handleOnDonate} />
         </DialogContent>
       </Dialog> */}
-      <CustomModal
+      <CustomModal 
         isOpen={donationState.isFormOpen}
         onClose={() => { setDonationState({ ...donationState, isFormOpen: false }) }}
       >

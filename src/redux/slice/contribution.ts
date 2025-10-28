@@ -11,6 +11,7 @@ import {
   batchCreateContributions,
   fetchContributionsByTiles,
   addStrokes,
+  createEmptyContribution,
 } from "../action/contribution";
 
 // Naya, saaf suthra initialState
@@ -23,9 +24,12 @@ const initialState = {
 
   currentBrush: {
     size: 3,
-    color: { r: 0, g: 0, b: 0, a: 1 },
+    // color: { r: 0, g: 0, b: 0, a: 1 },
+    color: { h: 0, s: 100, l: 50 },
     mode: "brush",
   },
+  recentColors: [], 
+
   currentCanvas: {
     resolution: 1,
     size: 1024,
@@ -89,7 +93,12 @@ const paintPixelSlice = createSlice({
       state.currentBrush.size = action.payload;
     },
     setBrushColor: (state, action) => {
-      state.currentBrush.color = action.payload;
+      console.log("state.currentBrush.color:", action.payload);
+
+      state.currentBrush.color = {
+        ...state.currentBrush.color,
+        ...action.payload,
+      };
     },
     setBrushMode: (state, action) => {
       state.currentBrush.mode = action.payload;
@@ -172,7 +181,7 @@ const paintPixelSlice = createSlice({
     },
     clearAllContributionsFromState: (state) => {
       state.canvasData = [];
-          state.activeContributionId = null;
+      state.activeContributionId = null;
       state.pendingStrokes = [];
     },
     removeMultipleContributionsFromState: (state, action) => {
@@ -201,31 +210,50 @@ const paintPixelSlice = createSlice({
         });
       }
     },
-    appendStrokesToContribution: (state:any, action) => {
-     const { contributionId, newStrokes } = action.payload;
-    
-    // Step 1: Find the index of the contribution that needs to be updated.
-    const index = state.canvasData.findIndex((c:any) => c._id === contributionId);
+    addRecentColor: (state: any, action: any) => {
+      const newColor = action.payload; // An HSL object {h, s, l}
 
-    // Step 2: If the contribution is found...
-    if (index !== -1) {
+      // 1. Remove any existing instance of the same color to avoid duplicates
+      // We'll compare by converting to a string for simplicity
+      const newColorString = JSON.stringify(newColor);
+      const filtered = state.recentColors.filter(
+        (c: any) => JSON.stringify(c) !== newColorString
+      );
+
+      // 2. Add the new color to the beginning of the array
+      const updatedColors = [newColor, ...filtered];
+
+      // 3. Keep only the 10 most recent colors
+      state.recentColors = updatedColors.slice(0, 10);
+    },
+
+    appendStrokesToContribution: (state: any, action) => {
+      const { contributionId, newStrokes } = action.payload;
+
+      // Step 1: Find the index of the contribution that needs to be updated.
+      const index = state.canvasData.findIndex(
+        (c: any) => c._id === contributionId
+      );
+
+      // Step 2: If the contribution is found...
+      if (index !== -1) {
         // Step 3: Create a NEW contribution object.
         const updatedContribution = {
-            // Copy all the old properties from the existing contribution
-            ...state.canvasData[index],
-            // Create a NEW strokes array by combining the old strokes and the new ones
-            strokes: [...state.canvasData[index].strokes, ...newStrokes],
+          // Copy all the old properties from the existing contribution
+          ...state.canvasData[index],
+          // Create a NEW strokes array by combining the old strokes and the new ones
+          strokes: [...state.canvasData[index].strokes, ...newStrokes],
         };
 
         // Step 4: Create a NEW canvasData array and replace the old
         // contribution at the correct index with our new, updated version.
         state.canvasData = [
-            ...state.canvasData.slice(0, index), // All items before the one we're updating
-            updatedContribution,                 // Our updated item
-            ...state.canvasData.slice(index + 1),  // All items after the one we're updating
+          ...state.canvasData.slice(0, index), // All items before the one we're updating
+          updatedContribution, // Our updated item
+          ...state.canvasData.slice(index + 1), // All items after the one we're updating
         ];
-    }
-  }
+      }
+    },
   },
 
   extraReducers: (builder) => {
@@ -373,7 +401,7 @@ const paintPixelSlice = createSlice({
         state.canvasData = [];
         // Pending strokes ko bhi saaf karein
         state.pendingStrokes = [];
-       
+
         state.activeContributionId = null;
       })
       .addCase(clearCanvas.rejected, (state, action) => {
@@ -397,6 +425,24 @@ const paintPixelSlice = createSlice({
           state.canvasData.push(...uniqueNewContributions);
         }
       );
+
+    builder
+      .addCase(createEmptyContribution.pending, (state: any) => {
+        // Optional: Aap yahan loading state set kar sakte hain
+      })
+      .addCase(createEmptyContribution.fulfilled, (state: any, action) => {
+        const newContribution = action.payload;
+
+        // Step 1: Nayi contribution ko list mein add karein
+        state.canvasData.push(newContribution);
+
+        // Step 2: Foran isi nayi contribution ko "active" set kar dein
+        state.activeContributionId = newContribution._id;
+      })
+      .addCase(createEmptyContribution.rejected, (state, action) => {
+        // Optional: Error handle karein
+      });
+
     builder
       .addCase(addStrokes.fulfilled, (state: any, action) => {
         const updatedContribution = action.payload;
@@ -445,12 +491,14 @@ export const {
   addContributionToState,
   updateContributionInState,
   addPendingStrokes,
-  appendStrokesToContribution
+  appendStrokesToContribution,
+  addRecentColor,
 } = paintPixelSlice.actions;
 
 // Selectors
 export const selectActiveContributionId = (state: any) =>
   state.paintPixel.activeContributionId;
+export const selectRecentColors = (state: any) => state.paintPixel.recentColors;
 
 export const selectCanvasData = (state: any) => state.paintPixel.canvasData;
 export const selectCurrentBrush = (state: any) => state.paintPixel.currentBrush;

@@ -23,7 +23,7 @@ export const createContribution = createAsyncThunk(
   "paintPixel/createContribution",
   // Payload ab ek object hoga: { projectId, strokes }
   async (
-    contributionData: { projectId: string; strokes: any[]; userId:string },
+    contributionData: { projectId: string; strokes: any[]; userId: string },
     thunkAPI
   ) => {
     try {
@@ -34,7 +34,7 @@ export const createContribution = createAsyncThunk(
     } catch (error: any) {
       return thunkAPI.rejectWithValue(
         error.response?.data?.message || "Failed to create contribution"
-      ); 
+      );
     }
   }
 );
@@ -52,7 +52,7 @@ export const batchCreateContributions = createAsyncThunk(
     }
   }
 );
- 
+
 export const getContributionsByProject = createAsyncThunk(
   "paintPixel/getContributionsByProject",
   // (1) Payload ke types mein `userId` ko (optional string ke tor par) add karein
@@ -106,7 +106,11 @@ export const voteOnContribution = createAsyncThunk(
       contributionId,
       voteType,
       userId,
-    }: { contributionId: string; voteType: "up" | "down"; userId:string | null },
+    }: {
+      contributionId: string;
+      voteType: "up" | "down";
+      userId: string | null;
+    },
     thunkAPI
   ) => {
     try {
@@ -145,8 +149,8 @@ export const generateTimelapseVideo = createAsyncThunk(
       // Naye API endpoint ko call karein
       const response = await api.get(`/timelapse/${projectId}`);
       console.log("Timelapse generation response:", response.data);
-      
-      return response?.data?.data; 
+
+      return response?.data?.data;
     } catch (error: any) {
       return thunkAPI.rejectWithValue(
         error.response?.data?.message || "Failed to generate timelapse"
@@ -240,6 +244,26 @@ export const fetchContributionsByTiles = createAsyncThunk(
       return rejectWithValue(
         error.response?.data?.message || "Could not load artwork for this area."
       );
-    } 
+    }
+  }
+);
+
+export const createEmptyContribution = createAsyncThunk(
+  "contributions/createEmpty",
+  async (
+    {
+      projectId,
+      userId,
+    }: { projectId: string; userId: string | null | undefined },
+    { rejectWithValue }
+  ) => {
+    try {
+      // API endpoint ko call karein
+      const response = await api.post("/contributions", { projectId, userId });
+      // Backend se anay wali nayi contribution wapas bhejein
+      return response.data.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response.data.message);
+    }
   }
 );

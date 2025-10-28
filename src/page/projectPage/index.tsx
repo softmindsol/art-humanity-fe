@@ -35,6 +35,7 @@ import { addContributorToState, removeContributorFromState, selectCurrentProject
 import type { RootState } from '@/redux/store';
 import { useNavigate } from 'react-router-dom';
 import { useDebounce } from '@/hook/useDebounce';
+import { getContributionBoundingBox } from '@/utils/contributionUtils';
 
 
 const TILE_SIZE = 512; // Optimal tile size for performance
@@ -70,6 +71,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
     const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, text: '' });
     const [isGeneratingTimelapse, _] = useState(false);
     const [isTimelapseFullscreen, setIsTimelapseFullscreen] = useState(false);
+    const [focusTarget, setFocusTarget] = useState<any>(null);
 
     // --- REFS ---
     const canvasContainerRef = useRef<any>(null);
@@ -94,8 +96,58 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
 
 
 
+    const handleContributionSelect = useCallback((contributionId:any) => {
+        // Agar user ne wahi contribution dobara click ki hai, to usay deselect kar do
+        if (selectedContributionId === contributionId) {
+            setSelectedContributionId(null);
+            return;
+        }
 
-    // --- YEH NAYA HANDLER BANAYEIN ---
+        // Nayi ID ko set karein (highlight ke liye)
+        setSelectedContributionId(contributionId);
+
+        // Sidebar -> Canvas navigation ke liye:
+        // Foran focus target set karein
+        const targetContribution = contributions.find((c:any) => c._id === contributionId);
+        if (targetContribution) {
+            const bbox = getContributionBoundingBox(targetContribution);
+            console.log("[Step 1] Calculated BBox:", bbox);
+            if (bbox) {
+                // --- YEH LINES ADD KAREIN ---
+                // Animation ko fail hone se bachane ke liye ek minimum size dein
+                if (bbox.width === 0) {
+                    bbox.width = 10; // Minimum 10 pixels
+                }
+                if (bbox.height === 0) {
+                    bbox.height = 10; // Minimum 10 pixels
+                }
+                // -----------------------------
+                setFocusTarget(bbox);
+            } else {
+                console.error("[Step 1] Bounding box is NULL. Canvas cannot focus.");
+            }
+        }
+    }, [selectedContributionId, contributions]); // Dependencies zaroori hain
+
+   
+
+    useEffect(() => {
+        // Yeh effect sirf tab chalega jab 'selectedContributionId' badlega
+        if (selectedContributionId && listItemRefs.current[selectedContributionId]) {
+            // Sidebar ko kholein (agar band hai)
+            setIsSidebarOpen(true);
+
+            // Thora sa delay dein taake sidebar khul jaye, phir scroll karein
+            const timer = setTimeout(() => {
+                const element = listItemRefs.current[selectedContributionId];
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 300); // 300ms ka delay
+
+            return () => clearTimeout(timer);
+        }
+    }, [selectedContributionId]);
     const handleClearHighlight = useCallback(() => {
         // Agar pehle se koi cheez selected hai, to usay deselect kar do
         if (selectedContributionId) {
@@ -129,6 +181,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
     } = useCanvasState();
 
 
+    
 
     // Canvas se click handle karne wala function
     const handleCanvasClick = (contributionId: any) => {
@@ -143,7 +196,15 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
 
     const handleSidebarContributionSelect = useCallback((contributionId: any) => {
         setSelectedContributionId(contributionId);
-        // Sidebar pehle se khula hai, usay dobara kholne ki zaroorat nahi
+        const targetContribution = contributions.find((c:any) => c._id === contributionId);
+        if (targetContribution) {
+            // 3. Calculate its bounding box
+            const bbox = getContributionBoundingBox(targetContribution);
+            if (bbox) {
+                // 4. Set the bounding box as our focus target
+                setFocusTarget(bbox);
+            }
+        }
     }, []);
 
 
@@ -231,7 +292,6 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
    
     const showLoginDialog = !!currentProject && !user && !loginDialogDismissed;
     const showJoinDialog = isJoinDialogOpen && !showLoginDialog;
-    console.log(showLoginDialog)
     const isCurrentUserAContributor = useMemo(() => {
         if (!user || !currentProject?.contributors) {
             return false;
@@ -693,15 +753,18 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
                                         onContributionHover={handleContributionHover}
                                         onContributionLeave={handleContributionLeave}
                                         // onContributionSelect={setSelectedContributionId}
-                                        onContributionSelect={handleCanvasClick}
+                                        // onContributionSelect={handleCanvasClick}
                                         setIsContributionSaving={setIsContributionSaving}
                                         onGuestInteraction={handleGuestCanvasInteraction}
                                         isContributor={isCurrentUserAContributor}
-                                        // onContributionSelect={handleCanvasContributionSelect} 
+                                        focusTarget={focusTarget} // <-- Pass the new state as a prop
+                                        onFocusComplete={() => setFocusTarget(null)} // <-- Add a callback to reset
 
                                         isReadOnly={isReadOnly} // Naya prop pass karein
-                                        onClearHighlight={handleClearHighlight} // <-- YEH NAYA PROP PASS KAREIN
-
+                                        onContributionSelect={handleContributionSelect} 
+                                        onClearHighlight={handleClearHighlight} 
+                                        viewportWidth={canvasSize.width}
+                                        viewportHeight={canvasSize.height}
                                     />
                                 )}
                                 {Object.entries(cursors as Record<string, CursorData>).map(([socketId, data]) => (
@@ -811,6 +874,8 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
                 projectId={projectId}
                 contributions={contributions} // TODO: Isay proper contribution objects mein badalna hoga
                 selectedContributionId={selectedContributionId}
+                isContributor={isCurrentUserAContributor} // <-- ADD THIS PROP
+
                 // onContributionSelect={setSelectedContributionId}
                 canvasStats={canvasStats}
                 infoBoxData={{
@@ -823,7 +888,8 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
                 listItemRefs={listItemRefs}
                 onGuestVoteAttempt={handleGuestCanvasInteraction}
                 isReadOnly={isReadOnly} // Naya prop pass karein
-                onContributionSelect={handleSidebarContributionSelect} // Sidebar ko apna alag function dein
+                // onContributionSelect={handleSidebarContributionSelect} // Sidebar ko apna alag function dein
+                onContributionSelect={handleContributionSelect} // <-- Sidebar se click ke liye
 
 
             />

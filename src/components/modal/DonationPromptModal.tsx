@@ -9,7 +9,7 @@ interface CustomModalProps {
 }
 
 const CustomModal: React.FC<CustomModalProps> = ({ isOpen, onClose, onDonateClick }) => {
-    if (!isOpen) return null;
+    if (!isOpen) return null; 
 
     return (
         <div className="fixed inset-0 bg-black/50 bg-opacity-50 flex justify-center items-center  z-50">
@@ -27,12 +27,12 @@ const CustomModal: React.FC<CustomModalProps> = ({ isOpen, onClose, onDonateClic
                     <Button onClick={onClose} variant="outline" className="cursor-pointer">
                         Maybe Later
                     </Button>
-                    <Button
+                    {/* <Button
                         onClick={onDonateClick}
                         className="cursor-pointer border-white bg-green-600 text-white hover:bg-green-700 ml-4"
                     >
                         Donate Now
-                    </Button>
+                    </Button> */}
                 </div>
             </div>
         </div>

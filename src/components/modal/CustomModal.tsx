@@ -4,6 +4,7 @@ import { X } from 'lucide-react'; // Using Lucide's X icon for close functionali
 interface CustomModalProps {
     isOpen: boolean;
     onClose: () => void;
+    handleSupportClick?: () => void;
     children: React.ReactNode; // The modal content
 }
 
