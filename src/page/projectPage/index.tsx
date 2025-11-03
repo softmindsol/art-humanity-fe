@@ -121,7 +121,6 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
                 if (bbox.height === 0) {
                     bbox.height = 10; // Minimum 10 pixels
                 }
-                // -----------------------------
                 setFocusTarget(bbox);
             } else {
                 console.error("[Step 1] Bounding box is NULL. Canvas cannot focus.");
@@ -872,7 +871,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
 
             <ContributionSidebar
                 projectId={projectId}
-                contributions={contributions} // TODO: Isay proper contribution objects mein badalna hoga
+                contributions={contributions} 
                 selectedContributionId={selectedContributionId}
                 isContributor={isCurrentUserAContributor} // <-- ADD THIS PROP
 

@@ -245,17 +245,24 @@ const DemoCanvas: React.FC = () => {
     useEffect(() => { if (timelapseUrl) setIsModalOpen(true); }, [timelapseUrl]);
 
 
-    // --- MOUSE AND DRAWING HANDLERS ---
-
     const getMousePosInWorld = (e: MouseEvent | React.MouseEvent): Position => {
         const viewport = viewportCanvasRef.current!;
-        const rect = viewport.getBoundingClientRect();
+        const rect = viewport.getBoundingClientRect(); // Yeh humein display size dega
+
+        // Step 1: Click ki position display size ke hisab se nikalein (0 se 1 ke darmiyan)
+        const mouseX_ratio = (e.clientX - rect.left) / rect.width;
+        const mouseY_ratio = (e.clientY - rect.top) / rect.height;
+
+        // Step 2: Is ratio ko canvas ke asal size se multiply karke sahi pixel coordinate nikalein
+        const mouseX_on_canvas = mouseX_ratio * viewport.width; // viewport.width yahan 1024 hai
+        const mouseY_on_canvas = mouseY_ratio * viewport.height; // viewport.height yahan 1024 hai
+
+        // Step 3: Ab in sahi coordinates ko world position mein convert karein
         return {
-            x: (e.clientX - rect.left - canvasState.offset.x) / canvasState.zoomLevel,
-            y: (e.clientY - rect.top - canvasState.offset.y) / canvasState.zoomLevel
+            x: (mouseX_on_canvas - canvasState.offset.x) / canvasState.zoomLevel, // <-- YAHAN PAR TYPO THEEK KI GAYI HAI
+            y: (mouseY_on_canvas - canvasState.offset.y) / canvasState.zoomLevel, // <-- YAHAN PAR TYPO THEEK KI GAYI HAI
         };
     };
-
 
     const drawOnTile = (tile: any, fromX: any, fromY: any, toX: any, toY: any) => {
         const ctx = tile.context;
@@ -653,7 +660,7 @@ const InfoBox = ({ zoom, worldPos, boundaryRef }: any) => {
     const dragOffsetRef = useRef({ x: 0, y: 0 });
     const infoBoxRef = useRef<HTMLDivElement>(null);
 
-    
+
     useEffect(() => {
         setIsMinimized(isSmallScreen);
     }, [isSmallScreen]);
@@ -752,7 +759,7 @@ const InfoBox = ({ zoom, worldPos, boundaryRef }: any) => {
                 onMouseDown={handleDragMouseDown}
             >
                 <p className="text-[#3e2723] text-lg font-bold m-0 whitespace-nowrap">Infobox</p>
-               
+
             </div>
 
 

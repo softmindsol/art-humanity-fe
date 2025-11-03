@@ -21,17 +21,15 @@ import { Elements } from '@stripe/react-stripe-js';
 import { useEffect, useState } from 'react';
 import DonationPromptModal from './components/modal/DonationPromptModal';
 import { useSelector } from 'react-redux';
-import { openDonationForm, resetDonationPrompt, selectIsDonationModalOpen, selectIsDonationPromptModalOpen } from './redux/slice/opeModal';
+import { openDonationForm, resetDonationPrompt, selectIsDonationPromptModalOpen } from './redux/slice/opeModal';
 import { useDispatch } from 'react-redux';
 import ContactUs from './page/contact/ContactPage';
 import ScrollToTop from './components/common/ScrollToTop';
 function App() {
-  const isDonationOpen = useSelector(selectIsDonationModalOpen);
   const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
   const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
   const shouldShow = useSelector(selectIsDonationPromptModalOpen);
   const dispatch = useDispatch();
-  console.log(isDonationOpen)
   // This useEffect listens for the trigger from Redux
   useEffect(() => {
     if (shouldShow) {
@@ -83,25 +81,20 @@ function App() {
             </Routes>
           </main>
         </ProjectProvider>
-       
-{
-  
-
-  
-            isPromptModalOpen && <div className='w-[90%] md:w-[100%]'>
-              <DonationPromptModal
+       {
+            isPromptModalOpen && <div className='w-[90%] md:w-[100%]'><DonationPromptModal
                 isOpen={isPromptModalOpen}
                 onClose={() => setIsPromptModalOpen(false)}
                 onDonateClick={() => {
                   dispatch(openDonationForm())
                 }}
               /></div>
-}
+      }
        
           <Footer />
             {/* </div> */}
       </SocketProvider>
-    </Router> 
+    </Router>
     </Elements>
   );
 }

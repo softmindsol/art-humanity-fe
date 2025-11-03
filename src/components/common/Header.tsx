@@ -43,6 +43,8 @@ const Header = () => {
     amount: 0,
   });
 
+  console.log("donationState:", donationState?.isFormOpen)
+
   useOnClickOutside([notificationRef], () => setIsNotificationOpen(false));
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false); // Loading state
@@ -489,6 +491,7 @@ const Header = () => {
       >
         <DonationForm onDonate={handleOnDonate} />
       </CustomModal>
+      
       {/* 2. Card Input Wala Modal */}
       {/* <Dialog open={donationState.isCheckoutOpen} onOpenChange={(isOpen) => setDonationState({ ...donationState, isCheckoutOpen: isOpen })}>
         <DialogContent className="!bg-[#5d4037] border-2 border-[#3e2723] text-white font-[Georgia, serif] max-w-3xl">

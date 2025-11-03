@@ -32,7 +32,7 @@ const Toolbox = ({ boundaryRef }: any) => {
 
 
 
-    const handleColorFinalized = (hslColor:any) => {
+    const handleColorFinalized = (hslColor: any) => {
         // Dispatch the action to add this color to the recent colors list
         dispatch(addRecentColor(hslColor));
     };
@@ -78,7 +78,7 @@ const Toolbox = ({ boundaryRef }: any) => {
         if (!isSmallScreen) {
             setIsMinimized(false);
         }
-        else{
+        else {
             setIsMinimized(true);
             setPosition({ x: 100, y: 60 });
         }
@@ -119,7 +119,7 @@ const Toolbox = ({ boundaryRef }: any) => {
         handleColorFinalized({ ...brushState.color, l: lightness });
 
     };
-    const handleRecentColorClick = (hslColor:any) => {
+    const handleRecentColorClick = (hslColor: any) => {
         dispatch(setBrushColor(hslColor));
     };
     // Mojooda HSL color ko RGB string mein convert karein taake preview mein dikha sakein
@@ -157,26 +157,26 @@ const Toolbox = ({ boundaryRef }: any) => {
                             <circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="19" r="1"></circle>
                         </svg>
                     </div>
-                  
+
                 </div>
-               
+
             </div>
 
-           {!isMinimized &&
+            {!isMinimized &&
                 <div className='flex flex-col gap-4'>
-            <div className="flex gap-2">
-                        {(['brush', 'eraser', 'line','picker'] as const).map((mode) => {
+                    <div className="flex gap-2">
+                        {(['brush', 'eraser', 'line', 'picker'] as const).map((mode) => {
                             const Icon = { brush: Brush, eraser: Eraser, line: Baseline, picker: Pipette }[mode];
-                    const isActive = brushState.mode === mode;
-                    return (
-                        <button key={mode} onClick={() => dispatch(setCurrentBrush({ mode }))} title={mode.charAt(0).toUpperCase() + mode.slice(1)} className={`flex-1 p-2 border border-[#8b795e] rounded flex justify-center transition-colors ${isActive ? 'bg-[#8b795e] text-white' : 'bg-white text-[#8b795e] hover:bg-gray-200'}`}>
-                            <Icon size={18} />
-                        </button>
-                    );
-                })}
-              
-                       
-            </div>
+                            const isActive = brushState.mode === mode;
+                            return (
+                                <button key={mode} onClick={() => dispatch(setCurrentBrush({ mode }))} title={mode.charAt(0).toUpperCase() + mode.slice(1)} className={`flex-1 p-2 border border-[#8b795e] rounded flex justify-center transition-colors ${isActive ? 'bg-[#8b795e] text-white' : 'bg-white text-[#8b795e] hover:bg-gray-200'}`}>
+                                    <Icon size={18} />
+                                </button>
+                            );
+                        })}
+
+
+                    </div>
                     {recentColors.length > 0 && (
                         <div>
                             <label className="text-sm font-bold !text-[#212121] mb-2 block">Recent Colors</label>
@@ -184,11 +184,21 @@ const Toolbox = ({ boundaryRef }: any) => {
                                 {recentColors.map((hslColor: any, index: any) => {
                                     const rgb = hslToRgb(hslColor.h, hslColor.s, hslColor.l);
                                     const bgColor = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+                                    const isActive =
+                                        Math.round(hslColor.h) === Math.round(brushState.color.h) &&
+                                        hslColor.s === brushState.color.s &&
+                                        hslColor.l === brushState.color.l;
                                     return (
                                         <button
                                             key={index}
                                             onClick={() => handleRecentColorClick(hslColor)}
-                                            className="w-full h-8 rounded border border-gray-300 cursor-pointer"
+                                            className={`
+                                                w-full h-8 rounded border cursor-pointer transition-all duration-150 ease-in-out
+                                                ${isActive
+                                                    ? 'ring-2 ring-offset-1 ring-blue-500 transform scale-110 shadow-lg' // Active state ki classes
+                                                    : 'border-gray-300 hover:scale-105' // Normal state ki classes
+                                                }
+                                            `}
                                             style={{ backgroundColor: bgColor }}
                                             title={`Select color (H:${Math.round(hslColor.h)}, S:${hslColor.s}, L:${hslColor.l})`}
                                         />
@@ -197,19 +207,19 @@ const Toolbox = ({ boundaryRef }: any) => {
                             </div>
                         </div>
                     )}
-            <div>
-                <label className="text-sm font-bold !text-[#212121] mb-2 block">Color</label>
-                <div
-                    className="relative w-[150px] h-[150px] mx-auto rounded-full cursor-pointer border-2 border-gray-300"
-                    style={{ background: 'conic-gradient(red, yellow, lime, cyan, blue, magenta, red)' }}
+                    <div>
+                        <label className="text-sm font-bold !text-[#212121] mb-2 block">Color</label>
+                        <div
+                            className="relative w-[150px] h-[150px] mx-auto rounded-full cursor-pointer border-2 border-gray-300"
+                            style={{ background: 'conic-gradient(red, yellow, lime, cyan, blue, magenta, red)' }}
                             onClick={handleHueChange} // Yeh 'hue' set karega
-                >
-                    <div
-                        className="absolute w-[40px] h-[40px] rounded-full border-4 border-white shadow-md"
-                        style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', backgroundColor: currentColorString }}
-                    />
-                </div>
-            </div>
+                        >
+                            <div
+                                className="absolute w-[40px] h-[40px] rounded-full border-4 border-white shadow-md"
+                                style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', backgroundColor: currentColorString }}
+                            />
+                        </div>
+                    </div>
                     <div>
                         <label className="text-sm font-bold !text-[#212121] mb-2 block">Shade (Lightness)</label>
                         <input
@@ -222,17 +232,17 @@ const Toolbox = ({ boundaryRef }: any) => {
                             style={{ background: lightnessGradient }}
                         />
                     </div>
-            <div>
-                <label className="text-sm font-bold !text-[#212121] mb-2 block">Brush Size: {brushState.size}px</label>
-                <input
-                    type="range"
-                    min="1"
-                    max="50"
-                    value={brushState.size}
-                    onChange={(e) => dispatch(setBrushSize(Number(e.target.value)))}
-                    className="w-full"
-                />
-            </div>
+                    <div>
+                        <label className="text-sm font-bold !text-[#212121] mb-2 block">Brush Size: {brushState.size}px</label>
+                        <input
+                            type="range"
+                            min="1"
+                            max="50"
+                            value={brushState.size}
+                            onChange={(e) => dispatch(setBrushSize(Number(e.target.value)))}
+                            className="w-full"
+                        />
+                    </div>
                     <style>{`
                     .shade-slider {
                         -webkit-appearance: none;
@@ -247,7 +257,7 @@ const Toolbox = ({ boundaryRef }: any) => {
                     .shade-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 2px solid #5d4037; cursor: pointer; }
                     .shade-slider::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 2px solid #5d4037; cursor: pointer; }
                 `}</style>
-            </div>}
+                </div>}
 
         </div>
     );

@@ -15,22 +15,37 @@ import { getCanvasPointerPosition } from '@/utils/getCanvasPointerPosition';
 import { incrementPixelCount } from '@/redux/slice/project';
 import Konva from 'konva';
 
-const plotLine = (x0, y0, x1, y1, map, value, width, height) => { // <-- width aur height ko yahan add karein
+// Purane plotLine function ko is naye function se replace karein
+
+const plotLine = (x0, y0, x1, y1, map, value, width, height, brushSize) => {
     x0 = Math.round(x0); y0 = Math.round(y0);
     x1 = Math.round(x1); y1 = Math.round(y1);
+
     const dx = Math.abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
     const dy = -Math.abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
     let err = dx + dy;
+
+    // Brush ka radius nikal lein (kam se kam 1 ho)
+    const radius = Math.floor(brushSize / 2) || 1;
+
     while (true) {
-        // --- YEH HAI ASAL FIX ---
-        // Ab `map.length` ke bajaye, `height` aur `width` se check karein
-        if (y0 >= 0 && y0 < height && x0 >= 0 && x0 < width) {
-            // Safety check: Yaqeeni banayein ke `map[y0]` mojood hai
-            if (map[y0]) {
-                map[y0][x0] = value;
+        // --- YEH HAI NAYI AUR BEHTAR LOGIC ---
+        // Ab ek pixel ke bajaye, poora square (brush ke size ka) fill karein
+        for (let i = -radius; i <= radius; i++) {
+            for (let j = -radius; j <= radius; j++) {
+                const drawX = x0 + i;
+                const drawY = y0 + j;
+
+                // Boundary check zaroori hai
+                if (drawY >= 0 && drawY < height && drawX >= 0 && drawX < width) {
+                    if (map[drawY]) {
+                        map[drawY][drawX] = value;
+                    }
+                }
             }
         }
-        // -----------------------
+        // ------------------------------------
+
         if (x0 === x1 && y0 === y1) break;
         let e2 = 2 * err;
         if (e2 >= dy) { err += dy; x0 += sx; }
@@ -70,7 +85,7 @@ const KonvaCanvas = ({
     onClearHighlight, focusTarget, onFocusComplete, onContributionSelect, viewportWidth,
     viewportHeight,
 
-}: any) => { 
+}: any) => {
 
     const dispatch = useAppDispatch();
     const brushState = useSelector(selectCurrentBrush);
@@ -99,8 +114,9 @@ const KonvaCanvas = ({
     const stageRef = useRef<any>(null);
     const panStartPointRef = useRef<any>({ x: 0, y: 0 });
     const lastPanPointRef = useRef<any>(null);
-    const memoizedTransform = React.useCallback((c:any) => transformContributionForKonva(c), []);
+    const memoizedTransform = React.useCallback((c: any) => transformContributionForKonva(c), []);
     const ownershipMapRef = React.useRef(null);
+    const wasInsideCanvasRef = useRef(true);
 
     // --- zoom in/out limit --- 
     const MAX_ZOOM = 32;
@@ -109,7 +125,7 @@ const KonvaCanvas = ({
 
     const memoizedTransformContributionForKonva = useCallback((contribution: any) => {
         return transformContributionForKonva(contribution);
-    }, []); 
+    }, []);
 
     useEffect(() => {
         const stage = stageRef.current;
@@ -120,7 +136,7 @@ const KonvaCanvas = ({
         const { x, y, width, height } = focusTarget;
         const PADDING = 50;
 
-   
+
         const scaleX = viewportWidth / (width + PADDING * 2);
         const scaleY = viewportHeight / (height + PADDING * 2);
 
@@ -151,10 +167,10 @@ const KonvaCanvas = ({
 
         tween.play();
 
-    }, [focusTarget, onStateChange, onFocusComplete, viewportWidth, viewportHeight]); 
+    }, [focusTarget, onStateChange, onFocusComplete, viewportWidth, viewportHeight]);
 
 
-    
+
     useEffect(() => {
         if (!savedStrokes || width === 0 || height === 0) {
             setBakedImage(null);
@@ -274,10 +290,10 @@ const KonvaCanvas = ({
                     ctx.globalCompositeOperation = line.globalCompositeOperation;
                     ctx.stroke();
                 });
-          
+
                 // Fill the ownership map
-                contribution.strokes.forEach((stroke:any) => {
-                    stroke.strokePath.forEach((segment:any) => {
+                contribution.strokes.forEach((stroke: any) => {
+                    stroke.strokePath.forEach((segment: any) => {
                         plotLine(
                             segment.fromX, segment.fromY,
                             segment.toX, segment.toY, // Use `toY`, not `y`
@@ -307,13 +323,13 @@ const KonvaCanvas = ({
             batchTimerRef.current = setTimeout(sendBatchToServer, 3000);
             return; // Function ko yahin rok dein
         }
-    
+
         // Agar queue khaali hai ya koi contribution active nahi hai, to kuch na karein
         if (strokeQueueRef.current.length === 0 || !activeContributionId) {
             return;
         }
 
-        
+
         const strokesToSend = [...strokeQueueRef.current];
         strokeQueueRef.current = []; // Queue ko foran khaali kar dein
 
@@ -354,13 +370,14 @@ const KonvaCanvas = ({
         if (isReadOnly || !isContributor || brushState.mode === 'move') return;
         if (!user) { onGuestInteraction(); return; }
         if (!isPointerInsideCanvas(pos)) return; // Agar pointer canvas ke bahar hai, drawing stop
-      
+        wasInsideCanvasRef.current = true;
+
         if (!activeContributionId) {
-            toast.error("Please create or select a contribution first.");
+            toast.error("You can’t draw on this contribution. Please create your own new contribution.");
             return;
         }
 
-       
+
         if (onClearHighlight) onClearHighlight();
 
         setIsDrawing(true);
@@ -393,6 +410,24 @@ const KonvaCanvas = ({
                 currentStrokePathRef.current.push({ fromX: last.x, fromY: last.y, toX: point.x, toY: point.y });
             }
         }
+
+        const isCurrentlyInside = isPointerInsideCanvas(point);
+        const lastPoints = activeLine.points;
+
+        // Ek segment banane ke liye pichla point zaroori hai
+        if (lastPoints.length >= 4) { // Kam se kam 2 points (x1, y1, x2, y2) hone chahiye
+            const last = { x: lastPoints[lastPoints.length - 4], y: lastPoints[lastPoints.length - 3] };
+
+            // Data segment sirf tab save karein jab mojooda point AND pichla point, dono andar hon.
+            // Is se jab user bahar se andar aata hai to ek lambi lakeer nahi banti.
+            if (isCurrentlyInside && wasInsideCanvasRef.current) {
+                currentStrokePathRef.current.push({ fromX: last.x, fromY: last.y, toX: point.x, toY: point.y });
+            }
+        }
+
+        // 3. Agle event ke liye state ko update karein
+        wasInsideCanvasRef.current = isCurrentlyInside;
+
     };
 
     const stopDrawing = () => {
@@ -415,13 +450,13 @@ const KonvaCanvas = ({
         }
 
         if (!activeContributionId) {
-            toast.error("Please create or select a contribution first.");
+            toast.error("You can’t draw on this contribution. Please create your own new contribution.");
             setActiveLine({ points: [] });
             currentStrokePathRef.current = [];
             return;
         }
 
-     
+
         const tempCanvas = document.createElement('canvas');
         tempCanvas.width = virtualWidth;
         tempCanvas.height = virtualHeight;
@@ -488,7 +523,7 @@ const KonvaCanvas = ({
             setIsPanning(false);
             return;
         }
-        // Yeh sirf 'stopDrawing' ko call karega
+
         stopDrawing();
     };
 
@@ -517,7 +552,7 @@ const KonvaCanvas = ({
             onClearHighlight();
         }
         setIsDrawing(true);
-       
+
         if (brushState.mode === 'picker' && bakedImageContextRef.current) {
             const pixel = bakedImageContextRef.current.getImageData(pos.x, pos.y, 1, 1).data;
             const rgb = { r: pixel[0], g: pixel[1], b: pixel[2], a: 1 };
@@ -567,7 +602,7 @@ const KonvaCanvas = ({
             setActiveLine({
                 points: [pos.x, pos.y],
                 tool: brushState.mode,
-                stroke: colorString, 
+                stroke: colorString,
                 strokeWidth: brushState.size,
             });
         }
@@ -577,8 +612,8 @@ const KonvaCanvas = ({
             lineStartPointRef.current = pos;
             setActiveLine({
                 points: [pos.x, pos.y, pos.x, pos.y],
-                tool: 'brush', 
-                stroke: colorString, 
+                tool: 'brush',
+                stroke: colorString,
                 strokeWidth: brushState.size,
             });
         }
