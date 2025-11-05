@@ -283,7 +283,9 @@ const ContributionSidebar = ({ projectId,selectedContributionId, isContributor,o
                             // onContributionSelect={onContributionSelect}
                             listItemRefs={listItemRefs}
                             isContributor={isContributor} 
-                            onContributionSelect={onContributionSelect}
+                            // onContributionSelect={onContributionSelect}
+                            onContributionSelect={handleContributionClick}
+
                             projectId={projectId}
                             onGuestVoteAttempt={onGuestVoteAttempt}
                             loading={loading} setLoading={setLoading}

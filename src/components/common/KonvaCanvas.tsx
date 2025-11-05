@@ -17,7 +17,7 @@ import Konva from 'konva';
 
 // Purane plotLine function ko is naye function se replace karein
 
-const plotLine = (x0, y0, x1, y1, map, value, width, height, brushSize) => {
+const plotLine = (x0: any, y0: any, x1: any, y1: any, map: any, value: any, width: any, height: any, brushSize: any) => {
     x0 = Math.round(x0); y0 = Math.round(y0);
     x1 = Math.round(x1); y1 = Math.round(y1);
 
@@ -94,7 +94,7 @@ const KonvaCanvas = ({
     const savedContributions = useSelector(selectCanvasData);
     const pendingStrokes = useSelector(selectPendingStrokes);
     const { user } = useAuth();
-    const [colorPickerPreview, setColorPickerPreview] = useState(null); // For the preview swatch
+    const [colorPickerPreview, setColorPickerPreview] = useState<any>(null); // For the preview swatch
 
     // This is the baked image canvas context, we need access to it
     const bakedImageContextRef = useRef(null);
@@ -115,7 +115,7 @@ const KonvaCanvas = ({
     const panStartPointRef = useRef<any>({ x: 0, y: 0 });
     const lastPanPointRef = useRef<any>(null);
     const memoizedTransform = React.useCallback((c: any) => transformContributionForKonva(c), []);
-    const ownershipMapRef = React.useRef(null);
+    const ownershipMapRef = React.useRef<any>(null);
     const wasInsideCanvasRef = useRef(true);
 
     // --- zoom in/out limit --- 
@@ -260,9 +260,9 @@ const KonvaCanvas = ({
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, virtualWidth, virtualHeight);
 
-        const contributionsMap = new Map(savedContributions.map(c => [c._id, JSON.parse(JSON.stringify(c))]));
+        const contributionsMap = new Map(savedContributions.map((c:any) => [c._id, JSON.parse(JSON.stringify(c))]));
 
-        pendingStrokes.forEach(pending => {
+        pendingStrokes.forEach((pending:any) => {
             if (!pending || !pending.contributionId || !Array.isArray(pending.strokes)) return;
             const container = contributionsMap.get(pending.contributionId);
             if (container) container.strokes.push(...pending.strokes);
@@ -270,7 +270,7 @@ const KonvaCanvas = ({
 
         const allContributionsToDraw = Array.from(contributionsMap.values());
 
-        allContributionsToDraw.forEach((contribution) => {
+        allContributionsToDraw.forEach((contribution:any) => {
             if (contribution?.strokes?.length > 0) {
                 // Draw visually
                 const konvaData = memoizedTransform(contribution);
@@ -293,12 +293,18 @@ const KonvaCanvas = ({
 
                 // Fill the ownership map
                 contribution.strokes.forEach((stroke: any) => {
+                    // Har stroke ka apna brushSize hota hai
+                    const brushSizeForMap = stroke.brushSize || 1; // Default 1 rakhein agar size na mile
+
                     stroke.strokePath.forEach((segment: any) => {
                         plotLine(
                             segment.fromX, segment.fromY,
-                            segment.toX, segment.toY, // Use `toY`, not `y`
-                            newOwnershipMap, contribution._id,
-                            virtualWidth, virtualHeight
+                            segment.toX, segment.toY,
+                            newOwnershipMap,
+                            contribution._id,
+                            virtualWidth,
+                            virtualHeight,
+                            brushSizeForMap // <-- YEH MISSING PARAMETER ADD KAR DIYA GAYA HAI
                         );
                     });
                 });
@@ -354,17 +360,35 @@ const KonvaCanvas = ({
         const x = Math.floor(pos.x);
         const y = Math.floor(pos.y);
 
-        // Safety check if the map exists
+        if (!activeContributionId) {
+            toast.error("You can’t draw on this contribution. Please create your own new contribution.");
+            return;
+        }
+        console.log("activeContributionId:",activeContributionId)
+
         if (ownershipMapRef.current) {
-            // Check boundary first
             if (y >= 0 && y < virtualHeight && x >= 0 && x < virtualWidth) {
                 const pixelOwnerId = ownershipMapRef.current[y][x];
+
+                // Scenario 1: Agar is pixel ka malik hai lekin woh active contribution nahi hai
                 if (pixelOwnerId && pixelOwnerId !== activeContributionId) {
-                    toast.error("You cannot draw over another user's contribution.");
-                    return; // Stop the drawing
+                    // Yahan hum pehle owner ka naam nikalenge taake message zyada wazeh ho
+                    const ownerContribution = savedContributions.find((c:any) => c._id === pixelOwnerId);
+                    const ownerName = ownerContribution?.userId?.fullName || 'another user';
+
+                    toast.error(`This belongs to ${ownerName}. You can only edit your active contribution.`);
+                    return; // Drawing ko rok dein
+                }
+
+                // Scenario 2: Agar pixel khaali hai, lekin humari active contribution apni nahi hai (sirf doosre ki select ki hui hai)
+                // (Yeh check zaroori hai taake user kisi doosre ki contribution ko "extend" na kar sake)
+                const activeContribution = savedContributions.find((c:any) => c._id === activeContributionId);
+                if (!pixelOwnerId && activeContribution && activeContribution.userId?._id !== user?._id) {
+                    toast.error("You can only draw on your own contributions.");
+                    return;
                 }
             } else {
-                return; // Click is outside the canvas, do nothing
+                return; // Canvas se bahar click hua hai
             }
         }
         if (isReadOnly || !isContributor || brushState.mode === 'move') return;
@@ -372,11 +396,7 @@ const KonvaCanvas = ({
         if (!isPointerInsideCanvas(pos)) return; // Agar pointer canvas ke bahar hai, drawing stop
         wasInsideCanvasRef.current = true;
 
-        if (!activeContributionId) {
-            toast.error("You can’t draw on this contribution. Please create your own new contribution.");
-            return;
-        }
-
+    
 
         if (onClearHighlight) onClearHighlight();
 
@@ -449,12 +469,12 @@ const KonvaCanvas = ({
             return;
         }
 
-        if (!activeContributionId) {
-            toast.error("You can’t draw on this contribution. Please create your own new contribution.");
-            setActiveLine({ points: [] });
-            currentStrokePathRef.current = [];
-            return;
-        }
+        // if (!activeContributionId) {
+        //     toast.error("You can’t draw on this contribution. Please create your own new contribution.");
+        //     setActiveLine({ points: [] });
+        //     currentStrokePathRef.current = [];
+        //     return;
+        // }
 
 
         const tempCanvas = document.createElement('canvas');
@@ -528,56 +548,134 @@ const KonvaCanvas = ({
     };
 
 
+    // const handleMouseDown = (e: any) => {
+    //     const stage = stageRef.current;
+    //     if (!stage) return;
+
+    //     if (e.evt.button === 2) { // Right-click for panning
+    //         setIsPanning(true);
+    //         panStartPointRef.current = stage.getPointerPosition();
+    //         return;
+    //     }
+    //     startDrawing(e.target.getStage().getRelativePointerPosition());
+
+    //     if (isReadOnly || !user) {
+    //         if (!user) onGuestInteraction();
+    //         return;
+    //     }
+    //     if (!isContributor) {
+    //         toast.warning("You are not a contributor for this project.");
+    //         return;
+    //     }
+    //     if (brushState.mode === 'move') return;
+    //     if (onClearHighlight) {
+    //         onClearHighlight();
+    //     }
+    //     setIsDrawing(true);
+
+    //     if (brushState.mode === 'picker' && bakedImageContextRef.current) {
+    //         const pixel = bakedImageContextRef.current.getImageData(pos.x, pos.y, 1, 1).data;
+    //         const rgb = { r: pixel[0], g: pixel[1], b: pixel[2], a: 1 };
+
+    //         // Convert the picked RGB color back to HSL for our Redux state
+    //         const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+
+    //         // Dispatch to set the brush color
+    //         dispatch(setBrushColor({ h: hsl.h, s: hsl.s, l: hsl.l }));
+
+    //         // Add the picked color to recent colors
+    //         dispatch(addRecentColor({ h: hsl.h, s: hsl.s, l: hsl.l }));
+
+    //         // Switch the tool back to the brush
+    //         dispatch(setCurrentBrush({ mode: 'brush' }));
+
+    //         toast.success("Color picked!");
+    //         return; // Stop further execution
+    //     }
+    //     const pos = getCanvasPointerPosition(stage);
+        
+    //     const { h, s, l } = brushState.color;
+    //     const rgbColor = hslToRgb(h, s, l);
+    //     const colorString = `rgba(${rgbColor.r}, ${rgbColor.g}, ${rgbColor.b}, 1)`;
+    //     let clickedOnContributionId = null;
+    //     if (ownershipMapRef.current) {
+    //         const x = Math.floor(pos.x);
+    //         const y = Math.floor(pos.y);
+    //         if (y >= 0 && y < virtualHeight && x >= 0 && x < virtualWidth) {
+    //             clickedOnContributionId = ownershipMapRef.current[y][x];
+    //         }
+    //     }
+    //     // Step 2: Faisla karein
+    //     if (clickedOnContributionId) {
+    //         // Agar click drawing par hua hai, to parent ko ID bhejein
+    //         onContributionSelect(clickedOnContributionId);
+    //     } else {
+    //         // Agar click khaali jagah par hua hai, to highlight saaf karne ka event bhejein
+    //         onClearHighlight();
+    //     }
+    //     if (brushState.mode === 'brush' || brushState.mode === 'eraser') {
+    //         setIsDrawing(true);
+    //         currentStrokePathRef.current = [];
+    //         // Redux se anay wale color object ko CSS ke rgba string mein convert karein
+
+    //         setActiveLine({
+    //             points: [pos.x, pos.y],
+    //             tool: brushState.mode,
+    //             stroke: colorString,
+    //             strokeWidth: brushState.size,
+    //         });
+    //     }
+
+    //     if (brushState.mode === 'line') {
+    //         setIsDrawing(true);
+    //         lineStartPointRef.current = pos;
+    //         setActiveLine({
+    //             points: [pos.x, pos.y, pos.x, pos.y],
+    //             tool: 'brush',
+    //             stroke: colorString,
+    //             strokeWidth: brushState.size,
+    //         });
+    //     }
+    //     startDrawing(pos);
+
+
+
+    // };
+
+   
     const handleMouseDown = (e: any) => {
         const stage = stageRef.current;
         if (!stage) return;
 
-        if (e.evt.button === 2) { // Right-click for panning
+        // Step 1: Right-click ko handle karein (panning ke liye)
+        if (e.evt.button === 2) {
             setIsPanning(true);
             panStartPointRef.current = stage.getPointerPosition();
             return;
         }
-        startDrawing(e.target.getStage().getRelativePointerPosition());
 
-        if (isReadOnly || !user) {
-            if (!user) onGuestInteraction();
-            return;
-        }
-        if (!isContributor) {
-            toast.warning("You are not a contributor for this project.");
-            return;
-        }
-        if (brushState.mode === 'move') return;
-        if (onClearHighlight) {
-            onClearHighlight();
-        }
-        setIsDrawing(true);
+        // Sirf left-click hi aage jayega
+        if (e.evt.button !== 0) return;
 
+        // Step 2: Canvas par click ki position nikalein
+        const pos = getCanvasPointerPosition(stage);
+
+        // Step 3: Agar Color Picker mode on hai, to usay handle karein
         if (brushState.mode === 'picker' && bakedImageContextRef.current) {
-            const pixel = bakedImageContextRef.current.getImageData(pos.x, pos.y, 1, 1).data;
-            const rgb = { r: pixel[0], g: pixel[1], b: pixel[2], a: 1 };
-
-            // Convert the picked RGB color back to HSL for our Redux state
+            const pixel = (bakedImageContextRef.current as any).getImageData(pos.x, pos.y, 1, 1).data;
+            const rgb = { r: pixel[0], g: pixel[1], b: pixel[2] };
             const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
 
-            // Dispatch to set the brush color
             dispatch(setBrushColor({ h: hsl.h, s: hsl.s, l: hsl.l }));
-
-            // Add the picked color to recent colors
             dispatch(addRecentColor({ h: hsl.h, s: hsl.s, l: hsl.l }));
-
-            // Switch the tool back to the brush
             dispatch(setCurrentBrush({ mode: 'brush' }));
 
             toast.success("Color picked!");
-            return; // Stop further execution
+            return; // Picker ke baad drawing shuru nahi karni, isliye yahin se return karein
         }
-        const pos = getCanvasPointerPosition(stage); // <-- NAYI AUR THEEK LINE
-        const { h, s, l } = brushState.color;
-        const rgbColor = hslToRgb(h, s, l);
-        const colorString = `rgba(${rgbColor.r}, ${rgbColor.g}, ${rgbColor.b}, 1)`;
+
+        // Step 4: Pata lagayein ke user ne kisi drawing par click kiya hai ya nahi
         let clickedOnContributionId = null;
-        // Hum ownership map ka istemal kar sakte hain jo humne pehle banaya tha
         if (ownershipMapRef.current) {
             const x = Math.floor(pos.x);
             const y = Math.floor(pos.y);
@@ -586,42 +684,20 @@ const KonvaCanvas = ({
             }
         }
 
-        // Step 2: Faisla karein
+        // Step 5: Click ke hisab se Active ID set karein
         if (clickedOnContributionId) {
-            // Agar click drawing par hua hai, to parent ko ID bhejein
-            onContributionSelect(clickedOnContributionId);
+            if (clickedOnContributionId !== activeContributionId) {
+                onContributionSelect(clickedOnContributionId);
+            }
         } else {
-            // Agar click khaali jagah par hua hai, to highlight saaf karne ka event bhejein
             onClearHighlight();
         }
-        if (brushState.mode === 'brush' || brushState.mode === 'eraser') {
-            setIsDrawing(true);
-            currentStrokePathRef.current = [];
-            // Redux se anay wale color object ko CSS ke rgba string mein convert karein
 
-            setActiveLine({
-                points: [pos.x, pos.y],
-                tool: brushState.mode,
-                stroke: colorString,
-                strokeWidth: brushState.size,
-            });
-        }
-
-        if (brushState.mode === 'line') {
-            setIsDrawing(true);
-            lineStartPointRef.current = pos;
-            setActiveLine({
-                points: [pos.x, pos.y, pos.x, pos.y],
-                tool: 'brush',
-                stroke: colorString,
-                strokeWidth: brushState.size,
-            });
-        }
-
-
-
+        // Step 6: Ab jab sab kuch set ho chuka hai, to drawing shuru karein
+        // Is function ko sirf ek baar, bilkul aakhir mein call karein
+        startDrawing(pos);
     };
-
+   
     const handleMouseMove = (e: any) => {
         const stage = stageRef.current;
         if (!stage) return;

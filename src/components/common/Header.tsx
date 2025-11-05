@@ -161,7 +161,7 @@ const Header = () => {
       dispatch(markSingleNotificationRead({ notificationId: notification._id, userId: user?._id }));
       dispatch(fetchNotifications({ userId: user?._id }));
 
-    }
+    } 
   };
 
   useEffect(() => {

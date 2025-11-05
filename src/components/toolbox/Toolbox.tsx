@@ -206,7 +206,7 @@ const Toolbox = ({ boundaryRef }: any) => {
                                 })}
                             </div>
                         </div>
-                    )}
+                    )} 
                     <div>
                         <label className="text-sm font-bold !text-[#212121] mb-2 block">Color</label>
                         <div
