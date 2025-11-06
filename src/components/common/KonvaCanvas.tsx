@@ -364,7 +364,6 @@ const KonvaCanvas = ({
             toast.error("You can’t draw on this contribution. Please create your own new contribution.");
             return;
         }
-        console.log("activeContributionId:",activeContributionId)
 
         if (ownershipMapRef.current) {
             if (y >= 0 && y < virtualHeight && x >= 0 && x < virtualWidth) {
@@ -653,7 +652,10 @@ const KonvaCanvas = ({
             panStartPointRef.current = stage.getPointerPosition();
             return;
         }
-
+        if (!isContributor) {
+                    toast.warning("You are not a contributor for this project.");
+                    return;
+                }
         // Sirf left-click hi aage jayega
         if (e.evt.button !== 0) return;
 
