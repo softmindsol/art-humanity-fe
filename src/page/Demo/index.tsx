@@ -108,7 +108,15 @@ const styles = `
     }
 `;
 
-
+const hslToRgb = (h: number, s: number, l: number) => {
+    s /= 100; l /= 100;
+    const c = (1 - Math.abs(2 * l - 1)) * s, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = l - c / 2;
+    let r = 0, g = 0, b = 0;
+    if (h < 60) { r = c; g = x; } else if (h < 120) { r = x; g = c; }
+    else if (h < 180) { g = c, b = x; } else if (h < 240) { g = x, b = c; }
+    else if (h < 300) { r = x, b = c; } else { r = c, b = x; }
+    return { r: Math.round((r + m) * 255), g: Math.round((g + m) * 255), b: Math.round((b + m) * 255), a: 1 };
+};
 const DemoCanvas: React.FC = () => {
     const dispatch = useAppDispatch();
 
@@ -152,6 +160,12 @@ const DemoCanvas: React.FC = () => {
     } = useCanvasState();
 
     const [lineStartPos, setLineStartPos] = useState<Position | null>(null);
+    const brushStateRef = useRef(brushState);
+    useEffect(() => {
+        brushStateRef.current = brushState;
+    }, [brushState]);
+
+
 
     useEffect(() => { saveStateToHistory(); }, []);
 
@@ -265,6 +279,7 @@ const DemoCanvas: React.FC = () => {
     };
 
     const drawOnTile = (tile: any, fromX: any, fromY: any, toX: any, toY: any) => {
+        const currentBrush = brushStateRef.current;
         const ctx = tile.context;
         ctx.lineWidth = brushState.size;
         ctx.lineCap = 'round';
@@ -281,8 +296,17 @@ const DemoCanvas: React.FC = () => {
             ctx.strokeStyle = 'rgba(0,0,0,1)';
             ctx.stroke();
         } else {
+            const { h, s, l } = brushState.color;
+
+            // 2. Usay foran RGB mein convert karein
+            // Agar color pehle se RGB hai to usay waise hi rehne dein
+            const finalColor = (h !== undefined)
+                ? hslToRgb(h, s, l)
+                : brushState.color;
+
+            // 3. Sahi RGB color istemal karein
             ctx.globalCompositeOperation = 'source-over';
-            ctx.strokeStyle = `rgba(${brushState.color.r}, ${brushState.color.g}, ${brushState.color.b}, ${brushState.color.a})`;
+            ctx.strokeStyle = `rgba(${finalColor.r}, ${finalColor.g}, ${finalColor.b}, ${finalColor.a || 1})`;
             ctx.stroke();
         }
         tile.isDirty = true;
@@ -343,7 +367,7 @@ const DemoCanvas: React.FC = () => {
         setHistoryIndex(index);
         renderVisibleTiles();
     }, [history, tilesRef, setHistoryIndex, renderVisibleTiles, getTile]);
-
+ 
 
     const stopDrawing = async () => {
         if (brushState.mode === 'line' && isDrawing && lineStartPos) {
@@ -514,18 +538,6 @@ const DemoCanvas: React.FC = () => {
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [handleUndo, handleRedo]);
-    // --- COLOR CONVERSION ---
-    useEffect(() => {
-        const hslToRgb = (h: number, s: number, l: number) => {
-            s /= 100; l /= 100;
-            const c = (1 - Math.abs(2 * l - 1)) * s, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = l - c / 2;
-            let r = 0, g = 0, b = 0;
-            if (h < 60) { r = c; g = x; } else if (h < 120) { r = x; g = c; } else if (h < 180) { g = c; b = x; }
-            else if (h < 240) { g = x; b = c; } else if (h < 300) { r = x; b = c; } else { r = c; b = x; }
-            return { r: Math.round((r + m) * 255), g: Math.round((g + m) * 255), b: Math.round((b + m) * 255), a: 1 };
-        };
-        dispatch(setBrushColor(hslToRgb(hue, saturation, lightness)));
-    }, [hue, saturation, lightness]);
 
     // <-- Canvas Hover Effects Setup -->
     useEffect(() => {
