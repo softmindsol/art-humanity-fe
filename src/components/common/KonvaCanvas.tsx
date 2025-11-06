@@ -652,6 +652,10 @@ const KonvaCanvas = ({
             panStartPointRef.current = stage.getPointerPosition();
             return;
         }
+        if (isReadOnly || !user) {
+                if (!user) onGuestInteraction();
+                return;
+            }
         if (!isContributor) {
                     toast.warning("You are not a contributor for this project.");
                     return;
