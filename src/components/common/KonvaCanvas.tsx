@@ -468,12 +468,7 @@ const KonvaCanvas = ({
             return;
         }
 
-        // if (!activeContributionId) {
-        //     toast.error("You can’t draw on this contribution. Please create your own new contribution.");
-        //     setActiveLine({ points: [] });
-        //     currentStrokePathRef.current = [];
-        //     return;
-        // }
+     
 
 
         const tempCanvas = document.createElement('canvas');
