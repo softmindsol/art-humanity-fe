@@ -51,6 +51,7 @@ function App() {
     }
   }, [shouldShow, dispatch]);
 
+  console.log("published key:", import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
   return (
     <Elements stripe={stripePromise}>
     <Router>
