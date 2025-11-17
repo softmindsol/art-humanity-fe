@@ -14,23 +14,14 @@ const GuidelinePage: React.FC = () => {
                     <div className="rule-card">
                         <h3>How It Works</h3>
                         <p>
-                            Make a contribution in the contributions page and start painting. Each pixel you paint will become yours
-                            and cannot be changed by other contributors. All painted pixels will be automatically saved to the
-                            currently selected contribution. Each user is allowed 10 contributions per project and can be as big or as
-                            small as you want. If you want to paint on a different section of the canvas, create a new contribution
-                            and have it selected as you paint. All other contributors can upvote your contribution to permanently keep
-                            it in the canvas or downvote it to be deleted from the canvas. If a contribution receives over 50%
-                            downvotes from all project contributors it will be rejected and deleted from the canvas. The project is
-                            only complete when almost all pixels are painted and not a single contribution receives over 50%
-                            downvotes for 1 week. If a contribution is rejected, the week resets.
+                            Make a contribution in the contributions page and start painting. Each pixel you paint will become yours and cannot be changed by other contributors. All painted pixels will be automatically saved to the currently selected contribution. Each user is allowed 10 contributions per project and can be as big or as small as you want. If you want to paint on a different section of the canvas, create a new contribution and have it selected as you paint. All other contributors can upvote your contribution to permanently keep it in the canvas or downvote it to be deleted from the canvas. If a contribution receives over 50% downvotes from all project contributors, it will be rejected and deleted from the canvas. The project is only complete when almost all pixels are painted and not a single contribution receives over 50% downvotes.
                         </p>
                     </div>
 
                     <div className="rule-card">
                         <h3>The Rules Are Simple</h3>
                         <p>
-                            We have three fundamental rules that all contributions must follow and should be taken into account when
-                            voting for other contributions:
+                            We have three fundamental rules that all contributions must follow and should be taken into account when voting for other contributions:
                         </p>
                         <ul className="rule-list">
                             <li>Your contribution must follow the theme of the project.</li>
@@ -39,7 +30,7 @@ const GuidelinePage: React.FC = () => {
                                 Your contribution, its colors, and lighting must integrate and flow with other contributions.
                             </li>
                         </ul>
-                        <p>Graphic content is allowed as long as it follows the other rules. Nudity is prohibited.</p>
+                        <p>Graphic content is allowed as long as it follows the other rules. Nudity is prohibited. Moderators will be monitoring contributions live and at any point can immediately reject your contribution from the canvas if your contribution clearly and obviously doesn't follow the rules. If a moderator rejects 1 of your contributions, you will automatically be removed from the project and will not be able to paint again in the project.</p>
                         <img
                             src={MexicoCity_2018}
                             alt="Detailed aerial drawing of Mexico City"
@@ -64,30 +55,22 @@ const GuidelinePage: React.FC = () => {
                             MEXICO CITY - Benjiman Sack
                         </p>
                         <p>
-                            When zooming in to draw, your contribution should maintain an isometric-like perspective so the canvas is
-                            consistent as seen when fully zoomed out. This approach ensures other contributions can integrate smoothly
-                            with each other, resulting in a cohesive and consistent final piece.
+                            When zooming in to draw, your contribution should maintain an isometric-like perspective so the canvas is consistent as seen when fully zoomed out. This approach ensures other contributions can integrate smoothly with each other, resulting in a cohesive and consistent final piece.
                         </p>
                     </div>
 
                     <div className="rule-card">
                         <h3>Troll Prevention and Promoting Quality over Quantity</h3>
                         <p>
-                            We only want painters who are passionate about the project, no matter how small your contribution is. You
-                            will also only be able to paint a certain number of pixels per minute to prevent pixel hogging. You will
-                            also be removed from the project if 3 of your contributions get rejected from the canvas. Also moderators
-                            will be monitoring contributions live and at any point can immediately reject your contribution from the
-                            canvas if your contribution clearly doesn't follow the rules. The painting system is designed to emphasize
-                            a slow and steady process for your contribution. Take your time, even if it means painting one small
-                            detail, and solidify your spot in the canvas.
+                            We only want painters who are passionate about the project, no matter how small your contribution is. The painting system is designed to emphasize a slow and steady process for your contribution. Take your time, even if it means painting one small detail, and solidify your spot in the canvas. With all of these systems in place, you still might encounter trolls interfering with your contribution. And you still might have to wait until it gets rejected to continue your contribution. The process will be long and vigorous but eventually, pixel by pixel, the canvas will become one breathtaking, cohesive, final piece of art.
                         </p>
 
-                        <p>
+                        {/* <p>
                             With all of these systems in place, you still might encounter trolls interfering with your contribution.
                             And you still might have to wait until it gets rejected to continue your contribution. The process will be
                             long and vigorous but eventually, pixel by pixel, the canvas will become one breathtaking, cohesive, final
                             piece of art.
-                        </p>
+                        </p> */}
 
                         <blockquote className="guideline-quote">
                             "Success is the sum of small efforts, repeated day in and day out."
