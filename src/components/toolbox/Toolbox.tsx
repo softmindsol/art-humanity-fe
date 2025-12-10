@@ -24,6 +24,16 @@ const Toolbox = ({ boundaryRef }: any) => {
     const [isDragging, setIsDragging] = useState(false);
     const dragOffsetRef = useRef({ x: 0, y: 0 });
     const toolboxRef = useRef<HTMLDivElement>(null);
+    const colorWheelRef = useRef<HTMLDivElement>(null);
+    const [isDraggingColor, setIsDraggingColor] = useState(false);
+    const brushStateRef = useRef(brushState);
+
+    console.log('[Toolbox] Component rendered. Recent Colors:', recentColors);
+
+    // Keep brushState ref updated for event handlers
+    useEffect(() => {
+        brushStateRef.current = brushState;
+    }, [brushState]);
     // --- MINIMIZE LOGIC ---
     const [isMinimized, setIsMinimized] = useState(false);
     const isSmallScreen = useMediaQuery(1440); // 1440px par check karega
@@ -32,28 +42,38 @@ const Toolbox = ({ boundaryRef }: any) => {
 
 
 
-    const handleColorFinalized = (hslColor: any) => {
-        // Dispatch the action to add this color to the recent colors list
-        dispatch(addRecentColor(hslColor));
-    };
-    const handleDragMouseDown = useCallback((e: React.MouseEvent) => {
+    // const handleColorFinalized = (hslColor: any) => {
+    //     // Dispatch the action to add this color to the recent colors list
+    //     // dispatch(addRecentColor(hslColor));
+    // };
+    const handleDragStart = useCallback((clientX: number, clientY: number) => {
         if (!toolboxRef.current) return;
         const toolboxRect = toolboxRef.current.getBoundingClientRect();
         setIsDragging(true);
         dragOffsetRef.current = {
-            x: e.clientX - toolboxRect.left,
-            y: e.clientY - toolboxRect.top,
+            x: clientX - toolboxRect.left,
+            y: clientY - toolboxRect.top,
         };
-        e.preventDefault();
     }, []);
 
+    const handleDragMouseDown = useCallback((e: React.MouseEvent) => {
+        handleDragStart(e.clientX, e.clientY);
+        e.preventDefault();
+    }, [handleDragStart]);
+
+    const handleDragTouchStart = useCallback((e: React.TouchEvent) => {
+        const touch = e.touches[0];
+        handleDragStart(touch.clientX, touch.clientY);
+        e.preventDefault(); // Stop creating mouse event
+    }, [handleDragStart]);
+
     useEffect(() => {
-        const handleDragMouseMove = (e: MouseEvent) => {
+        const handleDragMove = (clientX: number, clientY: number) => {
             if (!isDragging || !boundaryRef?.current || !toolboxRef.current) return;
             const boundaryRect = boundaryRef.current.getBoundingClientRect();
             const toolboxRect = toolboxRef.current.getBoundingClientRect();
-            let newX_viewport = e.clientX - dragOffsetRef.current.x;
-            let newY_viewport = e.clientY - dragOffsetRef.current.y;
+            let newX_viewport = clientX - dragOffsetRef.current.x;
+            let newY_viewport = clientY - dragOffsetRef.current.y;
             let newX = newX_viewport - boundaryRect.left;
             let newY = newY_viewport - boundaryRect.top;
             newX = Math.max(0, newX);
@@ -62,14 +82,27 @@ const Toolbox = ({ boundaryRef }: any) => {
             newY = Math.min(newY, boundaryRect.height - toolboxRect.height);
             setPosition({ x: newX, y: newY });
         };
-        const handleDragMouseUp = () => setIsDragging(false);
+
+        const handleMouseMove = (e: MouseEvent) => handleDragMove(e.clientX, e.clientY);
+        const handleTouchMove = (e: TouchEvent) => {
+            const touch = e.touches[0];
+            handleDragMove(touch.clientX, touch.clientY);
+            e.preventDefault();
+        };
+
+        const handleDragEnd = () => setIsDragging(false);
+
         if (isDragging) {
-            document.addEventListener('mousemove', handleDragMouseMove);
-            document.addEventListener('mouseup', handleDragMouseUp);
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleDragEnd);
+            document.addEventListener('touchmove', handleTouchMove, { passive: false });
+            document.addEventListener('touchend', handleDragEnd);
         }
         return () => {
-            document.removeEventListener('mousemove', handleDragMouseMove);
-            document.removeEventListener('mouseup', handleDragMouseUp);
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleDragEnd);
+            document.removeEventListener('touchmove', handleTouchMove);
+            document.removeEventListener('touchend', handleDragEnd);
         };
     }, [isDragging, boundaryRef]);
 
@@ -96,27 +129,109 @@ const Toolbox = ({ boundaryRef }: any) => {
     };
 
 
-    const handleHueChange = (e: React.MouseEvent) => {
-        const rect = e.currentTarget.getBoundingClientRect();
+    const calculateColorFromPosition = (clientX: number, clientY: number) => {
+        if (!colorWheelRef.current) return null;
+        const rect = colorWheelRef.current.getBoundingClientRect();
         const centerX = rect.left + rect.width / 2;
         const centerY = rect.top + rect.height / 2;
-        const clickX = e.clientX - centerX;
-        const clickY = e.clientY - centerY;
 
-        const angleInRadians = Math.atan2(clickX, -clickY);
+        const dx = clientX - centerX;
+        const dy = clientY - centerY;
+
+        // Hue (Angle) - 0deg at top
+        const angleInRadians = Math.atan2(dx, -dy);
         let hue = (angleInRadians * 180) / Math.PI;
         if (hue < 0) hue += 360;
 
-        // Ab sirf 'h' (hue) ko update karne ke liye dispatch karein
-        dispatch(setBrushColor({ h: hue }));
-        handleColorFinalized({ ...brushState.color, h: hue });
+        // Saturation (Distance)
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const maxRadius = rect.width / 2;
+        const saturation = Math.min(100, (distance / maxRadius) * 100);
 
+        return { h: hue, s: saturation };
     };
+
+    // --- MOUSE HANDLER ---
+    const handleColorMouseDown = (e: React.MouseEvent) => {
+        e.preventDefault();
+        setIsDraggingColor(true);
+        const newColor = calculateColorFromPosition(e.clientX, e.clientY);
+        if (newColor) {
+            dispatch(setBrushColor(newColor));
+        }
+    };
+
+    // --- TOUCH HANDLER ---
+    const handleColorTouchStart = (e: React.TouchEvent) => {
+        e.preventDefault(); // Prevent scroll while touching color wheel
+        const touch = e.touches[0];
+        setIsDraggingColor(true);
+        const newColor = calculateColorFromPosition(touch.clientX, touch.clientY);
+        if (newColor) {
+            dispatch(setBrushColor(newColor));
+        }
+    };
+
+
+    useEffect(() => {
+        const handleColorMouseMove = (e: MouseEvent) => {
+            if (isDraggingColor) {
+                const newColor = calculateColorFromPosition(e.clientX, e.clientY);
+                if (newColor) {
+                    dispatch(setBrushColor(newColor));
+                }
+            }
+        };
+
+        const handleColorMouseUp = (e: MouseEvent) => {
+            if (isDraggingColor) {
+                setIsDraggingColor(false);
+                const newColor = calculateColorFromPosition(e.clientX, e.clientY);
+                if (newColor) {
+                    // Combine with current lightness
+                    const finalColor = {
+                        ...brushStateRef.current.color,
+                        h: newColor.h,
+                        s: newColor.s
+                    };
+                    // handleColorFinalized(finalColor);
+                }
+            }
+        };
+
+        const handleColorTouchMove = (e: TouchEvent) => {
+            if (isDraggingColor) {
+                const touch = e.touches[0];
+                const newColor = calculateColorFromPosition(touch.clientX, touch.clientY);
+                if (newColor) {
+                    dispatch(setBrushColor(newColor));
+                }
+            }
+        };
+
+        const handleColorTouchEnd = () => {
+            setIsDraggingColor(false);
+            // Logic currently commented out in main handler, so leaving blank or mirroring mouseUp logic if needed
+        };
+
+        if (isDraggingColor) {
+            window.addEventListener('mousemove', handleColorMouseMove);
+            window.addEventListener('mouseup', handleColorMouseUp);
+            window.addEventListener('touchmove', handleColorTouchMove, { passive: false });
+            window.addEventListener('touchend', handleColorTouchEnd);
+        }
+        return () => {
+            window.removeEventListener('mousemove', handleColorMouseMove);
+            window.removeEventListener('mouseup', handleColorMouseUp);
+            window.removeEventListener('touchmove', handleColorTouchMove);
+            window.removeEventListener('touchend', handleColorTouchEnd);
+        };
+    }, [isDraggingColor]);
 
     const handleLightnessChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const lightness = Number(e.target.value);
         dispatch(setBrushColor({ l: lightness }));
-        handleColorFinalized({ ...brushState.color, l: lightness });
+        // handleColorFinalized({ ...brushState.color, l: lightness });
 
     };
     const handleRecentColorClick = (hslColor: any) => {
@@ -150,8 +265,7 @@ const Toolbox = ({ boundaryRef }: any) => {
                             {isMinimized ? <Plus size={18} /> : <Minus size={18} />}
                         </button>
                     )}
-                    <div title="Drag Toolbox" className='cursor-grab active:cursor-grabbing' onMouseDown={handleDragMouseDown}
-                    >
+                    <div title="Drag Toolbox" className='cursor-grab active:cursor-grabbing' onMouseDown={handleDragMouseDown} onTouchStart={handleDragTouchStart} style={{ touchAction: 'none' }}>
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="19" r="1"></circle>
                             <circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="19" r="1"></circle>
@@ -206,17 +320,26 @@ const Toolbox = ({ boundaryRef }: any) => {
                                 })}
                             </div>
                         </div>
-                    )} 
+                    )}
                     <div>
                         <label className="text-sm font-bold !text-[#212121] mb-2 block">Color</label>
                         <div
-                            className="relative w-[150px] h-[150px] mx-auto rounded-full cursor-pointer border-2 border-gray-300"
-                            style={{ background: 'conic-gradient(red, yellow, lime, cyan, blue, magenta, red)' }}
-                            onClick={handleHueChange} // Yeh 'hue' set karega
+                            ref={colorWheelRef}
+                            className="relative w-[150px] h-[150px] mx-auto rounded-full cursor-crosshair border-2 border-gray-300"
+                            style={{
+                                background: 'radial-gradient(circle, white 0%, transparent 80%), conic-gradient(red, yellow, lime, cyan, blue, magenta, red)',
+                                touchAction: 'none'
+                            }}
+                            onMouseDown={handleColorMouseDown}
+                            onTouchStart={handleColorTouchStart}
                         >
                             <div
-                                className="absolute w-[40px] h-[40px] rounded-full border-4 border-white shadow-md"
-                                style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', backgroundColor: currentColorString }}
+                                className="absolute w-[20px] h-[20px] rounded-full border-2 border-white shadow-md pointer-events-none"
+                                style={{
+                                    left: `${75 + ((brushState.color.s / 100) * 75) * Math.sin((brushState.color.h * Math.PI) / 180) - 10}px`, // 75(center) + x - 10(half-size)
+                                    top: `${75 - ((brushState.color.s / 100) * 75) * Math.cos((brushState.color.h * Math.PI) / 180) - 10}px`,
+                                    backgroundColor: currentColorString
+                                }}
                             />
                         </div>
                     </div>
@@ -237,7 +360,7 @@ const Toolbox = ({ boundaryRef }: any) => {
                         <input
                             type="range"
                             min="1"
-                            max="50"
+                            max="25"
                             value={brushState.size}
                             onChange={(e) => dispatch(setBrushSize(Number(e.target.value)))}
                             className="w-full"

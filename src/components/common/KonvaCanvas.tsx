@@ -117,6 +117,7 @@ const KonvaCanvas = ({
     const memoizedTransform = React.useCallback((c: any) => transformContributionForKonva(c), []);
     const ownershipMapRef = React.useRef<any>(null);
     const wasInsideCanvasRef = useRef(true);
+    const lastDistRef = useRef<number>(0); // NEW: Track pinch distance
 
     // --- zoom in/out limit --- 
     const MAX_ZOOM = 32;
@@ -260,9 +261,9 @@ const KonvaCanvas = ({
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, virtualWidth, virtualHeight);
 
-        const contributionsMap = new Map(savedContributions.map((c:any) => [c._id, JSON.parse(JSON.stringify(c))]));
+        const contributionsMap = new Map(savedContributions.map((c: any) => [c._id, JSON.parse(JSON.stringify(c))]));
 
-        pendingStrokes.forEach((pending:any) => {
+        pendingStrokes.forEach((pending: any) => {
             if (!pending || !pending.contributionId || !Array.isArray(pending.strokes)) return;
             const container = contributionsMap.get(pending.contributionId);
             if (container) container.strokes.push(...pending.strokes);
@@ -270,7 +271,7 @@ const KonvaCanvas = ({
 
         const allContributionsToDraw = Array.from(contributionsMap.values());
 
-        allContributionsToDraw.forEach((contribution:any) => {
+        allContributionsToDraw.forEach((contribution: any) => {
             if (contribution?.strokes?.length > 0) {
                 // Draw visually
                 const konvaData = memoizedTransform(contribution);
@@ -372,7 +373,7 @@ const KonvaCanvas = ({
                 // Scenario 1: Agar is pixel ka malik hai lekin woh active contribution nahi hai
                 if (pixelOwnerId && pixelOwnerId !== activeContributionId) {
                     // Yahan hum pehle owner ka naam nikalenge taake message zyada wazeh ho
-                    const ownerContribution = savedContributions.find((c:any) => c._id === pixelOwnerId);
+                    const ownerContribution = savedContributions.find((c: any) => c._id === pixelOwnerId);
                     const ownerName = ownerContribution?.userId?.fullName || 'another user';
 
                     toast.error(`This belongs to ${ownerName}. You can only edit your active contribution.`);
@@ -381,7 +382,7 @@ const KonvaCanvas = ({
 
                 // Scenario 2: Agar pixel khaali hai, lekin humari active contribution apni nahi hai (sirf doosre ki select ki hui hai)
                 // (Yeh check zaroori hai taake user kisi doosre ki contribution ko "extend" na kar sake)
-                const activeContribution = savedContributions.find((c:any) => c._id === activeContributionId);
+                const activeContribution = savedContributions.find((c: any) => c._id === activeContributionId);
                 if (!pixelOwnerId && activeContribution && activeContribution.userId?._id !== user?._id) {
                     toast.error("You can only draw on your own contributions.");
                     return;
@@ -395,7 +396,7 @@ const KonvaCanvas = ({
         if (!isPointerInsideCanvas(pos)) return; // Agar pointer canvas ke bahar hai, drawing stop
         wasInsideCanvasRef.current = true;
 
-    
+
 
         if (onClearHighlight) onClearHighlight();
 
@@ -468,7 +469,7 @@ const KonvaCanvas = ({
             return;
         }
 
-     
+
 
 
         const tempCanvas = document.createElement('canvas');
@@ -509,6 +510,8 @@ const KonvaCanvas = ({
 
         const pixelsInThisStroke = currentStrokePathRef.current.length;
         if (pixelsInThisStroke > 0) {
+            // Add to recent colors only if we actually drew something
+            dispatch(addRecentColor(brushState.color));
             dispatch(incrementPixelCount({ pixelCountToAdd: pixelsInThisStroke }));
         }
 
@@ -521,17 +524,28 @@ const KonvaCanvas = ({
 
     // handleMouseUp ab bohat aasan ho gaya hai
     const handleMouseUp = () => {
-        if (brushState.mode === 'picker' && bakedImageContextRef.current) {
-            // Get the pixel data from the baked canvas context at the cursor's position
-            const pixel = bakedImageContextRef.current.getImageData(pos.x, pos.y, 1, 1).data;
-            const rgb = { r: pixel[0], g: pixel[1], b: pixel[2] };
+        const stage = stageRef.current;
+        if (brushState.mode === 'picker' && bakedImageContextRef.current && stage) {
+            // Get the pointer position from the stage
+            const pos = stage.getPointerPosition();
+            if (pos) {
+                // We need to account for stage pan and zoom to get the correct pixel on the baked image
+                const transform = stage.getAbsoluteTransform().copy();
+                transform.invert();
+                const localPos = transform.point(pos);
 
-            // Update a preview state (optional, for a custom cursor)
-            setColorPickerPreview(`rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`);
+                const x = Math.floor(localPos.x);
+                const y = Math.floor(localPos.y);
 
-            // Update the main color wheel in real-time (optional, can be performance intensive)
-            // const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
-            // dispatch(setBrushColor(hsl));
+                // Check bounds
+                if (x >= 0 && x < virtualWidth && y >= 0 && y < virtualHeight) {
+                    const ctx = bakedImageContextRef.current as CanvasRenderingContext2D; // Type Assertion
+                    const pixel = ctx.getImageData(x, y, 1, 1).data;
+                    const rgb = { r: pixel[0], g: pixel[1], b: pixel[2] };
+                    // Update a preview state (optional, for a custom cursor)
+                    // setColorPickerPreview(`rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`);
+                }
+            }
         }
         if (isPanning) {
             setIsPanning(false);
@@ -587,7 +601,7 @@ const KonvaCanvas = ({
     //         return; // Stop further execution
     //     }
     //     const pos = getCanvasPointerPosition(stage);
-        
+
     //     const { h, s, l } = brushState.color;
     //     const rgbColor = hslToRgb(h, s, l);
     //     const colorString = `rgba(${rgbColor.r}, ${rgbColor.g}, ${rgbColor.b}, 1)`;
@@ -636,7 +650,7 @@ const KonvaCanvas = ({
 
     // };
 
-   
+
     const handleMouseDown = (e: any) => {
         const stage = stageRef.current;
         if (!stage) return;
@@ -647,14 +661,22 @@ const KonvaCanvas = ({
             panStartPointRef.current = stage.getPointerPosition();
             return;
         }
+
+        // --- Prevent Drawing if Zoom < 1 ---
+        if (stage.scaleX() < 1) {
+            toast.error("Please zoom in to at least 100% to draw.");
+            return;
+        }
+        // -----------------------------------
+
         if (isReadOnly || !user) {
-                if (!user) onGuestInteraction();
-                return;
-            }
+            if (!user) onGuestInteraction();
+            return;
+        }
         if (!isContributor) {
-                    toast.warning("You are not a contributor for this project.");
-                    return;
-                }
+            toast.warning("You are not a contributor for this project.");
+            return;
+        }
         // Sirf left-click hi aage jayega
         if (e.evt.button !== 0) return;
 
@@ -668,7 +690,7 @@ const KonvaCanvas = ({
             const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
 
             dispatch(setBrushColor({ h: hsl.h, s: hsl.s, l: hsl.l }));
-            dispatch(addRecentColor({ h: hsl.h, s: hsl.s, l: hsl.l }));
+            // dispatch(addRecentColor({ h: hsl.h, s: hsl.s, l: hsl.l })); // REMOVED: Now only added on draw
             dispatch(setCurrentBrush({ mode: 'brush' }));
 
             toast.success("Color picked!");
@@ -698,7 +720,7 @@ const KonvaCanvas = ({
         // Is function ko sirf ek baar, bilkul aakhir mein call karein
         startDrawing(pos);
     };
-   
+
     const handleMouseMove = (e: any) => {
         const stage = stageRef.current;
         if (!stage) return;
@@ -747,6 +769,11 @@ const KonvaCanvas = ({
     };
 
     // --- TOUCH EVENT HANDLERS ---
+    // --- TOUCH EVENT HANDLERS ---
+    const getDistance = (p1: any, p2: any) => {
+        return Math.sqrt(Math.pow(p2.clientX - p1.clientX, 2) + Math.pow(p2.clientY - p1.clientY, 2));
+    };
+
     const handleTouchStart = (e: any) => {
         const stage = e.target.getStage();
         if (!stage) return;
@@ -754,12 +781,20 @@ const KonvaCanvas = ({
         const touches = e.evt.touches;
 
         if (touches.length === 1) {
+            // Check zoom level for touch as well
+            if (stage.scaleX() < 1) {
+                toast.error("Please zoom in to at least 100% to draw.");
+                return;
+            }
             // Agar ek ungli hai, to drawing shuru karein
             setIsDrawing(true);
             startDrawing(stage.getRelativePointerPosition());
         } else if (touches.length >= 2) {
+            // Prevent default browser behavior (zoom/scroll)
+            e.evt.preventDefault();
+
             // Agar do ya do se zyada ungliyan hain, to drawing ko foran rokein
-            // aur panning ke liye tayar ho jayein
+            // aur panning/zooming ke liye tayar ho jayein
             setIsDrawing(false);
 
             const touch1 = touches[0];
@@ -770,25 +805,33 @@ const KonvaCanvas = ({
                 x: (touch1.clientX + touch2.clientX) / 2,
                 y: (touch1.clientY + touch2.clientY) / 2,
             };
+
+            // Initial distance between fingers record karein
+            lastDistRef.current = getDistance(touch1, touch2);
         }
     };
     const handleTouchMove = (e: any) => {
         const stage = e.target.getStage();
         if (!stage) return;
 
+        // Prevent page scrolling/zooming while interacting with canvas
+        e.evt.preventDefault();
+
         const touches = e.evt.touches;
 
-        // --- YEH HAI ASAL NAYI LOGIC ---
+        // --- YEH HAI ASAL NAYI LOGIC (UPDATED FOR ZOOM) ---
         if (touches.length >= 2 && lastPanPointRef.current) {
-            // Case A: Agar do ungliyan hain, to PAN karein
+            // Case A: Two fingers -> Pan AND Zoom
             const touch1 = touches[0];
             const touch2 = touches[1];
 
+            const dist = getDistance(touch1, touch2);
             const newCenter = {
                 x: (touch1.clientX + touch2.clientX) / 2,
                 y: (touch1.clientY + touch2.clientY) / 2,
             };
 
+            // 1. Handle Panning
             const dx = newCenter.x - lastPanPointRef.current.x;
             const dy = newCenter.y - lastPanPointRef.current.y;
 
@@ -799,7 +842,33 @@ const KonvaCanvas = ({
 
             stage.position(newPos);
             lastPanPointRef.current = newCenter;
-            handleStageChange(); // Parent ko nayi position batayein
+
+            // 2. Handle Zooming if distance changed meaningfully
+            if (lastDistRef.current > 0) {
+                const oldScale = stage.scaleX();
+                const scaleBy = dist / lastDistRef.current;
+                const newScale = oldScale * scaleBy;
+
+                // Limit zoom
+                const constrainedScale = Math.max(MIN_ZOOM, Math.min(newScale, MAX_ZOOM));
+
+                // Center zoom on midpoint
+                const mousePointTo = {
+                    x: (newCenter.x - stage.x()) / oldScale,
+                    y: (newCenter.y - stage.y()) / oldScale,
+                };
+
+                const newPosZoom = {
+                    x: newCenter.x - mousePointTo.x * constrainedScale,
+                    y: newCenter.y - mousePointTo.y * constrainedScale,
+                };
+
+                stage.scale({ x: constrainedScale, y: constrainedScale });
+                stage.position(newPosZoom);
+            }
+
+            lastDistRef.current = dist;
+            handleStageChange();
 
         } else if (touches.length === 1 && isDrawing) {
             // Case B: Agar ek ungli hai, to DRAW karein
@@ -815,10 +884,38 @@ const KonvaCanvas = ({
         }
     };
 
-    const highlightedLines = useMemo(() => {
-        if (!selectedContributionId) return [];
+    const highlightedBox = useMemo(() => {
+        if (!selectedContributionId) return null;
         const selected = savedStrokes.find((c: any) => c._id === selectedContributionId);
-        return selected ? transformContributionForKonva(selected).lines : [];
+        if (!selected) return null;
+
+        // Use the existing utility logic to find bounds (or reimplement briefly here if imports are tricky, but best to reuse logic if possible. 
+        // Since getContributionBoundingBox is in utils, we could import it, but let's just do a quick calculation here as it is robust enough for a highlight box)
+        // Actually, let's keep it simple and consistent.
+
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        let hasPoints = false;
+
+        selected.strokes.forEach((stroke: any) => {
+            stroke.strokePath.forEach((segment: any) => {
+                minX = Math.min(minX, segment.fromX, segment.toX);
+                minY = Math.min(minY, segment.fromY, segment.toY);
+                maxX = Math.max(maxX, segment.fromX, segment.toX);
+                maxY = Math.max(maxY, segment.fromY, segment.toY);
+                hasPoints = true;
+            });
+        });
+
+        if (!hasPoints) return null;
+
+        // Add some padding
+        const padding = 10;
+        return {
+            x: minX - padding,
+            y: minY - padding,
+            width: (maxX - minX) + (padding * 2),
+            height: (maxY - minY) + (padding * 2)
+        };
     }, [selectedContributionId, savedStrokes]);
 
     return (
@@ -872,7 +969,20 @@ const KonvaCanvas = ({
                 {isDrawing && <Line points={activeLine.points} stroke={activeLine.stroke} strokeWidth={activeLine.strokeWidth} tension={brushState.mode === 'line' ? 0 : 0.5} lineCap="round" lineJoin="round" globalCompositeOperation={activeLine.tool === 'eraser' ? 'destination-out' : 'source-over'} listening={false} />}
             </Layer>
             <Layer listening={false}>
-                {highlightedLines.map((line: any, i: any) => <Line key={`highlight-${i}`} {...line} shadowColor="rgba(0, 102, 255, 0.8)" shadowBlur={15} shadowOpacity={0.9} />)}
+                {highlightedBox && (
+                    <Rect
+                        x={highlightedBox.x}
+                        y={highlightedBox.y}
+                        width={highlightedBox.width}
+                        height={highlightedBox.height}
+                        stroke="#0066FF"
+                        strokeWidth={2 / (stageRef.current?.scaleX() || 1)} // Dynamic stroke width
+                        fillEnabled={false}
+                        dash={[10, 5]}
+                        shadowColor="rgba(0, 102, 255, 0.4)"
+                        shadowBlur={10}
+                    />
+                )}
             </Layer>
         </Stage>
     );

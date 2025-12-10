@@ -51,57 +51,70 @@ const InfoBox = ({ zoom, worldPos, isSaving, saveError, boundaryRef }: any) => {
 
     // --- SIMPLE & CORRECT DRAGGING LOGIC (UPDATED) ---
 
-    const handleDragMouseDown = useCallback((e: React.MouseEvent) => {
-
-        // NAYA CODE: Ab yeh check nahi karega ke box minimized hai ya nahi
+    const handleDragStart = useCallback((clientX: number, clientY: number) => {
         if (!infoBoxRef.current) return;
-
         const infoBoxRect = infoBoxRef.current.getBoundingClientRect();
         setIsDragging(true);
         dragOffsetRef.current = {
-            x: e.clientX - infoBoxRect.left,
-            y: e.clientY - infoBoxRect.top,
+            x: clientX - infoBoxRect.left,
+            y: clientY - infoBoxRect.top,
         };
+    }, []);
+
+    const handleDragMouseDown = useCallback((e: React.MouseEvent) => {
+        handleDragStart(e.clientX, e.clientY);
         e.preventDefault();
-    }, []); // Dependency array se `isMinimized` hata dein
+    }, [handleDragStart]);
+
+    const handleDragTouchStart = useCallback((e: React.TouchEvent) => {
+        const touch = e.touches[0];
+        handleDragStart(touch.clientX, touch.clientY);
+        e.preventDefault(); // Stop creating mouse event
+    }, [handleDragStart]);
 
     useEffect(() => {
-        const handleDragMouseMove = (e: MouseEvent) => {
+        const handleDragMove = (clientX: number, clientY: number) => {
             if (!isDragging || !boundaryRef.current || !infoBoxRef.current) return;
 
             const boundaryRect = boundaryRef.current.getBoundingClientRect();
             const infoBoxNode = infoBoxRef.current;
 
-            // Calculate the new top-left position of the box in viewport coordinates
-            const newX_viewport = e.clientX - dragOffsetRef.current.x;
-            const newY_viewport = e.clientY - dragOffsetRef.current.y;
+            // Calculate the new top-left position...
+            const newX_viewport = clientX - dragOffsetRef.current.x;
+            const newY_viewport = clientY - dragOffsetRef.current.y;
 
-            // Convert viewport coordinates to be relative to the boundary container
             let newX = newX_viewport - boundaryRect.left;
             let newY = newY_viewport - boundaryRect.top;
 
-            // Enforce boundaries to keep the box inside the container
             newX = Math.max(0, newX);
             newY = Math.max(0, newY);
             newX = Math.min(newX, boundaryRect.width - infoBoxNode.offsetWidth);
             newY = Math.min(newY, boundaryRect.height - infoBoxNode.offsetHeight);
 
-            // Update the state directly. This is reliable and fast enough for this component.
             setPosition({ x: newX, y: newY });
         };
 
-        const handleDragMouseUp = () => {
-            setIsDragging(false);
+        const handleMouseMove = (e: MouseEvent) => handleDragMove(e.clientX, e.clientY);
+        const handleTouchMove = (e: TouchEvent) => {
+            const touch = e.touches[0];
+            handleDragMove(touch.clientX, touch.clientY);
+            e.preventDefault(); // Prevent scrolling while dragging
         };
 
+        const handleDragEnd = () => setIsDragging(false);
+
         if (isDragging) {
-            document.addEventListener('mousemove', handleDragMouseMove);
-            document.addEventListener('mouseup', handleDragMouseUp);
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleDragEnd);
+            document.addEventListener('touchmove', handleTouchMove, { passive: false });
+            document.addEventListener('touchend', handleDragEnd);
         }
 
         return () => {
-            document.removeEventListener('mousemove', handleDragMouseMove);
-            document.removeEventListener('mouseup', handleDragMouseUp);
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleDragEnd);
+            document.removeEventListener('touchmove', handleTouchMove);
+            document.removeEventListener('touchend', handleDragEnd);
         };
     }, [isDragging, boundaryRef]);
 
@@ -121,8 +134,9 @@ const InfoBox = ({ zoom, worldPos, isSaving, saveError, boundaryRef }: any) => {
         >
             <div
                 className="w-full flex justify-between items-center gap-5 mb-2"
-                style={{ cursor: isMinimized ? 'default' : 'grab' }}
+                style={{ cursor: isMinimized ? 'default' : 'grab', touchAction: 'none' }}
                 onMouseDown={handleDragMouseDown}
+                onTouchStart={handleDragTouchStart}
             >
                 <p className="text-[#3e2723] text-lg font-bold m-0">Infobox</p>
                 <div className='flex text-[#3e2723] items-center gap-2'>

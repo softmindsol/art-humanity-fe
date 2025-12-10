@@ -212,6 +212,7 @@ const paintPixelSlice = createSlice({
     },
     addRecentColor: (state: any, action: any) => {
       const newColor = action.payload; // An HSL object {h, s, l}
+      console.log("[Reducer] addRecentColor triggered. Payload:", newColor); // <-- LOG 1
 
       // 1. Remove any existing instance of the same color to avoid duplicates
       // We'll compare by converting to a string for simplicity
@@ -225,6 +226,8 @@ const paintPixelSlice = createSlice({
 
       // 3. Keep only the 10 most recent colors
       state.recentColors = updatedColors.slice(0, 10);
+        console.log('[Reducer] Updated recentColors state:', state.recentColors); // <-- LOG 2
+
     },
 
     appendStrokesToContribution: (state: any, action) => {

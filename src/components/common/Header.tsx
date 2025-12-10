@@ -43,7 +43,6 @@ const Header = () => {
     amount: 0,
   });
 
-  console.log("donationState:", donationState?.isFormOpen)
 
   useOnClickOutside([notificationRef], () => setIsNotificationOpen(false));
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
