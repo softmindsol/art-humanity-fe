@@ -6,6 +6,9 @@ import HeroSection from './components/hero-section/home-page-hero-section';
 import AboutUsSection from './components/about-us/AboutUsSection';
 import ServicesSection from './components/services/ServicesSection';
 import ActiveProjectsSection from './components/active-projects/ActiveProjectsSection';
+import ArtworkShowcaseSection from './components/artwork-showcase/ArtworkShowcaseSection';
+import PopularGallerySection from './components/gallery/PopularGallerySection';
+import TestimonialSection from './components/testimonial/TestimonialSection';
 import NotFoundPage from './components/PageNotFound';
 import GuidelinePage from './page/guideline';
 import ActiveProjects from './page/contribute/';
@@ -73,6 +76,9 @@ function App() {
                   <AboutUsSection />
                   <ServicesSection />
                   <ActiveProjectsSection />
+                  <ArtworkShowcaseSection />
+                  <PopularGallerySection />
+                  <TestimonialSection />
                  </>
               } />
               <Route path="/guideline" element={<GuidelinePage />} />
