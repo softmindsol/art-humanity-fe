@@ -3,6 +3,9 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Header from './components/common/Header';
 import Footer from './components/common/Footer';
 import HeroSection from './components/hero-section/home-page-hero-section';
+import AboutUsSection from './components/about-us/AboutUsSection';
+import ServicesSection from './components/services/ServicesSection';
+import ActiveProjectsSection from './components/active-projects/ActiveProjectsSection';
 import NotFoundPage from './components/PageNotFound';
 import GuidelinePage from './page/guideline';
 import ActiveProjects from './page/contribute/';
@@ -64,7 +67,14 @@ function App() {
               <ScrollToTop />
 
             <Routes>
-              <Route path="/" element={<HeroSection />} />
+              <Route path="/" element={
+                 <>
+                  <HeroSection />
+                  <AboutUsSection />
+                  <ServicesSection />
+                  <ActiveProjectsSection />
+                 </>
+              } />
               <Route path="/guideline" element={<GuidelinePage />} />
               <Route path="/gallery" element={<><GalleryPage /></>} />
               <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
@@ -91,7 +101,7 @@ function App() {
               /></div>
       }
        
-          <Footer />
+          {/* <Footer /> */}
             {/* </div> */}
       </SocketProvider>
     </Router>
