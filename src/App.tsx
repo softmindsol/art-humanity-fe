@@ -74,11 +74,11 @@ function App() {
                  <>
                   <HeroSection />
                   <AboutUsSection />
-                  <ServicesSection />
+                   <ServicesSection />
                   <ActiveProjectsSection />
                   <ArtworkShowcaseSection />
                   <PopularGallerySection />
-                  <TestimonialSection />
+                  <TestimonialSection />{/* */}
                  </>
               } />
               <Route path="/guideline" element={<GuidelinePage />} />
@@ -107,7 +107,7 @@ function App() {
               /></div>
       }
        
-          {/* <Footer /> */}
+          <Footer />
             {/* </div> */}
       </SocketProvider>
     </Router>

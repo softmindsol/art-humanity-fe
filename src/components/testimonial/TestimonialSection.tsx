@@ -16,7 +16,7 @@ const TestimonialSection: React.FC = () => {
 
             <div className="relative z-10 max-w-4xl mx-auto px-6 flex flex-col items-center text-center space-y-8">
                 {/* Quote Icon */}
-                <Quote className="w-16 h-16 text-gray-500/30 fill-current" />
+                <img src='/assets/commas.svg' className="w-16 h-16 text-gray-500/30 fill-current" />
 
                 {/* Stars */}
                 <div className="flex items-center gap-1">
@@ -26,7 +26,7 @@ const TestimonialSection: React.FC = () => {
                 </div>
 
                 {/* Testimonial Text */}
-                <p className="text-white text-base md:text-lg lg:text-xl leading-relaxed font-medium">
+                <p className="!text-white text-sm lg:text-[16px] leading-relaxed font-medium">
                     "Working with this team has been one of the best decisions I've made for my business. Not only did they bring expertise and creativity to the table, but they also made the entire process smooth and stress-free. They explained every step, offered helpful suggestions, and delivered high-quality results on time. It feels like a partnership, not just a service. Highly recommended!"
                 </p>
 
@@ -40,8 +40,8 @@ const TestimonialSection: React.FC = () => {
                         />
                     </div>
                     <div className="space-y-1">
-                        <h4 className="!text-white text-xl font-semibold">Jacob Jones</h4>
-                        <p className="text-[#E23373] text-sm lg:text-base  font-medium">Chief Product Executive</p>
+                        <h4 className="!text-white text-lg lg:text-[24px] font-semibold">Jacob Jones</h4>
+                        <p className="text-[#E23373]  text-base lg:text-[20px] font-semibold">Chief Product Executive</p>
                     </div>
                 </div>
             </div>

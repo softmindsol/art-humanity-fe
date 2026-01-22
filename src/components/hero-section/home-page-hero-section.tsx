@@ -5,19 +5,19 @@ import { Link } from 'react-router-dom';
 
 const HeroSection: React.FC = () => {
   return (
-    <div className='w-full min-h-screen relative flex items-center bg-[#030303]'>
+    <div className="w-full min-h-screen relative flex items-start lg:items-center bg-[#030303]">
       
       {/* Background Image Container */}
       <div className="absolute inset-0 z-0">
           <img 
             src="/assets/hero-section-img.svg" 
             alt="Hero Background" 
-            className="w-full h-fit object-cover "
+            className="w-full h-full object-cover "
           />
          
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-20 relative z-10 w-full">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 pt-40 relative z-10 w-full">
         
         {/* Content Container */}
         <div className="w-full lg:w-1/2 flex flex-col items-center lg:items-start text-center lg:text-left space-y-8">
