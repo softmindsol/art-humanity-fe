@@ -4,7 +4,7 @@ import { FaYoutube, FaTiktok, FaInstagram, FaDiscord } from 'react-icons/fa';
 const Footer = () => {
     const location = useLocation();
 
-    if (location.pathname === "/signup" || location.pathname === "/login" || location.pathname === "/forgot-password") {
+    if (location.pathname === "/signup" || location.pathname === "/login" || location.pathname === "/forgot-password" || location.pathname.startsWith("/reset-password")) {
         return null;
     }
 

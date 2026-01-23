@@ -211,7 +211,7 @@ const Header = () => {
 
   // --- HIDE HEADER ON AUTH PAGES ---
   const location = useLocation();
-  if (location.pathname === "/signup" || location.pathname === "/login" || location.pathname === "/forgot-password") {
+  if (location.pathname === "/signup" || location.pathname === "/login" || location.pathname === "/forgot-password" || location.pathname.startsWith("/reset-password")) {
     return null;
   }
 

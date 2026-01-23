@@ -82,7 +82,7 @@ function App() {
                   <ActiveProjectsSection />
                   <ArtworkShowcaseSection />
                   <PopularGallerySection />
-                  <TestimonialSection />{/* */}
+                  <TestimonialSection />
                  </>
               } />
               <Route path="/guideline" element={<GuidelinePage />} />
