@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import AuthModal from "../modal/AuthModal";
 import { useSelector } from "react-redux";
 import { getUserById, logoutUser } from "@/redux/action/auth";
@@ -14,7 +14,6 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import {
-  openAuthModal,
   closeAuthModal,
   selectIsAuthModalOpen,
   openDonationForm,
@@ -36,6 +35,7 @@ import {
   UserCircle2,
   Users,
   X,
+  Home,
 } from "lucide-react";
 import { addNotification } from "@/redux/slice/notification";
 import useOnClickOutside from "@/hook/useOnClickOutside";
@@ -49,6 +49,7 @@ import CustomModal from "../modal/CustomModal";
 const Header = () => {
   const isAuthModalOpen = useSelector(selectIsAuthModalOpen);
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const { user, profile } = useSelector((state: RootState) => state.auth);
 
   const notificationRef = useRef<HTMLDivElement>(null);
@@ -208,10 +209,16 @@ const Header = () => {
     }
   }, [user, dispatch]);
 
+  // --- HIDE HEADER ON AUTH PAGES ---
+  const location = useLocation();
+  if (location.pathname === "/signup" || location.pathname === "/login" || location.pathname === "/forgot-password" || location.pathname.startsWith("/reset-password")) {
+    return null;
+  }
+
   return (
     <>
       {/* Fixed Pill Container */}
-      <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-[1000] w-[100%] ">
+      <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-[1000] w-[95%] ">
         <header className="flex items-center justify-between px-6 !py-[5px] rounded-full  border border-white/20 shadow-2xl bg-black/10 backdrop-blur-[2px]">
           {/* Logo Section */}
           <div className="logo-container">
@@ -225,7 +232,7 @@ const Header = () => {
           </div>
 
           {/* Navigation - Hidden on Mobile */}
-          <div className="header-right flex items-center gap-8">
+          <div className="desktop-nav hidden md:flex items-center gap-8">
             <nav className="hidden md:block">
               <ul className="flex items-center gap-8">
                 <li>
@@ -233,11 +240,12 @@ const Header = () => {
                     to="/"
                     className={({ isActive }) =>
                       isActive
-                        ? "active text-white"
-                        : "text-gray-400 hover:text-white"
+                        ? "active text-white flex items-center gap-2"
+                        : "text-gray-400 hover:text-white flex items-center gap-2 transition-colors"
                     }
                   >
-                    Home
+                    <Home size={16} />
+                    <span className="hidden lg:inline">Home</span>
                   </NavLink>
                 </li>
                 <li>
@@ -245,11 +253,12 @@ const Header = () => {
                     to="/guideline"
                     className={({ isActive }) =>
                       isActive
-                        ? "active text-white"
-                        : "text-gray-400 hover:text-white"
+                        ? "active text-white flex items-center gap-2"
+                        : "text-gray-400 hover:text-white flex items-center gap-2 transition-colors"
                     }
                   >
-                    Guideline
+                    <FileText size={16} />
+                    <span className="hidden lg:inline">Guideline</span>
                   </NavLink>
                 </li>
                 {
@@ -259,11 +268,12 @@ const Header = () => {
                       to="/gallery"
                       className={({ isActive }) =>
                         isActive
-                          ? "active text-white"
-                          : "text-gray-400 hover:text-white"
+                          ? "active text-white flex items-center gap-2"
+                          : "text-gray-400 hover:text-white flex items-center gap-2 transition-colors"
                       }
                     >
-                      Gallery
+                      <Image size={16} />
+                      <span className="hidden lg:inline">Gallery</span>
                     </NavLink>
                   </li>
                 }
@@ -274,11 +284,12 @@ const Header = () => {
                       to="/projects"
                       className={({ isActive }) =>
                         isActive
-                          ? "active text-white"
-                          : "text-gray-400 hover:text-white"
+                          ? "active text-white flex items-center gap-2"
+                          : "text-gray-400 hover:text-white flex items-center gap-2 transition-colors"
                       }
                     >
-                      Contribute
+                      <Users size={16} />
+                      <span className="hidden lg:inline">Contribute</span>
                     </NavLink>
                   </li>
                 }
@@ -287,11 +298,12 @@ const Header = () => {
                     to="/demo"
                     className={({ isActive }) =>
                       isActive
-                        ? "active text-white"
-                        : "text-gray-400 hover:text-white"
+                        ? "active text-white flex items-center gap-2"
+                        : "text-gray-400 hover:text-white flex items-center gap-2 transition-colors"
                     }
                   >
-                    Demo
+                    <PlayCircle size={16} />
+                    <span className="hidden lg:inline">Demo</span>
                   </NavLink>
                 </li>
 
@@ -368,8 +380,8 @@ const Header = () => {
               </ul>
             </nav>
 
-            {/* Auth Buttons */}
-            <div className="auth-buttons flex items-center">
+            {/* Auth Buttons - Hidden on Mobile (moved to sidebar) */}
+            <div className="auth-buttons hidden md:flex items-center">
               {profile ? (
                 <div>
                   <DropdownMenu>
@@ -429,22 +441,23 @@ const Header = () => {
                 <button
                   id="sign-in-btn"
                   className="px-6 py-2 rounded-full font-medium text-white bg-gradient-to-r from-[#E23373] to-[#FEC133] hover:opacity-90 transition-opacity transform active:scale-95 shadow-[0_0_20px_rgba(226,51,115,0.4)] font-montserrat"
-                  onClick={() => dispatch(openAuthModal())}
+                  onClick={() => navigate('/signup')}
                 >
                   Sign In
                 </button>
               )}
             </div>
 
-            {/* Mobile Menu Button */}
-            <div className="md:hidden ml-2">
-              <button
-                onClick={() => setIsSidebarOpen(true)}
-                className="text-white hover:bg-white/10 p-2 rounded-full transition-colors"
-              >
-                <Menu size={24} />
-              </button>
-            </div>
+          </div>
+
+          {/* Mobile Menu Button - Direct Child */}
+          <div className="md:hidden relative z-100 flex items-center">
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="!text-white hover:bg-white/10 p-2 rounded-full transition-colors"
+            >
+              <Menu size={24} />
+            </button>
           </div>
         </header>
       </div>
@@ -456,110 +469,140 @@ const Header = () => {
 
       {/* ===== SIDEBAR PANEL (WITH AUTH LOGIC) ===== */}
       <div
-        className={`fixed top-0 right-0 h-full w-72 max-w-[80%] bg-[#f5f5dc] p-5 z-50 shadow-lg 
+        className={`fixed top-0 right-0 h-full w-72 max-w-[80%] bg-[#1A1D24] border-l border-white/10 p-5 z-[2000] shadow-2xl 
                 transition-transform duration-300 ease-in-out
                 ${isSidebarOpen ? "translate-x-0" : "translate-x-full"}`}
       >
         {/* Close Button */}
-        <div className="flex items-center justify-between mb-5 pb-2 border-b border-accent-dark">
+        <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/10">
           {/* Logo (Left side) */}
           <Link
             to="/"
             onClick={handleLinkClick}
             className="flex items-center gap-x-3"
           >
-            <img src="/favicon.PNG" alt="Logo" className="h-10 w-10" />
-            {/* <span className="font-bold text-primary-dark text-lg font-playfair">Project Art</span> */}
+            <img src="/assets/logo.svg" alt="Logo" className="h-10 w-10 object-contain" />
           </Link>
 
           {/* Close Button (Right side) */}
-          <button onClick={() => setIsSidebarOpen(false)}>
-            <X className="h-6 w-6 text-primary-dark" />
+          <button onClick={() => setIsSidebarOpen(false)} className="text-white/70 hover:text-white transition-colors">
+            <X className="h-6 w-6" />
           </button>
         </div>
 
         {/* Flex container to push auth section to the bottom */}
-        <div className="flex flex-col justify-between h-[calc(100%-64px)]">
+        <div className="flex flex-col justify-between h-[calc(100%-100px)]">
           {/* Navigation Links */}
           <nav>
-            <ul className="flex flex-col gap-y-4">
-              {/* Guideline Link with Icon */}
+            <ul className="flex flex-col gap-y-2">
+              {/* Home Link */}
+              <li>
+                <NavLink
+                  to="/"
+                  onClick={handleLinkClick}
+                  className="cursor-pointer text-gray-300 hover:text-white hover:bg-white/5 p-3 rounded-lg transition-all flex items-center gap-3 font-medium"
+                >
+                  <span className="text-lg">Home</span>
+                </NavLink>
+              </li>
+
+              {/* Guideline Link */}
               <li>
                 <NavLink
                   to="/guideline"
                   onClick={handleLinkClick}
-                  className="cursor-pointer text-[#5d4037] hover:bg-[#f1e6da] transition-colors !flex !items-center gap-2"
+                  className="cursor-pointer text-gray-300 hover:text-white hover:bg-white/5 p-3 rounded-lg transition-all flex items-center gap-3 font-medium"
                 >
-                  <FileText size={24} />
+                  <FileText size={20} />
                   <span>Guideline</span>
                 </NavLink>
               </li>
 
-              {/* Gallery Link with Icon */}
-              <li>
-                <NavLink
-                  to="/gallery"
-                  onClick={handleLinkClick}
-                  className="cursor-pointer text-[#5d4037] hover:bg-[#f1e6da] transition-colors !flex !items-center gap-2"
-                >
-                  <Image size={24} />
-                  <span>Gallery</span>
-                </NavLink>
-              </li>
+              {/* Gallery Link */}
+              {/* user && ( // Uncomment if needed */ }
+                 <li>
+                  <NavLink
+                    to="/gallery"
+                    onClick={handleLinkClick}
+                    className="cursor-pointer text-gray-300 hover:text-white hover:bg-white/5 p-3 rounded-lg transition-all flex items-center gap-3 font-medium"
+                  >
+                    <Image size={20} />
+                    <span>Gallery</span>
+                  </NavLink>
+                </li>
+             { /* ) */ }
 
-              {/* Contribute Link with Icon */}
-              <li>
-                <NavLink
-                  to="/projects"
-                  onClick={handleLinkClick}
-                  className="cursor-pointer text-[#5d4037] hover:bg-[#f1e6da] transition-colors !flex !items-center gap-2"
-                >
-                  <Users size={24} />
-                  <span>Contribute</span>
-                </NavLink>
-              </li>
+              {/* Contribute Link */}
+              {/* user && ( // Uncomment if needed */ }
+                <li>
+                  <NavLink
+                    to="/projects"
+                    onClick={handleLinkClick}
+                    className="cursor-pointer text-gray-300 hover:text-white hover:bg-white/5 p-3 rounded-lg transition-all flex items-center gap-3 font-medium"
+                  >
+                    <Users size={20} />
+                    <span>Contribute</span>
+                  </NavLink>
+                </li>
+              { /* ) */ }
 
-              {/* Demo Link with Icon */}
+              {/* Demo Link */}
               <li>
                 <NavLink
                   to="/demo"
                   onClick={handleLinkClick}
-                  className="cursor-pointer text-[#5d4037] hover:bg-[#f1e6da] transition-colors !flex !items-center gap-2"
+                  className="cursor-pointer text-gray-300 hover:text-white hover:bg-white/5 p-3 rounded-lg transition-all flex items-center gap-3 font-medium"
                 >
-                  <PlayCircle size={24} />
+                  <PlayCircle size={20} />
                   <span>Demo</span>
                 </NavLink>
               </li>
 
-              {/* Support Us Link with Icon */}
+              {/* Support Us Link */}
               {user?._id && (
-                <span
+                <li
                   onClick={handleSupportClick}
-                  className="cursor-pointer text-[#5d4037] hover:bg-[#f1e6da] transition-colors !flex !items-center gap-2"
+                  className="cursor-pointer text-gray-300 hover:text-white hover:bg-white/5 p-3 rounded-lg transition-all flex items-center gap-3 font-medium"
                 >
-                  <Heart size={24} />
+                  <Heart size={20} />
                   <span>Support Us</span>
-                </span>
+                </li>
               )}
             </ul>
           </nav>
 
           {/* Auth Section (Sign In OR Profile/Logout) */}
-          <div className="pt-6 border-t border-[#a1887f]">
+          <div className="pt-6 border-t border-white/10">
             {profile ? (
               // --- AGAR USER LOGGED IN HAI ---
-              <div className="text-center">
-                <div className="font-semibold text-lg text-[#3e2723]">
-                  {profile.fullName}
-                </div>
-                <div className="text-sm text-primary mb-4">{profile.email}</div>
+              <div className="flex flex-col items-center gap-4">
+
+                 <div className="flex items-center gap-3 w-full p-2 rounded-lg bg-white/5">
+                    {profile?.avatar ? (
+                        <img
+                          src={profile?.avatar}
+                          alt="Avatar"
+                          className="w-10 h-10 rounded-full object-cover border border-white/10"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#FF6B6B] to-[#FFD93D] text-white flex items-center justify-center font-bold text-lg shadow-sm">
+                          {profile?.fullName.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                    <div className="flex flex-col overflow-hidden">
+                        <span className="font-semibold text-white truncate">{profile.fullName}</span>
+                        <span className="text-xs text-gray-400 truncate">{profile.email}</span>
+                    </div>
+                 </div>
+
                 <button
                   onClick={() => {
                     handleLogout();
-                    handleLinkClick(); // Sidebar band karein
+                    handleLinkClick(); 
                   }}
-                  className="w-full cursor-pointer py-2 bg-[#3e2723] text-white rounded-full hover:opacity-75 transition-colors"
+                  className="w-full cursor-pointer py-2.5 bg-red-500/10 text-red-400 border border-red-500/20 rounded-lg hover:bg-red-500/20 transition-colors flex items-center justify-center gap-2 font-medium"
                 >
+                  <LogOut size={16} />
                   Logout
                 </button>
               </div>
@@ -567,12 +610,12 @@ const Header = () => {
               // --- AGAR USER LOGGED OUT HAI ---
               <button
                 onClick={() => {
-                  dispatch(openAuthModal()); // Auth modal kholein
-                  handleLinkClick(); // Sidebar band karein
+                  navigate('/signup'); 
+                  handleLinkClick(); 
                 }}
-                className="w-full cursor-pointer py-2 bg-[#3e2723] text-[#ffff] rounded-full font-semibold text-md hover:opacity-75 transition-colors"
+                className="w-full cursor-pointer py-3 rounded-full font-bold text-white bg-gradient-to-r from-[#E23373] to-[#FEC133] hover:opacity-90 shadow-lg transition-all active:scale-95"
               >
-                Sign In / Sign Up
+                Sign In
               </button>
             )}
           </div>
@@ -648,6 +691,7 @@ const Header = () => {
         confirmText="Yes, Logout"
         isLoading={isLoggingOut}
       />
+      
     </>
   );
 };

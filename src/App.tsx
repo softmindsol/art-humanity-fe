@@ -31,6 +31,10 @@ import { openDonationForm, resetDonationPrompt, selectIsDonationPromptModalOpen 
 import { useDispatch } from 'react-redux';
 import ContactUs from './page/contact/ContactPage';
 import ScrollToTop from './components/common/ScrollToTop';
+import SignupPage from './page/auth/SignupPage';
+import LoginPage from './page/auth/LoginPage';
+import ForgotPasswordPage from './page/auth/ForgotPasswordPage';
+
 function App() {
   const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
   const [isPromptModalOpen, setIsPromptModalOpen] = useState(false);
@@ -74,7 +78,7 @@ function App() {
                  <>
                   <HeroSection />
                   <AboutUsSection />
-                  <ServicesSection />
+                   <ServicesSection />
                   <ActiveProjectsSection />
                   <ArtworkShowcaseSection />
                   <PopularGallerySection />
@@ -86,6 +90,9 @@ function App() {
               <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
               <Route path="/create-project" element={<CreateProjectPage />} />
                 <Route path="/contact-us" element={<><ContactUs /></>} />
+              <Route path="/signup" element={<SignupPage />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
               <Route path="/projects" element={<><ActiveProjects /></>} />
               <Route path="/demo" element={<Demo />} />
@@ -107,7 +114,7 @@ function App() {
               /></div>
       }
        
-          {/* <Footer /> */}
+          <Footer />
             {/* </div> */}
       </SocketProvider>
     </Router>

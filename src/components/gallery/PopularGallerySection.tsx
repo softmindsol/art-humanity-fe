@@ -55,7 +55,7 @@ const PopularGallerySection: React.FC = () => {
     ];
 
     return (
-        <section className="relative w-full bg-[#0F0D0D] py-20 lg:py-32 overflow-hidden">
+        <section className="relative w-full bg-[#0F0D0D] py-20 lg:py-20 overflow-hidden">
             <div className="max-w-7xl mx-auto px-6 lg:px-8">
                 
                 {/* Header Row */}

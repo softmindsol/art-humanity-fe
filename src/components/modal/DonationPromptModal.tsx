@@ -9,30 +9,46 @@ interface CustomModalProps {
 }
 
 const CustomModal: React.FC<CustomModalProps> = ({ isOpen, onClose, onDonateClick }) => {
-    if (!isOpen) return null; 
+    if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/50 bg-opacity-50 flex justify-center items-center  z-50">
-            <div className="bg-[#5d4037] border-2 border-[#3e2723] text-white w-[90%]  sm:w-[500px] font-[Georgia, serif] p-6 rounded-lg shadow-lg">
-                <div className="flex justify-center items-center mb-4">
-                    <Heart className="text-red-400" size={48} />
-                </div>
-                <h2 className="text-2xl !text-white text-center">Support Collaborative Art</h2>
-                <p className="pt-4 text-base text-gray-300 text-center">
-                    Our platform is a community-driven space for creativity. Your donation helps us maintain the servers, develop new features, and keep the art alive.
-                    <br /><br />
-                    Every contribution, big or small, makes a difference.
-                </p>
-                <div className="mt-4 flex justify-center">
-                    <Button onClick={onClose} variant="outline" className="cursor-pointer">
-                        Maybe Later
-                    </Button>
-                    {/* <Button
-                        onClick={onDonateClick}
-                        className="cursor-pointer border-white bg-green-600 text-white hover:bg-green-700 ml-4"
-                    >
-                        Donate Now
-                    </Button> */}
+        <div className="fixed inset-0 bg-black/80 flex justify-center items-center z-50 backdrop-blur-sm p-4">
+            <div className="w-full max-w-[535px] p-[1px] rounded-[14px] bg-gradient-to-br from-[#545454] to-[#212121] shadow-2xl relative">
+                <div className="bg-[#0f0f0f] w-full h-full rounded-[14px] p-6 sm:p-8">
+                    <div className="flex justify-center -mt-4 mb-6">
+                        <div className="bg-[#E23373] p-3 rounded-2xl shadow-lg shadow-pink-500/20">
+                            <Heart className="text-white fill-transparent" size={28} strokeWidth={2.5} />
+                        </div>
+                    </div>
+                    
+                    <h2 className="sm:text-[22px] text-[18px] font-bold !text-white text-center">Support the Collaborative Art</h2>
+                    
+                    <p className="mt-4 sm:text-[16px] text-[13px] !text-white text-center leading-relaxed">
+                        Our Platform is a community-driven space for creativity. Your donation helps us maintain the servers, develop new features, and keep the art alive
+                    </p>
+                    
+                    <p className="mt-6 sm:text-[16px] text-[13px] !text-white text-center font-medium">
+                        Every Contribution, big or small, makes a difference
+                    </p>
+                    
+                    <div className="mt-8 flex gap-3 sm:gap-4 w-full">
+                        <div className="flex-1 p-[1px] rounded-full bg-gradient-to-r from-[#E23373] to-[#FEC133]">
+                            <Button 
+                                onClick={onClose} 
+                                variant="ghost" 
+                                className="w-full h-10 sm:h-12 rounded-full bg-[#0f0f0f] hover:bg-[#1a1a1a] font-semibold text-sm sm:text-base text-white hover:text-white border-0 transition-colors"
+                            >
+                                Cancel
+                            </Button>
+                        </div>
+                        
+                        <Button
+                            onClick={onDonateClick}
+                            className="flex-1 h-10 sm:h-12 rounded-full bg-gradient-to-r from-[#E23373] to-[#FEC133] hover:opacity-90 text-sm sm:text-base !text-white font-semibold border-0 shadow-lg shadow-pink-500/20"
+                        >
+                            Raise Fund
+                        </Button>
+                    </div>
                 </div>
             </div>
         </div>
