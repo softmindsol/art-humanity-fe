@@ -1,7 +1,13 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { FaYoutube, FaTiktok, FaInstagram, FaDiscord } from 'react-icons/fa';
 
 const Footer = () => {
+    const location = useLocation();
+
+    if (location.pathname === "/signup" || location.pathname === "/login" || location.pathname === "/forgot-password") {
+        return null;
+    }
+
   return (
     <footer className="w-full !bg-[#141414] pt-16 pb-8 border-t border-white/5">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">

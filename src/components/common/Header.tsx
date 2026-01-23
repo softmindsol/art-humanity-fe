@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import AuthModal from "../modal/AuthModal";
 import { useSelector } from "react-redux";
 import { getUserById, logoutUser } from "@/redux/action/auth";
@@ -14,7 +14,6 @@ import {
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
 import {
-  openAuthModal,
   closeAuthModal,
   selectIsAuthModalOpen,
   openDonationForm,
@@ -50,6 +49,7 @@ import CustomModal from "../modal/CustomModal";
 const Header = () => {
   const isAuthModalOpen = useSelector(selectIsAuthModalOpen);
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const { user, profile } = useSelector((state: RootState) => state.auth);
 
   const notificationRef = useRef<HTMLDivElement>(null);
@@ -208,6 +208,12 @@ const Header = () => {
       dispatch(getUserById(user._id));
     }
   }, [user, dispatch]);
+
+  // --- HIDE HEADER ON AUTH PAGES ---
+  const location = useLocation();
+  if (location.pathname === "/signup" || location.pathname === "/login" || location.pathname === "/forgot-password") {
+    return null;
+  }
 
   return (
     <>
@@ -435,7 +441,7 @@ const Header = () => {
                 <button
                   id="sign-in-btn"
                   className="px-6 py-2 rounded-full font-medium text-white bg-gradient-to-r from-[#E23373] to-[#FEC133] hover:opacity-90 transition-opacity transform active:scale-95 shadow-[0_0_20px_rgba(226,51,115,0.4)] font-montserrat"
-                  onClick={() => dispatch(openAuthModal())}
+                  onClick={() => navigate('/signup')}
                 >
                   Sign In
                 </button>
@@ -570,6 +576,7 @@ const Header = () => {
             {profile ? (
               // --- AGAR USER LOGGED IN HAI ---
               <div className="flex flex-col items-center gap-4">
+
                  <div className="flex items-center gap-3 w-full p-2 rounded-lg bg-white/5">
                     {profile?.avatar ? (
                         <img
@@ -603,7 +610,7 @@ const Header = () => {
               // --- AGAR USER LOGGED OUT HAI ---
               <button
                 onClick={() => {
-                  dispatch(openAuthModal()); 
+                  navigate('/signup'); 
                   handleLinkClick(); 
                 }}
                 className="w-full cursor-pointer py-3 rounded-full font-bold text-white bg-gradient-to-r from-[#E23373] to-[#FEC133] hover:opacity-90 shadow-lg transition-all active:scale-95"
