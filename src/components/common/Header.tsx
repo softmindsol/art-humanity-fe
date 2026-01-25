@@ -232,7 +232,7 @@ const Header = () => {
           </div>
 
           {/* Navigation - Hidden on Mobile */}
-          <div className="desktop-nav hidden md:flex items-center gap-8">
+          <div className="desktop-nav hidden md:flex items-center xl:gap-8">
             <nav className="hidden md:block">
               <ul className="flex items-center gap-8">
                 <li>
