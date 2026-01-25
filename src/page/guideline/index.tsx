@@ -83,9 +83,9 @@ const GuidelinePage: React.FC = () => {
                    </div>
                    
                 </div>
-             <div className='absolute -right-36 top-0'>
+             {/* <div className='absolute -right-36 top-0'>
                   <img src="/assets/gradient-1.svg" alt="" className='h-[10%]' />
-                </div>
+                </div> */}
            
              </div>
 
@@ -115,9 +115,9 @@ const GuidelinePage: React.FC = () => {
                     receives over 50% downvotes.
                 </p>
 
-                <div className='absolute z-0 right-0 bottom-20'>
+                {/* <div className='absolute z-0 right-0 bottom-20'>
                   <img src="/assets/gradient.svg" alt="" className='' />
-                </div>
+                </div> */}
              </div>
 
           </div>
