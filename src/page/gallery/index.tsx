@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useMemo } from 'react'; // useMemo import karein
 import { Link } from 'react-router-dom';
+import { ArrowUpRight } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import {
     selectGalleryProjects,
@@ -159,94 +160,193 @@ const GalleryPage: React.FC = () => {
     }
 
     return (
-        <div id="gallery-content" className="projects-content">
-            <section className="projects-header page-header">
-                <h2 className='!text-[28px] md:!text-[32px]'>Project Gallery</h2>
-                <p className='!text-[14px] !w-full md:!text-[19.2px]' style={{ color: '#8d6e63' }}>Explore our collection of completed collaborative canvases.</p>
-            </section>
-            {
-                (isLoading &&projects.length === 0) && <div className="flex justify-center items-center h-full w-full py-20">
-                    <div className="w-16 h-16 border-4 border-[#d29000] border-t-transparent rounded-full animate-spin"></div>
+        <div className="min-h-screen bg-[#0F0D0D] font-montserrat text-white pb-20">
+            
+            {/* Hero Section */}
+            <section className="relative w-full min-h-[75vh] flex items-center overflow-hidden">
+                {/* Background Image */}
+                <div className="absolute inset-0 z-0">
+                    <img 
+                        src="/assets/gallery-art-image.svg" 
+                        alt="Gallery Hero" 
+                        className="w-full h-full object-cover"
+                    />
                 </div>
-            }
-            <section className="projects-grid mt-5">
+
+                <div className="max-w-7xl mx-auto px-6 lg:px-8 pb-12 pt-40 relative z-10 w-full">
+                
+                {/* Content Container */}
+                <div className="w-full lg:w-1/2 flex flex-col items-center lg:items-start text-center lg:text-left space-y-8">
+                   <span className="text-[#FFFFFF] text-sm md:text-base  font-medium font- ">Collections</span>
+        
+                   <h1 className="text-4xl md:text-6xl !text-white lg:text-[46px] font-bold text-white leading-[1.1] lg:leading-[1.1] ">
+                    Project Gallery
+                  </h1>
+        
+                  <p className="!text-white !font-medium text-base 2xl:text-[22px] max-w-xl leading-relaxed drop-shadow-md">
+                            Explore Our Collection Of Completed Collaborative Canvases And Step Into A World Where Creativity Knows No Borders. Each Masterpiece You'll Find Here Is The Result Of Countless Artists Contributing Their Unique Vision, Style, And Imagination To A Shared Digital Space. From Subtle Strokes To Bold Concepts, Every Detail Adds Depth, Character, And Emotion—Proving That Art Doesn't Need A Single Creator To Feel Whole.
+                  </p>
+        
+                  <Link to="/gallery">
+                      <div className="relative p-[1px] rounded-full bg-gradient-to-r from-[#E23373] to-[#FEC133] group hover:opacity-90 transition-opacity">
+                        <Button 
+                          className="rounded-full px-[17px] py-[7px] bg-black text-white hover:bg-black/90 transition-all duration-300 flex items-center gap-2 text-base font-semibold border-none relative z-10"
+                        >
+                          Explore Now
+                          <ArrowUpRight className="w-5 h-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                        </Button>
+                      </div>
+                  </Link>
+                </div>
+        
+              </div>
+              
+            </section>
+
+            {/* Gallery Grid Section */}
+            <section id="gallery-grid" className="max-w-7xl mx-auto px-6 lg:px-8 py-12">
+                 
+                 {/* Section Header */}
+                 <div className="flex justify-between items-center mb-10">
+                    <h2 className="text-[34px] font-bold !text-white">
+                      Our Completed <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#E23373] to-[#FEC133]">Gallery Artwork</span>
+                    </h2>
+                   <div className="inline-block p-[1px] rounded-full bg-gradient-to-r from-[#E13372] to-[#FEC133]">
+                        <div className="px-8 py-2 rounded-full bg-[#0F0D0D] text-white tracking-widest text-xs font-semibold uppercase">
+                            Guideline
+                        </div>
+                    </div>
+                 </div>
+
+                {(isLoading && projects.length === 0) && (
+                    <div className="flex justify-center items-center py-40">
+                         <div className="w-16 h-16 border-4 border-[#E23373] border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                )}
+
                 {!isLoading && projects.length === 0 ? (
-                    <div className="text-center w-full py-20 col-span-full">
-                        <h3 className="text-2xl text-gray-500">The Gallery is currently empty.</h3>
+                     <div className="text-center w-full py-40">
+                        <h3 className="text-2xl text-gray-500 font-medium">The Gallery is currently empty.</h3>
                     </div>
                 ) : (
-                    projects.map((project: any) => {
-                        const hasPurchased = purchasedProjectIds.has(project._id);
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {projects.map((project: any) => {
+                             const hasPurchased = purchasedProjectIds.has(project._id);
+                             const contributorsCount = project.contributors ? project.contributors.length : 0;
+                             // Use stats.pixelCount if available, otherwise estimate or specific property
+                             const pixelsPainted = project.stats ? project.stats.pixelCount : (project.width * project.height); 
 
+                             return (
+                                <div key={project._id} className="bg-[#1E1E1E] rounded-2xl p-4 border border-white/5 flex flex-col gap-4 hover:border-[#E23373]/30 transition-all duration-300">
+                                    
+                                    {/* Image Area */}
+                                    <div className="relative rounded-xl overflow-hidden aspect-video bg-gray-900 group">
+                                        <img 
+                                            src={getImageUrl(project.thumbnailUrl) || '/assets/placeholder-art.svg'} 
+                                            alt={project.title} 
+                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                                        />
+                                        
+                                        {/* Completed Badge */}
+                                        <div className="absolute top-3 right-3">
+                                            <div className="bg-gradient-to-r from-[#E23373] to-[#FEC133] p-[1px] rounded-full">
+                                                <div className="!text-white px-3 py-1 rounded-full">
+                                                    <span className="bg-gradient-to-r from-[#E23373] to-[#FEC133] text-base font-semibold">
+                                                        Completed
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </div>
 
-                        return (
-                            <div key={project._id} className="project-card completed">
-                                <div className="project-image">
-                                    <img src={getImageUrl(project.thumbnailUrl) || '...'} alt={project.title} />
-                                    <div className="absolute top-2 right-2">
-                                        <span className="bg-purple-600 text-white text-xs font-bold px-2 py-1 rounded">COMPLETED</span>
+                                        {/* Progress Bar (Visual) */}
+                                       
+                                    </div>
+
+                                    {/* Content */}
+                                    <div className="flex flex-col gap-4 px-2 pb-2">
+                                         <div className="">
+                                            <div className="h-1.5 w-full bg-gray-700 rounded-full overflow-hidden">
+                                                <div className="h-full bg-[#E23373] w-[15%] rounded-full"></div> {/* Mocking 15% from design, or 100% since it's gallery */}
+                                            </div>
+                                            <div className="flex justify-end mt-1">
+                                                 <span className="text-[15px] text-white font-medium">100% Complete</span>
+                                            </div>
+                                        </div>
+                                        {/* Title */}
+                                        <h3 className="text-lg font-semibold text-center !text-white">
+                                            {project.title}
+                                        </h3>
+
+                                        {/* Stats */}
+                                        <div className="flex justify-center gap-12 text-center">
+                                            <div className="flex flex-col gap-1">
+                                                <span className="text-sm text-[#AAB2C7]">Contributor</span>
+                                                <span className="text-[20px] font-semibold text-white">{contributorsCount || 4}</span>
+                                            </div>
+                                            <div className="flex flex-col gap-1">
+                                                <span className="text-sm text-[#AAB2C7]">Pixel Painted</span>
+                                                <span className="text-[20px] font-semibold text-white">{pixelsPainted || 11014}</span>
+                                            </div>
+                                        </div>
+
+                                        {/* Actions */}
+                                        <div className="flex flex-col gap-3 mt-2">
+                                            <Link to={`/project/${project?.canvasId}?view=gallery`} className="w-full">
+                                                <Button className="w-full rounded-full text-base bg-gradient-to-r from-[#E23373] to-[#FEC133] text-white hover:opacity-90 border-none font-semibold h-10">
+                                                    View Artwork
+                                                </Button>
+                                            </Link>
+
+                                            {hasPurchased ? (
+                                                <Button
+                                                    onClick={() => handleDownload(project)}
+                                                    disabled={downloading === project._id}
+                                                    className="w-full rounded-full bg-transparent border border-[#5d4037] text-white hover:bg-white/5 h-10"
+                                                >
+                                                    {downloading === project._id ? 'Preparing...' : 'Download Again'}
+                                                </Button>
+                                            ) : (
+                                                <div className="p-[1px] rounded-full bg-gradient-to-r from-[#E23373] to-[#FEC133] w-full">
+                                                    <Button
+                                                        onClick={() => handleBuyClick(project)}
+                                                        disabled={paymentLoading === project._id}
+                                                        className="w-full rounded-full bg-[#1E1E1E] text-white hover:bg-[#2a2a2a] h-10 border-none"
+                                                    >
+                                                        {paymentLoading === project._id ? 'Processing...' : `Buy & Download`}
+                                                    </Button>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="project-info">
-                                    <h3>{project.title}</h3>
-                                    <div className="flex flex-col items-center gap-2 mt-4">
-                                        <Link
-                                            to={`/project/${project?.canvasId}?view=gallery`}
-                                            className="btn-contribute flex-1 hover:!text-white !text-[16px] !bg-purple-600 hover:!bg-purple-700"
-                                        >
-                                            View Artwork
-                                        </Link>
-
-                                        {hasPurchased ? (
-                                            <Button
-                                                onClick={() => handleDownload(project)}
-                                                disabled={downloading === project._id}
-                                                className="btn-contribute cursor-pointer flex-1 !bg-green-600 hover:!bg-green-700 disabled:opacity-50"
-                                            >
-                                                {downloading === project._id ? 'Preparing...' : 'Download Again'}
-                                            </Button>
-                                        ) : (
-                                            <Button
-                                                onClick={() => handleBuyClick(project)}
-                                                // Button ko disable karein agar is project ke liye payment load ho rahi hai
-                                                disabled={paymentLoading === project._id}
-                                                className="btn-contribute cursor-pointer flex-1 !bg-blue-600 hover:!bg-blue-700 disabled:opacity-50"
-                                            >
-                                                {
-                                                    // Text ko aql-mand tareeqe se badlein
-                                                    paymentLoading === project._id
-                                                        ? 'Processing...'
-                                                        : `Buy & Download ($${project.price.toFixed(2)})`
-                                                }
-                                            </Button>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                        );
-                    })
+                             );
+                        })}
+                    </div>
                 )}
+
+                <div className="mt-16 flex justify-center">
+                    <Pagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={handlePageChange}
+                    />
+                </div>
             </section>
 
-            <div className="mt-8">
-                <Pagination
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={handlePageChange}
-                />
-            </div>
-
+            {/* Modals */}
             <Dialog open={paymentState.isOpen} onOpenChange={(isOpen) => setPaymentState({ ...paymentState, isOpen })}>
-                <DialogContent className="bg-[#5d4037] border-2 border-[#3e2723] text-white font-[Georgia, serif] max-w-lg">
+                <DialogContent className="bg-[#1a1a1a] border border-white/10 text-white max-w-lg">
                     <DialogHeader>
-                        <DialogTitle className='!text-white'>Complete Your Purchase</DialogTitle>
+                        <DialogTitle className='text-2xl font-bold text-white'>Complete Your Purchase</DialogTitle>
                     </DialogHeader>
                     {paymentState.clientSecret && paymentState.projectToDownload && (
-                        <CheckoutForm
-                            clientSecret={paymentState.clientSecret}
-                            onPaymentSuccess={handlePaymentSuccess}
-                            projectPrice={paymentState.projectToDownload.price}
-                        />
+                        <div className="mt-4">
+                             <CheckoutForm
+                                clientSecret={paymentState.clientSecret}
+                                onPaymentSuccess={handlePaymentSuccess}
+                                projectPrice={paymentState.projectToDownload.price}
+                            />
+                        </div>
                     )}
                 </DialogContent>
             </Dialog>
