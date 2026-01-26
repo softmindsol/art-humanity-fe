@@ -83,9 +83,9 @@ const GuidelinePage: React.FC = () => {
                    </div>
                    
                 </div>
-             {/* <div className='absolute -right-36 top-0'>
+             <div className='absolute 2xl:-right-36 top-0 z-0'>
                   <img src="/assets/gradient-1.svg" alt="" className='h-[10%]' />
-                </div> */}
+                </div>
            
              </div>
 
@@ -115,16 +115,16 @@ const GuidelinePage: React.FC = () => {
                     receives over 50% downvotes.
                 </p>
 
-                {/* <div className='absolute z-0 right-0 bottom-20'>
+                <div className='absolute 2xl:-right-[27.2%] xl:-right-[20%] lg:-right-8 md:-right-6 -right-6 top-0'>
                   <img src="/assets/gradient.svg" alt="" className='' />
-                </div> */}
+                </div>
              </div>
 
           </div>
         </div>
 
         {/* Rules Section */}
-        <div className="w-full bg-[#141414] py-20 mt-12">
+        <div className="w-full bg-[#141414] py-20 mt-12 relative z-50">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
             <div className="flex flex-col lg:flex-row gap-16 items-center">
             

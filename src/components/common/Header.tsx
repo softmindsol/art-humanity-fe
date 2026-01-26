@@ -219,7 +219,7 @@ const Header = () => {
     <>
       {/* Fixed Pill Container */}
       <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-[1000] w-[95%] ">
-        <header className="flex items-center justify-between px-6 !py-[5px] rounded-full  border border-white/20 shadow-2xl bg-black/10 backdrop-blur-[2px]">
+        <header className="flex items-center !justify-between  !py-[5px] rounded-full  border border-white/20 shadow-2xl bg-black/10 backdrop-blur-[2px]">
           {/* Logo Section */}
           <div className="logo-container">
             <Link to="/" className="logo-link flex items-center gap-3">
@@ -234,7 +234,7 @@ const Header = () => {
           {/* Navigation - Hidden on Mobile */}
           <div className="desktop-nav hidden md:flex items-center xl:gap-8">
             <nav className="hidden md:block">
-              <ul className="flex items-center gap-8">
+              <ul className="flex items-center gap-2">
                 <li>
                   <NavLink
                     to="/"
@@ -379,9 +379,9 @@ const Header = () => {
                 )}
               </ul>
             </nav>
-
-            {/* Auth Buttons - Hidden on Mobile (moved to sidebar) */}
-            <div className="auth-buttons hidden md:flex items-center">
+</div>
+           {/* Auth Buttons - Hidden on Mobile (moved to sidebar) */}
+            <div className=" hidden md:flex items-center">
               {profile ? (
                 <div>
                   <DropdownMenu>
@@ -403,17 +403,17 @@ const Header = () => {
                       className="w-60 bg-[#1A1D24] border border-white/10 rounded-xl shadow-2xl text-gray-200 mt-2"
                     >
                       <DropdownMenuLabel className="p-3">
-                        <div className="font-bold text-white mb-0.5">
+                        <div className="font-bold !text-white mb-0.5">
                           {profile?.fullName}
                         </div>
-                        <div className="text-xs text-gray-500 font-normal truncate">
+                        <div className="text-xs !text-white font-normal truncate">
                           {profile?.email}
                         </div>
                       </DropdownMenuLabel>
                       <DropdownMenuSeparator className="bg-white/10" />
 
                       <Link to="/profile">
-                        <DropdownMenuItem className="cursor-pointer hover:bg-white/5 focus:bg-white/5 focus:text-white transition-colors flex items-center gap-2 p-2.5 rounded-md mx-1 my-0.5">
+                        <DropdownMenuItem className="cursor-pointer !text-white hover:bg-white/5 focus:bg-white/5 focus:text-white transition-colors flex items-center gap-2 p-2.5 rounded-md mx-1 my-0.5">
                           <UserCircle2 size={16} />
                           <span>Profile</span>
                         </DropdownMenuItem>
@@ -421,7 +421,7 @@ const Header = () => {
 
                       <DropdownMenuItem
                         onClick={handleSupportClick}
-                        className="cursor-pointer hover:bg-white/5 focus:bg-white/5 focus:text-white transition-colors flex items-center gap-2 p-2.5 rounded-md mx-1 my-0.5"
+                        className="cursor-pointer !text-white hover:bg-white/5 focus:bg-white/5 focus:text-white transition-colors flex items-center gap-2 p-2.5 rounded-md mx-1 my-0.5"
                       >
                         <Heart size={16} />
                         <span>Support Us</span>
@@ -448,8 +448,8 @@ const Header = () => {
               )}
             </div>
 
-          </div>
-
+          
+ 
           {/* Mobile Menu Button - Direct Child */}
           <div className="md:hidden relative z-100 flex items-center">
             <button
