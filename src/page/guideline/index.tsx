@@ -7,7 +7,7 @@ const GuidelinePage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#0F0D0D] text-gray-200 font-montserrat">
       {/* Hero Section */}
-      <section className="relative w-full min-h-[90vh] pb-20 md:pb-0 flex items-center overflow-hidden">
+      <section className="relative w-full min-h-[100vh] pb-20 md:pb-0 flex items-center overflow-hidden">
         {/* Background Image with Overlay */}
         <div className="absolute inset-0 z-0">
           <img 
@@ -22,7 +22,7 @@ const GuidelinePage: React.FC = () => {
                 
                 {/* Content Container */}
                 <div className="w-full lg:w-1/2 flex flex-col items-center lg:items-start text-center lg:text-left space-y-8">
-                   <span className="text-[#FFFFFF] text-sm md:text-base  font-medium font- ">Project Guideline</span>
+                   <span className="text-[#FFFFFF] text-sm md:text-base  font-medium">Project Guideline</span>
         
                    <h1 className="text-4xl md:text-6xl !text-white lg:text-[46px] font-bold text-white leading-[1.1] lg:leading-[1.1] ">
                     Guideline
@@ -83,9 +83,9 @@ const GuidelinePage: React.FC = () => {
                    </div>
                    
                 </div>
-             {/* <div className='absolute -right-36 top-0'>
+             <div className='absolute 2xl:-right-36 top-0 z-0'>
                   <img src="/assets/gradient-1.svg" alt="" className='h-[10%]' />
-                </div> */}
+                </div>
            
              </div>
 
@@ -115,16 +115,16 @@ const GuidelinePage: React.FC = () => {
                     receives over 50% downvotes.
                 </p>
 
-                {/* <div className='absolute z-0 right-0 bottom-20'>
+                <div className='absolute  2xl:-right-86 xl:-right-[20%] lg:-right-8 md:-right-6 -right-6 top-0'>
                   <img src="/assets/gradient.svg" alt="" className='' />
-                </div> */}
+                </div>
              </div>
 
           </div>
         </div>
 
         {/* Rules Section */}
-        <div className="w-full bg-[#141414] py-20 mt-12">
+        <div className="w-full bg-[#141414] py-20 mt-12 relative z-50">
           <div className="max-w-7xl mx-auto px-6 lg:px-8">
             <div className="flex flex-col lg:flex-row gap-16 items-center">
             

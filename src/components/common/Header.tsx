@@ -219,7 +219,7 @@ const Header = () => {
     <>
       {/* Fixed Pill Container */}
       <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-[1000] w-[95%] ">
-        <header className="flex items-center justify-between px-6 !py-[5px] rounded-full  border border-white/20 shadow-2xl bg-black/10 backdrop-blur-[2px]">
+        <header className="flex items-center !justify-between  !py-[5px] rounded-full  border border-white/20 shadow-2xl bg-black/10 backdrop-blur-[2px]">
           {/* Logo Section */}
           <div className="logo-container">
             <Link to="/" className="logo-link flex items-center gap-3">
@@ -234,7 +234,7 @@ const Header = () => {
           {/* Navigation - Hidden on Mobile */}
           <div className="desktop-nav hidden md:flex items-center xl:gap-8">
             <nav className="hidden md:block">
-              <ul className="flex items-center gap-8">
+              <ul className="flex items-center gap-2">
                 <li>
                   <NavLink
                     to="/"
@@ -307,81 +307,82 @@ const Header = () => {
                   </NavLink>
                 </li>
 
-                {/* Bell Icon for Notifications */}
-                {user?._id && (
-                  <li>
-                    <div ref={notificationRef} className="relative mt-1">
-                      <button
-                        onClick={handleBellClick}
-                        className="text-gray-400 hover:text-white transition-colors cursor-pointer"
-                      >
-                        <Bell size={20} />
-                        {unreadCount > 0 && (
-                          <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white font-bold">
-                            {unreadCount}
-                          </span>
-                        )}
-                      </button>
 
-                      {/* --- NOTIFICATION DROPDOWN --- */}
-                      {isNotificationOpen && (
-                        <div className="absolute right-0 mt-4 w-80 bg-[#1A1D24] border border-white/10 rounded-xl shadow-2xl max-h-96 overflow-y-auto p-2 z-[2000]">
-                          <div className="p-3 flex justify-between items-center border-b border-white/5 mb-2">
-                            <span className="font-bold text-white text-sm">
-                              Notifications
-                            </span>
-                            {unreadCount > 0 && (
-                              <button
-                                onClick={handleMarkAllAsRead}
-                                className="text-xs text-red-400 hover:text-red-300 transition-colors"
+              </ul>
+            </nav>
+</div>
+            {/* Auth Buttons - Hidden on Mobile (moved to sidebar) */}
+            <div className="hidden md:flex items-center gap-6 pr-1">
+              {user?._id && (
+                <div ref={notificationRef} className="relative">
+                  <div
+                    onClick={handleBellClick}
+                    className="relative cursor-pointer group"
+                  >
+                    {/* Gradient Border Container */}
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-[#E23373] to-[#FEC133] rounded-xl opacity-70 group-hover:opacity-100 transition duration-200 blur-[0.5px]"></div>
+                    {/* Inner Black Box */}
+                    <div className="relative w-10 h-10 bg-black rounded-xl flex items-center justify-center border border-white/10">
+                      <Bell size={20} className="text-white" />
+                    </div>
+
+                    {unreadCount > 0 && (
+                      <span className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-red-500 border border-black">
+                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                      </span>
+                    )}
+                  </div>
+
+                  {/* --- NOTIFICATION DROPDOWN --- */}
+                  {isNotificationOpen && (
+                    <div className="absolute right-0 mt-4 w-80 bg-[#1A1D24] border border-white/10 rounded-xl shadow-2xl max-h-96 overflow-y-auto p-2 z-[2000]">
+                      <div className="p-3 flex justify-between items-center border-b border-white/5 mb-2">
+                        <span className="font-bold text-white text-sm">
+                          Notifications
+                        </span>
+                        {unreadCount > 0 && (
+                          <button
+                            onClick={handleMarkAllAsRead}
+                            className="text-xs text-red-400 hover:text-red-300 transition-colors"
+                          >
+                            Mark all as read
+                          </button>
+                        )}
+                      </div>
+                      {notifications.length > 0 ? (
+                        <ul className="space-y-1 flex flex-col">
+                          {notifications.map((notif: any) => (
+                            <li
+                              key={notif?._id}
+                              className={`p-3 rounded-lg text-sm transition-colors ${!notif.isRead ? "bg-white/5 hover:bg-white/10" : "bg-transparent hover:bg-white/5"} mb-1`}
+                            >
+                              <Link
+                                to={`/project/${notif.project?.canvasId}`}
+                                onClick={() => handleNotificationClick(notif)}
+                                className="block"
                               >
-                                Mark all as read
-                              </button>
-                            )}
-                          </div>
-                          {notifications.length > 0 ? (
-                            <ul className="space-y-1 flex flex-col">
-                              {notifications.map((notif: any) => (
-                                <li
-                                  key={notif?._id}
-                                  className={`p-3 rounded-lg text-sm transition-colors ${!notif.isRead ? "bg-white/5 hover:bg-white/10" : "bg-transparent hover:bg-white/5"} mb-1`}
+                                <div
+                                  className={`mb-1 ${!notif.isRead ? "text-white font-medium" : "text-gray-400"}`}
                                 >
-                                  <Link
-                                    to={`/project/${notif.project?.canvasId}`}
-                                    onClick={() =>
-                                      handleNotificationClick(notif)
-                                    }
-                                    className="block"
-                                  >
-                                    <div
-                                      className={`mb-1 ${!notif.isRead ? "text-white font-medium" : "text-gray-400"}`}
-                                    >
-                                      {notif?.message}
-                                    </div>
-                                    <div className="text-[10px] text-gray-500">
-                                      {new Date(
-                                        notif?.createdAt,
-                                      ).toLocaleString()}
-                                    </div>
-                                  </Link>
-                                </li>
-                              ))}
-                            </ul>
-                          ) : (
-                            <div className="p-8 text-center text-gray-500 text-sm">
-                              No new notifications
-                            </div>
-                          )}
+                                  {notif?.message}
+                                </div>
+                                <div className="text-[10px] text-gray-500">
+                                  {new Date(notif?.createdAt).toLocaleString()}
+                                </div>
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <div className="p-8 text-center text-gray-500 text-sm">
+                          No new notifications
                         </div>
                       )}
                     </div>
-                  </li>
-                )}
-              </ul>
-            </nav>
+                  )}
+                </div>
+              )}
 
-            {/* Auth Buttons - Hidden on Mobile (moved to sidebar) */}
-            <div className="auth-buttons hidden md:flex items-center">
               {profile ? (
                 <div>
                   <DropdownMenu>
@@ -390,10 +391,10 @@ const Header = () => {
                         <img
                           src={profile?.avatar}
                           alt="Avatar"
-                          className="w-9 h-9 rounded-full object-cover cursor-pointer border-2 border-white/20 hover:border-white transition-colors"
+                          className="w-10 h-10 rounded-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
                         />
                       ) : (
-                        <div className="w-9 h-9 rounded-full bg-gradient-to-r from-[#FF6B6B] to-[#FFD93D] text-white flex items-center justify-center font-bold cursor-pointer select-none shadow-lg">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#FF6B6B] to-[#FFD93D] text-white flex items-center justify-center font-bold cursor-pointer select-none shadow-lg">
                           {profile?.fullName.charAt(0).toUpperCase()}
                         </div>
                       )}
@@ -403,17 +404,17 @@ const Header = () => {
                       className="w-60 bg-[#1A1D24] border border-white/10 rounded-xl shadow-2xl text-gray-200 mt-2"
                     >
                       <DropdownMenuLabel className="p-3">
-                        <div className="font-bold text-white mb-0.5">
+                        <div className="font-bold !text-white mb-0.5">
                           {profile?.fullName}
                         </div>
-                        <div className="text-xs text-gray-500 font-normal truncate">
+                        <div className="text-xs !text-white font-normal truncate">
                           {profile?.email}
                         </div>
                       </DropdownMenuLabel>
                       <DropdownMenuSeparator className="bg-white/10" />
 
                       <Link to="/profile">
-                        <DropdownMenuItem className="cursor-pointer hover:bg-white/5 focus:bg-white/5 focus:text-white transition-colors flex items-center gap-2 p-2.5 rounded-md mx-1 my-0.5">
+                        <DropdownMenuItem className="cursor-pointer !text-white hover:bg-[#0F0D0D] font-semibold transition-colors flex items-center gap-2 p-2.5 rounded-full mx-1 my-0.5">
                           <UserCircle2 size={16} />
                           <span>Profile</span>
                         </DropdownMenuItem>
@@ -421,7 +422,7 @@ const Header = () => {
 
                       <DropdownMenuItem
                         onClick={handleSupportClick}
-                        className="cursor-pointer hover:bg-white/5 focus:bg-white/5 focus:text-white transition-colors flex items-center gap-2 p-2.5 rounded-md mx-1 my-0.5"
+                        className="cursor-pointer !text-white hover:bg-[#0F0D0D] font-semibold   transition-colors flex items-center gap-2 p-2.5 rounded-full mx-1 my-0.5"
                       >
                         <Heart size={16} />
                         <span>Support Us</span>
@@ -429,7 +430,7 @@ const Header = () => {
 
                       <DropdownMenuItem
                         onClick={handleLogout}
-                        className="cursor-pointer text-red-400 hover:text-red-300 hover:bg-red-500/10 focus:bg-red-500/10 focus:text-red-300 transition-colors flex items-center gap-2 p-2.5 rounded-md mx-1 my-0.5"
+                        className="cursor-pointer !text-white hover:bg-[#0F0D0D] font-semibold focus:bg-[#0F0D0D] focus:text-white transition-colors flex items-center gap-2 p-2.5 rounded-full mx-1 my-0.5"
                       >
                         <LogOut size={16} />
                         <span>Logout</span>
@@ -441,15 +442,15 @@ const Header = () => {
                 <button
                   id="sign-in-btn"
                   className="px-6 py-2 rounded-full font-medium text-white bg-gradient-to-r from-[#E23373] to-[#FEC133] hover:opacity-90 transition-opacity transform active:scale-95 shadow-[0_0_20px_rgba(226,51,115,0.4)] font-montserrat"
-                  onClick={() => navigate('/signup')}
+                  onClick={() => navigate('/login')}
                 >
                   Sign In
                 </button>
               )}
             </div>
 
-          </div>
-
+          
+ 
           {/* Mobile Menu Button - Direct Child */}
           <div className="md:hidden relative z-100 flex items-center">
             <button
