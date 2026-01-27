@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback, useRef, useState, useMemo } from 'react';
-import { Grid, Minus, Plus } from 'lucide-react';
+import { Grid, Minus, Plus, List } from 'lucide-react';
 import { useCanvasState } from '@/hook/useCanvasState';
 import type { Position, Tile } from '@/types/canvas';
 import { useSelector } from 'react-redux';
@@ -626,14 +626,14 @@ const CanvasBoard: React.FC = () => {
                         onWheel={handleWheel}
                         onContextMenu={(e) => e.preventDefault()}
                     />
-
-                    {/* InfoBox Integration */}
-                    <InfoBox
-                        zoom={canvasState.zoomLevel}
-                        worldPos={mousePos}
-                        boundaryRef={mainContentRef}
-                    />
                 </div>
+
+                {/* InfoBox Integration */}
+                <InfoBox
+                    zoom={canvasState.zoomLevel}
+                    worldPos={mousePos}
+                    boundaryRef={mainContentRef}
+                />
 
                 <Toolbox boundaryRef={mainContentRef} />
             </div>
@@ -685,7 +685,7 @@ const InfoBox = ({ zoom, worldPos, boundaryRef }: any) => {
 
 
     const handleDragMouseDown = useCallback((e: React.MouseEvent) => {
-        if (isMinimized || !infoBoxRef.current || e.button !== 0) return;
+        if (!infoBoxRef.current || e.button !== 0) return;
 
         const infoBoxRect = infoBoxRef.current.getBoundingClientRect();
         setIsDragging(true);
@@ -695,7 +695,7 @@ const InfoBox = ({ zoom, worldPos, boundaryRef }: any) => {
             y: e.clientY - infoBoxRect.top,
         };
         e.preventDefault();
-    }, [isMinimized]);
+    }, []);
 
     useEffect(() => {
         const handleDragMouseMove = (e: MouseEvent) => {
@@ -736,26 +736,34 @@ const InfoBox = ({ zoom, worldPos, boundaryRef }: any) => {
     return (
         <div
             ref={infoBoxRef}
-            className="absolute bg-white/90 p-3 top-0 -right-48 rounded-lg text-base text-[#5d4e37] border border-[#3e2723] shadow-lg select-none z-50"
+            className="absolute bg-[#0F0D0D] p-3 !w-[300px] rounded-xl border border-white/10 shadow-2xl select-none z-50 backdrop-blur-sm"
             style={{
-
-                width: isMinimized ? 'auto' : '200px',
-                transition: isDragging ? 'none' : 'top 0.3s ease-in-out, left 0.3s ease-in-out, width 0.3s ease-in-out',
+                top: position.y,
+                left: position.x,
+                width: isMinimized ? 'auto' : 'auto',
+                minWidth: '300px',
+                transition: isDragging ? 'none' : 'top 0.3s ease-in-out, left 0.3s ease-in-out',
             }}
         >
             <div
-                className="w-full flex justify-between items-center gap-2"
+                className="w-full flex items-center gap-2 mb-3 cursor-move"
                 onMouseDown={handleDragMouseDown}
             >
-                <p className="text-[#3e2723] text-lg font-bold m-0 whitespace-nowrap">Infobox</p>
-
+                <List size={18} className="!text-white" />
+                <p className="!text-white text-base font-medium m-0 whitespace-nowrap tracking-wide">InfoBox</p>
             </div>
 
 
-            <div className='pt-1'>
-                <div>Zoom: {Math.round(zoom * 100)}%</div>
-                <div>World Pos: ({Math.round(worldPos.x)}, {Math.round(worldPos.y)})</div>
-
+            <div className='flex items-center justify-between text-sm !text-white'>
+                <div className="flex items-center gap-1">
+                    <span className="text-white">Zoom:</span>
+                    <span className="text-white font-medium">{Math.round(zoom * 100)}%</span>
+                </div>
+                <div className="flex items-center gap-1">
+                     <span className="text-white">World Pos:</span>
+                     <span className="text-white font-medium">({Math.round(worldPos.x)}, {Math.round(worldPos.y)})</span>
+                </div>
+                 
             </div>
 
         </div>
