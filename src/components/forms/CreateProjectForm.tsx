@@ -11,8 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, Sparkles, Loader2 } from "lucide-react"; // Icons
+import { X, Pencil, Loader2 } from "lucide-react";
 
 // Formik and Yup for validation
 import { Formik, Form, Field, ErrorMessage } from "formik";
@@ -22,12 +21,13 @@ const AdminDashboard = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { loading, error } = useSelector((state: any) => state.projects);
+  const { loading } = useSelector((state: any) => state.projects);
 
-  // Form state and thumbnail file state
+  // Form state
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  const [thumbnailPreview, setThumbnailPreview] = useState<string | null>(null);
 
-  // Validation Schema for Formik (using Yup)
+  // Validation Schema
   const validationSchema = Yup.object({
     title: Yup.string()
       .required("Project title is required")
@@ -38,33 +38,36 @@ const AdminDashboard = () => {
       .required("Description is required")
       .test("wordCount", "Description must be no more than 50 words", (value: any) => {
         if (value) {
-          const wordCount = value.trim().split(/\s+/).length; // Split by spaces and count words
-          return wordCount <= 50; // Validate that word count is 50 or fewer
+          return value.trim().split(/\s+/).length <= 50;
         }
         return true; 
-      }), canvasId: Yup.string().required("Canvas ID is required"),
-    width: Yup.number().required("Width is required").min(1, "Width must be a positive number"),
-    height: Yup.number().required("Height is required").min(1, "Height must be a positive number"),
-    thumbnail: Yup.mixed()
-      .required("Thumbnail image is required")
-      .test("fileType", "Invalid type (only PNG, JPEG, WebP allowed)", (value: any) => {
-        // Check if file type is PNG, JPEG, or WebP
-        return value && (value.type === "image/jpeg" || value.type === "image/png" || value.type === "image/webp");
-      })
-      .test("fileSize", "File size is too large. Maximum size is 1MB", (value: any) => {
-        // Optional file size validation, if needed
-        return value && value.size <= 1 * 1024 * 1024; // Limit to 2MB
       }),
+    canvasId: Yup.string().required("Canvas ID is required"),
+    thumbnail: Yup.mixed().required("Thumbnail image is required")
   });
 
-  // Form submission handler
+  const handleThumbnailChange = (e: React.ChangeEvent<HTMLInputElement>, setFieldValue: any) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setThumbnailFile(file);
+      setFieldValue("thumbnail", file);
+      
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setThumbnailPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = async (values: any) => {
     const projectFormData = new FormData();
     projectFormData.append("title", values.title);
     projectFormData.append("description", values.description);
     projectFormData.append("canvasId", values.canvasId);
-    projectFormData.append("width", String(values.width));
-    projectFormData.append("height", String(values.height));
+    projectFormData.append("width", String(1024)); // Default width
+    projectFormData.append("height", String(1024)); // Default height
     projectFormData.append("userId", String(user?._id));
 
     if (thumbnailFile) {
@@ -76,187 +79,152 @@ const AdminDashboard = () => {
     if (createProject.fulfilled.match(resultAction)) {
       const newProject = resultAction.payload;
       toast.success("Project created successfully.");
-      navigate(`/project/${newProject.canvasId}`); // Navigate with canvasId for a clean URL
+      navigate(`/project/${newProject.canvasId}`);
     } else {
-      // toast.error("Failed to create project. Please try again.");
-      console.error("Failed to create project:", resultAction.error.message);
+      console.error("Failed to create project");
     }
   };
 
   return (
-    <div className="min-h-screen font-serif p-4 md:px-5">
-      <div className="container mx-auto">
-        {/* Header with Back Button */}
-        <header className="flex items-center justify-between mb-6">
-          <h1 className="text-4xl font-bold text-[#5d4037]">Project Creation Panel </h1>
-          <Button variant="outline" onClick={() => navigate("/projects")} className="bg-white/50 border-[#bcaaa4] hover:bg-white cursor-pointer text-[#3e2723]">
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
-          </Button>
-        </header>
-
-        <Card className="max-w-3xl mx-auto bg-white/70 backdrop-blur-sm border-2 border-white/30 shadow-lg rounded-xl">
-          <CardHeader>
-            <CardTitle className="text-3xl font-normal text-[#3e2723] flex items-center text-center gap-3">
-              <Sparkles className="w-6 h-6 text-[#d4af37]" />
-              Create a New Project
-            </CardTitle>
-            <CardDescription className="text-[#8d6e63] ">
-              Fill in the details to launch a new collaborative canvas.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {/* Formik form */}
-            <Formik
-              initialValues={{
-                title: "",
-                description: "",
-                canvasId: "",
-                width: 1024,
-                height: 1024,
-                userId: user?._id || "",
-                thumbnail: null, // Initially set thumbnail to null
-              }}
-              validationSchema={validationSchema}
-              onSubmit={handleSubmit}
-              enableReinitialize
+    <div className="fixed inset-0 z-[9999] bg-[#0F0D0D] text-white flex overflow-y-auto font-montserrat">
+      <div className="w-full max-w-7xl relative m-auto p-4 md:p-8">
+        {/* Header Section */}
+        <div className="flex justify-between items-start mb-8">
+            <div>
+                <h1 className="text-[34px] !text-white font-semibold mb-2">Create a new Project</h1>
+                <p className="text-white text-sm lg:text-base">Fill in the details to launch a new collaborative canvas</p>
+            </div>
+            <button 
+                onClick={() => navigate('/projects')}
+                className="p-2 hover:bg-white/10 rounded-full transition-colors cursor-pointer"
             >
-              {({ setFieldValue, values, errors, touched }) => {
-                // Automatically sync canvasId with title
-                const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-                  const title = e.target.value;
-                  setFieldValue("title", title);
-                  setFieldValue("canvasId", title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""));
-                };
+                <X className="w-6 h-6 text-gray-400" />
+            </button>
+        </div>
 
-                return (
-                  <Form className="space-y-6">
-                    {/* Title */}
-                    <div className="space-y-2">
-                      <Label htmlFor="title" className="text-lg font-medium text-[#5d4037]">Project Title <span className="text-red-500">*</span></Label>
-                      <Field
-                        id="title"
-                        name="title"
-                        value={values.title}
-                        onChange={handleTitleChange}  // Automatically update canvasId
-                        placeholder="e.g., Spring Community Mural"
-                        className="h-12"
-                        as={Input}
-                      />
-                      <ErrorMessage name="title" component="div" className="text-red-500 text-sm" />
-                    </div>
-
-                    {/* Description */}
-                    <div className="space-y-2">
-                      <Label htmlFor="description" className="text-lg font-medium text-[#5d4037]">Description</Label>
-                      <Field
-                        id="description"
-                        name="description"
-                        as={Textarea}
-                        placeholder="A short description of the project's theme..."
-                        rows={4}
-                      />
-                      <ErrorMessage name="description" component="div" className="text-red-500 text-sm" />
-                    </div>
-
-                    {/* Canvas ID */}
-                    <div className="space-y-2">
-                      <Label htmlFor="canvasId" className="text-lg font-medium text-[#5d4037]">Canvas ID (Unique URL) <span className="text-red-500">*</span></Label>
-                      <Field
-                        id="canvasId"
-                        name="canvasId"
-                        value={values.canvasId}
-                        placeholder="auto-generated-from-title"
-                        className="h-12"
-                        as={Input}
-                        disabled
-                      />
-                      <ErrorMessage name="canvasId" component="div" className="text-red-500 text-sm" />
-                    </div>
-
-                    {/* Dimensions */}
-                    {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="width" className="font-medium text-[#5d4037]">Width (px)</Label>
-                        <Field
-                          id="width"
-                          name="width"
-                          type="number"
-                          value={values.width}
-                          placeholder="Width"
-                          className="h-12"
-                          as={Input}
+        <Formik
+          initialValues={{
+            title: "",
+            description: "",
+            canvasId: "",
+            thumbnail: null,
+          }}
+          validationSchema={validationSchema}
+          onSubmit={handleSubmit}
+        >
+          {({ setFieldValue, values }) => (
+            <Form className="flex flex-col lg:flex-row gap-8 lg:gap-16">
+              
+              {/* Left Column - Project Cover */}
+              <div className="w-full lg:w-1/2 flex flex-col gap-4">
+                <label className="text-sm lg:text-base font-semibold !text-white">Project Cover</label>
+                
+                <div className="relative w-full aspect-video bg-[#2E2E2E] rounded-xl overflow-hidden border border-white/10 group">
+                    {thumbnailPreview ? (
+                        <img 
+                            src={thumbnailPreview} 
+                            alt="Project Cover" 
+                            className="w-full h-full object-cover"
                         />
-                        <ErrorMessage name="width" component="div" className="text-red-500 text-sm" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="height" className="font-medium text-[#5d4037]">Height (px)</Label>
-                        <Field
-                          id="height"
-                          name="height"
-                          type="number"
-                          value={values.height}
-                          placeholder="Height"
-                          className="h-12"
-                          as={Input}
-                        />
-                        <ErrorMessage name="height" component="div" className="text-red-500 text-sm" />
-                      </div>
-                    </div> */}
-
-                    {/* Thumbnail Upload */}
-                    <div className="space-y-2">
-                      <Label htmlFor="thumbnail" className="text-lg font-medium text-[#5d4037]">Thumbnail Image <span className="text-red-500">*</span></Label>
-
-                      {/* Custom File Upload Button */}
-                      <label
-                        htmlFor="thumbnail"
-                        className="cursor-pointer inline-block bg-[#5d4037] hover:bg-[#4e342e] text-white py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out text-center">
-                        Choose Thumbnail
-                      </label>
-
-                      <input
-                        id="thumbnail"
-                        name="thumbnail"
+                    ) : (
+                        <div className="flex items-center justify-center h-full text-white text-sm">
+                            No cover image selected
+                        </div>
+                    )}
+                    
+                    {/* Hidden File Input */}
+                    <input
+                        id="thumbnail-upload"
                         type="file"
                         accept="image/*"
-                        onChange={(e) => {
-                          if (e.target.files) {
-                            setThumbnailFile(e.target.files[0]);
-                            setFieldValue("thumbnail", e.target.files[0]); // Update Formik field value
-                          }
-                        }}
-                        className="hidden" // Hide the default file input
-                      />
+                        onChange={(e) => handleThumbnailChange(e, setFieldValue)}
+                        className="hidden"
+                    />
+                </div>
 
-                      {/* Error Message */}
-                      <ErrorMessage name="thumbnail" component="div" className="text-red-500 text-sm" />
+                <label 
+                    htmlFor="thumbnail-upload"
+                    className="flex items-center gap-2 text-[#E23373] text-sm lg:text-base font-semibold cursor-pointer hover:underline w-fit"
+                >
+                    <Pencil className="w-4 h-4" />
+                    Edit Cover Image
+                </label>
+                <ErrorMessage name="thumbnail" component="div" className="text-red-500 text-sm" />
+              </div>
 
-                      {/* Display Selected File Name */}
-                      {thumbnailFile && (
-                        <p className="text-sm text-gray-500 mt-2">Selected: {thumbnailFile.name}</p>
-                      )}
-                    </div>
+              {/* Right Column - Form Fields */}
+              <div className="w-full lg:w-1/2 flex flex-col gap-4">
+                 
+                 <div className="space-y-4">
+                     <h3 className="text-sm lg:text-base font-semibold !text-white">Project Information</h3>
+                     
+                     <div className="space-y-2">
+                        <Label htmlFor="title" className="text-xs text-white font-semibold">Project Title <span className="text-[#AAB2C7]">(required)</span> </Label>
+                        <Field
+                            id="title"
+                            name="title"
+                            className="w-full bg-[#2E2E2E] border-none rounded-lg p-3 text-white placeholder:text-[#AAB2C7] focus:ring-1 focus:ring-white/20 h-12"
+                            placeholder="Enter your Project Title"
+                            onChange={(e: any) => {
+                                const title = e.target.value;
+                                setFieldValue("title", title);
+                                setFieldValue("canvasId", title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""));
+                            }}
+                        />
+                        <ErrorMessage name="title" component="div" className="text-red-500 text-xs" />
+                     </div>
+                 </div>
 
-                    <Button type="submit" disabled={loading.creating} className="w-full h-12 text-lg cursor-pointer text-white bg-[#5d4037] hover:bg-[#4e342e]">
-                      {loading.creating ? (
-                        <>
-                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                          Creating...
-                        </>
-                      ) : (
-                        "Create Project"
-                      )}
+                 <div className="space-y-2">
+                    <Label htmlFor="description" className="text-sm lg:text-base font-semibold text-white">Description</Label>
+                    <Field
+                        as="textarea"
+                        id="description"
+                        name="description"
+                        className="w-full !bg-[#2E2E2E] !border-none rounded-lg p-3 text-white placeholder:text-[#AAB2C7] focus:!ring-1 focus:!ring-white/20 min-h-[100px] resize-none"
+                        placeholder="A Short description of the project's theme"
+                    />
+                    <ErrorMessage name="description" component="div" className="text-red-500 text-xs" />
+                 </div>
+
+                 <div className="space-y-2">
+                    <Label htmlFor="canvasId" className="text-sm lg:text-base font-semibold text-white">Canvas ID</Label>
+                    <Field
+                        id="canvasId"
+                        name="canvasId"
+                        disabled
+                        className="w-full bg-[#2E2E2E] border-none rounded-lg p-3 text-gray-400 h-12 cursor-not-allowed"
+                        placeholder="auto-generated-id"
+                    />
+                 </div>
+
+                 {/* Action Buttons */}
+                 <div className="flex justify-end items-center gap-4 mt-8 pt-4">
+                    <Button 
+                        type="button"
+                        onClick={() => navigate('/projects')}
+                        className="px-8 py-2.5 rounded-full border border-gray-600 bg-transparent text-white hover:bg-white/10 transition-colors"
+                    >
+                        Cancel
                     </Button>
+                    <Button 
+                        type="submit"
+                        disabled={loading.creating}
+                        className="px-8 py-2.5 rounded-full bg-gradient-to-r from-[#E23373] to-[#FEC133] text-white font-semibold border-none hover:opacity-90 transition-opacity"
+                    >
+                        {loading.creating ? (
+                            <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Creating...
+                            </>
+                        ) : "Create project"}
+                    </Button>
+                 </div>
 
-                    {error.creating && <p className="text-sm text-red-600 text-center font-semibold">{error.creating}</p>}
-                  </Form>
-                );
-              }}
-            </Formik>
-
-          </CardContent>
-        </Card>
+              </div>
+            </Form>
+          )}
+        </Formik>
       </div>
     </div>
   );

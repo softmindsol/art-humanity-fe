@@ -465,7 +465,22 @@ nav ul li a.active {
 /* === AB YAHAN SE RESPONSIVE MAGIC SHURU HOGA === */
 /* 900px se choti screens (tablets aur mobile) ke liye */
 
+@media (max-width: 1200px) {
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0;
+  }
+}
+@media (max-width: 768px) {
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0;
+  }
+}
 @media (max-width: 900px) {
+
   /* 1. Header ka font size chota karein */
   .rules-header h2 {
     font-size: 2.2rem; /* Original 2.8rem se kam */

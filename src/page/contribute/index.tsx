@@ -27,7 +27,7 @@ import useAuth from '@/hook/useAuth';
 // UI Components
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Play, Pause, Trash2, CheckCircle } from 'lucide-react'; // Icons
+import { Play, Pause, Trash2, CheckCircle, ArrowDownRight, ArrowUpRight } from 'lucide-react'; // Icons
 import { useDebounce } from '@/hook/useDebounce';
 import { SearchBar } from '@/components/common/SearchBar';
 import { ProjectStatusFilter } from '@/components/common/ProjectStatusFilter';
@@ -124,26 +124,72 @@ const ActiveProjects: React.FC = () => {
 
 
     return (
-        <div id="projects-content" className="projects-content">
-            <section className="projects-header page-header">
-                <h2>Active Projects</h2>
-                <p style={{ color: '#8d6e63' }}>Enter a project, or sign up to contribute!</p>
+        <div id="projects-content" >
+            {/* Hero Section */}
+            {/* Hero Section */}
+            <section className="relative w-full min-h-[100vh] flex items-center bg-black text-white overflow-hidden mb-12 px-2 sm:p-8 md:p-8 lg:p-16  project-hero"> 
+                {/* Background Image */}
+                <div className="absolute inset-0 z-0 select-none pointer-events-none">
+                     <img 
+                        src="/assets/project-hero-section.svg" 
+                        alt="Hero Background" 
+                        className="w-full h-full object-cover object-[80%] md:object-center"
+                    />
+                </div>
+
+                <div className="relative z-10 container sm:mt-0  w-full flex flex-col items-start gap-6">
+                    
+                    {/* Text Content */}
+                    <div className="w-full lg:w-2/3 mt-36 space-y-6">
+                        <span className="text-white text-base font-medium">Collections</span>
+                        <h1 className="text-[36px] lg:text-[46px] font-semibold leading-tight !text-white">
+                            Active Projects
+                        </h1>
+                        <p className="text-white leading-relaxed mix-blend-lighten drop-shadow-md sm:w-full sm:w-xl lg:w-2xl">
+                            Explore Projects That Are Currently In Progress And Open For Collaboration. Each Active Project Allows Contributors From Around The World To Add Their Ideas, Creativity, Or Skills, Helping Shape The Artwork As It Evolves. Whether You Contribute A Small Detail Or A Meaningful Section, Every Input Becomes Part Of A Larger Collective Vision, Turning Individual Efforts Into A Shared Creative Achievement.
+                        </p>
+                        <Link to="/gallery">
+                      <div className="relative w-fit p-[1px] rounded-full bg-gradient-to-r from-[#E23373] to-[#FEC133] group hover:opacity-90 transition-opacity">
+                        <Button 
+                          className="rounded-full px-[17px] py-[7px]  bg-black text-white hover:bg-black/90 transition-all duration-300 flex items-center gap-2 text-sm lg:text-base font-semibold border-none relative z-10"
+                        >
+                          Explore Now
+                          <ArrowUpRight className="w-5 h-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                        </Button>
+                      </div>
+                  </Link>
+                    </div>
+                </div>
             </section>
 
-       {user?.role === 'admin' && (
-                <section className='flex items-center justify-center my-6'>
-                    <Link to="/create-project">
-                        <Button className="bg-[#d29000] cursor-pointer hover:bg-[#b38f2c] text-white font-bold py-2 px-4 rounded shadow-lg !border !border-[#5d4037]">
-                            Create a New Project
+            <div className="flex flex-col gap-8 mb-12 px-6 container">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <h2 className="text-3xl md:text-[34px] font-semibold !text-white">
+                        Create Together, <span className="bg-gradient-to-r from-[#E23373] to-[#FEC133] bg-clip-text text-transparent">Live Projects</span>
+                    </h2>
+                      <div className="relative w-fit p-[1px] rounded-full bg-gradient-to-r from-[#E23373] to-[#FEC133] group hover:opacity-90 transition-opacity">
+                        <Button 
+                          className="rounded-full px-[17px] py-[7px] bg-black text-white hover:bg-black/90 transition-all duration-300 flex items-center gap-2 text-base font-semibold border-none relative z-10"
+                        >
+                          Explore Now
+                          <ArrowUpRight className="w-5 h-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                         </Button>
-                    </Link>
-                </section>
-            )}
+                      </div>
+                </div>
 
-            {/* --- Filter aur Search Bar --- */}
-            <div className="flex flex-col md:flex-row items-center justify-center gap-4 mb-8 w-full ">
-                <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-                <ProjectStatusFilter statusFilter={statusFilter} setStatusFilter={setStatusFilter} />
+                <div className="flex  flex-col md:flex-row justify-between items-center gap-4">
+                    <div className="flex flex-col lg:flex-row gap-4 w-full md:w-auto">
+                        <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+                        <ProjectStatusFilter statusFilter={statusFilter} setStatusFilter={setStatusFilter} />
+                    </div>
+                    {user?.role === 'admin' && (
+                        <Link to="/create-project" className="w-full md:w-auto">
+                            <Button className="w-full md:w-auto rounded-full bg-gradient-to-r from-[#E23373] to-[#FEC133] text-white font-semibold border-none hover:opacity-90 transition-opacity px-6 py-2">
+                                Create a new project
+                            </Button>
+                        </Link>
+                    )}
+                </div>
             </div>
             {
 
@@ -160,139 +206,124 @@ const ActiveProjects: React.FC = () => {
                     </div>
                 ) :
 
-                    <section className="projects-grid mt-5">
+                    <section id="active-projects-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 container !mt-5 px-6">
                         {
                             projects.length === 0 ? (
                                 <div className="text-center w-full py-20 col-span-full">
-                                    <h3 className="text-2xl !text-[#5d4037]">No projects found.</h3>
-                                    {user?.role === 'admin' && <p className="!text-[#5d4037]">You can create the first one from the Admin Dashboard.</p>}
+                                    <h3 className="text-2xl !text-[#ffffff]">No projects found.</h3>
+                                    {user?.role === 'admin' && <p className="!text-[#ffffff]">You can create the first one from the Admin Dashboard.</p>}
                                 </div>
                             ) : (
                                 projects.map((project: any) => {
                                     const isProjectPaused = project.status === 'Paused';
 
                                     return (
-                                        <div key={project._id} className="project-card active">
-                                            <div className="project-image relatve">
+                                        <div key={project._id} className="bg-[#1A1A1A] rounded-[8.03px] border border-white/10 overflow-hidden flex flex-col p-2.5 hover:border-[#E23373]/50 transition-colors duration-300">
+                                            {/* Image with Badge */}
+                                            <div className="relative group">
                                                 <img
                                                     src={getImageUrl(project.thumbnailUrl) || 'https://via.placeholder.com/400x250'}
                                                     alt={project.title}
+                                                    className="w-full aspect-[4/3] object-cover rounded-[8.03px] transition-transform duration-500 group-hover:scale-105"
                                                 />
-                                                {/* Project status badge */}
-                                                <div className="absolute top-2 right-2">
-                                                    <Badge
-                                                        // We will no longer use the generic 'variant' prop.
-                                                        // Instead, we'll use a template literal for dynamic, high-contrast classes.
-                                                        className={`text-sm font-semibold shadow-md
-                                                        ${
-                                                            // Pehla check: Kya status 'Paused' hai?
-                                                            project.status === 'Paused'
-                                                                ? 'bg-red-600 text-white border-red-700' // Haan, to Red (laal)
-                                                                // Agar nahi, to doosra check: Kya status 'Completed' hai?
-                                                                : project.status === 'Completed'
-                                                                    ? 'bg-purple-600 text-white border-purple-700' // Haan, to Purple (jamni)
-                                                                    // Agar woh bhi nahi (matlab 'Active' hai)
-                                                                    : 'bg-green-600 text-white border-green-700' // To Green (sabz)
-                                                            }
-                                                                `}
-                                                    >
-                                                        {project.status}
-                                                    </Badge>
-                                                </div>
-                                                <div className="project-progress">
-                                                    <div className="progress-bar">
-                                                        <div className="progress-fill" style={{ width: `${project.stats?.percentComplete || 0}%` }}></div>
-                                                    </div>
-                                                    <div className="progress-text">{project.stats?.percentComplete?.toFixed(2) || 0}% Complete</div>
-                                                </div>
-                                            </div>
-                                            <div className="project-info">
-                                                <ProjectTitle project={project} isAdmin={user?.role === 'admin'} />
-                                                <div className="project-stats">
-                                                    <div className="stat">
-                                                        <span className="stat-value !text-[#8d6e63] !text-[12.8px]">{project.contributors?.length || 0}</span>
-                                                        <span className="stat-label !text-[#8d6e63]">Contributors</span>
-                                                    </div>
-                                                    <div className="stat">
-                                                        <span className="stat-value !text-[#8d6e63] !text-[12.8px]">{project.stats?.pixelCount || 0}</span>
-                                                        <span className="stat-label !text-[#8d6e63]">Pixels Painted</span>
-                                                    </div>
-                                                </div>
-                                                {project.status === 'Completed' ? (
-                                                    // --- AGAR PROJECT COMPLETED HAI ---
-                                                    <Link
-                                                        to={`/project/${project?.canvasId}?view=gallery`}
-                                                        className="btn-contribute !text-white !bg-purple-600 hover:!bg-purple-700" // Gallery wala style
-                                                        title="View this completed artwork in the gallery"
-                                                    >
-                                                        View Artwork
-                                                    </Link>
-                                                ) : (<Link
-                                                    // Step 1: Agar project paused hai, to usay kahin bhi na le kar jao
-                                                    to={isProjectPaused ? "#" : `/project/${project?.canvasId}`}
-
-                                                    // Step 2: Kuch aisi CSS classes lagayein jo disabled jaisa look dein
-                                                    className={`btn-contribute !text-black !bg-[#d4af37] ${isProjectPaused ? 'opacity-50 cursor-not-allowed' : 'hover:!bg-[#b38f2c]'}`}
-
-                                                    // Step 3: Event ko cancel karein taake link kaam na kare
-                                                    onClick={(e) => { if (isProjectPaused) e.preventDefault(); }}
-
-                                                    // title se user ko wajah batayein
-                                                    title={isProjectPaused ? "This project is currently paused" : "Enter Project"}
+                                                <span className={`absolute top-3 right-3 px-4 py-1 rounded-full text-xs font-semibold !text-white shadow-lg
+                                                    ${project.status === 'Paused' 
+                                                        ? 'bg-red-600' 
+                                                        : project.status === 'Completed' 
+                                                            ? 'bg-purple-600' 
+                                                            : 'bg-gradient-to-r from-[#E23373] to-[#FEC133]'
+                                                    }`}
                                                 >
-                                                    {/* Text bhi badalna ek acha option hai */}
-                                                    {isProjectPaused ? "Project Paused" : "Enter Project"}
-                                                </Link>)}
-                                                {/* // -------- YEH MUKAMMAL UPDATE SHUDA JSX HAI -------- */}
+                                                    {project.status}
+                                                </span>
+                                            </div>
 
-                                                {user?.role === 'admin' && (
-                                                    <div className="mt-4 pt-4 border-t">
-                                                        <div className="flex items-center justify-between">
-                                                            {/* --- ADMIN ACTIONS AB NAYE STATUS FIELD PAR CHALENGE --- */}
-                                                            {project.status === 'Paused' ? (
-                                                                <Button
-                                                                    className="cursor-pointer"
-                                                                    variant="outline"
-                                                                    size="icon"
-                                                                    title="Resume Project"
-                                                                    onClick={() =>
-                                                                        // Naya Function Signature: (projectId, actionType, actionText)
-                                                                        openConfirmationDialog(project._id, 'RESUME', 'Resume')
-                                                                    }
-                                                                >
-                                                                    <Play className="h-4 w-4" />
-                                                                </Button>
-                                                            ) : (
-                                                                <Button
-                                                                    className="cursor-pointer"
-                                                                    variant="outline"
-                                                                    size="icon"
-                                                                    title="Pause Project"
-                                                                    onClick={() =>
-                                                                        // Naya Function Signature: (projectId, actionType, actionText)
-                                                                        openConfirmationDialog(project._id, 'PAUSE', 'Pause')
-                                                                    }
-                                                                >
-                                                                    <Pause className="h-4 w-4" />
-                                                                </Button>
-                                                            )}
-
-                                                            <Button className="cursor-pointer bg-red-100 hover:bg-red-200 text-red-600 border border-red-200"
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                title="Close Project (Move to Gallery)" onClick={() => openConfirmationDialog(project._id, 'COMPLETE', 'Mark as Complete')}>
-                                                                <CheckCircle className="h-4 w-4 cursor-pointer" />
-                                                            </Button>
-
-                                                            <Button className="cursor-pointer bg-red-600 hover:bg-red-700 text-white"
-                                                                variant="destructive"
-                                                                size="icon"
-                                                                title="Delete Project FOREVER" onClick={() => openConfirmationDialog(project._id, 'DELETE', 'DELETE PERMANENTLY')}>
-                                                                <Trash2 className="h-4 w-4 cursor-pointer" color='white' />
-                                                            </Button>
+                                            {/* Content */}
+                                            <div className="py-3 flex flex-col gap-2">
+                                                {/* Progress Bar */}
+                                                <div className="flex items-center gap-3">
+                                                    <div className="flex-1 h-1 bg-white/10 rounded-full overflow-hidden">
+                                                        <div 
+                                                            className="h-full bg-[#E23373] rounded-full relative" 
+                                                            style={{ width: `${project.stats?.percentComplete || 0}%` }}
+                                                        >
+                                                            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 bg-white rounded-full shadow-[0_0_10px_rgba(226,51,115,0.8)]"></div>
                                                         </div>
                                                     </div>
-                                                )}
+                                                   
+                                                </div>
+ <span className="!text-white text-xs font-medium text-right">{project.stats?.percentComplete?.toFixed(1) || 0}% Complete</span>
+                                                {/* Title and Admin Actions */}
+                                                <div className="flex items-center justify-between gap-2 mt-1">
+                                                    <div className="flex-1 min-w-0">
+                                                        <ProjectTitle project={project} isAdmin={user?.role === 'admin'} />
+                                                    </div>
+                                                    
+                                                    {user?.role === 'admin' && (
+                                                        <div className="flex items-center gap-2 shrink-0">
+                                                            {/* Pause/Resume Button */}
+                                                            <div className="p-[1px] rounded-lg bg-gradient-to-r from-[#E23373] to-[#FEC133]">
+                                                                <button 
+                                                                    className="w-8 h-8 rounded-lg bg-[#1A1A1A] flex items-center justify-center text-white hover:bg-[#252525] transition-colors"
+                                                                    onClick={() => openConfirmationDialog(
+                                                                        project._id, 
+                                                                        project.status === 'Paused' ? 'RESUME' : 'PAUSE', 
+                                                                        project.status === 'Paused' ? 'Resume' : 'Pause'
+                                                                    )}
+                                                                    title={project.status === 'Paused' ? "Resume Project" : "Pause Project"}
+                                                                >
+                                                                    {project.status === 'Paused' ? <Play className="w-3.5 h-3.5 fill-white" /> : <Pause className="w-3.5 h-3.5 fill-white" />}
+                                                                </button>
+                                                            </div>
+
+                                                            {/* Delete Button */}
+                                                            <button 
+                                                                className="w-[34px] h-[34px] rounded-lg bg-[#BE0000] flex items-center justify-center text-white hover:bg-red-700 transition-colors shadow-sm"
+                                                                onClick={() => openConfirmationDialog(project._id, 'DELETE', 'DELETE PERMANENTLY')}
+                                                                title="Delete Project"
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Stats */}
+                                                <div className="grid grid-cols-2 gap-4 py-3  mt-1">
+                                                    <div className="text-center">
+                                                        <p className="!text-[#AAB2C7] text-sm font-semibold tracking-wider mb-1">Contributors</p>
+                                                        <p className="!text-white text-[20px] font-semibold">{project.contributors?.length || 0}</p>
+                                                    </div>
+                                                    <div className="text-center">
+                                                        <p className="!text-[#AAB2C7] text-xs font-semibold tracking-wider mb-1">Pixels Painted</p>
+                                                        <p className="!text-white text-[20px] font-semibold">{project.stats?.pixelCount?.toLocaleString() || 0}</p>
+                                                    </div>
+                                                </div>
+
+                                                {/* Action Buttons */}
+                                                <div className="flex flex-col gap-2 mt-1">
+                                                    <Link
+                                                        to={isProjectPaused ? "#" : (project.status === 'Completed' ? `/project/${project?.canvasId}?view=gallery` : `/project/${project?.canvasId}`)}
+                                                        onClick={(e) => { if (isProjectPaused) e.preventDefault(); }}
+                                                        className={`w-full relative group overflow-hidden`}
+                                                    >
+                                                        <div className={`w-full py-3 rounded-full bg-gradient-to-r from-[#E23373] to-[#FEC133] text-white font-semibold text-base tracking-wide flex justify-center items-center transition-all duration-300 ${isProjectPaused ? 'opacity-50 cursor-not-allowed grayscale' : 'hover:shadow-[0_0_20px_rgba(226,51,115,0.4)] hover:scale-[1.02]'}`}>
+                                                            {project.status === 'Completed' ? 'View Artwork' : (isProjectPaused ? 'Project Paused' : 'Enter Project')}
+                                                        </div>
+                                                    </Link>
+
+                                                    {user?.role === 'admin' && project.status !== 'Completed' && (
+                                                        <div className="w-full p-[1px] rounded-full bg-gradient-to-r from-[#E23373] to-[#FEC133] group hover:shadow-[0_0_15px_rgba(226,51,115,0.2)] transition-shadow">
+                                                            <button 
+                                                                className="w-full py-3 rounded-full bg-[#1A1A1A] text-white font-semibold text-base tracking-wide hover:bg-[#252525] transition-colors flex items-center justify-center gap-2"
+                                                                onClick={() => openConfirmationDialog(project._id, 'COMPLETE', 'Mark as Complete')}
+                                                            >
+                                                                {/* <CheckCircle className="w-3.5 h-3.5" /> */}
+                                                                Mark as Done
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     )
@@ -308,17 +339,33 @@ const ActiveProjects: React.FC = () => {
                 />}
             </div>
             <AlertDialog open={dialogState.isOpen} onOpenChange={(isOpen) => setDialogState({ ...dialogState, isOpen })}>
-                <AlertDialogContent className="bg-[#5d4037] border-2 border-[#3e2723] text-white font-[Georgia, serif]">
-                    <AlertDialogHeader>
-                        <AlertDialogTitle className='!text-white'>Are you absolutely sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            This action will <span className="font-bold">{dialogState.actionText}</span> this project. This may affect active contributors.
+                <AlertDialogContent className="bg-[#0F0D0D] border border-white/10  text-white font-montserrat min-w-[750px] p-8 rounded-2xl">
+                    <AlertDialogHeader className="space-y-4">
+                        <AlertDialogTitle className="text-[28px] xl:text-[34px] font-semibold text-center leading-tight !text-white">
+                            {dialogState.actionType === 'DELETE' 
+                                ? "Do you want to Delete the project?" 
+                                : `Do you want to ${dialogState.actionText?.toLowerCase()} your project?`
+                            }
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-center text-[#ffffff] text-base 2xl:text-[20px] font-medium min-w-[700px] mx-auto leading-relaxed">
+                            {dialogState.actionType === 'DELETE'
+                                ? "Are you sure you want to delete this project? This action can't be undone."
+                                : "This action will pause your project. This may effect your contributors"
+                            }
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel className='cursor-pointer '>Cancel</AlertDialogCancel>
-                        <AlertDialogAction className="cursor-pointer border-white bg-[#8b795e] text-white hover:bg-[#a1887f] disabled:opacity-50" onClick={handleConfirmAction}>
-                            Continue
+                    <AlertDialogFooter className="flex items-center justify-center sm:justify-center gap-4 mt-8 w-full">
+                        <AlertDialogCancel className="w-full sm:w-[180px] h-[52px] rounded-full border border-white/20 bg-transparent hover:bg-white/5 hover:text-white text-white transition-colors uppercase tracking-wide text-sm font-semibold">
+                            Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction 
+                            className={`w-full sm:w-[180px] h-[52px] rounded-full text-white transition-colors uppercase tracking-wide text-sm font-semibold border-none 
+                                ${dialogState.actionType === 'DELETE' 
+                                    ? 'bg-[#BE0000] hover:bg-red-700' 
+                                    : 'bg-gradient-to-r from-[#E23373] to-[#FEC133] hover:opacity-90'}`}
+                            onClick={handleConfirmAction}
+                        >
+                            {dialogState.actionType === 'DELETE' ? 'Delete' : 'Continue'}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

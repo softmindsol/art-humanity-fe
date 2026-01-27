@@ -41,7 +41,7 @@ const AboutUsSection: React.FC = () => {
                         <img 
                             src="/assets/gradient.svg" 
                             alt="" 
-                            className="absolute xl:top-60 top-96 xl:-right-40 right-0  -translate-y-1/2 w-1/2 h-[650px] -z-10 opacity-70 pointer-events-none"
+                            className="absolute 2xl:-right-86 xl:top-60 top-96 xl:-right-40 right-0  -translate-y-1/2 w-1/2 h-[650px] -z-10 opacity-70 pointer-events-none"
                         />
                         <p className="!text-white font-medium text-sm lg:text-base leading-relaxed text-justify relative z-10">
                             Our journey begins with artwork development a collaborative space where ideas evolve, concepts gain clarity, and creativity is given the freedom to grow. We dive deep into your world, learning what inspires you, understanding your goals, and discovering what sets your vision apart. From raw sketches and moodboards to detailed illustrations and polished compositions, we shape a visual direction that captures your unique narrative. This process is immersive, intentional, and full of exploration, allowing us to build an artistic identity that feels authentic, expressive, and visually unforgettable. Here, art becomes the language of your story bold, meaningful, and ready to make an impact.

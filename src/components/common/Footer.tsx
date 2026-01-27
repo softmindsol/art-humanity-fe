@@ -67,7 +67,7 @@ const Footer = () => {
                 </div>
 
                 {/* Description Column */}
-                 <div className="max-w-sm text-center lg:text-left">
+                 <div className="w-sm md:w-full lg:w-sm text-center lg:text-left">
                     <p className="!text-white text-sm font-medium leading-relaxed">
                         Project MurArt provides enormous digital canvases that would be nearly impossible to fully paint by one person. We have developed a collaboration system that will allow the creation of the most stunning art pieces the world has ever seen. Anyone can paint a part of the canvas and solidify your spot in history!
                     </p>

@@ -1,13 +1,10 @@
-import React, { useEffect, useMemo, useState } from "react";
-
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/redux/store";
-import { changePassword, getUserById, updateUser, /* add your thunk below */ 
-verifyPassword} from "@/redux/action/auth";
+import { getUserById, updateUser, requestEmailChange } from "@/redux/action/auth";
 import useAppDispatch from "@/hook/useDispatch";
 import { toast } from "sonner";
-import { Eye, EyeOff } from "lucide-react";
-import "../../style/profile.css";
+import { Camera, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,42 +16,30 @@ import {
     DialogDescription,
     DialogFooter,
 } from "@/components/ui/dialog";
-
-import { requestEmailChange } from "@/redux/action/auth"; // <-- make sure this exists
-
-const MIN_PASSWORD_LEN = 6;
+import PasswordSection from "./PasswordSection";
 
 const ProfilePage = () => {
     const { profile } = useSelector((state: RootState) => state?.auth);
     const dispatch = useAppDispatch();
 
-    const [loader, setLoader] = useState(false);
- 
+    // Loading States
+    const [profileLoader, setProfileLoader] = useState(false);
+    const [emailLoader, setEmailLoader] = useState(false);
+
+    // Form Data
     const [formData, setFormData] = useState({
         fullName: "",
         email: "",
         profileImage: null as File | null,
-      
-
     });
 
-    const [showPasswordModal, setShowPasswordModal] = useState(false);
-    const [passwordStep, setPasswordStep] = useState(1); // 1: Verify old password, 2: Set new password
-    const [passwordForm, setPasswordForm] = useState({
-        oldPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-    });
-    const [passwordLoader, setPasswordLoader] = useState(false);
-    const [showOldPassword, setShowOldPassword] = useState(false);
-    const [showNewPassword, setShowNewPassword] = useState(false);
+    // Modals
+    const [showEmailVerificationModal, setShowEmailVerificationModal] = useState(false);
+    const [emailVerificationPassword, setEmailVerificationPassword] = useState("");
 
-    // Email-change modal state
-    const [showEmailModal, setShowEmailModal] = useState(false);
-    const [emailForm, setEmailForm] = useState({ newEmail: "", currentPassword: "" });
-    const [emailLoading, setEmailLoading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // populate from profile
+    // Populate from profile
     useEffect(() => {
         if (profile) {
             setFormData((prev) => ({
@@ -65,15 +50,16 @@ const ProfilePage = () => {
         }
     }, [profile]);
 
-    const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Handlers
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setPasswordForm((prev) => ({ ...prev, [name]: value }));
+        setFormData((prev) => ({ ...prev, [name]: value }));
     };
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, value, files } = e.target;
-        if (name === "profileImage" && files) {
+
+    const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const files = e.target.files;
+        if (files && files[0]) {
             const file = files[0];
-            // Optional: basic image validation
             if (!file.type.startsWith("image/")) {
                 toast.error("Please select a valid image file.");
                 return;
@@ -83,12 +69,10 @@ const ProfilePage = () => {
                 return;
             }
             setFormData((prev) => ({ ...prev, profileImage: file }));
-        } else {
-            setFormData((prev) => ({ ...prev, [name]: value }));
         }
     };
 
-    // safer avatar preview (revoke object URL on change/unmount)
+    // Avatar Preview
     const avatarPreview = useMemo(() => {
         if (formData.profileImage) {
             return URL.createObjectURL(formData.profileImage);
@@ -102,361 +86,246 @@ const ProfilePage = () => {
         };
     }, [avatarPreview, formData.profileImage]);
 
-    // enable button only if something changed meaningfully
-    const isChanged =
-        formData.fullName !== (profile?.fullName || "") || !!formData.profileImage;
-
-    const handleUpdate = () => {
+    // 1. Handle Personal Details Update (Name & Avatar)
+    const handleProfileUpdate = () => {
         const nameRegex = /^[a-zA-Z0-9\s\-_]+$/;
-
+        
+        // Check if name is valid
         if (formData.fullName.trim() && !nameRegex.test(formData.fullName.trim())) {
             toast.error("Display Name can only contain letters, numbers, spaces, hyphens, and underscores.");
             return;
         }
-        setLoader(true);
+
+        // Check if email has changed
+        if (formData.email !== profile?.email) {
+            // Trigger email verification flow
+            setShowEmailVerificationModal(true);
+            return;
+        }
+
+        // Proceed with normal profile update (Name/Image)
+        setProfileLoader(true);
         const data = new FormData();
         data.append("fullName", formData.fullName);
         if (formData.profileImage) {
             data.append("profileImage", formData.profileImage);
         }
+        
         const userId = (profile as any)?.id ?? (profile as any)?._id;
 
         dispatch(updateUser({ userId, formData: data }))
             .unwrap()
             .then(() => {
                 dispatch(getUserById(userId));
-                setLoader(false);
+                setProfileLoader(false);
                 setFormData((prev) => ({ ...prev, profileImage: null }));
                 toast.success("Profile updated successfully.");
             })
             .catch((error) => {
-                setLoader(false);
-                console.error("Failed to update profile:", error);
+                setProfileLoader(false);
                 toast.error(error?.message || "Failed to update profile.");
             });
     };
-    // --- Password Verification (Step 1) ---
-    const handleVerifyPassword = async () => {
-        if (passwordForm.oldPassword.length < MIN_PASSWORD_LEN) {
-            return toast.error("Please enter your current password.");
-        }
-        setPasswordLoader(true);
-        try {
-            const userId = (profile as any)?.id ?? (profile as any)?._id;
-            // Aapko ek new thunk `verifyPassword` banana hoga jo sirf password check kare
-            await dispatch(verifyPassword({ userId, oldPassword: passwordForm.oldPassword })).unwrap();
-            setPasswordStep(2); // Move to the next step
-            toast.success("Password verified. You can now set a new password.");
-        } catch (err: any) {
-            toast.error(err?.message || "Incorrect old password.");
-        } finally {
-            setPasswordLoader(false);
-        }
+
+    // 2. Handle Email Update (via Modal)
+    const handleEmailUpdateConfirm = async () => {
+         if (!emailVerificationPassword) {
+            toast.error("Please enter your password to confirm email change.");
+            return;
+         }
+         
+         setEmailLoader(true);
+         const userId = (profile as any)?.id ?? (profile as any)?._id;
+
+         try {
+             await dispatch(requestEmailChange({
+                 userId, 
+                 newEmail: formData.email,
+                 currentPassword: emailVerificationPassword
+             })).unwrap();
+             
+             toast.success("Verification link sent to your new email.");
+             setShowEmailVerificationModal(false);
+             setEmailVerificationPassword("");
+             
+             // Also update the name/image if they were changed together, to be helpful
+             if ((formData.fullName !== profile?.fullName) || formData.profileImage) {
+                 // We don't wait for this one
+                  const data = new FormData();
+                  data.append("fullName", formData.fullName);
+                   if (formData.profileImage) data.append("profileImage", formData.profileImage);
+                   dispatch(updateUser({ userId, formData: data }));
+             }
+
+         } catch (err: any) {
+             toast.error(err?.message || "Failed to update email.");
+         } finally {
+             setEmailLoader(false);
+         }
     };
 
-    // --- New Password Submission (Step 2) ---
-    const handleChangePasswordSubmit = async () => {
-        if (passwordForm.newPassword.length < MIN_PASSWORD_LEN) {
-            return toast.error(`New password must be at least ${MIN_PASSWORD_LEN} characters.`);
-        }
-        if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-            return toast.error("New passwords do not match.");
-        }
-        setPasswordLoader(true);
-        try {
-            const userId = (profile as any)?.id ?? (profile as any)?._id;
-            // Yeh `updateUser` thunk ko call karega sirf password ke saath
-            await dispatch(changePassword({
-                userId,
-                oldPassword: passwordForm.oldPassword,
-                newPassword: passwordForm.newPassword,
-            })).unwrap();
-
-            toast.success("Password changed successfully!");
-            setShowPasswordModal(false);
-            setPasswordForm({ oldPassword: "", newPassword: "", confirmPassword: "" });
-            setPasswordStep(1);
-        } catch (err: any) {
-            toast.error(err || "Failed to change password.");
-        } finally {
-            setPasswordLoader(false);
-        }
+    
+    // Helper to clear selected image
+    const handleRemovePhoto = () => {
+        setFormData(prev => ({ ...prev, profileImage: null }));
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        toast.info("Image selection cleared. Save to apply changes.");
     };
 
-    // Email-change submit
-    const handleEmailChangeSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!emailForm.newEmail.trim()) return toast.error("Please enter a new email.");
-        if (!/\S+@\S+\.\S+/.test(emailForm.newEmail)) return toast.error("Enter a valid email.");
-        if (emailForm.currentPassword.length < MIN_PASSWORD_LEN)
-            return toast.error(`Password must be at least ${MIN_PASSWORD_LEN} characters.`);
-
-        setEmailLoading(true);
-        try {
-            const userId = (profile as any)?.id ?? (profile as any)?._id;
-
-            await dispatch(
-                requestEmailChange({
-                    userId,
-                    newEmail: emailForm.newEmail.trim(),
-                    currentPassword: emailForm.currentPassword,
-                })
-            ).unwrap();
-
-            setShowEmailModal(false);
-            setEmailForm({ newEmail: "", currentPassword: "" });
-
-            // Inform user about verification flow
-            toast.success(
-                "Email change requested. We’ve sent a verification link to your new email. Your account will be verified after you confirm."
-            );
-
-            // Optional: refresh profile to reflect pending change or server response
-            dispatch(getUserById(userId));
-        } catch (err: any) {
-            console.error(err);
-            toast.error(err?.message || "Failed to request email change.");
-        } finally {
-            setEmailLoading(false);
-        }
-    };
-
-    // Get first letter fallback
-    const fallbackLetter =
-        profile?.fullName?.trim()?.charAt(0)?.toUpperCase() ||
-        formData.fullName?.trim()?.charAt(0)?.toUpperCase() ||
-        "A";
+    const fallbackLetter = profile?.fullName?.charAt(0)?.toUpperCase() || "U";
 
     return (
-        <div className="container">
-            <main>
-                <section className="profile-header">
-                    <h2>My Profile</h2>
-                    <p>Manage your account</p>
-                </section>
+        <div className="min-h-screen bg-[#0F0D0D] text-white font-montserrat pb-20 pt-10 mt-24">
+            <div className="container mx-auto px-4 md:px-6 max-w-5xl">
+                
+                {/* Header */}
+                <div className="text-center mb-12">
+                    <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-[#E23373] to-[#FEC133] !bg-clip-text !text-transparent inline-block">
+                        Your Profile
+                    </h1>
+                </div>
 
-                <section className="profile-content">
-                    <div className="profile-sidebar">
-                        <div className="profile-avatar-container">
-                            <div id="profile-avatar" className="profile-avatar" aria-label="Profile avatar">
-                                {avatarPreview ? (
-                                    <img src={avatarPreview} alt="Profile Avatar" className="profile-avatar-image" />
-                                ) : (
-                                    <div className="profile-avatar-fallback" aria-hidden>
-                                        {fallbackLetter}
-                                    </div>
-                                )}
+                {/* Profile Details Card */}
+                <div className="bg-[#141414] rounded-2xl p-6 md:p-10 border border-white/5 shadow-2xl">
+                    
+                    {/* Section 1: Profile Photo */}
+                    <div className="flex flex-col md:flex-row items-center gap-8 mb-12">
+                        <div className="relative group">
+                            <div className="w-24 h-24 md:w-28 md:h-28 rounded-full p-[2px] bg-gradient-to-r from-[#E23373] to-[#FEC133]">
+                                <div className="w-full h-full rounded-full overflow-hidden bg-[#0F0D0D] relative">
+                                    {avatarPreview ? (
+                                        <img src={avatarPreview} alt="Profile" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-4xl font-bold text-gray-500">
+                                            {fallbackLetter}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-
-                            <button
-                                id="change-avatar-btn"
-                                className="btn-secondary"
-                                type="button"
-                                onClick={() => document.getElementById("file-input")?.click()}
+                            <button 
+                                onClick={() => fileInputRef.current?.click()}
+                                className="absolute bottom-0 right-0 p-2 bg-gradient-to-r from-[#E23373] to-[#FEC133] rounded-full text-white hover:scale-110 transition-transform shadow-lg"
                             >
-                                Change Avatar
+                                <Camera size={16} />
                             </button>
-
-                            <input
-                                type="file"
-                                id="file-input"
-                                name="profileImage"
+                            <input 
+                                type="file" 
+                                ref={fileInputRef} 
+                                className="hidden" 
                                 accept="image/*"
-                                style={{ display: "none" }}
-                                onChange={handleChange}
+                                onChange={handleImageChange}
                             />
                         </div>
-                    </div>
 
-                    <div className="profile-details">
-                        <div className="profile-section">
-                            <h3>Account Information</h3>
-                            <form id="profile-form" onSubmit={(e) => { e.preventDefault(); handleUpdate(); }}>
-                                {/* Display Name */}
-                                <div className="form-group">
-                                    <label htmlFor="profile-display-name">Display Name</label>
-                                    <input type="text" id="profile-display-name" name="fullName" value={formData.fullName} onChange={handleChange} required />
-                                </div>
-
-                                {/* Email */}
-                                <div className="form-group">
-                                    <label htmlFor="profile-email">Email</label>
-                                    <div className="input-with-button">
-                                        <input type="email" id="profile-email" name="email" value={formData.email} disabled />
-                                        <button type="button" id="change-email-btn" className="btn-secondary-profile" onClick={() => setShowEmailModal(true)}>Change Email</button>
-                                    </div>
-                                </div>
-
-                                <button type="submit" className="btn-profile" disabled={!isChanged || loader}>
-                                    {loader ? "Saving..." : "Save Changes"}
-                                </button>
-                            </form>
+                        <div className="flex-1 text-center md:text-left space-y-1">
+                            <h2 className="text-lg font-semibold !text-white">{formData.fullName || "User Name"}</h2>
+                            <p className="text-[#ffffff]">{profile?.email || "user@example.com"}</p>
                         </div>
 
-                        <div className="profile-section">
-                            <h3>Security</h3>
-                            <div className="form-group">
-                                <label>Password</label>
-                                <p>Set a unique password to protect your account.</p>
-                                <button
-                                    type="button"
-                                    className="btn-secondary"
-                                    onClick={() => {
-                                        setShowPasswordModal(true);
-                                        setPasswordStep(1);
-                                        setPasswordForm({ oldPassword: "", newPassword: "", confirmPassword: "" });
-                                    }}
-                                >
-                                    Change Password
-                                </button>
-                            </div>
-                        </div>
+                        {formData.profileImage && (
+                             <Button 
+                             onClick={handleRemovePhoto}
+                             variant="outline" 
+                             className="rounded-full border border-[#E23373] font-semibold text-[#E23373] hover:bg-[#E23373]/10 hover:text-[#E23373] px-6"
+                         >
+                             Remove Photo
+                         </Button>
+                        )}
                     </div>
-                </section>
-            </main>
 
+                    <div className="border-t border-white/10 my-8"></div>
 
-            <Dialog open={showPasswordModal} onOpenChange={setShowPasswordModal}>
-                <DialogContent className="bg-[#5d4037] border-2 border-[#3e2723] text-white font-[Georgia, serif]">
-                    <DialogHeader>
-                        <DialogTitle className="!text-white">Change Password</DialogTitle>
-                        <DialogDescription>
-                            {passwordStep === 1
-                                ? "To continue, please enter your current password."
-                                : "Your old password is correct. Please enter a new password."}
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    {passwordStep === 1 ? (
-                        // Step 1: Verify Old Password
-                        <form 
-                        onSubmit={(e) => { e.preventDefault(); handleVerifyPassword(); }}
-                         className="space-y-4">
-                            <div className="grid gap-2">
-                                <Label htmlFor="oldPassword">Current Password</Label>
-                                <div className="relative">
-                                    <Input
-                                        id="oldPassword"
-                                        name="oldPassword"
-                                        type={showOldPassword ? "text" : "password"}
-                                        value={passwordForm.oldPassword}
-                                        onChange={handlePasswordChange}
-                                        required
-                                        minLength={MIN_PASSWORD_LEN}
-                                    />
-                                    <button type="button" 
-                                    onClick={() => setShowOldPassword((v) => !v)} className="absolute inset-y-0 right-0 px-3 flex items-center">
-                                        {showOldPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                                    </button>
-                                </div>
-                            </div>
-                            <DialogFooter>
-                                <Button type="submit" disabled={passwordLoader} className="cursor-pointer border-white bg-[#8b795e] text-white hover:bg-[#a1887f] disabled:opacity-50">
-                                    {passwordLoader ? "Verifying..." : "Verify Password"}
-                                </Button>
-                            </DialogFooter>
-                        </form>
-                    ) : (
-                        // Step 2: Set New Password
-                        <form onSubmit={(e) => {
-                             e.preventDefault(); 
-                        handleChangePasswordSubmit();
-                         }} className="space-y-4">
-                            <div className="grid gap-2">
-                                <Label htmlFor="newPassword">New Password</Label>
-                                <div className="relative">
-                                    <Input
-                                        id="newPassword"
-                                        name="newPassword"
-                                        type={showNewPassword ? "text" : "password"}
-                                        value={passwordForm.newPassword}
-                                        onChange={handlePasswordChange}
-                                        required
-                                        minLength={MIN_PASSWORD_LEN}
-                                    />
-                                    <button type="button" onClick={() => setShowNewPassword((v) => !v)} className="absolute inset-y-0 right-0 px-3 flex items-center">
-                                        {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                                    </button>
-                                </div>
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                                <Input
-                                    id="confirmPassword"
-                                    name="confirmPassword"
-                                    type={showNewPassword ? "text" : "password"}
-                                    value={passwordForm.confirmPassword}
-                                    onChange={handlePasswordChange}
-                                    required
-                                    minLength={MIN_PASSWORD_LEN}
+                    {/* Section 2: Personal Details */}
+                    <div>
+                        <h3 className="text-lg font-semibold !text-white mb-6">Personal Details</h3>
+                        <div className="space-y-6">
+                            <div className="space-y-2">
+                                <Label className="text-base font-semibold !text-white">Name</Label>
+                                <Input 
+                                    name="fullName"
+                                    value={formData.fullName}
+                                    onChange={handleInputChange}
+                                    placeholder="Enter your Name"
+                                    className="bg-[#2E2E2E] border-none text-white h-12 rounded-lg focus-visible:ring-1 focus-visible:ring-[#E23373] placeholder:text-[#AAB2C7]"
                                 />
                             </div>
-                            <DialogFooter>
-                                    <Button type="submit" disabled={passwordLoader} className="cursor-pointer border-white bg-[#8b795e] text-white hover:bg-[#a1887f] disabled:opacity-50">
-                                    {passwordLoader ? "Saving..." : "Save New Password"}
-                                </Button>
-                            </DialogFooter>
-                        </form>
-                    )}
-                </DialogContent>
-            </Dialog>
-            {/* Change Email Modal (very lightweight, no extra deps) */}
-            <Dialog open={showEmailModal} onOpenChange={setShowEmailModal}>
-                <DialogContent className="bg-[#5d4037] border-2 border-[#3e2723] text-white font-[Georgia, serif]">
+                            <div className="space-y-2">
+                                <Label className="text-base font-semibold !text-white">Email</Label>
+                                <Input 
+                                    name="email"
+                                    value={formData.email}
+                                    onChange={handleInputChange}
+                                    placeholder="Enter your Email"
+                                    className="bg-[#2E2E2E] border-none text-white h-12 rounded-lg focus-visible:ring-1 focus-visible:ring-[#E23373] placeholder:text-[#AAB2C7]"
+                                />
+                                {formData.email !== profile?.email && (
+                                    <p className="text-xs text-[#FEC133] flex items-center gap-1 mt-1">
+                                        <AlertCircle size={12} />
+                                        Changing email will require password verification.
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+                        <div className="mt-8 flex justify-end">
+                            <Button 
+                                onClick={handleProfileUpdate}
+                                disabled={profileLoader}
+                                className="bg-gradient-to-r from-[#E23373] to-[#FEC133] rounded-full px-8 py-2 h-10 text-white font-semibold hover:opacity-90 border-none transition-all"
+                            >
+                                {profileLoader ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : null}
+                                Save Changes
+                            </Button>
+                        </div>
+                    </div>
+                
+                </div>
+
+                {/* Password Section (Separate Card) */}
+                <PasswordSection />
+
+            </div>
+
+            {/* Email Verification Modal */}
+             <Dialog open={showEmailVerificationModal} onOpenChange={setShowEmailVerificationModal}>
+                <DialogContent className="bg-[#141414] border border-white/10 text-white">
                     <DialogHeader>
-                        <DialogTitle className="!text-white">Change Email</DialogTitle>
-                        <DialogDescription>
-                            Enter your new email and current password. We’ll send a verification link to the new address.
+                        <DialogTitle className="text-xl font-semibold">Verify Email Change</DialogTitle>
+                        <DialogDescription className="text-gray-400">
+                            To update your email to <b>{formData.email}</b>, please enter your current password.
                         </DialogDescription>
                     </DialogHeader>
 
-                    <form
-                        onSubmit={handleEmailChangeSubmit}
-                        className="space-y-4"
-                    >
-                        <div className="grid gap-2">
-                            <Label htmlFor="new-email">New Email</Label>
-                            <Input
-                                id="new-email"
-                                type="email"
-                                value={emailForm.newEmail}
-                                onChange={(e) => setEmailForm((p) => ({ ...p, newEmail: e.target.value }))}
-                                placeholder="you@newdomain.com"
-                                required
-                            />
-                        </div>
-
-                        <div className="grid gap-2">
-                            <Label htmlFor="current-password">Current Password</Label>
-                            <Input
-                                id="current-password"
+                    <div className="space-y-4 my-4">
+                        <div className="space-y-2">
+                            <Label>Current Password</Label>
+                            <Input 
                                 type="password"
-                                value={emailForm.currentPassword}
-                                onChange={(e) => setEmailForm((p) => ({ ...p, currentPassword: e.target.value }))}
+                                value={emailVerificationPassword}
+                                onChange={(e) => setEmailVerificationPassword(e.target.value)}
                                 placeholder="Enter current password"
-                                required
-                                minLength={MIN_PASSWORD_LEN}
+                                className="bg-[#2E2E2E] border-none text-white focus-visible:ring-1 focus-visible:ring-[#E23373]"
                             />
                         </div>
+                    </div>
 
-                        <DialogFooter className="gap-2">
-                            <Button
-                                className="cursor-pointer"
-                                type="button"
-                                variant="outline"
-                                onClick={() => setShowEmailModal(false)}
-                            >
-                                Cancel
-                            </Button>
-                            <Button type="submit" disabled={emailLoading} className="cursor-pointer border-white bg-[#8b795e] text-white hover:bg-[#a1887f] disabled:opacity-50" >
-                                {emailLoading ? "Submitting..." : "Submit"}
-                            </Button>
-                        </DialogFooter>
- 
-                        <p className="text-sm text-muted-foreground">
-                            After submitting, your account will be set to <strong>unverified</strong>. Check your new inbox for the verification link.
-                        </p>
-                    </form>
+                    <DialogFooter>
+                        <Button 
+                            variant="outline" 
+                            onClick={() => {
+                                setShowEmailVerificationModal(false);
+                            }}
+                            className="bg-transparent border-white/20 text-white hover:bg-white/5"
+                        >
+                            Cancel
+                        </Button>
+                        <Button 
+                            onClick={handleEmailUpdateConfirm} 
+                            disabled={emailLoader}
+                            className="bg-gradient-to-r from-[#E23373] to-[#FEC133] border-none text-white hover:opacity-90"
+                        >
+                            {emailLoader ? <Loader2 className="animate-spin w-4 h-4" /> : "Verify & Update"}
+                        </Button>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
 
