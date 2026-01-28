@@ -211,7 +211,12 @@ const Header = () => {
 
   // --- HIDE HEADER ON AUTH PAGES ---
   const location = useLocation();
-  if (location.pathname === "/signup" || location.pathname === "/login" || location.pathname === "/forgot-password" || location.pathname.startsWith("/reset-password")) {
+  if (
+    location.pathname === "/signup" ||
+    location.pathname === "/login" ||
+    location.pathname === "/forgot-password" ||
+    location.pathname.startsWith("/reset-password")
+  ) {
     return null;
   }
 
@@ -219,7 +224,7 @@ const Header = () => {
     <>
       {/* Fixed Pill Container */}
       <div className="fixed top-6 left-1/2 transform -translate-x-1/2 z-[1000] w-[95%] ">
-        <header className="flex items-center !justify-between  !py-[5px] rounded-full  border border-white/20 shadow-2xl bg-black/10 backdrop-blur-[2px]">
+        <header className="flex items-center !justify-between !py-[5px] rounded-full border border-white/20 shadow-2xl bg-black/10 backdrop-blur-[2px]">
           {/* Logo Section */}
           <div className="logo-container">
             <Link to="/" className="logo-link flex items-center gap-3">
@@ -306,151 +311,147 @@ const Header = () => {
                     <span className="hidden lg:inline">Demo</span>
                   </NavLink>
                 </li>
-
-
               </ul>
             </nav>
-</div>
-            {/* Auth Buttons - Hidden on Mobile (moved to sidebar) */}
-            <div className="hidden md:flex items-center gap-6 pr-1">
-              {user?._id && (
-                <div ref={notificationRef} className="relative">
-                  <div
-                    onClick={handleBellClick}
-                    className="relative cursor-pointer group"
-                  >
-                    {/* Gradient Border Container */}
-                    <div className="absolute -inset-0.5 bg-gradient-to-r from-[#E23373] to-[#FEC133] rounded-xl opacity-70 group-hover:opacity-100 transition duration-200 blur-[0.5px]"></div>
-                    {/* Inner Black Box */}
-                    <div className="relative w-10 h-10 bg-black rounded-xl flex items-center justify-center border border-white/10">
-                      <Bell size={20} className="text-white" />
-                    </div>
-
-                    {unreadCount > 0 && (
-                      <span className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-red-500 border border-black">
-                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                      </span>
-                    )}
+          </div>
+          {/* Auth Buttons - Hidden on Mobile (moved to sidebar) */}
+          <div className="hidden md:flex items-center gap-6 pr-1">
+            {user?._id && (
+              <div ref={notificationRef} className="relative">
+                <div
+                  onClick={handleBellClick}
+                  className="relative cursor-pointer group"
+                >
+                  {/* Gradient Border Container */}
+                  <div className="absolute -inset-0.5 bg-gradient-to-r from-[#E23373] to-[#FEC133] rounded-xl opacity-70 group-hover:opacity-100 transition duration-200 blur-[0.5px]"></div>
+                  {/* Inner Black Box */}
+                  <div className="relative w-10 h-10 bg-black rounded-xl flex items-center justify-center border border-white/10">
+                    <Bell size={20} className="text-white" />
                   </div>
 
-                  {/* --- NOTIFICATION DROPDOWN --- */}
-                  {isNotificationOpen && (
-                    <div className="absolute right-0 mt-4 w-80 bg-[#1A1D24] border border-white/10 rounded-xl shadow-2xl max-h-96 overflow-y-auto p-2 z-[2000]">
-                      <div className="p-3 flex justify-between items-center border-b border-white/5 mb-2">
-                        <span className="font-bold text-white text-sm">
-                          Notifications
-                        </span>
-                        {unreadCount > 0 && (
-                          <button
-                            onClick={handleMarkAllAsRead}
-                            className="text-xs text-red-400 hover:text-red-300 transition-colors"
-                          >
-                            Mark all as read
-                          </button>
-                        )}
-                      </div>
-                      {notifications.length > 0 ? (
-                        <ul className="space-y-1 flex flex-col">
-                          {notifications.map((notif: any) => (
-                            <li
-                              key={notif?._id}
-                              className={`p-3 rounded-lg text-sm transition-colors ${!notif.isRead ? "bg-white/5 hover:bg-white/10" : "bg-transparent hover:bg-white/5"} mb-1`}
-                            >
-                              <Link
-                                to={`/project/${notif.project?.canvasId}`}
-                                onClick={() => handleNotificationClick(notif)}
-                                className="block"
-                              >
-                                <div
-                                  className={`mb-1 ${!notif.isRead ? "text-white font-medium" : "text-gray-400"}`}
-                                >
-                                  {notif?.message}
-                                </div>
-                                <div className="text-[10px] text-gray-500">
-                                  {new Date(notif?.createdAt).toLocaleString()}
-                                </div>
-                              </Link>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <div className="p-8 text-center text-gray-500 text-sm">
-                          No new notifications
-                        </div>
-                      )}
-                    </div>
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-red-500 border border-black">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    </span>
                   )}
                 </div>
-              )}
 
-              {profile ? (
-                <div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      {profile?.avatar ? (
-                        <img
-                          src={profile?.avatar}
-                          alt="Avatar"
-                          className="w-10 h-10 rounded-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#FF6B6B] to-[#FFD93D] text-white flex items-center justify-center font-bold cursor-pointer select-none shadow-lg">
-                          {profile?.fullName.charAt(0).toUpperCase()}
-                        </div>
+                {/* --- NOTIFICATION DROPDOWN --- */}
+                {isNotificationOpen && (
+                  <div className="absolute right-0 mt-4 w-80 bg-[#1A1D24] border border-white/10 rounded-xl shadow-2xl max-h-96 overflow-y-auto p-2 z-[2000]">
+                    <div className="p-3 flex justify-between items-center border-b border-white/5 mb-2">
+                      <span className="font-bold text-white text-sm">
+                        Notifications
+                      </span>
+                      {unreadCount > 0 && (
+                        <button
+                          onClick={handleMarkAllAsRead}
+                          className="text-xs text-red-400 hover:text-red-300 transition-colors"
+                        >
+                          Mark all as read
+                        </button>
                       )}
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      align="end"
-                      className="w-60 bg-[#1A1D24] border border-white/10 rounded-xl shadow-2xl text-gray-200 mt-2"
+                    </div>
+                    {notifications.length > 0 ? (
+                      <ul className="space-y-1 flex flex-col">
+                        {notifications.map((notif: any) => (
+                          <li
+                            key={notif?._id}
+                            className={`p-3 rounded-lg text-sm transition-colors ${!notif.isRead ? "bg-white/5 hover:bg-white/10" : "bg-transparent hover:bg-white/5"} mb-1`}
+                          >
+                            <Link
+                              to={`/project/${notif.project?.canvasId}`}
+                              onClick={() => handleNotificationClick(notif)}
+                              className="block"
+                            >
+                              <div
+                                className={`mb-1 ${!notif.isRead ? "text-white font-medium" : "text-gray-400"}`}
+                              >
+                                {notif?.message}
+                              </div>
+                              <div className="text-[10px] text-gray-500">
+                                {new Date(notif?.createdAt).toLocaleString()}
+                              </div>
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div className="p-8 text-center text-gray-500 text-sm">
+                        No new notifications
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {profile ? (
+              <div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    {profile?.avatar ? (
+                      <img
+                        src={profile?.avatar}
+                        alt="Avatar"
+                        className="w-10 h-10 rounded-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#FF6B6B] to-[#FFD93D] text-white flex items-center justify-center font-bold cursor-pointer select-none shadow-lg">
+                        {profile?.fullName.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="end"
+                    className="w-60 bg-[#1A1D24] border border-white/10 rounded-xl shadow-2xl text-gray-200 mt-2"
+                  >
+                    <DropdownMenuLabel className="p-3">
+                      <div className="font-bold !text-white mb-0.5">
+                        {profile?.fullName}
+                      </div>
+                      <div className="text-xs !text-white font-normal truncate">
+                        {profile?.email}
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator className="bg-white/10" />
+
+                    <Link to="/profile">
+                      <DropdownMenuItem className="cursor-pointer !text-white hover:bg-[#0F0D0D] font-semibold transition-colors flex items-center gap-2 p-2.5 rounded-full mx-1 my-0.5">
+                        <UserCircle2 size={16} />
+                        <span>Profile</span>
+                      </DropdownMenuItem>
+                    </Link>
+
+                    <DropdownMenuItem
+                      onClick={handleSupportClick}
+                      className="cursor-pointer !text-white hover:bg-[#0F0D0D] font-semibold   transition-colors flex items-center gap-2 p-2.5 rounded-full mx-1 my-0.5"
                     >
-                      <DropdownMenuLabel className="p-3">
-                        <div className="font-bold !text-white mb-0.5">
-                          {profile?.fullName}
-                        </div>
-                        <div className="text-xs !text-white font-normal truncate">
-                          {profile?.email}
-                        </div>
-                      </DropdownMenuLabel>
-                      <DropdownMenuSeparator className="bg-white/10" />
+                      <Heart size={16} />
+                      <span>Support Us</span>
+                    </DropdownMenuItem>
 
-                      <Link to="/profile">
-                        <DropdownMenuItem className="cursor-pointer !text-white hover:bg-[#0F0D0D] font-semibold transition-colors flex items-center gap-2 p-2.5 rounded-full mx-1 my-0.5">
-                          <UserCircle2 size={16} />
-                          <span>Profile</span>
-                        </DropdownMenuItem>
-                      </Link>
+                    <DropdownMenuItem
+                      onClick={handleLogout}
+                      className="cursor-pointer !text-white hover:bg-[#0F0D0D] font-semibold focus:bg-[#0F0D0D] focus:text-white transition-colors flex items-center gap-2 p-2.5 rounded-full mx-1 my-0.5"
+                    >
+                      <LogOut size={16} />
+                      <span>Logout</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            ) : (
+              <button
+                id="sign-in-btn"
+                className="px-6 py-2 rounded-full font-medium text-white bg-gradient-to-r from-[#E23373] to-[#FEC133] hover:opacity-90 transition-opacity transform active:scale-95 shadow-[0_0_20px_rgba(226,51,115,0.4)] font-montserrat"
+                onClick={() => navigate("/login")}
+              >
+                Sign In
+              </button>
+            )}
+          </div>
 
-                      <DropdownMenuItem
-                        onClick={handleSupportClick}
-                        className="cursor-pointer !text-white hover:bg-[#0F0D0D] font-semibold   transition-colors flex items-center gap-2 p-2.5 rounded-full mx-1 my-0.5"
-                      >
-                        <Heart size={16} />
-                        <span>Support Us</span>
-                      </DropdownMenuItem>
-
-                      <DropdownMenuItem
-                        onClick={handleLogout}
-                        className="cursor-pointer !text-white hover:bg-[#0F0D0D] font-semibold focus:bg-[#0F0D0D] focus:text-white transition-colors flex items-center gap-2 p-2.5 rounded-full mx-1 my-0.5"
-                      >
-                        <LogOut size={16} />
-                        <span>Logout</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              ) : (
-                <button
-                  id="sign-in-btn"
-                  className="px-6 py-2 rounded-full font-medium text-white bg-gradient-to-r from-[#E23373] to-[#FEC133] hover:opacity-90 transition-opacity transform active:scale-95 shadow-[0_0_20px_rgba(226,51,115,0.4)] font-montserrat"
-                  onClick={() => navigate('/login')}
-                >
-                  Sign In
-                </button>
-              )}
-            </div>
-
-          
- 
           {/* Mobile Menu Button - Direct Child */}
           <div className="md:hidden relative z-100 flex items-center">
             <button
@@ -482,11 +483,18 @@ const Header = () => {
             onClick={handleLinkClick}
             className="flex items-center gap-x-3"
           >
-            <img src="/assets/logo.svg" alt="Logo" className="h-10 w-10 object-contain" />
+            <img
+              src="/assets/logo.svg"
+              alt="Logo"
+              className="h-10 w-10 object-contain"
+            />
           </Link>
 
           {/* Close Button (Right side) */}
-          <button onClick={() => setIsSidebarOpen(false)} className="text-white/70 hover:text-white transition-colors">
+          <button
+            onClick={() => setIsSidebarOpen(false)}
+            className="text-white/70 hover:text-white transition-colors"
+          >
             <X className="h-6 w-6" />
           </button>
         </div>
@@ -520,32 +528,32 @@ const Header = () => {
               </li>
 
               {/* Gallery Link */}
-              {/* user && ( // Uncomment if needed */ }
-                 <li>
-                  <NavLink
-                    to="/gallery"
-                    onClick={handleLinkClick}
-                    className="cursor-pointer text-gray-300 hover:text-white hover:bg-white/5 p-3 rounded-lg transition-all flex items-center gap-3 font-medium"
-                  >
-                    <Image size={20} />
-                    <span>Gallery</span>
-                  </NavLink>
-                </li>
-             { /* ) */ }
+              {/* user && ( // Uncomment if needed */}
+              <li>
+                <NavLink
+                  to="/gallery"
+                  onClick={handleLinkClick}
+                  className="cursor-pointer text-gray-300 hover:text-white hover:bg-white/5 p-3 rounded-lg transition-all flex items-center gap-3 font-medium"
+                >
+                  <Image size={20} />
+                  <span>Gallery</span>
+                </NavLink>
+              </li>
+              {/* ) */}
 
               {/* Contribute Link */}
-              {/* user && ( // Uncomment if needed */ }
-                <li>
-                  <NavLink
-                    to="/projects"
-                    onClick={handleLinkClick}
-                    className="cursor-pointer text-gray-300 hover:text-white hover:bg-white/5 p-3 rounded-lg transition-all flex items-center gap-3 font-medium"
-                  >
-                    <Users size={20} />
-                    <span>Contribute</span>
-                  </NavLink>
-                </li>
-              { /* ) */ }
+              {/* user && ( // Uncomment if needed */}
+              <li>
+                <NavLink
+                  to="/projects"
+                  onClick={handleLinkClick}
+                  className="cursor-pointer text-gray-300 hover:text-white hover:bg-white/5 p-3 rounded-lg transition-all flex items-center gap-3 font-medium"
+                >
+                  <Users size={20} />
+                  <span>Contribute</span>
+                </NavLink>
+              </li>
+              {/* ) */}
 
               {/* Demo Link */}
               <li>
@@ -577,29 +585,32 @@ const Header = () => {
             {profile ? (
               // --- AGAR USER LOGGED IN HAI ---
               <div className="flex flex-col items-center gap-4">
-
-                 <div className="flex items-center gap-3 w-full p-2 rounded-lg bg-white/5">
-                    {profile?.avatar ? (
-                        <img
-                          src={profile?.avatar}
-                          alt="Avatar"
-                          className="w-10 h-10 rounded-full object-cover border border-white/10"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#FF6B6B] to-[#FFD93D] text-white flex items-center justify-center font-bold text-lg shadow-sm">
-                          {profile?.fullName.charAt(0).toUpperCase()}
-                        </div>
-                      )}
-                    <div className="flex flex-col overflow-hidden">
-                        <span className="font-semibold text-white truncate">{profile.fullName}</span>
-                        <span className="text-xs text-gray-400 truncate">{profile.email}</span>
+                <div className="flex items-center gap-3 w-full p-2 rounded-lg bg-white/5">
+                  {profile?.avatar ? (
+                    <img
+                      src={profile?.avatar}
+                      alt="Avatar"
+                      className="w-10 h-10 rounded-full object-cover border border-white/10"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#FF6B6B] to-[#FFD93D] text-white flex items-center justify-center font-bold text-lg shadow-sm">
+                      {profile?.fullName.charAt(0).toUpperCase()}
                     </div>
-                 </div>
+                  )}
+                  <div className="flex flex-col overflow-hidden">
+                    <span className="font-semibold text-white truncate">
+                      {profile.fullName}
+                    </span>
+                    <span className="text-xs text-gray-400 truncate">
+                      {profile.email}
+                    </span>
+                  </div>
+                </div>
 
                 <button
                   onClick={() => {
                     handleLogout();
-                    handleLinkClick(); 
+                    handleLinkClick();
                   }}
                   className="w-full cursor-pointer py-2.5 bg-red-500/10 text-red-400 border border-red-500/20 rounded-lg hover:bg-red-500/20 transition-colors flex items-center justify-center gap-2 font-medium"
                 >
@@ -611,8 +622,8 @@ const Header = () => {
               // --- AGAR USER LOGGED OUT HAI ---
               <button
                 onClick={() => {
-                  navigate('/signup'); 
-                  handleLinkClick(); 
+                  navigate("/signup");
+                  handleLinkClick();
                 }}
                 className="w-full cursor-pointer py-3 rounded-full font-bold text-white bg-gradient-to-r from-[#E23373] to-[#FEC133] hover:opacity-90 shadow-lg transition-all active:scale-95"
               >
@@ -692,7 +703,6 @@ const Header = () => {
         confirmText="Yes, Logout"
         isLoading={isLoggingOut}
       />
-      
     </>
   );
 };
