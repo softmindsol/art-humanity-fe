@@ -30,7 +30,7 @@ const ServiceCard: React.FC<ServiceCardProps> = ({
       </div>
 
       {/* Title */}
-      <h3 className="!text-white md:text-[28px] text-2xl font-semibold !mb-0">
+      <h3 className="!text-white md:text-[28px] text-xl font-semibold !mb-0">
         {title}
       </h3>
 
@@ -69,7 +69,7 @@ const ServicesSection: React.FC = () => {
 
   return (
     <section className="relative w-full bg-[#0F0D0D] py-10 lg:py-20 overflow-hidden">
-      <div className="max-w-7xl mx-auto px-6 lg:px-8">
+      <div className="max-w-[1440px] px-6 2xl:px-8 mx-auto">
         {/* Header Row */}
         <div className="flex flex-col-reverse md:flex-row justify-between items-start !sm:items-center md:gap-6 gap-3 lg:mb-16 md:mb-5 mb-3">
           {/* Heading */}

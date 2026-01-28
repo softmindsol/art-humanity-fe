@@ -6,7 +6,7 @@ const AboutUsSection: React.FC = () => {
       {/* Background Glow Effect */}
       <div className="absolute right-0 top-1/2 w-[600px] h-[600px] bg-red-900/10 rounded-full blur-[120px] translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
 
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 flex flex-col-reverse lg:flex-row items-center gap-16 lg:gap-24 relative z-10">
+      <div className="max-w-[1440px] px-6 2xl:px-8 mx-auto flex flex-col-reverse lg:flex-row items-center gap-16 lg:gap-24 relative z-10">
         {/* Left Side: Image */}
         <div className="relative w-full lg:w-1/2 flex justify-center items-center">
           <img
