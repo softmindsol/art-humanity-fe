@@ -7,7 +7,7 @@ import useAuth from "@/hook/useAuth";
 interface PublicRouteProps {
   children: any;
 }
-
+ 
 const PublicRoute: React.FC<PublicRouteProps> = ({ children }) => {
   const { user } = useAuth();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);

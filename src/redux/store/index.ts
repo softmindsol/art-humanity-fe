@@ -15,7 +15,7 @@ import storage from "redux-persist/lib/storage"; // uses localStorage by default
 import paintPixelReducer from "../slice/contribution";
 import projectReducer from '../slice/project'; 
 import uiReducer from "../slice/opeModal"; // Import the new slice
-
+import notificationsReducer from "../slice/notification"; // <-- Notification slice ko import karein
 
 // Combine your reducers (if you have more later)
 const rootReducer = combineReducers({
@@ -23,6 +23,7 @@ const rootReducer = combineReducers({
   paintPixel: paintPixelReducer,
   projects: projectReducer, // Nayi slice ko register karein
   ui: uiReducer,
+  notifications: notificationsReducer, // <-- Notification slice ko yahan add karein
 });
 
 // Persist config

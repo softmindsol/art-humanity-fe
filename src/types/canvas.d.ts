@@ -36,3 +36,8 @@ export interface Tile {
     context: CanvasRenderingContext2D;
     isDirty: boolean;
 }
+
+export interface FetchTilesArgs {
+  projectId: string;
+  tiles: string; // "0-0,0-1"
+}

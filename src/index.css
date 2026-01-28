@@ -33,12 +33,15 @@
   box-sizing: border-box;
 }
 
+@utility font-montserrat {
+  font-family: "Montserrat", sans-serif;
+}
+
 body {
-  font-family: "Source Serif Pro", Georgia, serif;
+  font-family: "Montserrat", sans-serif;
   color: var(--text-dark);
-  background-color: var(--parchment);
+  background-color: #0F0D0D;
   line-height: 1.6;
-  background-image: url("data:image/png;base64,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");
   margin: 0;
   padding: 0;
 }
@@ -60,8 +63,8 @@ main {
 }
 .container {
   max-width: 1200px;
-  margin: auto;
-  padding: 0 28px;
+  margin: 0 auto;
+  padding: 0;
 }
 
 h1,
@@ -70,9 +73,9 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: "Playfair Display", serif;
+  font-family: "Montserrat", serif;
   font-weight: 700;
-  /* margin-bottom: 1rem; */
+  margin-bottom: 1rem;
   color: var(--primary-dark);
 }
 
@@ -88,19 +91,19 @@ a:hover {
 
 /* Header Styles */
 .header-container {
-  background-color: var(--cream);
+  /* background-color: var(--cream);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   position: sticky;
   top: 0;
   z-index: 40;
-  border-bottom: 1px solid var(--accent-dark);
+  border-bottom: 1px solid var(--accent-dark); */
 }
 
 header {
-  display: flex;
+  display: flex !important;
   justify-content: space-between;
   align-items: center;
-  padding: 15px 30px;
+  padding: 10px 30px;
   max-width: 1200px;
   margin: 0 auto;
 }
@@ -115,23 +118,28 @@ header {
   align-items: center;
   text-decoration: none;
 }
+.logo-link-footer {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
 
 .logo {
-  width: 80px;
-  height: 80px;
+  width: 50px; /* Reduced specific logo size */
+  height: auto;
   margin-right: 15px;
 }
 
 .logo-text h1 {
   font-size: 24px;
   margin: 0;
-  color: #333;
+  color: #fff; /* Changed to white */
 }
 
 .tagline {
   font-size: 14px;
   margin: 0;
-  color: #666;
+  color: #aaa; /* Changed to light gray */
 }
 
 .header-right {
@@ -163,15 +171,14 @@ nav ul li:last-child {
 }
 
 nav ul li a {
-  color: var(--primary-dark);
+  color: #fff; /* White Text */
   text-decoration: none;
-  font-size: 18px;
-  font-weight: 500;
-  padding: 10px 0;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 5px 0;
   position: relative;
   transition: all 0.3s ease;
-  display: inline-block;
-  font-family: "Playfair Display", serif;
+  font-family: "Montserrat", sans-serif;
 }
 
 nav ul li a:after {
@@ -181,12 +188,16 @@ nav ul li a:after {
   left: 0;
   width: 0;
   height: 2px;
-  background-color: #d4af37; /* Gold color for the line */
+  background: linear-gradient(
+    90deg,
+    #E23373 0%,
+    #FEC133 100%
+  ); /* User requested gradient */
   transition: width 0.3s ease;
 }
 
 nav ul li a:hover {
-  color: var(--primary-dark);
+  color: #fff;
 }
 
 nav ul li a:hover:after,
@@ -237,14 +248,14 @@ nav ul li a.active {
 }
 
 .hero-content h2 {
-  /* font-size: 3rem; */
+  font-size: 3rem;
   margin-bottom: 1.5rem;
   color: var(--text-light);
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .hero-content p {
-  /* font-size: 1.1rem; */
+  font-size: 1.1rem;
   margin-bottom: 2rem;
   line-height: 1.6;
   max-width: 800px;
@@ -356,7 +367,7 @@ nav ul li a.active {
 }
 
 .project-card h3 {
-  padding: 20px 20px 10px;
+  padding: 5px 20px 1px;
   font-size: 1.3rem;
 }
 
@@ -380,7 +391,8 @@ nav ul li a.active {
   background-color: var(--primary);
   color: var(--text-light);
   transition: all 0.3s ease;
-  margin: 0 20px 20px;
+  /* margin: 0 20px 20px; */
+  margin-top: 10px;
   border-radius: 3px;
 }
 
@@ -429,6 +441,155 @@ nav ul li a.active {
   margin: 0 auto 60px;
 }
 
+/* ===== GUIDELINE PAGE - RESPONSIVE STYLES ===== */
+
+/* Pehle, image aur caption ke liye default styles set karein */
+.guideline-image {
+  max-width: 60%; /* Desktop par 60% width */
+  height: auto;
+  margin-top: 15px;
+  border-radius: 8px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.image-caption {
+  font-style: italic;
+  font-size: 0.9em;
+  text-align: center;
+  margin-top: 5px;
+  color: var(--primary); /* Text color behtar karein */
+}
+
+/* === AB YAHAN SE RESPONSIVE MAGIC SHURU HOGA === */
+/* 900px se choti screens (tablets aur mobile) ke liye */
+
+@media (max-width: 1200px) {
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0;
+  }
+}
+@media (max-width: 768px) {
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0;
+  }
+}
+@media (max-width: 900px) {
+
+  /* 1. Header ka font size chota karein */
+  .rules-header h2 {
+    font-size: 2.2rem; /* Original 2.8rem se kam */
+  }
+
+  .rules-header,
+  .page-header {
+    text-align: center;
+    margin: 21px 0 21px;
+    padding-bottom: 20px;
+    position: relative;
+  }
+  .rules-content {
+    max-width: 90%;
+    margin: 0 auto 60px;
+  }
+  .rules-header p {
+    font-size: 1.1rem; /* Subtitle bhi thora chota */
+  }
+
+  /* 2. Rule cards ke andar padding kam karein */
+  .rule-card {
+    padding: 10px 15px; /* Top/Bottom 20px, Left/Right 15px */
+  }
+
+  /* 3. Card ke andar ke headings ka size kam karein */
+  .rule-card h3 {
+    font-size: 1.25rem; /* Original 1.4rem se kam */
+  }
+
+  /* 4. Paragraph text ko thora chota karein taake fit ho jaye */
+  .rule-card p {
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  /* 5. Image ko card ki poori width de dein */
+  .guideline-image {
+    max-width: 100%; /* Image ab poori chaurai legi */
+  }
+}
+
+/* Extra adjustments for bohat choti screens (480px se kam) */
+@media (max-width: 768px) {
+  .header-right {
+    display: none;
+  }
+}
+@media (max-width: 767px) {
+  header {
+    display: flex;
+    flex-direction: row !important;
+    justify-content: space-between;
+    align-items: center;
+    padding: 5px 30px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+}
+
+/* Is se hum drawer ki width aur background set karenge */
+.drawer-custom .drawer-content {
+  width: 280px !important; /* Drawer ki width set karein */
+  max-width: 80%;
+  background-color: var(--cream) !important; /* Aapki theme ka cream color */
+}
+
+/* Overlay ka color set karein */
+.drawer-custom .drawer-overlay {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Sidebar ke andar ke links ke liye styles */
+.drawer-custom nav ul li a {
+  font-size: 1.5rem; /* 24px, mobile par bare aur aasan */
+  font-weight: 600;
+  color: var(--primary-dark);
+  padding: 10px;
+  font-family: "Playfair Display", serif;
+}
+
+/* Extra adjustments for bohat choti screens (480px se kam) */
+@media (max-width: 480px) {
+  .logo {
+    width: 60px;
+    height: 60px;
+    margin-right: 5px;
+  }
+
+  .rules-header h2 {
+    font-size: 1.8rem; /* Aur chota karein */
+  }
+
+  /* Main container ki side padding kam karein */
+  .container {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+  .logo-text h1 {
+    display: none;
+  }
+  .tagline {
+    display: none;
+  }
+  .header-right {
+    display: none;
+  }
+}
+
 .rule-card {
   background-color: var(--cream);
   border: 1px solid var(--accent-dark);
@@ -436,7 +597,9 @@ nav ul li a.active {
   padding: 25px 30px;
   margin-bottom: 20px;
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
 }
 
 .rule-card:hover {
@@ -488,9 +651,9 @@ nav ul li a.active {
 footer {
   background-color: var(--primary-dark);
   color: var(--text-light);
-  padding-top: 50px;
+  padding-top: 40px;
   padding-bottom: 20px;
-  margin-top: 60px;
+  /* margin-top: 60px; */
 }
 
 .footer-content {
@@ -521,7 +684,7 @@ footer {
 }
 
 .footer-column {
-  margin-left: 60px;
+  /* margin-left: 60px; */
 }
 
 .footer-column h3 {
@@ -567,6 +730,11 @@ footer {
 }
 
 @media (max-width: 1024px) {
+  /* header {
+    flex-direction: column;
+    align-items: center;
+    min-width: 100%;
+  } */
   .canvas-drawing-area {
     width: 100%;
     max-width: 1024px;
@@ -591,15 +759,6 @@ footer {
 }
 
 @media (max-width: 768px) {
-  header {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .logo-container {
-    margin-bottom: 15px;
-  }
-
   .main-nav {
     margin: 10px 0;
     width: 100%;
@@ -640,6 +799,12 @@ footer {
   .footer-column {
     margin-right: 0;
     margin-bottom: 20px;
+    margin-left: 30px;
+  }
+
+  .logo-link {
+    margin-left: 15px;
+    margin-bottom: 5px;
   }
 
   .rules-header h2 {
@@ -665,7 +830,10 @@ footer {
   .hero {
     padding: 60px 0;
   }
-
+  .logo-link-footer {
+    margin-left: 30px;
+    margin-bottom: 20px;
+  }
   .hero-content {
     width: 100%;
   }
@@ -693,9 +861,24 @@ footer {
   nav ul li a {
     font-size: 14px;
   }
+  nav ul li {
+    margin-right: 15px;
+  }
 
   header {
-    padding: 10px 0;
+    padding: 14px 1px 0px 0px;
+  }
+  .footer-logo h2 {
+    color: var(--text-light);
+    font-size: 1.7rem;
+    margin-bottom: 10px;
+  }
+  footer {
+    background-color: var(--primary-dark);
+    color: var(--text-light);
+    padding-top: 10px;
+    padding-bottom: 20px;
+    /* margin-top: 60px; */
   }
 }
 
@@ -844,6 +1027,7 @@ footer {
 .canvas-count {
   display: flex;
   justify-content: center;
+  align-items: center;
   font-size: 0.9rem;
   color: var(--primary-dark);
   margin: 1rem 0;
@@ -981,7 +1165,7 @@ footer {
 .btn-auth {
   background-color: var(--gold);
   color: var(--primary-dark);
-  padding: 8px 16px;
+  padding: 8px 12px;
   border-radius: 4px;
   font-weight: 600;
   transition: all 0.3s ease;
@@ -1006,6 +1190,46 @@ footer {
 .btn-auth-secondary:hover {
   background-color: var(--accent);
   color: var(--primary-dark);
+}
+
+.auth-form {
+  /* Scrollbar aur content ke beech space ke liye padding */
+  padding-right: 15px; /* <-- YEH SABSE ZAROORI LINE HAI */
+  padding-left: 5px; /* <-- Yeh balance ke liye hai */
+  margin-bottom: 10px;
+  /* Baqi scrollbar styles waisy hi rahenge */
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary-light) var(--accent);
+}
+
+/* Ab, Webkit browsers (Chrome, Safari, Edge) ke liye, jismein hum zyada design kar sakte hain */
+
+/* 1. Poora scrollbar kaisa dikhega */
+.auth-form::-webkit-scrollbar {
+  width: 8px; /* Scrollbar ki chaurai */
+}
+
+/* 2. Scrollbar ka track (jis par handle chalta hai) */
+.auth-form::-webkit-scrollbar-track {
+  background: var(--accent); /* Track ka halka background color */
+  border-radius: 10px;
+}
+
+/* 3. Scrollbar ka handle (jisko hum drag karte hain) */
+.auth-form::-webkit-scrollbar-thumb {
+  background-color: var(
+    --primary-light
+  ); /* Thumb/Handle ka color (Light Brown) */
+  border-radius: 10px;
+  /* Ek chota sa border dekar isko floating look de sakte hain */
+  border: 2px solid var(--accent);
+}
+
+/* 4. Jab mouse handle ke upar aaye (hover) */
+.auth-form::-webkit-scrollbar-thumb:hover {
+  background-color: var(
+    --primary
+  ); /* Hover par thora dark color (Medium Brown) */
 }
 
 /* Auth Modal */
@@ -1447,7 +1671,9 @@ footer {
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   background-color: white;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
   position: relative;
   width: 330px;
   box-sizing: border-box;
@@ -1573,7 +1799,7 @@ footer {
 .project-stats {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 0.5rem;
+  /* margin-bottom: 0.5rem; */
 }
 
 .stat {
@@ -1640,13 +1866,18 @@ footer {
 /* Responsive Adjustments */
 @media (max-width: 768px) {
   .projects-grid {
+    max-width: 1024px;
+    margin-right: 17px !important;
     grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   }
 }
 
 @media (max-width: 480px) {
   .projects-grid {
+    /* background-color: #000; */
     grid-template-columns: 1fr;
+    /* margin-left: -20px; */
+    margin-right: 5px;
   }
 }
 
@@ -1744,10 +1975,6 @@ footer {
     margin-left: 10px;
     /* margin-top: 15px; */
   }
-
-  header {
-    flex-direction: column;
-  }
 }
 .react-colorful {
   width: 100% !important;
@@ -1756,4 +1983,96 @@ footer {
 .react-colorful__saturation,
 .react-colorful__hue {
   border-radius: 8px;
+}
+
+/* ===== GALLERY PAGE - RESPONSIVE PROJECT GRID ===== */
+
+/* 1. Grid Container ko Theek Karein */
+.projects-grid {
+  display: grid; /* Flex ke bajaye Grid istemal karein, yeh behtar hai */
+
+  /* YEH LINE RESPONSIVE MAGIC HAI */
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+
+  gap: 2rem; /* Cards ke beech fasla */
+  max-width: 1200px;
+  margin: 2rem auto; /* Top/bottom aur left/right margin */
+  padding: 0 20px; /* Side se thori padding */
+}
+
+/* 2. Project Card ko Flexible Banayein */
+.project-card {
+  /* width: 330px; <-- Fixed width ko HATA DEIN! */
+  width: 100%; /* Card ab apne grid column ki poori width lega */
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background-color: white;
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+  display: flex; /* Flexbox istemal karein taake content theek se align ho */
+  flex-direction: column; /* Image upar, text neeche */
+}
+
+.project-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* Baqi card ki styles waisy hi rahengi (image, info waghera) */
+.project-image {
+  width: 100%;
+  aspect-ratio: 1 / 1; /* Image ko hamesha square rakhein */
+  overflow: hidden;
+}
+.project-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover; /* Image ko stretch kiye bina fit karein */
+}
+.project-info {
+  padding: 1rem 1rem;
+  flex-grow: 1; /* Yeh info section ko baqi jaga lene dega */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* Content ko upar neeche phailayein */
+}
+
+/* === Choti Screens ke liye mazeed adjustments === */
+@media (max-width: 480px) {
+  .projects-grid {
+    /* Mobile par cards ko thora aur chota karein */
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    padding: 0 15px; /* Side padding kam karein */
+    margin-right: 5px;
+  }
+
+  .projects-header h2 {
+    font-size: 2rem; /* Header title chota karein */
+  }
+  .canvas-count {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.9rem;
+    color: var(--primary-dark);
+    margin: 1rem 0;
+    padding: 1rem;
+    background-color: var(--bg-light);
+    gap: 2rem;
+    box-shadow: var(--shadow-sm);
+    border-radius: var(--border-radius-md);
+  }
+}
+
+[data-radix-overlay-wrapper] > [data-state="closed"] {
+  /* 
+    Sab se Ahem Property: pointer-events: none;
+    Yeh browser ko kehta hai ke is "ghost" overlay par hone walay tamam
+    mouse clicks ko "ignore" karo aur unhein iske peeche walay elements
+    (aapke buttons, links, etc.) par jaane do.
+  */
+  pointer-events: none;
 }

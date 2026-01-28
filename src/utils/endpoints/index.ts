@@ -3,7 +3,9 @@ const config = {
     LOGOUT: "/auth/logout",
     LOGIN: "/auth/login",
     UPDATE_USER: "/auth/update-profile",
+    VERIFY_PASSWORD: "/auth/verify-password", // Yeh add karein
     CHANGE_PASSWORD: "/auth/change-password",
+    CHANGE_EMAIL: "/auth/change-email",
     GET_USER: "/auth",
     REGISTER: "/auth/register",
     VERIFY_EMAIL: "/auth/verify-email",
@@ -15,6 +17,11 @@ const config = {
     FETCH_ACTIVE_PROJECT: "/projects/all-active-project",
     FETCH_PROJECT_BY_ID: "/projects",
     JOIN_AS_CONTRIBUTOR: "/projects",
+    LEAVE_PROJECT: "/projects",
+    FETCH_CONTRIBUTORS: "/projects",
+    REMOVE_CONTRIBUTOR: "/projects",
+    GET_NOTIFICATIONS: "/notifications/all",
+    MARK_NOTIFICATIONS_AS_READ: "/notifications/mark-as-read",
   },
 };
 

@@ -1,4 +1,5 @@
 import api from "@/api/api";
+import type { FetchTilesArgs } from "@/types/canvas";
 import { config } from "@/utils/endpoints";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 
@@ -22,7 +23,7 @@ export const createContribution = createAsyncThunk(
   "paintPixel/createContribution",
   // Payload ab ek object hoga: { projectId, strokes }
   async (
-    contributionData: { projectId: string; strokes: any[]; userId:string },
+    contributionData: { projectId: string; strokes: any[]; userId: string },
     thunkAPI
   ) => {
     try {
@@ -33,7 +34,7 @@ export const createContribution = createAsyncThunk(
     } catch (error: any) {
       return thunkAPI.rejectWithValue(
         error.response?.data?.message || "Failed to create contribution"
-      ); 
+      );
     }
   }
 );
@@ -51,20 +52,41 @@ export const batchCreateContributions = createAsyncThunk(
     }
   }
 );
- 
+
 export const getContributionsByProject = createAsyncThunk(
   "paintPixel/getContributionsByProject",
-  // Step 1: Payload object ab 'sortBy' bhi accept karega.
+  // (1) Payload ke types mein `userId` ko (optional string ke tor par) add karein
   async (
-    { projectId, sortBy }: { projectId: string; sortBy?: string },
+    {
+      projectId,
+      sortBy,
+      page,
+      limit,
+      userId,
+    }: {
+      projectId: string;
+      sortBy?: string;
+      page?: number;
+      limit?: number;
+      userId?: string;
+    },
     thunkAPI
   ) => {
     try {
-      // Step 2: API call mein 'sortBy' parameter ko shamil karein.
-      let url = `/contributions/project/${projectId}`;
-      if (sortBy) {
-        url += `?sortBy=${sortBy}`;
+      const params = new URLSearchParams();
+      if (sortBy) params.append("sortBy", sortBy);
+      if (page) params.append("page", page.toString());
+      if (limit) params.append("limit", limit.toString());
+      // (2) Agar userId mojood hai, to usay bhi query parameters mein shamil karein
+      if (userId) params.append("userId", userId);
+
+      const queryString = params.toString();
+      let url = `/contributions/${projectId}`;
+      if (queryString) {
+        url += `?${queryString}`;
       }
+
+      console.log(`Fetching contributions with URL: ${url}`); // Debugging ke liye
 
       const response = await api.get(url);
       return response.data.data;
@@ -76,8 +98,6 @@ export const getContributionsByProject = createAsyncThunk(
   }
 );
 
-
-// --- NAYA VOTE THUNK ---
 export const voteOnContribution = createAsyncThunk(
   "paintPixel/voteOnContribution",
   // Payload ab ek object hoga: { contributionId, voteType }
@@ -86,7 +106,11 @@ export const voteOnContribution = createAsyncThunk(
       contributionId,
       voteType,
       userId,
-    }: { contributionId: string; voteType: "up" | "down"; userId:string | null },
+    }: {
+      contributionId: string;
+      voteType: "up" | "down";
+      userId: string | null;
+    },
     thunkAPI
   ) => {
     try {
@@ -122,10 +146,11 @@ export const generateTimelapseVideo = createAsyncThunk(
   "paintPixel/generateTimelapse",
   async ({ projectId }: { projectId: string }, thunkAPI) => {
     try {
-      // API endpoint ko call karein. Response mein video ka URL aayega.
-      const response = await api.get(`/timelapse/${projectId}`); // URL badal jayega
+      // Naye API endpoint ko call karein
+      const response = await api.get(`/timelapse/${projectId}`);
       console.log("Timelapse generation response:", response.data);
-      return response.data; // Yeh { success: true, videoUrl: '...' } return karega
+
+      return response?.data?.data;
     } catch (error: any) {
       return thunkAPI.rejectWithValue(
         error.response?.data?.message || "Failed to generate timelapse"
@@ -165,6 +190,28 @@ export const batchCreateStrokes = createAsyncThunk(
   }
 );
 
+export const addStrokes = createAsyncThunk(
+  "contributions/addStrokes",
+  async (
+    { contributionId, strokes }: { contributionId: string; strokes: any[] },
+    { rejectWithValue }
+  ) => {
+    try {
+      // Call our new PATCH endpoint
+      const response = await api.patch(
+        `/contributions/${contributionId}/strokes`,
+        { strokes }
+      );
+      // The backend will return the fully updated contribution object
+      return response.data.data;
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || "Could not save your drawing."
+      );
+    }
+  }
+);
+
 // Clear canvas
 export const clearCanvas = createAsyncThunk(
   "paintPixel/clearCanvasAPI",
@@ -172,7 +219,7 @@ export const clearCanvas = createAsyncThunk(
     try {
       // Call the new DELETE endpoint
       const response = await api.delete(
-        `/contributions/project/${projectId}/clear`
+        `/contributions/${projectId}/clear-canvas`
       );
       return response.data; // Should return { success: true, ... }
     } catch (error: any) {
@@ -183,75 +230,40 @@ export const clearCanvas = createAsyncThunk(
   }
 );
 
-// Get tile data
-export const getTileData = createAsyncThunk(
-  "paintPixel/getTileData",
-  async ({ sessionId, tileX, tileY, tileSize = 64 }: any, thunkAPI) => {
+export const fetchContributionsByTiles = createAsyncThunk(
+  "contributions/fetchByTiles",
+  async ({ projectId, tiles }: FetchTilesArgs, { rejectWithValue }) => {
     try {
-      const params = new URLSearchParams({
-        tileSize: tileSize.toString(),
-      });
+      // Naye "smart" API endpoint ko call karein
       const response = await api.get(
-        `${config?.endpoints?.GET_USER}/tile/${sessionId}/${tileX}/${tileY}?${params}`
+        `/contributions/project/${projectId}?tiles=${tiles}`
       );
-      return response.data;
+      return response.data.data.contributions; // Sirf contributions ka array return karein
     } catch (error: any) {
-      return thunkAPI.rejectWithValue(
-        error.response?.data?.message || "Failed to fetch tile data"
+      console.error("Failed to fetch contributions for tiles:", error);
+      return rejectWithValue(
+        error.response?.data?.message || "Could not load artwork for this area."
       );
     }
   }
 );
 
-// Get canvas statistics
-export const getCanvasStats = createAsyncThunk(
-  "paintPixel/getCanvasStats",
-  async (sessionId: any, thunkAPI) => {
+export const createEmptyContribution = createAsyncThunk(
+  "contributions/createEmpty",
+  async (
+    {
+      projectId,
+      userId,
+    }: { projectId: string; userId: string | null | undefined },
+    { rejectWithValue }
+  ) => {
     try {
-      const response = await api.get(
-        `${config?.endpoints?.GET_USER}/stats/${sessionId}`
-      );
-      return response.data;
+      // API endpoint ko call karein
+      const response = await api.post("/contributions", { projectId, userId });
+      // Backend se anay wali nayi contribution wapas bhejein
+      return response.data.data;
     } catch (error: any) {
-      return thunkAPI.rejectWithValue(
-        error.response?.data?.message || "Failed to fetch canvas stats"
-      );
-    }
-  }
-);
-
-// Export canvas
-export const exportCanvas = createAsyncThunk(
-  "paintPixel/exportCanvas",
-  async ({ sessionId, format = "json" }: any, thunkAPI) => {
-    try {
-      const params = new URLSearchParams({ format });
-      const response = await api.get(
-        `${config?.endpoints?.GET_USER}/export/${sessionId}?${params}`
-      );
-      return response.data;
-    } catch (error: any) {
-      return thunkAPI.rejectWithValue(
-        error.response?.data?.message || "Failed to export canvas"
-      );
-    }
-  }
-);
-
-// Import canvas
-export const importCanvas = createAsyncThunk(
-  "paintPixel/importCanvas",
-  async ({ data, overwrite = false }: any, thunkAPI) => {
-    try {
-      const response = await api.post(`${config?.endpoints?.GET_USER}/import`, {
-        data,
-        overwrite,
-      });
-      return response.data;
-    } catch (error: any) {
-      return thunkAPI.rejectWithValue(
-        error.response?.data?.message || "Failed to import canvas"
-      );
+      return rejectWithValue(error.response.data.message);
     }
   }
 );

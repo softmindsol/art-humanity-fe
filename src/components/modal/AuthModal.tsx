@@ -3,9 +3,9 @@ import googleImage from '../../assets/images/google-icon.svg';
 import { useRegisterForm } from '@/hook/useRegisterForm';
 import { Eye, EyeOff } from 'lucide-react';
 import ForgotPasswordForm from './ForgotPasswordForm';
-
 import { useSelector } from 'react-redux';
 import type { RootState } from '@/redux/store';
+import AnimatedDots from '../common/AnimatedDots';
 
 interface AuthModalProps {
     isOpen: boolean;
@@ -13,7 +13,9 @@ interface AuthModalProps {
 }
 
 const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
-    const [activeTab, setActiveTab] = useState<'sign-in' | 'sign-up'>('sign-in');
+    const [activeTab, setActiveTab] = useState<'sign-in' | 'sign-up' | `forget-password`>('sign-in');
+    const [submitted, setSubmitted] = useState(false);
+
     const [showForgotPassword, setShowForgotPassword] = useState(false);
     const { googleLoading } = useSelector((state: RootState) => state.auth);
 
@@ -35,37 +37,70 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         loginErrors,
         loginLoading,
         handleGoogleLogin
-      
+    } = useRegisterForm({ onClose });
 
-    } = useRegisterForm({onClose});
-
-
-
-
-
-
+    // Disable modal if either login or sign-up is loading
+    const isModalDisabled = loginLoading || loading;
 
     if (!isOpen) return null;
 
     return (
-        <div className="auth-modal">
-            <div className="auth-modal-content">
-                <span className="auth-modal-close" onClick={onClose}>&times;</span>
-                <div className="auth-modal-header">
-                    <h2>Join Project Art of Humanity</h2>
-                    <p>Create an account to contribute to the world's largest collaborative art project</p>
+        <div className="auth-modal  fixed inset-0 z-50 flex items-center justify-center bg-black/30">
+            <div className="auth-modal-content relative bg-white dark:bg-gray-900 p-6 rounded-lg w-full max-w-md">
+
+                {/* Overlay while loading */}
+                {isModalDisabled && (
+                    <div className="absolute inset-0 bg-black/20 z-50 flex items-center justify-center">
+                        <p className="text-white text-lg flex items-center gap-2">
+                            Processing
+                            <AnimatedDots />
+                        </p>
+                    </div>
+                )}
+
+                {/* Close Button */}
+                <span
+                    className={`auth-modal-close absolute top-2 right-3 text-2xl cursor-pointer ${isModalDisabled ? 'pointer-events-none opacity-50' : ''}`}
+                    onClick={onClose}
+                >
+                    &times;
+                </span>
+
+                {/* Header */}
+                <div className="auth-modal-header mb-4">
+                    {(showForgotPassword && !submitted && activeTab === `forget-password`) && <>
+                        <h2 className="text-xl font-bold">Forgot Password</h2>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">
+                            Enter your email address below and we’ll send you a link to
+                            reset your password.
+                        </p>
+                    </>}
+                    {(!showForgotPassword && activeTab === `sign-up`) && <><h2 className="text-xl font-bold">Join MurArt</h2>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">
+                            Create an account to contribute to the world's largest collaborative art project
+                        </p></>}
+
+                    {activeTab === `sign-in` && <>
+                        <h2 className="text-xl font-bold">Welcome Back</h2>
+                        <p className="text-sm text-gray-600 dark:text-gray-300">
+                            Sign in to continue contributing to the world's largest
+                            collaborative art project.
+                        </p>
+                    </>}
+
                 </div>
 
+                {/* Tabs */}
                 {!showForgotPassword && (
-                    <div className="auth-tabs">
+                    <div className="auth-tabs flex mb-4 border-b">
                         <div
-                            className={`auth-tab ${activeTab === 'sign-up' ? 'active' : ''}`}
+                            className={`auth-tab flex-1 text-center py-2 cursor-pointer ${activeTab === 'sign-up' ? 'font-bold border-b-2 border-black dark:border-white' : ''}`}
                             onClick={() => setActiveTab('sign-up')}
                         >
                             Sign Up
                         </div>
                         <div
-                            className={`auth-tab ${activeTab === 'sign-in' ? 'active' : ''}`}
+                            className={`auth-tab flex-1 text-center py-2 cursor-pointer ${activeTab === 'sign-in' ? 'font-bold border-b-2 border-black dark:border-white' : ''}`}
                             onClick={() => setActiveTab('sign-in')}
                         >
                             Sign In
@@ -73,29 +108,39 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                     </div>
                 )}
 
+                {/* Forgot Password */}
                 {showForgotPassword ? (
-                    <ForgotPasswordForm onBackToSignIn={() => setShowForgotPassword(false)} />
+                    <ForgotPasswordForm setActiveTab={setActiveTab} submitted={submitted} setSubmitted={setSubmitted} onBackToSignIn={() => setShowForgotPassword(false)} />
                 ) : activeTab === 'sign-in' ? (
-                    <form className="auth-form" onSubmit={handleLoginSubmit}>
-                        <div className="form-group">
+                    <form className={` auth-form ${activeTab === 'sign-in' && '!max-h-[50vh] md:max-h-[80vh]'}   overflow-y-auto pr-2`} onSubmit={handleLoginSubmit}>
+                        {/* Email */}
+                        <div className="form-group mb-3">
                             <label>Email</label>
                             <input
                                 type="email"
                                 name="email"
                                 value={loginData.email}
                                 onChange={handleLoginChange}
+                                placeholder="Enter your email"
                                 required
+                                disabled={isModalDisabled}
+                                className="w-full px-3 py-2 border rounded"
                             />
                             {loginErrors.email && <p className="error text-red-500">{loginErrors.email}</p>}
                         </div>
-                        <div className="form-group relative">
+
+                        {/* Password */}
+                        <div className="form-group relative mb-3">
                             <label>Password</label>
                             <input
                                 type={showSigninPassword ? 'text' : 'password'}
                                 name="password"
                                 value={loginData.password}
                                 onChange={handleLoginChange}
+                                placeholder="Enter your password"
                                 required
+                                disabled={isModalDisabled}
+                                className="w-full px-3 py-2 border rounded"
                             />
                             <span
                                 className="eye-icon absolute right-3 top-11.5 cursor-pointer"
@@ -105,46 +150,83 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                             </span>
                             {loginErrors.password && <p className="error text-red-500">{loginErrors.password}</p>}
                         </div>
-                        <button type="submit" className="auth-submit" disabled={loginLoading}>
+
+                        {/* Sign In Button */}
+                        <button
+                            type="submit"
+                            className="auth-submit w-full py-2 bg-black text-white rounded mb-3 disabled:opacity-50"
+                            disabled={isModalDisabled}
+                        >
                             {loginLoading ? 'Signing in...' : 'Sign In'}
                         </button>
-                        <div className="auth-divider"><span>or</span></div>
+
+                        {/* Divider */}
+                        <div className="auth-divider text-center my-2"><span>or</span></div>
+
+                        {/* Google Sign-in */}
                         <button
                             type="button"
-                            className="social-auth-btn"
+                            className="social-auth-btn flex items-center justify-center w-full py-2 border rounded mb-2 disabled:opacity-50"
                             onClick={handleGoogleLogin}
-                            disabled={googleLoading}
+                            disabled={isModalDisabled || googleLoading}
                         >
-                            <img src={googleImage} alt="Google" />
+                            <img src={googleImage} alt="Google" className="w-5 h-5 mr-2" />
                             {googleLoading ? 'Signing in...' : 'Sign in with Google'}
                         </button>
 
-                        <div className="auth-footer">
-                            <button type="button" onClick={() => setShowForgotPassword(true)} className="text-[#5d4037] hover:underline cursor-pointer">
+                        {/* Forgot Password */}
+                        <div className="auth-footer text-center mt-2">
+                            <button
+                                type="button"
+                                onClick={() => { setShowForgotPassword(true); setActiveTab(`forget-password`) }}
+                                className="text-[#5d4037] hover:underline cursor-pointer"
+                                disabled={isModalDisabled}
+                            >
                                 Forgot password?
                             </button>
                         </div>
                     </form>
-
                 ) : (
-                    <form className="auth-form" >
-                        <div className="form-group">
+                    /* Sign Up Form */
+                    <form className={`auth-form ${activeTab === 'sign-up' && '!max-h-[50vh] md:!max-h-[60vh]'} !overflow-y-auto`} onSubmit={handleSubmit}>
+                        <div className="form-group mb-3">
                             <label>Display Name</label>
-                            <input type="text" name="fullName" value={formData.fullName} onChange={handleChange} />
+                            <input
+                                type="text"
+                                name="fullName"
+                                placeholder="Enter your full name"
+                                value={formData.fullName}
+                                onChange={handleChange}
+                                disabled={isModalDisabled}
+                                className="w-full px-3 py-2 border rounded"
+                            />
                             {errors.fullName && <p className="error text-red-500">{errors.fullName}</p>}
                         </div>
-                        <div className="form-group">
+
+                        <div className="form-group mb-3">
                             <label>Email</label>
-                            <input type="email" name="email" value={formData.email} onChange={handleChange} />
+                            <input
+                                type="email"
+                                name="email"
+                                placeholder="Enter your email"
+                                value={formData.email}
+                                onChange={handleChange}
+                                disabled={isModalDisabled}
+                                className="w-full px-3 py-2 border rounded"
+                            />
                             {errors.email && <p className="error text-red-500">{errors.email}</p>}
                         </div>
-                        <div className="form-group relative">
+
+                        <div className="form-group relative mb-3">
                             <label>Password</label>
                             <input
                                 type={showPassword ? 'text' : 'password'}
                                 name="password"
+                                placeholder="Enter your password"
                                 value={formData.password}
                                 onChange={handleChange}
+                                disabled={isModalDisabled}
+                                className="w-full px-3 py-2 border rounded"
                             />
                             <span
                                 className="eye-icon absolute right-3 top-11.5 cursor-pointer"
@@ -154,13 +236,17 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                             </span>
                             {errors.password && <p className="error text-red-500">{errors.password}</p>}
                         </div>
-                        <div className="form-group relative">
+
+                        <div className="form-group relative mb-3">
                             <label>Confirm Password</label>
                             <input
                                 type={showConfirmPassword ? 'text' : 'password'}
                                 name="confirmPassword"
+                                placeholder="Enter your confirm password"
                                 value={formData.confirmPassword}
                                 onChange={handleChange}
+                                disabled={isModalDisabled}
+                                className="w-full px-3 py-2 border rounded"
                             />
                             <span
                                 className="eye-icon absolute right-3 top-11.5 cursor-pointer"
@@ -170,20 +256,26 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
                             </span>
                             {errors.confirmPassword && <p className="error text-red-500">{errors.confirmPassword}</p>}
                         </div>
-                        <button type="submit" onClick={handleSubmit} className="auth-submit" disabled={loading}>
+
+                        <button
+                            type="submit"
+                            className="auth-submit w-full py-2 bg-black text-white rounded mb-3 disabled:opacity-50"
+                            disabled={isModalDisabled}
+                        >
                             {loading ? 'Creating...' : 'Create Account'}
                         </button>
-                        <div className="auth-divider"><span>or</span></div>
+
+                        <div className="auth-divider text-center my-2"><span>or</span></div>
+
                         <button
                             type="button"
-                            className="social-auth-btn"
+                            className="social-auth-btn flex items-center justify-center w-full py-2 border rounded disabled:opacity-50"
                             onClick={handleGoogleLogin}
-                            disabled={googleLoading}
+                            disabled={isModalDisabled || googleLoading}
                         >
-                            <img src={googleImage} alt="Google" />
+                            <img src={googleImage} alt="Google" className="w-5 h-5 mr-2" />
                             {googleLoading ? 'Signing up...' : 'Sign up with Google'}
                         </button>
-
                     </form>
                 )}
             </div>

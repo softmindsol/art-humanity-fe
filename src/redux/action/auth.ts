@@ -20,6 +20,20 @@ export const registerUser = createAsyncThunk(
   }
 );
 
+export const fetchAllRegisteredUsers = createAsyncThunk(
+  "users/fetchAll",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.get(
+        `${config.endpoints.GET_USER}/get-all-users`
+      );
+      return response.data.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response.data.message);
+    }
+  }
+);
+
 export const verifyEmail = createAsyncThunk(
   "user/verifyEmail",
   async ({ token }: { token: string | undefined }, thunkAPI) => {
@@ -56,7 +70,7 @@ export const updateUser = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const response = await api.put(
+      const response = await api.patch(
         `${config?.endpoints?.UPDATE_USER}/${userId}`,
         formData,
         {
@@ -67,6 +81,87 @@ export const updateUser = createAsyncThunk(
       return response.data;
     } catch (err: any) {
       return rejectWithValue(err.response?.data?.message || "Update failed");
+    }
+  }
+);
+
+export const changePassword = createAsyncThunk(
+  "user/changePassword",
+  async (
+    {
+      userId,
+      oldPassword,
+      newPassword,
+    }: { userId: string; oldPassword: string; newPassword: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      // Endpoint ka path config se lein (e.g., /users/change-password)
+      const endpoint = `${config?.endpoints?.CHANGE_PASSWORD}/${userId}`;
+
+      const response = await api.patch(
+        // PATCH method behtar hai password update ke liye
+        endpoint,
+        { oldPassword, newPassword }, // Dono passwords body mein bhejें
+        {
+          withCredentials: true, // Session/cookie ke liye zaroori
+        }
+      );
+
+      return response.data; // Success response return karein
+    } catch (err: any) {
+      // Error ko rejectWithValue ke zariye handle karein
+      return rejectWithValue(
+        err.response?.data?.message || "Failed to change password"
+      );
+    }
+  }
+);
+
+export const verifyPassword = createAsyncThunk(
+  "user/verifyPassword",
+  async (
+    { userId, oldPassword }: { userId: string; oldPassword: string },
+    { rejectWithValue }
+  ) => {
+    try {
+      // Endpoint ka path config se lein (e.g., /users/verify-password)
+      const endpoint = `${config?.endpoints?.VERIFY_PASSWORD}/${userId}`;
+
+      const response = await api.post(
+        endpoint,
+        { oldPassword }, // Sirf 'oldPassword' body mein bhejें
+        {
+          withCredentials: true, // Session/cookie ke liye zaroori
+        }
+      );
+
+      return response.data; // Success response return karein
+    } catch (err: any) {
+      // Error ko rejectWithValue ke zariye handle karein
+      return rejectWithValue(
+        err.response?.data?.message || "Password verification failed"
+      );
+    }
+  }
+);
+
+
+type Req = { userId: string; newEmail: string; currentPassword: string };
+
+export const requestEmailChange = createAsyncThunk(
+  "auth/requestEmailChange",
+  async (payload: Req, { rejectWithValue }) => {
+    try {
+      const { data } = await api.post(
+        `${config?.endpoints?.CHANGE_EMAIL}`,
+        payload
+      );
+      return data;
+    } catch (err: any) {
+      return rejectWithValue(
+        err?.response?.data || { message: "Request failed" }
+      );
     }
   }
 );

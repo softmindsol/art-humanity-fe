@@ -3,6 +3,7 @@ import { useState } from "react";
 import useAppDispatch from "./useDispatch";
 import { googleLogin, loginUser, registerUser } from "@/redux/action/auth";
 import { toast } from "sonner";
+import { triggerDonationPrompt } from "@/redux/slice/opeModal";
 export const useRegisterForm = ({onClose}:any) => {
   const dispatch = useAppDispatch();
   const [showPassword, setShowPassword] = useState(false);
@@ -38,14 +39,27 @@ export const useRegisterForm = ({onClose}:any) => {
   const validate = () => {
     const errs: { [key: string]: string } = {};
 
+    // --- YAHAN VALIDATION UPDATE KI GAYI HAI ---
     if (!formData.fullName.trim()) {
-      errs.fullName = "Name is required";
-    } else if (/ {2,}/.test(formData.fullName)) {
-      errs.fullName = "Name cannot contain multiple consecutive spaces";
+      errs.fullName = "Display Name is required";
+    } else if (formData.fullName.length < 3) {
+      errs.fullName = "Display Name must be at least 3 characters";
+    } else if (formData.fullName.length > 30) {
+      errs.fullName = "Display Name cannot be more than 30 characters";
+    } else if (!/^[a-zA-Z0-9\s]*$/.test(formData.fullName)) {
+      // Rule 1: Pehle check karo ke koi special character to nahin hai.
+      errs.fullName = "Special characters are not allowed.";
+    } else if (!/[a-zA-Z]/.test(formData.fullName)) {
+      // Rule 2 (NAYA RULE): Ab check karo ke kam se kam ek letter mojood hai ya nahin.
+      // Yeh "12345" jaise inputs ko reject kar dega.
+      errs.fullName = "Display Name must contain at least one letter.";
     }
 
     if (!formData.email.trim()) {
       errs.email = "Email is required";
+    } else if (!/^[\w.%+-]+@[\w.-]+\.(com|org|net|io)$/i.test(formData.email)) {
+      // <-- Aapka custom TLD check
+      errs.email = "Email is invalid or must end with .com, .org, .net, or .io";
     }
 
     if (!formData.password) {
@@ -55,6 +69,9 @@ export const useRegisterForm = ({onClose}:any) => {
 
       if (password.length < 8) {
         errs.password = "Password must be at least 8 characters";
+      } else if (/ {2,}/.test(password)) {
+        // <-- YEH NAYI LINE HAI
+        errs.password = "Password cannot contain consecutive spaces";
       } else if (!/[A-Z]/.test(password)) {
         errs.password = "Password must contain at least one uppercase letter";
       } else if (!/[a-z]/.test(password)) {
@@ -92,6 +109,7 @@ export const useRegisterForm = ({onClose}:any) => {
       });
     } catch (err: any) {
       console.log(err);
+      toast.error(err.message || "Registration failed");
       setErrors({ submit: err.message || "Registration failed" });
     } finally {
       setLoading(false);
@@ -126,7 +144,8 @@ export const useRegisterForm = ({onClose}:any) => {
         loginUser({ email: loginData.email, password: loginData.password })
       ).unwrap();
       // Add success toast or close modal
-      toast.success("Successfully logged in!");
+      toast.success("Successfully logged in.");
+      dispatch(triggerDonationPrompt()); 
       setLoginData({ email: "", password: "" });
       onClose();
     } catch (err: any) {

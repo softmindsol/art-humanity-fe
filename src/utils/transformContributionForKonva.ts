@@ -1,49 +1,51 @@
-export const transformContributionForKonva = (contribution:any) => {
-  // Defensive Check 1: Agar poora contribution object hi null hai, to khali lauta do.
-  if (!contribution) {
-    return { id: null, lines: [] };
-  }
+// src/utils/transformContributionForKonva.js
 
-  // Defensive Check 2: Agar strokes array mojood nahi ya array nahi hai, to baaqi data lauta do.
-  if (!contribution.strokes || !Array.isArray(contribution.strokes)) {
-    return { id: contribution._id, userId: contribution.userId, lines: [] };
+export const transformContributionForKonva = (contribution:any) => {
+  if (!contribution || !Array.isArray(contribution.strokes)) {
+    return { id: contribution?._id, lines: [] };
   }
 
   const lines = contribution.strokes
-    // Defensive Check 3: Sirf un strokes ko process karo jo null nahi hain.
-    .filter((stroke: any) => stroke && Array.isArray(stroke.strokePath))
+    .filter(
+      (stroke: any) =>
+        stroke &&
+        Array.isArray(stroke.strokePath) &&
+        stroke.strokePath.length > 0
+    )
     .map((stroke: any) => {
-      // Defensive Check 4: Har stroke ke andar strokePath ko check karo.
-      if (!stroke.strokePath || !Array.isArray(stroke.strokePath)) {
-        return { points: [] }; // Khali line return karo
+      // This is a simpler and more reliable way to create the points array
+      const points = stroke.strokePath.flatMap((segment: any) => {
+        if (
+          segment &&
+          typeof segment.fromX === "number" &&
+          typeof segment.toX === "number"
+        ) {
+          return [segment.fromX, segment.fromY, segment.toX, segment.toY];
+        }
+        return []; // Skip malformed segments
+      });
+
+      // CRITICAL DEBUGGING: Check if points are being generated
+      if (points.length === 0) {
+        console.warn(
+          "Skipping a stroke because it has no valid points:",
+          stroke
+        );
       }
 
-      const points = stroke.strokePath.reduce((acc: any, pathSegment: any) => {
-        if (!pathSegment) return acc; // Agar segment null hai to skip karo
-        if (acc.length === 0) {
-          return [
-            pathSegment.fromX,
-            pathSegment.fromY,
-            pathSegment.toX,
-            pathSegment.toY,
-          ];
-        }
-        return [...acc, pathSegment.toX, pathSegment.toY];
-      }, []);
-
       return {
-        tool: stroke.mode,
+        points: points,
         stroke: `rgba(${stroke.color.r}, ${stroke.color.g}, ${
           stroke.color.b
         }, ${stroke.color.a || 1})`,
         strokeWidth: stroke.brushSize,
-        points: points,
+        globalCompositeOperation:
+          stroke.mode === "eraser" ? "destination-out" : "source-over",
       };
     });
 
   return {
     id: contribution._id,
-    userId: contribution?.userId,
     lines: lines,
   };
 };

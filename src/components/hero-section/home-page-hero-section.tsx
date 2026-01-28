@@ -1,100 +1,51 @@
 import React from 'react';
+import { Button } from '../ui/button';
+import { ArrowUpRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const HeroSection: React.FC = () => {
   return (
-    <div className="container">
-      <main>
-        <section className="hero">
-          <div className="hero-content">
-            <h2 className="lg:!text-[46px] md:!text-4xl !text-2xl mt-6 sm:mt-0">
-              Join the World's Largest Collaborative Art Project
-            </h2>
-            <p className="md:text-lg text-sm">
-              Project Art of Humanity provides enormous digital canvases that
-              would be nearly impossible to fully paint by one person. We have
-              developed a collaboration system that will allow the creation of
-              the most stunning art pieces the world has ever seen. Anyone can
-              paint a part of the canvas and solidify your spot in history!
-            </p>
-          </div>
-        </section>
+    <div className="w-full min-h-screen relative flex items-start lg:items-center bg-[#030303]">
+      
+      {/* Background Image Container */}
+      <div className="absolute inset-0 z-0">
+          <img 
+            src="/assets/hero-section-img.svg" 
+            alt="Hero Background" 
+            className="w-full h-full object-cover "
+          />
+         
+      </div>
 
-        <section className="flex flex-col md:flex-row xl:gap-x-14 lg:gap-x-12 md:gap-x-8 gap-5 md:mt-10">
-          <div className="w-full bg-[#f5f5dc] shadow-md shadow-[#0000001A] rounded-lg p-6">
-            <div className="text-5xl md:text-4xl lg:text-5xl text-center mb-5">🖌️</div>
-            <h3>Paint Your Section</h3>
-            <p>
-              Contribute to massive canvases by painting your own unique
-              section.
-            </p>
-          </div>
-          <div className="w-full bg-[#f5f5dc] shadow-md shadow-[#0000001A] rounded-lg p-6">
-            <div className="text-5xl md:text-4xl lg:text-5xl text-center mb-5">👥</div>
-            <h3>Collaborate</h3>
-            <p>
-              Work alongside other artists to create something extraordinary.
-            </p>
-          </div>
-          <div className="w-full bg-[#f5f5dc] shadow-md shadow-[#0000001A] rounded-lg p-6">
-            <div className="text-5xl md:text-4xl lg:text-5xl text-center mb-5">🗳️</div>
-            <h3>Vote on Contributions</h3>
-            <p>
-              Help maintain quality by voting on other artists' contributions.
-            </p>
-          </div>
-        </section>
+      <div className="max-w-7xl mx-auto px-6 lg:px-8 pt-40 relative z-10 w-full">
+        
+        {/* Content Container */}
+        <div className="w-full lg:w-1/2 flex flex-col items-center lg:items-start text-center lg:text-left space-y-8">
+           <span className="text-[#FFFFFF] text-sm md:text-base  font-medium font- ">Stunning Artworks</span>
 
-        <section className="current-projects">
-          <div className="section-heading">
-            <h2>Active Projects</h2>
-            <p>Check the Contribute Page for all active projects</p>
-          </div>
-          <div className="project-grid">
-            <div className="project-card active medieval-theme">
-              <div className="project-image">
-                <div className="image-loading">
-                  <div className="loading-spinner"></div>
-                </div>
-                <img
-                  src=""
-                  alt="Medieval Town"
-                  data-preview="medieval_town"
-                  style={{ display: "none" }}
-                />
-                <div className="project-progress">
-                  <div className="progress-bar">
-                    <div
-                      className="progress-fill"
-                      style={{ width: "0%" }}
-                    ></div>
-                  </div>
-                  <div className="progress-text">0% Complete</div>
-                </div>
+           <h1 className="text-4xl md:text-6xl !text-white lg:text-[46px] font-bold text-white leading-[1.1] lg:leading-[1.1] ">
+            Join The Worlds Largest <br className="hidden lg:block"/>
+            Collaborative <span className="bg-gradient-to-r from-[#E23373] to-[#FEC133] bg-clip-text text-transparent">Art Project</span>
+          </h1>
+
+          <p className="!text-white !font-medium text-base md:text-lg max-w-xl leading-relaxed drop-shadow-md">
+            Project MurArt Offers Massive Digital Canvases For Collaborative Painting.
+            Anyone Can Contribute, Create Stunning Art, And Leave Their Mark In History.
+          </p>
+
+          <Link to="/gallery">
+              <div className="relative p-[1px] rounded-full bg-gradient-to-r from-[#E23373] to-[#FEC133] group hover:opacity-90 transition-opacity">
+                <Button 
+                  className="rounded-full px-[17px] py-[7px] bg-black text-white hover:bg-black/90 transition-all duration-300 flex items-center gap-2 text-base font-semibold border-none relative z-10"
+                >
+                  Explore Now
+                  <ArrowUpRight className="w-5 h-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                </Button>
               </div>
-              <div className="project-info">
-                <h3>Medieval Town</h3>
-                <div className="project-stats">
-                  <div className="stat">
-                    <span className="stat-value" data-stat="contributors">
-                      0
-                    </span>
-                    <span className="stat-label">Contributors</span>
-                  </div>
-                  <div className="stat">
-                    <span className="stat-value" data-stat="pixels">
-                      0
-                    </span>
-                    <span className="stat-label">Pixels Painted</span>
-                  </div>
-                </div>
-                <a href="/medieval-town" className="btn-contribute">
-                  Enter Project
-                </a>
-              </div>
-            </div>
-          </div>
-        </section>
-      </main>
+          </Link>
+        </div>
+
+      </div>
     </div>
   );
 };

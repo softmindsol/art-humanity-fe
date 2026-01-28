@@ -1,12 +1,13 @@
-// src/pages/ActiveProjects.js
-
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import {
     selectAllProjects,
     selectProjectsLoading,
-    selectProjectsError
+    selectProjectsError,
+    selectProjectPagination,
+    removeProjectFromList,
+
 } from '@/redux/slice/project';
 import {
     AlertDialog,
@@ -18,7 +19,7 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { fetchActiveProjects, updateProjectStatus } from '@/redux/action/project'; // updateProjectStatus ko import karein
+import { deleteProject, fetchActiveProjects, updateProjectStatus } from '@/redux/action/project';
 import { getImageUrl } from '@/utils/publicUrl';
 import useAppDispatch from '@/hook/useDispatch';
 import useAuth from '@/hook/useAuth';
@@ -26,7 +27,14 @@ import useAuth from '@/hook/useAuth';
 // UI Components
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Play, Pause, XCircle } from 'lucide-react'; // Icons
+import { Play, Pause, Trash2, CheckCircle, ArrowDownRight, ArrowUpRight } from 'lucide-react'; // Icons
+import { useDebounce } from '@/hook/useDebounce';
+import { SearchBar } from '@/components/common/SearchBar';
+import { ProjectStatusFilter } from '@/components/common/ProjectStatusFilter';
+import { Pagination } from '@/components/common/Pagination';
+import { toast } from 'sonner';
+import { useSocket } from '@/context/SocketContext';
+import ProjectTitle from '@/components/common/ProjectTitle';
 
 const ActiveProjects: React.FC = () => {
     const { user } = useAuth();
@@ -34,187 +42,330 @@ const ActiveProjects: React.FC = () => {
 
     const projects = useSelector(selectAllProjects);
     const isLoading = useSelector(selectProjectsLoading).fetching;
-    const error = useSelector(selectProjectsError).fetching;
-    // --- NEW STATE for Confirmation Dialog ---
+    const { totalPages } = useSelector(selectProjectPagination);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'paused'>('all');
+    const [searchTerm, setSearchTerm] = useState('');
+    const { socket } = useSocket(); // Get the socket instance from your context
+
     const [dialogState, setDialogState] = useState<any>({
         isOpen: false,
         projectId: null,
-        statusUpdate: null,
+        actionType: null, // 'PAUSE', 'CLOSE', ya 'DELETE'
         actionText: '',
     });
+    const debouncedSearchTerm = useDebounce(searchTerm, 500); // 500ms ka delay
+    const error = useSelector(selectProjectsError).fetching;
+
+    // --- Data Fetch Karne ke liye Master useEffect ---
     useEffect(() => {
-        dispatch(fetchActiveProjects());
-    }, [dispatch]);
+        // Jab bhi page, filter, ya (debounced) search term badlega, yeh effect chalega
+        // inside useEffect that fetches
+        dispatch(fetchActiveProjects({
+            page: currentPage,
+            limit: 6,                // keep consistent
+            status: statusFilter,
+            search: debouncedSearchTerm
+        }));
+    }, [currentPage, statusFilter, debouncedSearchTerm, dispatch]);
+
+
 
     // Naya handler jo sirf dialog ko kholega
-    const openConfirmationDialog = (projectId: string, statusUpdate: object, actionText: string) => {
+    const openConfirmationDialog = (projectId: string, actionType: string, actionText: string) => {
         setDialogState({
             isOpen: true,
             projectId,
-            statusUpdate,
+            actionType,
             actionText,
         });
     };
 
     // Asal action ko anjaam dene wala handler
     const handleConfirmAction = () => {
-        if (dialogState.projectId && dialogState.statusUpdate) {
-            dispatch(updateProjectStatus({
-                projectId: dialogState.projectId,
-                statusUpdate: dialogState.statusUpdate,
-            }));
-            dispatch(fetchActiveProjects());
+        const { projectId, actionType } = dialogState;
+        if (!projectId || !actionType) return;
 
+        // --- YAHAN PAR FIX HAI: Naye status field ke mutabiq actions ---
+        if (actionType === 'PAUSE') {
+            dispatch(updateProjectStatus({ projectId, status: 'Paused' }));
+        } else if (actionType === 'RESUME') {
+            dispatch(updateProjectStatus({ projectId, status: 'Active' }));
+        } else if (actionType === 'COMPLETE') { // 'CLOSE' ke bajaye 'COMPLETE'
+
+            dispatch(updateProjectStatus({ projectId, status: 'Completed' }));
+        } else if (actionType === 'DELETE') {
+            dispatch(deleteProject(projectId));
         }
-        // Dialog ko band karein
-        setDialogState({ isOpen: false, projectId: null, statusUpdate: null, actionText: '' });
+
+        setDialogState({ isOpen: false, projectId: null, actionType: null, actionText: '' });
     };
 
-    if (isLoading) {
-        return (
-            <div className="flex justify-center items-center w-full py-20">
-                <div className="w-16 h-16 border-4 border-[#d29000] border-t-transparent rounded-full animate-spin"></div>
-            </div>
-        );
-    }
+    // --- REAL-TIME LISTENER FOR DELETED PROJECTS ---
+    useEffect(() => {
+        if (!socket) {
+            console.log("[Socket] No socket instance available yet. Waiting...");
+            return;
+        }
 
-    if (error) {
-        return (
-            <div className="text-center py-20 text-red-600 bg-red-50 p-4 rounded-lg">
-                <h3 className="font-bold">Oops! Something went wrong.</h3>
-                <p>{error}</p>
-            </div>
-        );
-    }
 
-    console.log("projects:", projects)
+        const handleProjectDeleted = (data: { projectId: string, message: string }) => {
+            dispatch(removeProjectFromList({ projectId: data.projectId }));
+            toast.error(data.message);
+        };
+        socket.on('project_deleted', handleProjectDeleted);
+
+        // This `return` function is the CLEANUP function.
+        // React runs this when the component unmounts. This is the ONLY correct place for `socket.off`.
+        return () => {
+            socket.off('project_deleted', handleProjectDeleted);
+        };
+    }, [socket, dispatch]); // Dependencies are correct
+
+
     return (
-        <div id="projects-content" className="projects-content">
-            <section className="projects-header page-header">
-                <h2>Active Projects</h2>
-                <p style={{ color: '#8d6e63' }}>Enter a project, or sign up to contribute!</p>
+        <div id="projects-content" >
+            {/* Hero Section */}
+            {/* Hero Section */}
+            <section className="relative w-full min-h-[100vh] flex items-center bg-black text-white overflow-hidden mb-12 px-2 sm:p-8 md:p-8 lg:p-16  project-hero"> 
+                {/* Background Image */}
+                <div className="absolute inset-0 z-0 select-none pointer-events-none">
+                     <img 
+                        src="/assets/project-hero-section.svg" 
+                        alt="Hero Background" 
+                        className="w-full h-full object-cover object-[80%] md:object-center"
+                    />
+                </div>
+
+                <div className="relative z-10 container sm:mt-0  w-full flex flex-col items-start gap-6">
+                    
+                    {/* Text Content */}
+                    <div className="w-full lg:w-2/3 mt-36 space-y-6">
+                        <span className="text-white text-base font-medium">Collections</span>
+                        <h1 className="text-[36px] lg:text-[46px] font-semibold leading-tight !text-white">
+                            Active Projects
+                        </h1>
+                        <p className="text-white leading-relaxed mix-blend-lighten drop-shadow-md sm:w-full sm:w-xl lg:w-2xl">
+                            Explore Projects That Are Currently In Progress And Open For Collaboration. Each Active Project Allows Contributors From Around The World To Add Their Ideas, Creativity, Or Skills, Helping Shape The Artwork As It Evolves. Whether You Contribute A Small Detail Or A Meaningful Section, Every Input Becomes Part Of A Larger Collective Vision, Turning Individual Efforts Into A Shared Creative Achievement.
+                        </p>
+                        <Link to="/gallery">
+                      <div className="relative w-fit p-[1px] rounded-full bg-gradient-to-r from-[#E23373] to-[#FEC133] group hover:opacity-90 transition-opacity">
+                        <Button 
+                          className="rounded-full px-[17px] py-[7px]  bg-black text-white hover:bg-black/90 transition-all duration-300 flex items-center gap-2 text-sm lg:text-base font-semibold border-none relative z-10"
+                        >
+                          Explore Now
+                          <ArrowUpRight className="w-5 h-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                        </Button>
+                      </div>
+                  </Link>
+                    </div>
+                </div>
             </section>
 
-            {/* "Create Project" button ab "/admin/dashboard" par link karega */}
-            {user?.role === 'admin' && (
-                <section className='flex items-center justify-center my-6'>
-                    <Link to="/create-project">
-                        <Button className="bg-[#d29000] cursor-pointer hover:bg-[#b38f2c] text-white font-bold py-2 px-4 rounded shadow-lg !border !border-[#5d4037]">
-                            Create a New Project
+            <div className="flex flex-col gap-8 mb-12 px-6 container">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <h2 className="text-3xl md:text-[34px] font-semibold !text-white">
+                        Create Together, <span className="bg-gradient-to-r from-[#E23373] to-[#FEC133] bg-clip-text text-transparent">Live Projects</span>
+                    </h2>
+                      <div className="relative w-fit p-[1px] rounded-full bg-gradient-to-r from-[#E23373] to-[#FEC133] group hover:opacity-90 transition-opacity">
+                        <Button 
+                          className="rounded-full px-[17px] py-[7px] bg-black text-white hover:bg-black/90 transition-all duration-300 flex items-center gap-2 text-base font-semibold border-none relative z-10"
+                        >
+                          Explore Now
+                          <ArrowUpRight className="w-5 h-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                         </Button>
-                    </Link>
-                </section>
-            )}
+                      </div>
+                </div>
 
-            <section className="projects-grid mt-5">
-                {projects.length === 0 ? (
-                    <div className="text-center w-full py-20 col-span-full">
-                        <h3 className="text-2xl text-gray-500">No active projects found.</h3>
-                        {user?.role === 'admin' && <p className="text-gray-400">You can create the first one from the Admin Dashboard.</p>}
+                <div className="flex  flex-col md:flex-row justify-between items-center gap-4">
+                    <div className="flex flex-col lg:flex-row gap-4 w-full md:w-auto">
+                        <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+                        <ProjectStatusFilter statusFilter={statusFilter} setStatusFilter={setStatusFilter} />
                     </div>
-                ) : (
-                    projects.map((project: any) => (
-                        <div key={project._id} className="project-card active">
-                            <div className="project-image relative">
-                                <img
-                                    src={getImageUrl(project.thumbnailUrl) || 'https://via.placeholder.com/400x250'}
-                                    alt={project.title}
-                                />
-                                {/* Project status badge */}
-                                {project.isPaused && (
-                                    <div className="absolute top-2 right-2">
-                                        <Badge variant="destructive" className="text-sm">Paused</Badge>
-                                    </div>
-                                )}
-                                <div className="project-progress">
-                                    <div className="progress-bar">
-                                        <div className="progress-fill" style={{ width: `${project.stats?.percentComplete || 0}%` }}></div>
-                                    </div>
-                                    <div className="progress-text">{project.stats?.percentComplete?.toFixed(2) || 0}% Complete</div>
+                    {user?.role === 'admin' && (
+                        <Link to="/create-project" className="w-full md:w-auto">
+                            <Button className="w-full md:w-auto rounded-full bg-gradient-to-r from-[#E23373] to-[#FEC133] text-white font-semibold border-none hover:opacity-90 transition-opacity px-6 py-2">
+                                Create a new project
+                            </Button>
+                        </Link>
+                    )}
+                </div>
+            </div>
+            {
+
+                isLoading ? (
+                    // Agar loading ho rahi hai, to yahan loader dikhayein
+                    <div className="flex justify-center items-center w-full py-20" >
+                        <div className="w-16 h-16 border-4 border-[#d29000] border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                ) : error ? (
+                    // Agar error hai, to yahan error message dikhayein
+                    <div className="text-center py-20 text-red-600  p-4 rounded-lg">
+                        <h3 className="font-bold">Oops! Something went wrong.</h3>
+                        <p>{error}</p>
+                    </div>
+                ) :
+
+                    <section id="active-projects-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 container !mt-5 px-6">
+                        {
+                            projects.length === 0 ? (
+                                <div className="text-center w-full py-20 col-span-full">
+                                    <h3 className="text-2xl !text-[#ffffff]">No projects found.</h3>
+                                    {user?.role === 'admin' && <p className="!text-[#ffffff]">You can create the first one from the Admin Dashboard.</p>}
                                 </div>
-                            </div>
-                            <div className="project-info">
-                                <h3 className='!text-[#5d4037]'>{project.title}</h3>
-                                <div className="project-stats">
-                                    <div className="stat">
-                                        <span className="stat-value !text-[#8d6e63] !text-[12.8px]">{project.stats?.contributorCount || 0}</span>
-                                        <span className="stat-label !text-[#8d6e63]">Contributors</span>
-                                    </div>
-                                    <div className="stat">
-                                        <span className="stat-value !text-[#8d6e63] !text-[12.8px]">{project.stats?.pixelCount || 0}</span>
-                                        <span className="stat-label !text-[#8d6e63]">Pixels Painted</span>
-                                    </div>
-                                </div>
-                                <Link to={`/project/${project?.canvasId}`} className="btn-contribute !text-black !bg-[#d4af37] hover:!bg-[#b38f2c] !border !border-[#5d4037]">
-                                    Enter Project
-                                </Link>
+                            ) : (
+                                projects.map((project: any) => {
+                                    const isProjectPaused = project.status === 'Paused';
 
-                                {/* --- ADMIN ACTION BUTTONS --- */}
-                                {user?.role === 'admin' && (
-                                    <div className="mt-4 pt-4 border-t border-gray-200 ">
-                                        <div className="flex items-center justify-between space-x-2">
-                                            <p className="text-xs !text-[#8d6e63]  !p-0 !m-0">Admin Actions:</p>
-
-                                            <div className="flex items-center space-x-2">
-                                                {project.isPaused ? (
-                                                    <Button
-                                                        className="cursor-pointer"
-                                                        variant="outline"
-                                                        size="icon"
-                                                        title="Resume Project"
-                                                        onClick={() =>
-                                                            openConfirmationDialog(project._id, { isPaused: false }, 'Resume')
-                                                        }
-                                                    >
-                                                        <Play className="h-4 w-4" />
-                                                    </Button>
-                                                ) : (
-                                                    <Button
-                                                        className="cursor-pointer"
-                                                        variant="outline"
-                                                        size="icon"
-                                                        title="Pause Project"
-                                                        onClick={() =>
-                                                            openConfirmationDialog(project._id, { isPaused: true }, 'Pause')
-                                                        }
-                                                    >
-                                                        <Pause className="h-4 w-4" />
-                                                    </Button>
-                                                )}
-
-                                                <Button
-                                                    className="cursor-pointer bg-red-100 hover:bg-red-200 text-red-600 border border-red-200"
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    title="Close Project"
-                                                    onClick={() =>
-                                                        openConfirmationDialog(project._id, { isClosed: true }, 'Close')
-                                                    }
+                                    return (
+                                        <div key={project._id} className="bg-[#1A1A1A] rounded-[8.03px] border border-white/10 overflow-hidden flex flex-col p-2.5 hover:border-[#E23373]/50 transition-colors duration-300">
+                                            {/* Image with Badge */}
+                                            <div className="relative group">
+                                                <img
+                                                    src={getImageUrl(project.thumbnailUrl) || 'https://via.placeholder.com/400x250'}
+                                                    alt={project.title}
+                                                    className="w-full aspect-[4/3] object-cover rounded-[8.03px] transition-transform duration-500 group-hover:scale-105"
+                                                />
+                                                <span className={`absolute top-3 right-3 px-4 py-1 rounded-full text-xs font-semibold !text-white shadow-lg
+                                                    ${project.status === 'Paused' 
+                                                        ? 'bg-red-600' 
+                                                        : project.status === 'Completed' 
+                                                            ? 'bg-purple-600' 
+                                                            : 'bg-gradient-to-r from-[#E23373] to-[#FEC133]'
+                                                    }`}
                                                 >
-                                                    <XCircle className="h-4 w-4" />
-                                                </Button>
+                                                    {project.status}
+                                                </span>
+                                            </div>
+
+                                            {/* Content */}
+                                            <div className="py-3 flex flex-col gap-2">
+                                                {/* Progress Bar */}
+                                                <div className="flex items-center gap-3">
+                                                    <div className="flex-1 h-1 bg-white/10 rounded-full overflow-hidden">
+                                                        <div 
+                                                            className="h-full bg-[#E23373] rounded-full relative" 
+                                                            style={{ width: `${project.stats?.percentComplete || 0}%` }}
+                                                        >
+                                                            <div className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-2 bg-white rounded-full shadow-[0_0_10px_rgba(226,51,115,0.8)]"></div>
+                                                        </div>
+                                                    </div>
+                                                   
+                                                </div>
+ <span className="!text-white text-xs font-medium text-right">{project.stats?.percentComplete?.toFixed(1) || 0}% Complete</span>
+                                                {/* Title and Admin Actions */}
+                                                <div className="flex items-center justify-between gap-2 mt-1">
+                                                    <div className="flex-1 min-w-0">
+                                                        <ProjectTitle project={project} isAdmin={user?.role === 'admin'} />
+                                                    </div>
+                                                    
+                                                    {user?.role === 'admin' && (
+                                                        <div className="flex items-center gap-2 shrink-0">
+                                                            {/* Pause/Resume Button */}
+                                                            <div className="p-[1px] rounded-lg bg-gradient-to-r from-[#E23373] to-[#FEC133]">
+                                                                <button 
+                                                                    className="w-8 h-8 rounded-lg bg-[#1A1A1A] flex items-center justify-center text-white hover:bg-[#252525] transition-colors"
+                                                                    onClick={() => openConfirmationDialog(
+                                                                        project._id, 
+                                                                        project.status === 'Paused' ? 'RESUME' : 'PAUSE', 
+                                                                        project.status === 'Paused' ? 'Resume' : 'Pause'
+                                                                    )}
+                                                                    title={project.status === 'Paused' ? "Resume Project" : "Pause Project"}
+                                                                >
+                                                                    {project.status === 'Paused' ? <Play className="w-3.5 h-3.5 fill-white" /> : <Pause className="w-3.5 h-3.5 fill-white" />}
+                                                                </button>
+                                                            </div>
+
+                                                            {/* Delete Button */}
+                                                            <button 
+                                                                className="w-[34px] h-[34px] rounded-lg bg-[#BE0000] flex items-center justify-center text-white hover:bg-red-700 transition-colors shadow-sm"
+                                                                onClick={() => openConfirmationDialog(project._id, 'DELETE', 'DELETE PERMANENTLY')}
+                                                                title="Delete Project"
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Stats */}
+                                                <div className="grid grid-cols-2 gap-4 py-3  mt-1">
+                                                    <div className="text-center">
+                                                        <p className="!text-[#AAB2C7] text-sm font-semibold tracking-wider mb-1">Contributors</p>
+                                                        <p className="!text-white text-[20px] font-semibold">{project.contributors?.length || 0}</p>
+                                                    </div>
+                                                    <div className="text-center">
+                                                        <p className="!text-[#AAB2C7] text-xs font-semibold tracking-wider mb-1">Pixels Painted</p>
+                                                        <p className="!text-white text-[20px] font-semibold">{project.stats?.pixelCount?.toLocaleString() || 0}</p>
+                                                    </div>
+                                                </div>
+
+                                                {/* Action Buttons */}
+                                                <div className="flex flex-col gap-2 mt-1">
+                                                    <Link
+                                                        to={isProjectPaused ? "#" : (project.status === 'Completed' ? `/project/${project?.canvasId}?view=gallery` : `/project/${project?.canvasId}`)}
+                                                        onClick={(e) => { if (isProjectPaused) e.preventDefault(); }}
+                                                        className={`w-full relative group overflow-hidden`}
+                                                    >
+                                                        <div className={`w-full py-3 rounded-full bg-gradient-to-r from-[#E23373] to-[#FEC133] text-white font-semibold text-base tracking-wide flex justify-center items-center transition-all duration-300 ${isProjectPaused ? 'opacity-50 cursor-not-allowed grayscale' : 'hover:shadow-[0_0_20px_rgba(226,51,115,0.4)] hover:scale-[1.02]'}`}>
+                                                            {project.status === 'Completed' ? 'View Artwork' : (isProjectPaused ? 'Project Paused' : 'Enter Project')}
+                                                        </div>
+                                                    </Link>
+
+                                                    {user?.role === 'admin' && project.status !== 'Completed' && (
+                                                        <div className="w-full p-[1px] rounded-full bg-gradient-to-r from-[#E23373] to-[#FEC133] group hover:shadow-[0_0_15px_rgba(226,51,115,0.2)] transition-shadow">
+                                                            <button 
+                                                                className="w-full py-3 rounded-full bg-[#1A1A1A] text-white font-semibold text-base tracking-wide hover:bg-[#252525] transition-colors flex items-center justify-center gap-2"
+                                                                onClick={() => openConfirmationDialog(project._id, 'COMPLETE', 'Mark as Complete')}
+                                                            >
+                                                                {/* <CheckCircle className="w-3.5 h-3.5" /> */}
+                                                                Mark as Done
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                )}
+                                    )
+                                })
+                            )}
+                    </section>}
 
-                            </div>
-                        </div>
-                    ))
-                )}
-            </section>
+            <div className="mt-8">
+                {!isLoading &&  <Pagination
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={setCurrentPage}
+                />}
+            </div>
             <AlertDialog open={dialogState.isOpen} onOpenChange={(isOpen) => setDialogState({ ...dialogState, isOpen })}>
-                <AlertDialogContent className="bg-[#5d4037] border-2 border-[#3e2723] text-white font-[Georgia, serif]">
-                    <AlertDialogHeader>
-                        <AlertDialogTitle className='!text-white'>Are you absolutely sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            This action will <span className="font-bold">{dialogState.actionText}</span> this project. This may affect active contributors.
+                <AlertDialogContent className="bg-[#0F0D0D] border border-white/10  text-white font-montserrat min-w-[750px] p-8 rounded-2xl">
+                    <AlertDialogHeader className="space-y-4">
+                        <AlertDialogTitle className="text-[28px] xl:text-[34px] font-semibold text-center leading-tight !text-white">
+                            {dialogState.actionType === 'DELETE' 
+                                ? "Do you want to Delete the project?" 
+                                : `Do you want to ${dialogState.actionText?.toLowerCase()} your project?`
+                            }
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-center text-[#ffffff] text-base 2xl:text-[20px] font-medium min-w-[700px] mx-auto leading-relaxed">
+                            {dialogState.actionType === 'DELETE'
+                                ? "Are you sure you want to delete this project? This action can't be undone."
+                                : "This action will pause your project. This may effect your contributors"
+                            }
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel className='cursor-pointer '>Cancel</AlertDialogCancel>
-                        <AlertDialogAction className="cursor-pointer border-white bg-[#8b795e] text-white hover:bg-[#a1887f] disabled:opacity-50" onClick={handleConfirmAction}>
-                            Continue
+                    <AlertDialogFooter className="flex items-center justify-center sm:justify-center gap-4 mt-8 w-full">
+                        <AlertDialogCancel className="w-full sm:w-[180px] h-[52px] rounded-full border border-white/20 bg-transparent hover:bg-white/5 hover:text-white text-white transition-colors uppercase tracking-wide text-sm font-semibold">
+                            Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction 
+                            className={`w-full sm:w-[180px] h-[52px] rounded-full text-white transition-colors uppercase tracking-wide text-sm font-semibold border-none 
+                                ${dialogState.actionType === 'DELETE' 
+                                    ? 'bg-[#BE0000] hover:bg-red-700' 
+                                    : 'bg-gradient-to-r from-[#E23373] to-[#FEC133] hover:opacity-90'}`}
+                            onClick={handleConfirmAction}
+                        >
+                            {dialogState.actionType === 'DELETE' ? 'Delete' : 'Continue'}
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

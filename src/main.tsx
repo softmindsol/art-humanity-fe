@@ -12,13 +12,58 @@ createRoot(document.getElementById('root')!).render(
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <Toaster
-          position="bottom-right"
+          position="top-center"
           toastOptions={{
             style: {
-              background: '#fef9f4',       // cream background
-              color: '#5d4037',            // dark brown text
-              border: '1px solid #d4af37', // gold border
+              background: '#FFFBF2',
+              backgroundImage: 'linear-gradient(#FFFBF2, #FFFBF2), linear-gradient(to right, #E23373, #FEC133)',
+              backgroundOrigin: 'border-box',
+              backgroundClip: 'padding-box, border-box',
+              color: '#0F0D0D',
+              border: '1px solid transparent',
+              borderRadius: '8px',
+              fontFamily: 'Montserrat, sans-serif',
+              padding: '16px',
             },
+            classNames: {
+              icon: 'text-[#3E2723]', 
+            }
+          }}
+          icons={{
+            success: (
+                 <div className="w-6 h-6 rounded-full bg-[#5D4037] flex items-center justify-center">
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="white"
+                      strokeWidth="3"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </div>
+            ),
+            error: (
+              <div className="w-6 h-6 rounded-full bg-[#5D4037] flex items-center justify-center">
+                 <svg
+                   width="24"
+                   height="24"
+                   viewBox="0 0 24 24"
+                   fill="none"
+                   stroke="white"
+                   strokeWidth="3"
+                   strokeLinecap="round"
+                   strokeLinejoin="round"
+                   className="w-3.5 h-3.5"
+                 >
+                   <line x1="12" y1="8" x2="12" y2="12"></line>
+                   <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                 </svg>
+               </div>
+            )
           }}
         />
         <App />
