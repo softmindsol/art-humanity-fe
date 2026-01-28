@@ -17,7 +17,7 @@ const AboutUsSection: React.FC = () => {
         </div>
 
         {/* Right Side: Content */}
-        <div className="w-full lg:w-1/2 text-left space-y-8">
+        <div className="w-full lg:w-1/2 text-left md:space-y-8 space-y-5">
           {/* Badge */}
           <div className="inline-block p-[1px] rounded-full bg-gradient-to-r from-[#E13372] to-[#FEC133]">
             <div className="px-8 py-2 rounded-full bg-[#0F0D0D] text-white tracking-widest text-xs font-semibold uppercase">
@@ -26,7 +26,7 @@ const AboutUsSection: React.FC = () => {
           </div>
 
           {/* Heading */}
-          <h2 className="text-4xl md:text-[34px] font-bold !text-white leading-tight">
+          <h2 className="text-2xl md:text-[34px] font-bold !text-white leading-tight">
             Let’s Start Our Story With{" "}
             <span className="bg-gradient-to-r from-[#E23373] to-[#FEC133] bg-clip-text text-transparent">
               Artwork Development
@@ -41,7 +41,7 @@ const AboutUsSection: React.FC = () => {
               alt=""
               className="absolute 2xl:-right-86 xl:top-60 top-96 xl:-right-40 right-0  -translate-y-1/2 w-1/2 h-[650px] -z-10 opacity-70 pointer-events-none"
             />
-            <p className="!text-white font-medium text-sm lg:text-base leading-relaxed text-justify relative z-10">
+            <p className="!text-white font-medium text-sm lg:text-base leading-relaxed text-left relative z-10">
               Our journey begins with artwork development a collaborative space
               where ideas evolve, concepts gain clarity, and creativity is given
               the freedom to grow. We dive deep into your world, learning what
