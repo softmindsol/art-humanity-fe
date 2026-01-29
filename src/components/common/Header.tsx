@@ -224,14 +224,14 @@ const Header = () => {
     <>
       {/* Fixed Pill Container */}
       <div className="fixed top-6 left-0 right-0 z-[1000] px-6 2xl:px-8">
-        <header className="flex items-center !justify-between !py-[5px] rounded-full border border-white/20 shadow-2xl bg-black/10 backdrop-blur-[2px] w-full xl:min-w-[1400px] mx-auto">
+        <header className="flex items-center !justify-between md:!py-[5px] !py-[3px] rounded-full border border-white/20 shadow-2xl bg-black/10 backdrop-blur-[2px] w-full xl:min-w-[1400px] mx-auto">
           {/* Logo Section */}
           <div className="logo-container">
             <Link to="/" className="logo-link flex items-center gap-3">
               <img
                 src="/assets/logo.svg"
                 alt="Logo"
-                className="size-14 object-contain"
+                className="md:size-14 size-12 object-contain"
               />
             </Link>
           </div>
@@ -486,7 +486,7 @@ const Header = () => {
             <img
               src="/assets/logo.svg"
               alt="Logo"
-              className="h-10 w-10 object-contain"
+              className="size-12 object-contain"
             />
           </Link>
 
