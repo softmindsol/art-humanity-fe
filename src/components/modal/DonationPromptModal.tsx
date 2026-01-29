@@ -13,7 +13,7 @@ const CustomModal: React.FC<CustomModalProps> = ({ isOpen, onClose, onDonateClic
 
     return (
         <div className="fixed inset-0 bg-black/80 flex justify-center items-center z-50 backdrop-blur-sm p-4">
-            <div className="w-full max-w-[535px] p-[1px] rounded-[14px] bg-gradient-to-br from-[#545454] to-[#212121] shadow-2xl relative">
+            <div className="w-full max-w-[535px] p-[1px] rounded-[12px] bg-gradient-to-br from-[#545454] to-[#212121] shadow-2xl relative">
                 <div className="bg-[#0f0f0f] w-full h-full rounded-[14px] p-6 sm:p-8">
                     <div className="flex justify-center -mt-4 mb-6">
                         <div className="bg-[#E23373] p-3 rounded-2xl shadow-lg shadow-pink-500/20">

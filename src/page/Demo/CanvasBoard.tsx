@@ -1,15 +1,13 @@
-import React, { useEffect, useCallback, useRef, useState, useMemo } from 'react';
-import { Grid, Minus, Plus, List } from 'lucide-react';
+import React, { useEffect, useCallback, useRef, useState } from 'react';
+import {  List } from 'lucide-react';
 import { useCanvasState } from '@/hook/useCanvasState';
 import type { Position, Tile } from '@/types/canvas';
 import { useSelector } from 'react-redux';
 
 import {
-    selectCurrentBrush, selectCurrentCanvas, setBrushColor, setCanvasOffset, setZoomLevel, selectTimelapseUrl,
-    selectCanvasData,
-} from '@/redux/slice/contribution';
+    selectCurrentBrush, selectCurrentCanvas, setCanvasOffset, setZoomLevel, selectTimelapseUrl} from '@/redux/slice/contribution';
 import useAppDispatch from '@/hook/useDispatch';
-import Toolbox from '@/components/toolbox/Toolbox';
+import Toolbox from '@/components/toolbox/ToolboxInfo';
 import { useMediaQuery } from '@/hook/useMediaQuery';
 
 // --- CONSTANTS ---
@@ -117,10 +115,10 @@ const hslToRgb = (h: number, s: number, l: number) => {
     else if (h < 300) { r = x, b = c; } else { r = c, b = x; }
     return { r: Math.round((r + m) * 255), g: Math.round((g + m) * 255), b: Math.round((b + m) * 255), a: 1 };
 };
+
+
 const CanvasBoard: React.FC = () => {
     const dispatch = useAppDispatch();
-
-    // --- REDUX STATE & LOCAL STATE ---
     const brushState = useSelector(selectCurrentBrush);
     const canvasState = useSelector(selectCurrentCanvas);
     const timelapseUrl = useSelector(selectTimelapseUrl);
@@ -599,14 +597,14 @@ const CanvasBoard: React.FC = () => {
                         <button
                             onClick={handleClearCanvas}
                             className="control-button"
-                            style={{ backgroundColor: '#cd5c5c', color: 'white' }}
+                            style={{ backgroundColor: '#BE0000', color: 'white' }}
                         >
                             Clear Canvas
                         </button>
                     </div>
                 </div>
 
-                <div className="canvas-viewport-wrapper justify-center items-center flex">
+                <div className="canvas-viewport-wrapper justify-center bg-[#0F0D0D] p-16 items-center rounded-[12px] flex">
                     <canvas
                         className='w-[90%] xl:w-[95%] justify-center items-center flex'
                         ref={viewportCanvasRef}
@@ -672,8 +670,8 @@ const InfoBox = ({ zoom, worldPos, boundaryRef }: any) => {
                         newX = 20;
                         newY = boundaryRect.height - infoBoxRect.height - 20;
                     } else {
-                        newX = boundaryRect.width - infoBoxRect.width - 20;
-                        newY = (boundaryRect.height / 2) - (infoBoxRect.height / 2);
+                        newX = 200;
+                        newY = 0;
                     }
                 }
                 setPosition({ x: newX, y: newY });
@@ -736,7 +734,7 @@ const InfoBox = ({ zoom, worldPos, boundaryRef }: any) => {
     return (
         <div
             ref={infoBoxRef}
-            className="absolute bg-[#0F0D0D] p-3 !w-[300px] rounded-xl border border-white/10 shadow-2xl select-none z-50 backdrop-blur-sm"
+            className="absolute bg-[#0F0D0D] px-3 py-2 !w-[300px] rounded-xl border border-white/10 shadow-2xl select-none z-50 backdrop-blur-sm"
             style={{
                 top: position.y,
                 left: position.x,
@@ -754,7 +752,7 @@ const InfoBox = ({ zoom, worldPos, boundaryRef }: any) => {
             </div>
 
 
-            <div className='flex items-center justify-between text-sm !text-white'>
+            <div className='flex items-center justify-between text-base !text-white'>
                 <div className="flex items-center gap-1">
                     <span className="text-white">Zoom:</span>
                     <span className="text-white font-medium">{Math.round(zoom * 100)}%</span>
