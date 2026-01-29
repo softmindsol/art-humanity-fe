@@ -41,7 +41,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
 
   return (
     <div className="fixed inset-0  backdrop-blur-sm flex justify-center items-center z-[2000]">
-      <div className="relative bg-[#0F0D0D] w-[90%] sm:w-[450px] border border-white/20 rounded-2xl  p-8 font-montserrat animation-fade-in transform transition-all scale-100">
+      <div className="relative bg-[#0F0D0D] w-[90%] sm:w-[450px] border border-white/20 rounded-[12px]  p-8 font-montserrat animation-fade-in transform transition-all scale-100">
         {/* Decorative Gradient Glow */}
         <div className="flex flex-col items-center text-center">
           <div className="w-16 h-16 rounded-full  flex items-center justify-center mb-6 border border-red-500/20 ">
