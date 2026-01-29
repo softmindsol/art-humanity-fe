@@ -13,7 +13,7 @@ const DemoPage: React.FC = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#0F0D0D] text-white font-montserrat">
+        <div className="min-h-screen bg-[#141414] text-white font-montserrat">
             
             {/* HERO SECTION */}
             <section className="relative w-full min-h-screen flex items-center overflow-hidden">
@@ -55,7 +55,7 @@ const DemoPage: React.FC = () => {
 
 
             {/* CANVAS SECTION */}
-            <section ref={canvasRef} className="relative w-full min-h-screen bg-[#141414]">
+            <section ref={canvasRef} className="relative w-full min-h-screen p-10 bg-[#141414]">
                 <CanvasBoard />
             </section>
 

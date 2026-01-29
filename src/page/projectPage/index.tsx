@@ -1,6 +1,8 @@
 // src/pages/ProjectPage.js
 
-import Toolbox from '@/components/toolbox/Toolbox';
+import Toolbox from '@/components/toolbox/ToolboxInfo';
+import Toolbox2 from '@/components/toolbox/Toolbox';
+
 import { useState, useRef, useLayoutEffect, useEffect, useMemo, useCallback } from 'react';
 import KonvaCanvas from '../../components/common/KonvaCanvas';
 import { Film, Square } from 'lucide-react'; // Grid icon imported
@@ -627,6 +629,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
 
                     {/* Left Column: Toolbox */}
                     {!isReadOnly && <Toolbox boundaryRef={mainContentRef} />}
+                    {!isReadOnly && <Toolbox2 boundaryRef={mainContentRef} />}
 
 
                     {/* Right Column: Canvas & Actions */}
