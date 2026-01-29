@@ -818,23 +818,25 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
             </div>
 
             <Dialog open={showJoinDialog} onOpenChange={setIsJoinDialogOpen}>
-                <DialogContent className="bg-[#5d4037] border-2 border-[#3e2723] text-white font-[Georgia, serif]">
-                    <DialogHeader>
-                        <DialogTitle className="text-2xl !text-white text-center">Join as a Contributor</DialogTitle>
-                        <DialogDescription className="pt-4 text-base text-gray-300">
+                <DialogContent className="bg-[#0F0D0D] border border-white/10 text-white !font-sans rounded-[12px] shadow-2xl max-w-lg p-8">
+                    <DialogHeader className="gap-2">
+                        <DialogTitle className="text-2xl sm:text-[28px] font-semibold !text-white text-center">Join as a Contributor</DialogTitle>
+                        <DialogDescription className="text-center text-[#E0E0E0] text-base leading-relaxed pt-2">
                             By clicking "Agree and Continue", you agree to the project's terms of contribution. Your artwork will become part of this collaborative canvas.
                         </DialogDescription>
                     </DialogHeader>
-                    {/* Yahan aap aage ja kar legal text daal sakte hain */}
-                    <DialogFooter>
-                        {/* ShadCN DialogClose cross icon ko aasan banata hai */}
+                    <DialogFooter className="flex gap-4 sm:justify-center mt-6 w-full">
                         <DialogClose asChild>
-                            <Button variant="outline" className="cursor-pointer">Cancel</Button>
+                            <button className="relative rounded-full p-[1px] bg-gradient-to-r from-[#E23373] to-[#FEC133] group overflow-hidden shrink-0 min-w-[120px]">
+                                <div className="bg-[#0F0D0D] rounded-full px-6 py-2.5 h-full w-full group-hover:bg-white/10 transition-colors flex items-center justify-center">
+                                    <span className="text-white font-medium text-sm">Cancel</span>
+                                </div>
+                            </button>
                         </DialogClose>
                         <Button
                             onClick={handleJoin}
                             disabled={loading.joining}
-                            className="cursor-pointer border-white bg-[#8b795e] text-white hover:bg-[#a1887f] disabled:opacity-50"
+                            className="bg-gradient-to-r from-[#E23373] to-[#FEC133] text-white hover:opacity-90 px-8 py-2.5 h-auto text-sm font-medium rounded-full border-none transition-all disabled:opacity-50 min-w-[160px]"
                         >
                             {loading.joining ? 'Joining...' : 'Agree and Continue'}
                         </Button>
@@ -848,26 +850,33 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
                     setLoginDialogDismissed(true); // Agar dialog band ho, to usay dismiss mark kar dein
                 }
             }}>
-                <DialogContent className="bg-[#5d4037] border-2 border-[#3e2723] text-white font-[Georgia, serif]">
-                    <DialogHeader>
-                        <DialogTitle className="text-2xl !text-white text-center">Want to Contribute?</DialogTitle>
-                        <DialogDescription className="pt-4 text-base text-gray-300">
+                <DialogContent className="bg-[#0F0D0D] border border-white/10 text-white !font-sans rounded-[12px] shadow-2xl max-w-[480px] p-8">
+                    <DialogHeader className="gap-2">
+                        <DialogTitle className="text-2xl sm:text-[28px] font-semibold !text-white text-center">Want to Contribute?</DialogTitle>
+                        <DialogDescription className="text-center text-[#E0E0E0] text-base leading-relaxed pt-2">
                             To paint, vote, or join this project, you need to be logged in. You can continue to browse as a guest.
                         </DialogDescription>
                     </DialogHeader>
-                    <DialogFooter>
+                    <DialogFooter className="flex gap-4 sm:justify-center mt-6 w-full">
                         {/* DialogClose ab "Stay as Guest" ka kaam karega */}
                         <DialogClose asChild>
-                            <Button variant="outline" className="cursor-pointer">Stay as Guest</Button>
+                            <button className="relative rounded-full p-[1px] bg-gradient-to-r from-[#E23373] to-[#FEC133] group overflow-hidden shrink-0 min-w-[140px]">
+                                <div className="bg-[#0F0D0D] rounded-full px-6 py-2.5 h-full w-full group-hover:bg-white/10 transition-colors flex items-center justify-center">
+                                    <span className="text-white font-medium text-sm">Stay as Guest</span>
+                                </div>
+                            </button>
                         </DialogClose>
-                        <Button onClick={() => {
-                            dispatch(openAuthModal());
-                            setLoginDialogDismissed(true)
-                        }} className="cursor-pointer border-white bg-[#8b795e] text-white hover:bg-[#a1887f] disabled:opacity-50"
+                        <Button 
+                            onClick={() => {
+                                navigate('/login');
+                                setLoginDialogDismissed(true)
+                            }} 
+                            className="bg-gradient-to-r from-[#E23373] to-[#FEC133] text-white hover:opacity-90 px-8 py-2.5 h-auto text-sm font-medium rounded-full border-none transition-all disabled:opacity-50 min-w-[160px]"
                         >
                             Login or Sign Up
                         </Button>
                     </DialogFooter>
+
                 </DialogContent>
             </Dialog>
 

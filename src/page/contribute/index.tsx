@@ -126,7 +126,6 @@ const ActiveProjects: React.FC = () => {
     return (
         <div id="projects-content" >
             {/* Hero Section */}
-            {/* Hero Section */}
             <section className="relative w-full min-h-[100vh] flex items-center bg-black text-white overflow-hidden mb-12 px-2 sm:p-8 md:p-8 lg:p-16  project-hero"> 
                 {/* Background Image */}
                 <div className="absolute inset-0 z-0 select-none pointer-events-none">
@@ -339,7 +338,7 @@ const ActiveProjects: React.FC = () => {
                 />}
             </div>
             <AlertDialog open={dialogState.isOpen} onOpenChange={(isOpen) => setDialogState({ ...dialogState, isOpen })}>
-                <AlertDialogContent className="bg-[#0F0D0D] border border-white/10  text-white font-montserrat min-w-[750px] p-8 rounded-2xl">
+                <AlertDialogContent className="bg-[#0F0D0D] border border-white/10  text-white font-montserrat min-w-[750px] p-8 rounded-[12px]">
                     <AlertDialogHeader className="space-y-4">
                         <AlertDialogTitle className="text-[28px] xl:text-[34px] font-semibold text-center leading-tight !text-white">
                             {dialogState.actionType === 'DELETE' 

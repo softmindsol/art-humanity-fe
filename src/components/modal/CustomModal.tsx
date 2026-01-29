@@ -26,7 +26,7 @@ const CustomModal: React.FC<CustomModalProps> = ({ isOpen, onClose, children }) 
 
     return (
         <div className="fixed inset-0 bg-black/50 bg-opacity-50 flex justify-center items-center z-50">
-            <div className="bg-[#5d4037] border-2 border-[#3e2723] text-white font-[Georgia, serif] p-6 rounded-lg shadow-lg w-[90%] sm:w-[500px] relative">
+            <div className="bg-[#5d4037] border-2 border-[#3e2723] text-white font-[Georgia, serif] p-6 rounded-[12px] shadow-lg w-[90%] sm:w-[500px] relative">
                 {/* Close Icon in the top right corner */}
                 <button
                     onClick={onClose}
