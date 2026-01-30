@@ -149,7 +149,7 @@ const ActiveProjects: React.FC = () => {
   return (
     <div id="projects-content">
       {/* Hero Section */}
-      <section className="relative w-full min-h-[100vh] flex items-center bg-black text-white overflow-hidden mb-12 px-2 sm:p-8 md:p-8   project-hero">
+      <section className="relative w-full min-h-[100vh] flex items-center bg-black text-white overflow-hidden mb-12 project-hero">
         {/* Background Image */}
         <div className="absolute inset-0 z-0 select-none pointer-events-none">
           <img
@@ -159,7 +159,7 @@ const ActiveProjects: React.FC = () => {
           />
         </div>
 
-        <div className="max-w-[1440px] mx-auto px-6 lg:px-8 pb-12 pt-32 relative z-10 w-full">
+        <div className="max-w-[1440px] mx-auto md:px-10 px-8 pb-12 pt-32 relative z-10 w-full">
           {/* Text Content */}
           <div className="w-full m-auto md:space-y-6 space-y-3">
             <span className="text-white text-base font-medium">
@@ -168,7 +168,7 @@ const ActiveProjects: React.FC = () => {
             <h1 className="text-[28px] md:text-[36px] lg:text-[46px] font-semibold leading-tight !text-white">
               Active Projects
             </h1>
-            <p className="text-white text-sm lg:text-base leading-relaxed mix-blend-lighten drop-shadow-md w-full lg:w-lg xl:w-2xl">
+            <p className="text-white text-sm lg:text-base xl:text-[22px] leading-relaxed mix-blend-lighten drop-shadow-md w-full lg:w-lg xl:w-2xl">
               Explore Projects That Are Currently In Progress And Open For
               Collaboration. Each Active Project Allows Contributors From Around
               The World To Add Their Ideas, Creativity, Or Skills, Helping Shape

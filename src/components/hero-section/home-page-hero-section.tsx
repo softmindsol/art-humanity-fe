@@ -15,9 +15,9 @@ const HeroSection: React.FC = () => {
         />
       </div>
 
-      <div className="max-w-[1440px] px-6 2xl:px-8 mx-auto my-auto relative z-10 w-full">
+      <div className="max-w-[1440px] md:px-10 px-8 mx-auto my-auto relative z-10 w-full">
         {/* Content Container */}
-        <div className="w-full md:w-1/2 flex flex-col items-center md:items-start text-center md:text-left xl:space-y-8 lg:space-y-6 space-y-4">
+        <div className="w-full md:w-1/2 flex flex-col items-start xl:space-y-8 lg:space-y-6 space-y-4">
           <span className="text-[#FFFFFF] text-sm md:text-base font-medium">
             Stunning Artworks
           </span>

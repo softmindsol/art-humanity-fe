@@ -13,14 +13,14 @@ const GuidelinePage: React.FC = () => {
           <img
             src="/assets/guideline-hero-section.svg"
             alt="Guideline Hero"
-            className="w-full h-[510px] md:h-[650px] lg:h-[758px] xl:h-[808px] object-[80%] object-cover md:object-cover"
+            className="w-full h-full object-[80%] object-cover md:object-cover"
           />
         </div>
 
         {/* Hero Content */}
-        <div className="max-w-[1440px] m-auto px-6 lg:px-8 pt-12 sm:pt-0 relative z-10 w-full">
+        <div className="max-w-[1440px] m-auto md:px-10 px-8 pt-12 sm:pt-0 relative z-10 w-full">
           {/* Content Container */}
-          <div className="w-full lg:w-1/2 flex flex-col items-center lg:items-start text-center lg:text-left lg:space-y-8 space-y-3">
+          <div className="w-full lg:w-1/2 flex flex-col items-start lg:space-y-8 space-y-3">
             <span className="text-[#FFFFFF] text-sm md:text-base  font-medium">
               Project Guideline
             </span>

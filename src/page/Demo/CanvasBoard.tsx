@@ -588,7 +588,7 @@ const CanvasBoard: React.FC = () => {
     return (
         <>
             <style>{styles}</style>
-            <div ref={mainContentRef} className="canvas-container !mt-20">
+            <div ref={mainContentRef} className="canvas-container lg:!mt-20">
                 <div className="canvas-header">
                   
 
@@ -604,7 +604,7 @@ const CanvasBoard: React.FC = () => {
                     </div>
                 </div>
 
-                <div className="canvas-viewport-wrapper justify-center bg-[#0F0D0D] p-16 items-center rounded-[12px] flex">
+                <div className="canvas-viewport-wrapper justify-center bg-[#0F0D0D] lg:p-16 p-8 items-center rounded-[12px] flex">
                     <canvas
                         className='w-[90%] xl:w-[95%] justify-center items-center flex'
                         ref={viewportCanvasRef}
