@@ -179,7 +179,7 @@ const ActiveProjects: React.FC = () => {
             </p>
             <Link to="/gallery">
               <div className="relative w-fit p-[1px] rounded-full bg-gradient-to-r from-[#E23373] to-[#FEC133] group hover:opacity-90 transition-opacity">
-                <Button className="rounded-full !px-[27px] py-[7px]  bg-black text-white hover:bg-black/90 transition-all duration-300 flex items-center gap-2 text-sm lg:text-base font-semibold border-none relative z-10">
+                <Button className="rounded-full md:!px-[27px] !px-[22px] py-[7px]  bg-black text-white hover:bg-black/90 transition-all duration-300 flex items-center gap-2 text-sm lg:text-base font-semibold border-none relative z-10">
                   Explore Now
                   <ArrowUpRight className="w-5 h-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                 </Button>
@@ -198,7 +198,7 @@ const ActiveProjects: React.FC = () => {
             </span>
           </h2>
           <div className="relative w-fit p-[1px] rounded-full bg-gradient-to-r from-[#E23373] to-[#FEC133] group hover:opacity-90 transition-opacity">
-            <Button className="rounded-full !px-[27px] py-[7px] bg-black text-white hover:bg-black/90 transition-all duration-300 flex items-center gap-2 text-base font-semibold border-none relative z-10">
+            <Button className="rounded-full md:!px-[27px] !px-[22px] py-[7px] bg-black text-white hover:bg-black/90 transition-all duration-300 flex items-center gap-2 md:text-base text-sm font-semibold border-none relative z-10">
               Explore Now
               <ArrowUpRight className="w-5 h-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
             </Button>

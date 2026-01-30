@@ -16,7 +16,7 @@ const Footer = () => {
   return (
     <footer className="w-full !bg-[#141414] pt-16 pb-8 border-t border-white/5">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        <div className="flex flex-col lg:flex-row justify-between gap-12 lg:gap-8 mb-16">
+        <div className="flex flex-col lg:flex-row justify-between gap-12 lg:gap-8 mb-8 md:mb-12 xl:mb-16">
           {/* Brand Column */}
           <div className="flex flex-col items-center lg:items-start md:space-y-6 space-y-3">
             <div className="flex flex-col items-center md:space-y-3 space-y-2">
@@ -65,87 +65,91 @@ const Footer = () => {
           </div>
 
           {/* Navigation Columns */}
-          <div className="flex flex-wrap justify-center lg:justify-start gap-12 lg:gap-24">
-            {/* Explore */}
-            <div className="flex flex-col space-y-6">
-              <h3 className="!text-white text-[16px] font-semibold">Explore</h3>
-              <ul className="space-y-3 !text-white text-sm font-medium">
-                <li>
-                  <Link to="/gallery" className="!text-white transition-colors">
-                    Gallery
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/projects"
-                    className="!text-white transition-colors"
-                  >
-                    Projects
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/guideline"
-                    className="!text-white transition-colors"
-                  >
-                    Guideline
-                  </Link>
-                </li>
-              </ul>
+          <div className="flex flex-wrap items-center justify-center lg:justify-between xl:gap-24 gap-10">
+            <div className="flex flex-wrap sm:justify-center lg:justify-start gap-12 md:gap-24">
+              {/* Explore */}
+              <div className="flex flex-col lg:space-y-6 space-y-3">
+                <h3 className="!text-white text-[16px] font-semibold">
+                  Explore
+                </h3>
+                <ul className="md:space-y-3 space-y-2 !text-white text-sm font-medium">
+                  <li>
+                    <Link
+                      to="/gallery"
+                      className="!text-white transition-colors"
+                    >
+                      Gallery
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to="/projects"
+                      className="!text-white transition-colors"
+                    >
+                      Projects
+                    </Link>
+                  </li>
+                  <li>
+                    <Link
+                      to="/guideline"
+                      className="!text-white transition-colors"
+                    >
+                      Guideline
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+              {/* Participate */}
+              <div className="flex flex-col space-y-6">
+                <h3 className="!text-white text-base font-semibold">
+                  Participate
+                </h3>
+                <ul className="md:space-y-3 space-y-2 !text-white text-sm font-medium">
+                  <li>
+                    <Link
+                      to="/projects"
+                      className="!text-white transition-colors"
+                    >
+                      Join a Project
+                    </Link>
+                  </li>
+                  <li>
+                    <Link to="/demo" className="!text-white transition-colors">
+                      Try Demo
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+              {/* About */}
+              <div className="flex flex-col space-y-6">
+                <h3 className="!text-white text-base font-semibold">About</h3>
+                <ul className="md:space-y-3 space-y-2 !text-white text-sm font-medium">
+                  <li>
+                    <Link
+                      to="/contact-us"
+                      className="!text-white transition-colors"
+                    >
+                      Contact
+                    </Link>
+                  </li>
+                </ul>
+              </div>
             </div>
-
-            {/* Participate */}
-            <div className="flex flex-col space-y-6">
-              <h3 className="!text-white text-base font-semibold">
-                Participate
-              </h3>
-              <ul className="space-y-3 !text-white text-sm font-medium">
-                <li>
-                  <Link
-                    to="/projects"
-                    className="!text-white transition-colors"
-                  >
-                    Join a Project
-                  </Link>
-                </li>
-                <li>
-                  <Link to="/demo" className="!text-white transition-colors">
-                    Try Demo
-                  </Link>
-                </li>
-              </ul>
+            {/* Description Column */}
+            <div className="md:w-full xl:w-sm text-left">
+              <p className="!text-white text-sm font-medium leading-relaxed">
+                Project MurArt provides enormous digital canvases that would be
+                nearly impossible to fully paint by one person. We have
+                developed a collaboration system that will allow the creation of
+                the most stunning art pieces the world has ever seen. Anyone can
+                paint a part of the canvas and solidify your spot in history!
+              </p>
             </div>
-
-            {/* About */}
-            <div className="flex flex-col space-y-6">
-              <h3 className="!text-white text-base font-semibold">About</h3>
-              <ul className="space-y-3 !text-white text-sm font-medium">
-                <li>
-                  <Link
-                    to="/contact-us"
-                    className="!text-white transition-colors"
-                  >
-                    Contact
-                  </Link>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          {/* Description Column */}
-          <div className="md:w-full lg:w-sm text-center lg:text-left">
-            <p className="!text-white text-sm font-medium leading-relaxed">
-              Project MurArt provides enormous digital canvases that would be
-              nearly impossible to fully paint by one person. We have developed
-              a collaboration system that will allow the creation of the most
-              stunning art pieces the world has ever seen. Anyone can paint a
-              part of the canvas and solidify your spot in history!
-            </p>
           </div>
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-8 border-t border-[#545454] text-center">
+        <div className="xl:pt-8 pt-5 border-t border-[#545454] text-center">
           <p className="!text-white text-sm">
             &copy; 2026 MurArt. All rights reserved.
           </p>
