@@ -155,7 +155,7 @@ const ContributionSidebar = ({ projectId,selectedContributionId, isContributor,o
         return () => { document.body.style.overflow = 'auto'; };
     }, [isOpen]);
     return (
-        <div ref={sidebarRef} className={`fixed  top-0 right-0 h-screen z-40 flex items-center  `}
+        <div ref={sidebarRef} className={`fixed  top-0 right-0 h-screen flex items-center z-[9999]  `}
             style={{
                 width: isOpen ? `${SIDEBAR_WIDTH}px` : '',
                 right: isOpen ? '0px' : `-${SIDEBAR_WIDTH}px`, // Panel ki animation
@@ -179,7 +179,7 @@ const ContributionSidebar = ({ projectId,selectedContributionId, isContributor,o
                     }
 
                 }}
-                className="absolute top-1/2 -translate-y-1/2 !bg-[#654321] !text-[17px] text-white py-2 px-8 rounded-l-md shadow-lg cursor-pointer z-50"
+                className="absolute top-1/2 -translate-y-1/2 !bg-[#0F0D0D] !text-[17px] text-white py-2 px-8 rounded-l-md shadow-lg cursor-pointer z-50"
                 style={{
                     right: '100%', // Yeh button ko panel ke bilkul bahar (left side) rakhega
                     writingMode: 'vertical-rl',
@@ -191,22 +191,24 @@ const ContributionSidebar = ({ projectId,selectedContributionId, isContributor,o
 
 
             {
+
+                
                 <div
-                    className={`w-[350px] h-screen bg-[#f8f0e3] border-l-4 border-[#5d4e37] shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'
+                    className={`w-[350px] h-screen bg-[#1D1D1D] shadow-2xl transform transition-transform duration-300 ease-in-out  flex flex-col ${isOpen ? 'translate-x-0' : 'translate-x-full'
                         }`}
                 >
 
-
+{/* <p className='text-[16px] font-semibold text-center !text-white py-3'>Contributions</p> */}
                     <div className="flex ">
                         <button
                             onClick={() => setActiveTab('my')}
-                            className={`flex-1 py-4 px-6 text-[19.2px] cursor-pointer ${activeTab === 'my' ? 'border-b-2 font-bold text-[#5d4e37]' : 'text-[#654321]'}`}
+                            className={`flex-1 py-4 px-6 text-[14px] cursor-pointer font-semibold ${activeTab === 'my' ? 'border-b-2  text-[#E23373]' : 'text-[#ffffff]'}`}
                         >
                             My Contributions
                         </button>
                         <button
                             onClick={() => setActiveTab('project')}
-                            className={`flex p-4 text-[19.2px] cursor-pointer ${activeTab === 'project' ? 'border-b-2  font-bold text-[#5d4e37]' : 'text-[#654321]'}`}
+                            className={`flex py-4 px-6 text-[14px] cursor-pointer font-semibold ${activeTab === 'project' ? 'border-b-2   text-[#E23373]' : 'text-[#ffffff]'}`}
                         >
                             Project Contributions
                         </button>
@@ -214,11 +216,11 @@ const ContributionSidebar = ({ projectId,selectedContributionId, isContributor,o
                     </div>
 
                     <div ref={listContainerRef} onScroll={handleScroll} className="p-4 flex-grow overflow-y-auto">
-                        <p className="text-[14.4px] italic text-[#654321] mb-4">
+                        <p className="text-[14px] font-medium text-[#ffffff] mb-4 ">
                             If a contribution receives over 50% downvotes from all project contributors it will be rejected and permanently deleted from the canvas...
                         </p>
 
-
+ 
                         {isModalOpen && (
                             <AddContributorModal
                                 projectId={currentProject?._id}
@@ -232,7 +234,7 @@ const ContributionSidebar = ({ projectId,selectedContributionId, isContributor,o
                         )}
 
                         {activeTab !== 'my' && <div className="flex items-center  gap-8 mb-4">
-                            <label htmlFor="filter" className="!font-semibold text-[#654321]">
+                            <label htmlFor="filter" className="!font-semibold  text-sm text-[#ffffff]">
                                 Filter By:
                             </label>
 

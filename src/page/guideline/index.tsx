@@ -13,19 +13,19 @@ const GuidelinePage: React.FC = () => {
           <img
             src="/assets/guideline-hero-section.svg"
             alt="Guideline Hero"
-            className="w-full h-[510px] md:h-[650px] lg:h-[758px] xl:h-[808px] object-cover"
+            className="w-full h-[510px] md:h-[650px] lg:h-[758px] xl:h-[808px] object-[80%] object-cover md:object-cover"
           />
         </div>
 
         {/* Hero Content */}
         <div className="max-w-[1440px] m-auto px-6 lg:px-8 pt-12 sm:pt-0 relative z-10 w-full">
           {/* Content Container */}
-          <div className="w-full lg:w-1/2 flex flex-col items-center lg:items-start text-center lg:text-left lg:space-y-8 space-y-4">
+          <div className="w-full lg:w-1/2 flex flex-col items-center lg:items-start text-center lg:text-left lg:space-y-8 space-y-3">
             <span className="text-[#FFFFFF] text-sm md:text-base  font-medium">
               Project Guideline
             </span>
 
-            <h1 className="text-2xl md:text-3xl lg:text-4xl !text-white lg:text-[46px] font-bold text-white leading-[1.1] lg:leading-[1.1] ">
+            <h1 className="text-2xl md:text-3xl lg:text-4xl !text-white lg:text-[46px] font-semibold leading-[1.1] lg:leading-[1.1] ">
               Guideline
             </h1>
 
@@ -39,7 +39,7 @@ const GuidelinePage: React.FC = () => {
 
             <Link to="/gallery">
               <div className="relative p-[1px] rounded-full bg-gradient-to-r from-[#E23373] to-[#FEC133] group hover:opacity-90 transition-opacity">
-                <Button className="rounded-full !px-[32px] py-[7px] bg-black text-white hover:bg-black/90 transition-all duration-300 flex items-center gap-2 text-base font-semibold border-none relative z-10">
+                <Button className="rounded-full !px-[32px] py-[7px] bg-black text-white hover:bg-black/90 transition-all duration-300 flex items-center gap-2 md:text-base text-sm font-semibold border-none relative z-10">
                   Explore Now
                   <ArrowUpRight className="w-5 h-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                 </Button>
@@ -55,7 +55,7 @@ const GuidelinePage: React.FC = () => {
         className="relative z-10 py-10 lg:py-20  bg-[#0F0D0D]"
       >
         <div className="max-w-[1440px] mx-auto px-6 lg:px-8 ">
-          <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-24">
+          <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-24">
             {/* Left Collage Section */}
             <div className="relative w-full lg:w-1/2 flex items-center justify-center">
               <div className="grid grid-cols-3 gap-2 sm:gap-4 items-center w-full max-w-[600px]">

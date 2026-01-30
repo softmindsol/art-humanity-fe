@@ -110,37 +110,37 @@ export default function ContributorsDropdown({ currentProject, loading, setLoadi
    
 
     return (
-        <div ref={dropdownRef} className="relative w-full mb-5">
+        <div ref={dropdownRef} className="relative w-full mb-5 border-[1px] border-[#ffffff]">
             <Button
                 variant="outline"
                 size="sm"
                 className="flex items-center justify-between gap-2 w-full"
                 onClick={() => setIsOpen(!isOpen)} // Toggle visibility on click
             >
-                <div className="flex items-center gap-2">
-                    <Users2 className="h-8 w-12" />
+                <div className="flex items-center gap-2 text-[#ffffff] ">
+                    <Users2 className="h-8 w-12 " />
                     <span className="text-[16px]">Other Contributors</span>
                     <span className="rounded bg-muted py-0.5 text-sm">({count})</span>
                 </div>
-                <ChevronDown className={`h-4 w-4 opacity-70 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`h-4 w-4 opacity-70 text-[#ffffff] transition-transform ${isOpen ? 'rotate-180' : ''}`} />
             </Button>
 
             {/* STEP 3: Conditional Dropdown Content */}
             {isOpen && (
                 <div
-                    className="absolute top-full mt-2 w-full z-20 bg-[#f8f0e3] border-2 border-[#5d4e37] rounded-lg shadow-xl text-[#] font-[Georgia, serif] p-1"
+                    className="absolute top-full mt-2 w-full z-20 bg-[#141414] border-1 border-[#ffffff] rounded-lg shadow-xl text-[#] font-[Georgia, serif] p-1"
                 >
                     {/* Baaqi saara content iske andar daal dein */}
                     {isLoading ? (
-                        <div className="flex items-center gap-2 p-4 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2 p-4 text-sm !text-white">
                             <Loader2 className="h-4 w-4 animate-spin" />
                             Loading contributors…
                         </div>
                     ) : (
                         <Command shouldFilter={false}>
-                            <CommandInput placeholder="Search contributors…" value={searchValue} onValueChange={setSearchValue} />
+                            <CommandInput className="placeholder:text-[#ffffff]" placeholder="Search contributors…" value={searchValue} onValueChange={setSearchValue} />
                             {filteredUsers.length === 0 ? (
-                                <CommandEmpty className="py-8 text-muted-foreground text-center">No contributors yet.</CommandEmpty>
+                                <CommandEmpty className="py-8 text-muted-foreground text-center text-[#ffffff]">No contributors yet.</CommandEmpty>
                             ) : (
                                 <CommandGroup className="p-0">
                                     <div className="overflow-y-auto max-h-64">
@@ -148,7 +148,7 @@ export default function ContributorsDropdown({ currentProject, loading, setLoadi
                                             // ... (User list ka poora JSX code yahan paste karein)
                                             const isSelf = c.id && user?._id && c.id === user._id;
                                             return (
-                                                <CommandItem key={c.id || c.name} className="flex w-full items-center justify-between gap-2 px-3 py-2">
+                                                <CommandItem key={c.id || c.name} className="flex w-full items-center text-[#ffffff] justify-between gap-2 px-3 py-2">
                                                     {/* User info */}
                                                     <div className="flex min-w-0 items-center gap-3">
                                                         <Avatar className="h-7 w-7"><AvatarFallback className="text-xs">{initials(c.name)}</AvatarFallback></Avatar>
@@ -176,17 +176,19 @@ export default function ContributorsDropdown({ currentProject, loading, setLoadi
 
             {/* Confirm Remove Dialog */}
             <AlertDialog open={!!confirmUser} onOpenChange={(o) => !o && setConfirmUser(null)}>
-                <AlertDialogContent className="bg-[#5d4037] border-2 border-[#3e2723] text-white font-[Georgia, serif]">
-                    <AlertDialogHeader>
-                        <AlertDialogTitle className="text-2xl !text-white text-center">Remove contributor?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            This will remove <strong>{confirmUser?.name}</strong> from the project. They will no longer be able to contribute.
+                <AlertDialogContent className="bg-[#0F0D0D] border border-white/10 text-white !font-sans rounded-[12px] shadow-2xl max-w-[500px] p-8">
+                    <AlertDialogHeader className="gap-2">
+                        <AlertDialogTitle className="text-2xl sm:text-[28px] font-semibold !text-white text-center">Remove contributor?</AlertDialogTitle>
+                        <AlertDialogDescription className="text-center text-[#E0E0E0] text-base leading-relaxed pt-2">
+                            This will remove <strong className="text-white">{confirmUser?.name}</strong> from the project. They will no longer be able to contribute.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel className="cursor-pointer">Cancel</AlertDialogCancel>
+                    <AlertDialogFooter className="flex gap-4 sm:justify-center mt-6 w-full">
+                        <AlertDialogCancel className="w-full sm:w-[180px] PY-1 rounded-full border border-white/20 bg-transparent hover:bg-white/5 hover:text-white text-white transition-colors uppercase tracking-wide text-sm font-semibold">
+                        Cancel
+                      </AlertDialogCancel>
                         <Button
-                            className="cursor-pointer border-white bg-[#8b795e] text-white hover:bg-[#a1887f] disabled:opacity-50"
+                            className="bg-[#BE0000] text-white hover:bg-[#B71C1C] px-5 py-1 text-sm font-medium rounded-full border-none transition-all disabled:opacity-50 min-w-[160px] cursor-pointer"
                             onClick={() => confirmUser && handleRemove(confirmUser.id, confirmUser.name)}
                             disabled={loading}
                         >

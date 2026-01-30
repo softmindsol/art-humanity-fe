@@ -11,7 +11,7 @@ const HeroSection: React.FC = () => {
         <img
           src="/assets/hero-section-img.svg"
           alt="Hero Background"
-          className="w-full h-[510px] md:h-[650px] lg:h-[758px] xl:h-[808px] object-cover"
+          className="w-full h-[510px] md:h-[650px] lg:h-[758px] xl:h-[808px] object-[65%] object-cover md:object-cover"
         />
       </div>
 
