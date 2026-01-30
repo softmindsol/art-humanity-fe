@@ -39,12 +39,12 @@ const CustomSelect = ({ options, value, onChange }: CustomSelectProps) => {
             <button
                 type="button"
                 onClick={() => setIsOpen(!isOpen)}
-                className="block w-full appearance-none text-left text-[12px] md:text-[14px] p-2 pr-8 border-[2px] border-[#654321] text-[#654321] rounded-md bg-transparent focus:outline-none focus:ring-2 focus:ring-[#8b795e]"
+                className="block w-full appearance-none text-left text-[12px] md:text-[14px] p-2 pr-8 border-[1px] border-[#ffffff] text-[#ffffff] rounded-md bg-transparent focus:outline-none focus:ring-2 focus:ring-[#8b795e]"
             >
                 {selectedLabel}
 
                 {/* Custom Arrow */}
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[#654321]">
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-[#ffffff]">
                     <ChevronDown
                         size={16}
                         className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
@@ -54,12 +54,12 @@ const CustomSelect = ({ options, value, onChange }: CustomSelectProps) => {
 
             {/* Yeh options ki list hai jo conditionally render hogi */}
             {isOpen && (
-                <div className="absolute top-full mt-1 w-full z-10 bg-[#f8f0e3] border-[2px] border-[#654321] rounded-md shadow-lg py-1">
+                <div className="absolute top-full mt-1 w-full z-10 bg-[#141414] border-[1px] border-[#ffffff] rounded-md shadow-lg py-1">
                     {options.map((option) => (
                         <div
                             key={option.value}
                             onClick={() => handleOptionClick(option.value)}
-                            className={`px-3 py-2 text-[12px] md:text-[14px] text-[#654321] cursor-pointer hover:bg-[#eaddc7] ${value === option.value ? 'font-bold bg-[#eaddc7]' : ''}`}
+                            className={`px-3 py-2 text-[12px] md:text-[14px] text-[#ffffff] cursor-pointer hover:bg-[#E23373] ${value === option.value ? 'font-bold bg-[#E23373]' : ''}`}
                         >
                             {option.label}
                         </div>

@@ -670,7 +670,7 @@ const InfoBox = ({ zoom, worldPos, boundaryRef }: any) => {
                         newX = 20;
                         newY = boundaryRect.height - infoBoxRect.height - 20;
                     } else {
-                        newX = 200;
+                        newX = 0;
                         newY = 0;
                     }
                 }
@@ -757,7 +757,7 @@ const InfoBox = ({ zoom, worldPos, boundaryRef }: any) => {
                     <span className="text-white">Zoom:</span>
                     <span className="text-white font-medium">{Math.round(zoom * 100)}%</span>
                 </div>
-                <div className="flex items-center gap-1">
+               <div className="flex items-center gap-1">
                      <span className="text-white">World Pos:</span>
                      <span className="text-white font-medium">({Math.round(worldPos.x)}, {Math.round(worldPos.y)})</span>
                 </div>
