@@ -13,7 +13,7 @@ const GuidelinePage: React.FC = () => {
           <img
             src="/assets/guideline-hero-section.svg"
             alt="Guideline Hero"
-            className="w-full h-full object-[80%] object-cover md:object-cover"
+            className="w-full h-full opacity-60 lg:opacity-100 object-[80%] object-cover md:object-cover"
           />
         </div>
 
@@ -29,12 +29,12 @@ const GuidelinePage: React.FC = () => {
               Guideline
             </h1>
 
-            <p className="!text-white !font-medium text-sm lg:text-base 2xl:text-[22px] max-w-xl leading-relaxed drop-shadow-md">
-              At MurArt, our mission is to empower artists, creators, and
-              curators with a platform that’s easy to use, inspiring, and fair.
-              These guidelines help you understand how to participate, create,
-              and engage within the MurArt community whether you’re showcasing
-              work, exploring collections, or interacting with other creators.
+            <p className="!text-white !font-medium text-sm lg:text-base 2xl:text-[22px] lg:max-w-2xl leading-relaxed drop-shadow-md">
+              At MurArt, Our Mission Is To Empower Artists, Creators, And
+              Curators With A Platform That’s Easy To Use, Inspiring, And Fair.
+              These Guidelines Help You Understand How To Participate, Create,
+              And Engage Within The MurArt Community Whether You’re Showcasing
+              Work, Exploring Collections, Or Interacting With Other Creators.
             </p>
 
             <Link to="/gallery">

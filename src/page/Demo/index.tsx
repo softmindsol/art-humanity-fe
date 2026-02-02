@@ -23,15 +23,15 @@ const DemoPage: React.FC = () => {
         {/* Content Container */}
         <div className="max-w-[1440px] w-full mx-auto md:px-10 px-8 relative z-10 flex items-center h-full">
           <div className="max-w-2xl pt-20">
-            <span className="!text-white text-sm md:text-base tracking-widest md:mb-4 mb-2 block">
+            <span className="!text-white text-sm md:text-base tracking-widest md:mb-3 mb-2 block">
               Start Your Artwork
             </span>
 
-            <h1 className="text-[28px] md:text-[34px] lg:text-[46px] font-semibold !text-white lg:mb-6 mb-4 leading-tight">
+            <h1 className="text-[28px] md:text-[34px] lg:text-[46px] font-semibold !text-white lg:mb-5 mb-4 leading-tight">
               Demo
             </h1>
 
-            <p className="!text-white text-sm lg:text-base xl:text-[22px] leading-relaxed lg:mb-10 mb-6 max-w-xl">
+            <p className="!text-white text-sm lg:text-base xl:text-[22px] leading-relaxed lg:mb-10 mb-6 lg:max-w-xl xl:max-w-2xl">
               Explore Our Collection Of Completed Collaborative Canvases And
               Step Into A World Where Creativity Knows No Borders. Each
               Masterpiece You’ll Find Here Is The Result Of Countless Artists
@@ -43,7 +43,7 @@ const DemoPage: React.FC = () => {
 
             <Link to="/gallery">
               <div className="relative inline-block w-fit p-[1px]  rounded-full bg-gradient-to-r from-[#E23373] to-[#FEC133] group hover:opacity-90 transition-opacity">
-                <Button className="rounded-full !w-fit  px-[17px] py-[7px] bg-black text-white hover:bg-black/90 transition-all duration-300 flex items-center gap-2 text-base font-semibold border-none relative z-10">
+                <Button className="rounded-full !w-fit lg:!px-[27px] !px-[17px] py-[7px] bg-black text-white hover:bg-black/90 transition-all duration-300 flex items-center gap-2 text-base font-semibold border-none relative z-10">
                   Explore Now
                   <ArrowUpRight className="w-5 h-5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                 </Button>
