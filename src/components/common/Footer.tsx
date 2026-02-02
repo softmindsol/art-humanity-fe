@@ -72,67 +72,76 @@ const Footer = () => {
                 <h3 className="!text-white text-[16px] font-semibold">
                   Explore
                 </h3>
-                <ul className="md:space-y-3 space-y-2 !text-white text-sm font-medium">
-                  <li>
-                    <Link
-                      to="/gallery"
-                      className="!text-white transition-colors"
-                    >
-                      Gallery
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="/projects"
-                      className="!text-white transition-colors"
-                    >
-                      Projects
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      to="/guideline"
-                      className="!text-white transition-colors"
-                    >
-                      Guideline
-                    </Link>
-                  </li>
-                </ul>
+                <div className="ftr">
+                  <ul className="md:space-y-3 space-y-2 !text-white text-sm font-medium">
+                    <li>
+                      <Link
+                        to="/gallery"
+                        className="!text-white transition-colors"
+                      >
+                        Gallery
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/projects"
+                        className="!text-white transition-colors"
+                      >
+                        Projects
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/guideline"
+                        className="!text-white transition-colors"
+                      >
+                        Guideline
+                      </Link>
+                    </li>
+                  </ul>
+                </div>
               </div>
               {/* Participate */}
               <div className="flex flex-col space-y-6">
                 <h3 className="!text-white text-base font-semibold">
                   Participate
                 </h3>
-                <ul className="md:space-y-3 space-y-2 !text-white text-sm font-medium">
-                  <li>
-                    <Link
-                      to="/projects"
-                      className="!text-white transition-colors"
-                    >
-                      Join a Project
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/demo" className="!text-white transition-colors">
-                      Try Demo
-                    </Link>
-                  </li>
-                </ul>
+                <div className="ftr">
+                  <ul className="md:space-y-3 space-y-2 !text-white text-sm font-medium">
+                    <li>
+                      <Link
+                        to="/projects"
+                        className="!text-white transition-colors"
+                      >
+                        Join a Project
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/demo"
+                        className="!text-white transition-colors"
+                      >
+                        Try Demo
+                      </Link>
+                    </li>
+                  </ul>
+                </div>
               </div>
               {/* About */}
               <div className="flex flex-col space-y-6">
                 <h3 className="!text-white text-base font-semibold">About</h3>
-                <ul className="md:space-y-3 space-y-2 !text-white text-sm font-medium">
-                  <li>
-                    <Link
-                      to="/contact-us"
-                      className="!text-white transition-colors"
-                    >
-                      Contact
-                    </Link>
-                  </li>
-                </ul>
+                <div className="ftr">
+                  <ul className="md:space-y-3 space-y-2 !text-white text-sm font-medium">
+                    <li>
+                      <Link
+                        to="/contact-us"
+                        className="!text-white transition-colors"
+                      >
+                        Contact
+                      </Link>
+                    </li>
+                  </ul>
+                </div>
               </div>
             </div>
             {/* Description Column */}
