@@ -111,7 +111,7 @@ const ContactUs: React.FC = () => {
           </form>
 
           <img
-            src="/assets/gradient.svg"
+            src="/assets/gradient.svg" 
             alt=""
             className="absolute 2xl:-right-20 lg:top-100 md:top-104 md:-right-10 -right-8 -translate-y-1/2 w-1/2 h-[650px] opacity-70 pointer-events-none"
           />
