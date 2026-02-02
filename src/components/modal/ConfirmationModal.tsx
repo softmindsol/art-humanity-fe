@@ -40,31 +40,36 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
   if (!isOpen) return null; // Do not render the modal if it's not open
 
   return (
-    <div className="fixed inset-0  backdrop-blur-sm flex justify-center items-center z-[2000]">
-      <div className="relative bg-[#0F0D0D] w-[90%] sm:w-[450px] border border-white/20 rounded-[12px]  p-8 font-montserrat animation-fade-in transform transition-all scale-100">
+    <div className="fixed inset-0 backdrop-blur-sm flex justify-center items-center z-[2000]">
+      <div className="relative bg-[#0F0D0D] w-[90%] sm:w-[500px] border border-white/20 rounded-[12px]  xl:p-8 md:p-6 p-4 font-montserrat animation-fade-in transform transition-all scale-100">
         {/* Decorative Gradient Glow */}
         <div className="flex flex-col items-center text-center">
-          <div className="w-16 h-16 rounded-full  flex items-center justify-center mb-6 border border-red-500/20 ">
-            <LogOut className="text-red-500" size={32} />
+          <div className="w-16 h-16 rounded-full flex items-center justify-center mb-6 border border-red-500/30 ">
+            <LogOut className="text-red-500 lg:size-6 size-5 ml-1" />
           </div>
 
-          <h2 className="text-2xl font-bold !text-white mb-3">{title}</h2>
+          <h2 className="lg:text-2xl md:text-xl text-lg font-bold !text-white mb-3">
+            {title}
+          </h2>
           <p className="text-[#AAB2C7] text-sm leading-relaxed mb-8 max-w-[90%]">
             {description}
           </p>
 
-          <div className="flex gap-4 w-full">
-            <Button
-              onClick={onClose}
-              variant="outline"
-              className="flex-1 h-11 rounded-full border border-white/10 bg-transparent text-white hover:bg-white/5 hover:text-white transition-all font-medium"
-            >
-              {cancelText}
-            </Button>
+          <div className="flex md:gap-3.5 gap-3 w-full">
+            <div className="p-[1.5px] flex-1 rounded-full bg-gradient-to-r from-[#E23373] to-[#FEC133]">
+              <Button
+                onClick={onClose}
+                variant="outline"
+                className="flex-1 h-10 w-full rounded-full bg-black text-white 
+               hover:bg-white/5 transition-all font-medium border-0"
+              >
+                {cancelText}
+              </Button>
+            </div>
             <Button
               onClick={onConfirm}
               disabled={isLoading}
-              className="flex-1 h-11 rounded-full border-none bg-gradient-to-r from-red-600 to-red-500 text-white hover:opacity-90 transition-all font-medium shadow-lg shadow-red-500/20"
+              className="flex-1 h-11 rounded-full border-none bg-[#BE0000] text-white hover:bg-[#d70f0f] transition-all font-medium hover:shadow-lg hover:shadow-red-500/30 cursor-pointer"
             >
               {isLoading ? (
                 <span className="flex items-center gap-2">

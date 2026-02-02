@@ -224,7 +224,7 @@ const Header = () => {
     <>
       {/* Fixed Pill Container */}
       <div className="fixed top-6 left-0 right-0 z-[1000] px-6 2xl:px-8">
-        <header className="flex items-center !justify-between md:!py-[5px] !py-[3px] rounded-full border border-white/20 shadow-2xl bg-black/10 backdrop-blur-[2px] w-full xl:min-w-[1400px] mx-auto">
+        <header className="flex items-center !justify-between md:!py-[5px] !py-[3px] rounded-full border border-white/20 shadow-2xl bg-[#0000001A] backdrop-blur-[3px] w-full xl:min-w-[1400px] mx-auto">
           {/* Logo Section */}
           <div className="logo-container">
             <Link to="/" className="logo-link flex items-center gap-3">
@@ -323,7 +323,7 @@ const Header = () => {
                   className="relative cursor-pointer group"
                 >
                   {/* Gradient Border Container */}
-                  <div className="absolute -inset-0.5 bg-gradient-to-r from-[#E23373] to-[#FEC133] rounded-xl opacity-70 group-hover:opacity-100 transition duration-200 blur-[0.5px]"></div>
+                  <div className="absolute -inset-0.5 bg-gradient-to-r from-[#E13372] to-[#FEC133] rounded-xl opacity-70 group-hover:opacity-100 transition duration-200 blur-[0.5px]"></div>
                   {/* Inner Black Box */}
                   <div className="relative w-10 h-10 bg-black rounded-xl flex items-center justify-center border border-white/10">
                     <Bell size={20} className="text-white" />
@@ -417,7 +417,7 @@ const Header = () => {
                     <DropdownMenuSeparator className="bg-white/10" />
 
                     <Link to="/profile">
-                      <DropdownMenuItem className="cursor-pointer !text-white hover:bg-[#0F0D0D] font-semibold transition-colors flex items-center gap-2 p-2.5 rounded-full mx-1 my-0.5">
+                      <DropdownMenuItem className="cursor-pointer !text-white hover:bg-gradient-to-r from-[#E13372] to-[#FEC133] font-semibold transition-colors flex items-center gap-2 p-2.5 rounded-full mx-1 my-0.5">
                         <UserCircle2 size={16} />
                         <span>Profile</span>
                       </DropdownMenuItem>
@@ -425,7 +425,7 @@ const Header = () => {
 
                     <DropdownMenuItem
                       onClick={handleSupportClick}
-                      className="cursor-pointer !text-white hover:bg-[#0F0D0D] font-semibold   transition-colors flex items-center gap-2 p-2.5 rounded-full mx-1 my-0.5"
+                      className="cursor-pointer !text-white hover:bg-gradient-to-r from-[#E13372] to-[#FEC133] font-semibold   transition-colors flex items-center gap-2 p-2.5 rounded-full mx-1 my-0.5"
                     >
                       <Heart size={16} />
                       <span>Support Us</span>
@@ -433,7 +433,7 @@ const Header = () => {
 
                     <DropdownMenuItem
                       onClick={handleLogout}
-                      className="cursor-pointer !text-white hover:bg-[#0F0D0D] font-semibold focus:bg-[#0F0D0D] focus:text-white transition-colors flex items-center gap-2 p-2.5 rounded-full mx-1 my-0.5"
+                      className="cursor-pointer !text-white hover:bg-gradient-to-r from-[#E13372] to-[#FEC133] font-semibold focus:bg-[#0F0D0D] focus:text-white transition-colors flex items-center gap-2 p-2.5 rounded-full mx-1 my-0.5"
                     >
                       <LogOut size={16} />
                       <span>Logout</span>
@@ -456,7 +456,7 @@ const Header = () => {
           <div className="md:hidden relative z-100 flex items-center">
             <button
               onClick={() => setIsSidebarOpen(true)}
-              className="!text-white hover:bg-white/10 p-2 rounded-full transition-colors"
+              className="!text-white hover:bg-white/15 p-2 rounded-full transition-colors"
             >
               <Menu size={24} />
             </button>

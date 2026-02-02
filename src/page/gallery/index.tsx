@@ -177,26 +177,26 @@ const GalleryPage: React.FC = () => {
       {/* Hero Section */}
       <section className="relative w-full min-h-[75vh] flex items-center overflow-hidden">
         {/* Background Image */}
-        <div className="absolute inset-0 z-0">
+        <div className="absolute h-full inset-0 z-0">
           <img
             src="/assets/gallery-art-image.svg"
             alt="Gallery Hero"
-            className="w-full h-full object-[80%] object-cover md:object-cover"
+            className="w-full h-full opacity-60 lg:opacity-100 object-[80%] object-cover md:object-cover"
           />
         </div>
 
-        <div className="max-w-[1440px] mx-auto px-6 lg:px-8 pb-12 pt-32 relative z-10 w-full">
+        <div className="max-w-[1440px] mx-auto md:px-10 px-8 pb-12 pt-32 relative z-10 w-full">
           {/* Content Container */}
-          <div className="w-full lg:w-1/2 flex flex-col items-center lg:items-start text-center lg:text-left lg:space-y-8 space-y-4">
+          <div className="w-full lg:w-1/2 flex flex-col items-start text-left xl:space-y-6 space-y-4">
             <span className="text-[#FFFFFF] text-sm md:text-base font-medium">
               Collections
             </span>
 
-            <h1 className="text-2xl md:text-3xl xl:text-4xl !text-white lg:text-[46px] font-bold text-white leading-[1.1] lg:leading-[1.1] ">
+            <h1 className="text-2xl lg:text-3xl xl:text-4xl !text-white font-bold leading-[1.1] lg:leading-[1.1] ">
               Project Gallery
             </h1>
 
-            <p className="!text-white !font-medium text-sm lg:text-base 2xl:text-[22px] max-w-xl leading-relaxed drop-shadow-md">
+            <p className="!text-white !font-medium text-sm lg:text-base 2xl:text-[22px] max-w-[756px] leading-relaxed drop-shadow-md">
               Explore Our Collection Of Completed Collaborative Canvases And
               Step Into A World Where Creativity Knows No Borders. Each
               Masterpiece You'll Find Here Is The Result Of Countless Artists

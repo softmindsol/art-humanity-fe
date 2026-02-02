@@ -13,14 +13,14 @@ const GuidelinePage: React.FC = () => {
           <img
             src="/assets/guideline-hero-section.svg"
             alt="Guideline Hero"
-            className="w-full h-[510px] md:h-[650px] lg:h-[758px] xl:h-[808px] object-[80%] object-cover md:object-cover"
+            className="w-full h-full opacity-60 lg:opacity-100 object-[80%] object-cover md:object-cover"
           />
         </div>
 
         {/* Hero Content */}
-        <div className="max-w-[1440px] m-auto px-6 lg:px-8 pt-12 sm:pt-0 relative z-10 w-full">
+        <div className="max-w-[1440px] m-auto md:px-10 px-8 pt-12 sm:pt-0 relative z-10 w-full">
           {/* Content Container */}
-          <div className="w-full lg:w-1/2 flex flex-col items-center lg:items-start text-center lg:text-left lg:space-y-8 space-y-3">
+          <div className="w-full lg:w-1/2 flex flex-col items-start lg:space-y-8 space-y-3">
             <span className="text-[#FFFFFF] text-sm md:text-base  font-medium">
               Project Guideline
             </span>
@@ -29,12 +29,12 @@ const GuidelinePage: React.FC = () => {
               Guideline
             </h1>
 
-            <p className="!text-white !font-medium text-sm lg:text-base 2xl:text-[22px] max-w-xl leading-relaxed drop-shadow-md">
-              At MurArt, our mission is to empower artists, creators, and
-              curators with a platform that’s easy to use, inspiring, and fair.
-              These guidelines help you understand how to participate, create,
-              and engage within the MurArt community whether you’re showcasing
-              work, exploring collections, or interacting with other creators.
+            <p className="!text-white !font-medium text-sm lg:text-base 2xl:text-[22px] lg:max-w-2xl leading-relaxed drop-shadow-md">
+              At MurArt, Our Mission Is To Empower Artists, Creators, And
+              Curators With A Platform That’s Easy To Use, Inspiring, And Fair.
+              These Guidelines Help You Understand How To Participate, Create,
+              And Engage Within The MurArt Community Whether You’re Showcasing
+              Work, Exploring Collections, Or Interacting With Other Creators.
             </p>
 
             <Link to="/gallery">
