@@ -185,7 +185,7 @@ const ProfilePage = () => {
   const fallbackLetter = profile?.fullName?.charAt(0)?.toUpperCase() || "U";
 
   return (
-    <div className="min-h-screen bg-[#0F0D0D] text-white font-montserrat pb-20 pt-10 lg:mt-26 mt-18">
+    <div className="min-h-screen bg-[#0F0D0D] text-white font-montserrat lg:pb-20 pb-10 pt-10 lg:mt-26 mt-18">
       <div className="max-w-[1440px] mx-auto md:px-10 px-8">
         {/* Header */}
         <div className="text-center lg:mb-12 mb-2">
@@ -263,7 +263,7 @@ const ProfilePage = () => {
             </h3>
             <div className="lg:space-y-6 space-y-3">
               <div className="space-y-1">
-                <Label className="text-base font-semibold !text-white">
+                <Label className="lg:text-base text-sm font-semibold !text-white">
                   Name
                 </Label>
                 <Input
@@ -275,7 +275,7 @@ const ProfilePage = () => {
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-base font-semibold !text-white">
+                <Label className="lg:text-base text-sm font-semibold !text-white">
                   Email
                 </Label>
                 <Input
