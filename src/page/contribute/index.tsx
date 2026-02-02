@@ -439,41 +439,48 @@ const ActiveProjects: React.FC = () => {
           />
         )}
       </div>
-      <AlertDialog
-        open={dialogState.isOpen}
-        onOpenChange={(isOpen) => setDialogState({ ...dialogState, isOpen })}
-      >
-        <AlertDialogContent className="bg-[#0F0D0D] border border-white/10  text-white font-montserrat min-w-[750px] p-8 rounded-[12px]">
-          <AlertDialogHeader className="space-y-4">
-            <AlertDialogTitle className="text-[28px] xl:text-[34px] font-semibold text-center leading-tight !text-white">
-              {dialogState.actionType === "DELETE"
-                ? "Do you want to Delete the project?"
-                : `Do you want to ${dialogState.actionText?.toLowerCase()} your project?`}
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-center text-[#ffffff] text-base 2xl:text-[20px] font-medium min-w-[700px] mx-auto leading-relaxed">
-              {dialogState.actionType === "DELETE"
-                ? "Are you sure you want to delete this project? This action can't be undone."
-                : "This action will pause your project. This may effect your contributors"}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter className="flex items-center justify-center sm:justify-center gap-4 mt-8 w-full">
-            <AlertDialogCancel className="w-full sm:w-[180px] h-[52px] rounded-full border border-white/20 bg-transparent hover:bg-white/5 hover:text-white text-white transition-colors uppercase tracking-wide text-sm font-semibold">
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              className={`w-full sm:w-[180px] h-[52px] rounded-full text-white transition-colors uppercase tracking-wide text-sm font-semibold border-none 
-                                ${
-                                  dialogState.actionType === "DELETE"
-                                    ? "bg-[#BE0000] hover:bg-red-700"
-                                    : "bg-gradient-to-r from-[#E23373] to-[#FEC133] hover:opacity-90"
-                                }`}
-              onClick={handleConfirmAction}
-            >
-              {dialogState.actionType === "DELETE" ? "Delete" : "Continue"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <div className="px-4 sm:px-6 md:px-8 lg:px-14">
+        <AlertDialog
+          open={dialogState.isOpen}
+          onOpenChange={(isOpen) => setDialogState({ ...dialogState, isOpen })}
+        >
+          <AlertDialogContent className="bg-[#0F0D0D] border border-white/10 text-white font-montserrat w-[calc(100%-2rem)] sm:w-[90%] md:w-[85%] lg:w-[750px] max-w-[750px] p-4 sm:p-6 md:p-8 rounded-[12px] !left-1/2 !top-1/2 !-translate-x-1/2 !-translate-y-1/2 !transform">
+            <AlertDialogHeader className="!space-y-3 sm:!space-y-4">
+              <AlertDialogTitle className="text-lg sm:text-xl md:text-2xl lg:text-[28px] font-semibold text-center leading-tight !text-white px-2 sm:px-0">
+                {dialogState.actionType === "DELETE"
+                  ? "Do you want to Delete the project?"
+                  : `Do you want to ${dialogState.actionText?.toLowerCase()} your project?`}
+              </AlertDialogTitle>
+              <AlertDialogDescription className="text-center text-[#AAB2C7] text-sm sm:text-base lg:text-lg xl:text-xl 2xl:text-[20px] font-medium max-w-[700px] mx-auto leading-relaxed px-2 sm:px-4">
+                {dialogState.actionType === "DELETE"
+                  ? "Are you sure you want to delete this project? This action can't be undone."
+                  : "This action will pause your project. This may effect your contributors"}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mt-4 sm:mt-8 w-full">
+              <AlertDialogCancel className="border-none p-[2px] h-10 sm:h-[48px] lg:h-[52px] w-full sm:flex-1 rounded-full bg-gradient-to-r from-[#E23373] to-[#FEC133] order-2 sm:order-1">
+                <Button
+                  variant="outline"
+                  className="h-full w-full rounded-full bg-black text-white hover:bg-white/5 transition-all font-medium border-0 text-sm sm:text-base"
+                >
+                  Cancel
+                </Button>
+              </AlertDialogCancel>
+              <AlertDialogAction
+                className={`w-full sm:flex-1 h-10 sm:h-[48px] lg:h-[52px] rounded-full border-none text-white transition-all font-medium hover:shadow-lg cursor-pointer order-1 sm:order-2 text-sm sm:text-base
+                    ${
+                      dialogState.actionType === "DELETE"
+                        ? "bg-[#BE0000] hover:bg-[#d70f0f] hover:shadow-red-500/30"
+                        : "bg-gradient-to-r from-[#E23373] to-[#FEC133] hover:opacity-90"
+                    }`}
+                onClick={handleConfirmAction}
+              >
+                {dialogState.actionType === "DELETE" ? "Delete" : "Continue"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
     </div>
   );
 };
