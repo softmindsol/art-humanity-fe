@@ -179,7 +179,7 @@ const ContributionSidebar = ({ projectId,selectedContributionId, isContributor,o
                     }
 
                 }}
-                className="absolute top-1/2 -translate-y-1/2 !bg-[#0F0D0D] !text-[17px] text-white py-2 px-8 rounded-l-md shadow-lg cursor-pointer z-50"
+                className="absolute top-1/2 -translate-y-1/2 border-[1px] border-gray-600 !bg-[#0F0D0D] !text-[17px] text-white py-2 px-8 rounded-l-md shadow-lg cursor-pointer z-50"
                 style={{
                     right: '100%', // Yeh button ko panel ke bilkul bahar (left side) rakhega
                     writingMode: 'vertical-rl',
@@ -199,16 +199,16 @@ const ContributionSidebar = ({ projectId,selectedContributionId, isContributor,o
                 >
 
 {/* <p className='text-[16px] font-semibold text-center !text-white py-3'>Contributions</p> */}
-                    <div className="flex ">
+                    <div className="flex border-b-[1px] border-[#0F0D0D]">
                         <button
                             onClick={() => setActiveTab('my')}
-                            className={`flex-1 py-4 px-6 text-[14px] cursor-pointer font-semibold ${activeTab === 'my' ? 'border-b-2  text-[#E23373]' : 'text-[#ffffff]'}`}
+                            className={`flex-1 py-4 px-6 text-[16px] cursor-pointer font-semibold ${activeTab === 'my' ? 'border-b-2  text-[#E23373]' : 'text-[#ffffff]'}`}
                         >
                             My Contributions
                         </button>
                         <button
                             onClick={() => setActiveTab('project')}
-                            className={`flex py-4 px-6 text-[14px] cursor-pointer font-semibold ${activeTab === 'project' ? 'border-b-2   text-[#E23373]' : 'text-[#ffffff]'}`}
+                            className={`flex py-4 px-6 text-[16px] cursor-pointer font-semibold ${activeTab === 'project' ? 'border-b-2   text-[#E23373]' : 'text-[#ffffff]'}`}
                         >
                             Project Contributions
                         </button>
@@ -265,7 +265,7 @@ const ContributionSidebar = ({ projectId,selectedContributionId, isContributor,o
                                         ? "You must join as a contributor to create contributions."
                                         : (isLimitReached ? `You have reached the limit of ${MAX_CONTRIBUTIONS_LIMIT} contributions.` : "Create a new contribution")
                                 }
-                                className="w-full mb-2 btn-primary !bg-[#E23373] disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full mb-2 text-white bg-gradient-to-r rounded-full from-[#E23373] to-[#FEC133] border-none disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <PlusCircle className="mr-2 h-4 w-4" />
                                 {isCreateLoading ? 'Creating...' : 'New Contribution'}
@@ -301,7 +301,7 @@ const ContributionSidebar = ({ projectId,selectedContributionId, isContributor,o
 
                         {/* No More Data Message */}
                         {!isLoading && contributions.length > 0 && currentPage >= totalPages && (
-                            <div className="text-center p-4 text-gray-500">No more contributions to load.</div>
+                            <div className="text-center p-4 text-white">No more contributions to load.</div>
                         )}
 
                     </div>

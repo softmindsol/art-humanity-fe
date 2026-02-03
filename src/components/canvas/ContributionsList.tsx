@@ -148,13 +148,13 @@ const ContributionsList = ({
                         onClick={() => onContributionSelect(contrib._id)}
                     >
                         {/* Header */}
-                        <div className="flex justify-between items-center font-semibold text-sm px-2 py-4 rounded-t-md border-b border-gray-300">
+                        <div className="flex justify-between items-center font-semibold text-sm px-2 py-4 ">
                             <span className="text-[11.7px] text-[#ffffff] ">Pixels: {pixelCount}</span>
                             <span className="text-[13px] font-semibold text-[#ffffff]">By: {artistName}</span>
                         </div>
 
                         {/* Thumbnail */}
-                        <div className="h-40 bg-gray-200 flex items-center  justify-center p-2">
+                        <div className="h-40 bg-gray-200 rounded-[6px] flex items-center  justify-center p-2">
                             {contrib.thumbnailUrl ? (
                                 <img
                                     src={contrib.thumbnailUrl}
@@ -173,26 +173,26 @@ const ContributionsList = ({
                         </div>
 
                         {/* Dates */}
-                        <div className="flex justify-end items-center p-2 bg-[#f8f0e3] border-y border-gray-300">
-                            <span className="text-[11px] text-[#654321]">Created: {formatDate(contrib.createdAt)}</span>
+                        <div className="flex justify-end items-center py-2">
+                            <span className="text-[12px] text-[#ffffff]">Created: {formatDate(contrib.createdAt)}</span>
                             {/* <span className="text-[11px] text-[#654321]">Modified: {formatDate(contrib.updatedAt)}</span> */}
                         </div>
 
                         {/* Voting and Actions */}
-                        <div className="flex justify-between items-center bg-[#f8f0e3] p-1 rounded-[2px] mt-2">
+                        <div className="flex justify-between items-center bg-[#141414] py-1 px-2.5 rounded-[12px] mt-2">
                             <div className="flex items-center justify-center gap-3 w-full">
                                 <button title={!isContributor ? "Only contributors can vote" : "Upvote"} disabled={isLoadingVoted || !isContributor} onClick={(e) => handleVote(e, contrib._id, 'up')} className="flex text-[14px] items-center gap-1 text-[#5d4037] cursor-pointer cursor-pointer disabled:cursor-not-allowed disabled:opacity-50">
-                                    ▲ <span className="font-bold" >{contrib.upvotes || 0}</span>
+                                    <span className='text-[#389C03]'>▲</span> <span className="font-semibold text-[#ffffff]" > {contrib.upvotes || 0}</span>
                                 </button>
                                 <button disabled={isLoadingVoted || !isContributor} title={!isContributor ? "Only contributors can vote" : "Downvote"} onClick={(e) => handleVote(e, contrib._id, 'down')} className="flex text-[14px] items-center gap-1 text-[#f44336] cursor-pointer cursor-pointer disabled:cursor-not-allowed disabled:opacity-50">
-                                    ▼ <span className="font-bold">{contrib.downvotes || 0}</span>
-                                    <span className=" text-[#654321] font-semibold">({downvotePercentage.toFixed(1)}%)</span>
+                                    <span className='text-[#BE0000]'>▼</span> <span className="font-semibold text-[#ffffff]"> {contrib.downvotes || 0}</span>
+                                    <span className="text-[#ffffff] font-semibold">({downvotePercentage.toFixed(1)}%)</span>
                                 </button>
                             </div>
                             {user?.role === 'admin' && (
                                 <button
                                     onClick={(e) => handleDelete(e, contrib._id)}
-                                    className="text-[#654321] cursor-pointer hover:text-[#f44336]"
+                                    className="text-[#ffffff] cursor-pointer hover:text-[#f44336]"
                                     title="Admin: Delete Contribution"
                                 >
                                     <Trash2 size={18} />

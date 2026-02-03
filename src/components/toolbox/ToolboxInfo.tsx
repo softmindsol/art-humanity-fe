@@ -166,7 +166,7 @@ const Toolbox = ({ boundaryRef }: any) => {
             onMouseDown={handleDragMouseDown}
         >
             {/* Drag Handle (Dots) */}
-            <div className="cursor-grab active:cursor-grabbing px-2 text-white/20 hover:text-white/40">
+            <div className="cursor-grab active:cursor-grabbing px-2 text-white hover:text-white/40">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                     <circle cx="8" cy="4" r="2" />
                     <circle cx="8" cy="12" r="2" />
