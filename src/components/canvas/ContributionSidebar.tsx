@@ -265,7 +265,7 @@ const ContributionSidebar = ({ projectId,selectedContributionId, isContributor,o
                                         ? "You must join as a contributor to create contributions."
                                         : (isLimitReached ? `You have reached the limit of ${MAX_CONTRIBUTIONS_LIMIT} contributions.` : "Create a new contribution")
                                 }
-                                className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full mb-2 btn-primary !bg-[#E23373] disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 <PlusCircle className="mr-2 h-4 w-4" />
                                 {isCreateLoading ? 'Creating...' : 'New Contribution'}

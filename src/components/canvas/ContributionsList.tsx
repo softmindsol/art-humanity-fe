@@ -113,8 +113,6 @@ const ContributionsList = ({
         return <div className="p-4 text-center text-gray-500">No project contributions</div>;
     }
 
-    console.log("isContributor:", isContributor)
-
     return (
         <ul className="space-y-4 font-serif">
             {contributions?.map((contrib: any) => {
@@ -141,7 +139,7 @@ const ContributionsList = ({
                                 listItemRefs.current[contrib._id] = el;
                             }
                         }}
-                        className={`bg-white rounded-lg border transition-all shadow-sm p-2 cursor-pointer  ${isActive
+                        className={`bg-[#272727] rounded-lg border transition-all shadow-sm p-2 cursor-pointer  ${isActive
                             ? 'border-2 border-blue-500' // If it's ACTIVE, always apply this
                             : isSelected
                                 ? 'border-[#a1887f] shadow-lg' // Othewise, if it's SELECTED, apply this
@@ -150,13 +148,13 @@ const ContributionsList = ({
                         onClick={() => onContributionSelect(contrib._id)}
                     >
                         {/* Header */}
-                        <div className="flex justify-between items-center px-2 py-4 bg-[#f8f0e3] rounded-t-md border-b border-gray-300">
-                            <span className="text-[11.7px] text-[#5d4037]">Pixels: {pixelCount}</span>
-                            <span className="text-[13px] font-semibold text-[#3e2723]">By: {artistName}</span>
+                        <div className="flex justify-between items-center font-semibold text-sm px-2 py-4 rounded-t-md border-b border-gray-300">
+                            <span className="text-[11.7px] text-[#ffffff] ">Pixels: {pixelCount}</span>
+                            <span className="text-[13px] font-semibold text-[#ffffff]">By: {artistName}</span>
                         </div>
 
                         {/* Thumbnail */}
-                        <div className="h-40 bg-gray-200 flex items-center justify-center p-2">
+                        <div className="h-40 bg-gray-200 flex items-center  justify-center p-2">
                             {contrib.thumbnailUrl ? (
                                 <img
                                     src={contrib.thumbnailUrl}
