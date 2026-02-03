@@ -1060,17 +1060,17 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
       <Dialog open={isTimelapseOpen} onOpenChange={handleModalClose}>
         <DialogContent
           className={`
-            bg-[#5d4037] border-2 border-[#3e2723] text-white font-[Georgia, serif] p-0
+            bg-[#0F0D0D] border-2 border-gray-500 z-[9999] text-white p-0
             transition-all duration-300 ease-in-out
             ${
               isTimelapseFullscreen
-                ? "fixed inset-0 w-full h-full max-w-full max-h-full rounded-none" // Fullscreen styles
-                : "sm:max-w-xl md:max-w-2xl lg:max-w-4xl" // Default modal styles
+                ? "fixed inset-0 w-full h-full max-w-full  max-h-full rounded-none" // Fullscreen styles
+                : "sm:max-w-xl md:max-w-2xl lg:max-w-4xl !h-[95vh]" // Default modal styles
             }
         `}
-        >
+        > 
           <DialogHeader>
-            <DialogTitle className="text-2xl !text-white text-center pt-3">
+            <DialogTitle className="text-lg lg:text-2xl !text-white text-center pt-3">
               Project Timelapse
             </DialogTitle>
           </DialogHeader>
@@ -1108,7 +1108,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
                         ${
                           isTimelapseFullscreen
                             ? "max-h-screen" // Allow full screen height
-                            : "max-h-[85vh]" // Default max height
+                            : "max-h-[80vh]" // Default max height
                         }
                     `}
               >

@@ -118,28 +118,33 @@ const InfoBox = ({ zoom, worldPos, isSaving, saveError, boundaryRef }: any) => {
         };
     }, [isDragging, boundaryRef]);
 
-    // --- RENDER ---
     return (
         <div
             ref={infoBoxRef}
-            className="absolute bg-white/90 p-3 rounded-lg text-base text-[#5d4e37] border border-[#3e2723] shadow-lg select-none"
+            className="absolute bg-[#0F0D0D] p-3 rounded-lg text-base text-[#5d4e37] border border-gray-500 w-full shadow-lg select-none"
             style={{
                 left: `${position.x}px`,
                 top: `${position.y}px`,
-                width: isMinimized ? 'auto' : '200px',
+                width: isMinimized ? 'auto' : '433px',
                 visibility: position.x === 0 && position.y === 0 ? 'hidden' : 'visible',
                 // Apply smooth transitions only when NOT dragging
                 transition: isDragging ? 'none' : 'top 0.3s ease-in-out, left 0.3s ease-in-out, width 0.3s ease-in-out',
             }}
         >
             <div
-                className="w-full flex justify-between items-center gap-5 mb-2"
+                className="w-full flex  items-center gap-2 mb-2"
                 style={{ cursor: isMinimized ? 'default' : 'grab', touchAction: 'none' }}
                 onMouseDown={handleDragMouseDown}
                 onTouchStart={handleDragTouchStart}
             >
-                <p className="text-[#3e2723] text-lg font-bold m-0">Infobox</p>
-                <div className='flex text-[#3e2723] items-center gap-2'>
+                 <div className="cursor-grab active:cursor-grabbing text-[#ffffff]">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="19" r="1"></circle>
+                            <circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="19" r="1"></circle>
+                        </svg>
+                    </div>
+                <p className="text-[#ffffff] text-base font-medium m-0">Infobox</p>
+                <div className='flex text-[#ffffff] items-center gap-2'>
                     {isSmallScreen && (
                         <button
                             onClick={() => setIsMinimized(!isMinimized)}
@@ -149,23 +154,21 @@ const InfoBox = ({ zoom, worldPos, isSaving, saveError, boundaryRef }: any) => {
                             {isMinimized ? <Plus size={16} /> : <Minus size={16} />}
                         </button>
                     )}
-                    <div className="cursor-grab active:cursor-grabbing">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="19" r="1"></circle>
-                            <circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="19" r="1"></circle>
-                        </svg>
-                    </div>
+                   
                 </div>
             </div>
 
             {!isMinimized && (
-                <>
-                    <div>Zoom: {Math.round(zoom * 100)}%</div>
-                    <div>World Pos: ({Math.round(worldPos.x)}, {Math.round(worldPos.y)})</div>
-                    <div>Contributions: {savedStrokeCount}</div>
+                <div className='text-base text-[#ffffff] '>
+                    <div className='flex items-center gap-2'>
+                    <p>Zoom: {Math.round(zoom * 100)}%</p>
+                    <p>World Pos: ({Math.round(worldPos.x)}, {Math.round(worldPos.y)})</p>
+                    <p>Contributions: {savedStrokeCount}</p>
+                    </div>
+                    
                     {isSaving && <div className="text-orange-500 font-semibold mt-1">Saving...</div>}
                     {saveError && <div className="text-red-600 font-semibold mt-1">{saveError}</div>}
-                </>
+                </div>
             )}
         </div>
     );
