@@ -44,14 +44,14 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
       <div className="relative bg-[#0F0D0D] w-[90%] sm:w-[500px] border border-white/20 rounded-[12px]  xl:p-8 md:p-6 p-4 font-montserrat animation-fade-in transform transition-all scale-100">
         {/* Decorative Gradient Glow */}
         <div className="flex flex-col items-center text-center">
-          <div className="w-16 h-16 rounded-full flex items-center justify-center mb-6 border border-red-500/30 ">
+          <div className="w-16 h-16 rounded-full flex items-center justify-center md:mb-6 !mb-3 border border-red-500/30 ">
             <LogOut className="text-red-500 lg:size-6 size-5 ml-1" />
           </div>
 
-          <h2 className="lg:text-2xl md:text-xl text-lg font-bold !text-white mb-3">
+          <h2 className="lg:text-2xl md:text-xl text-lg font-bold !text-white md:!mb-3 !mb-1.5">
             {title}
           </h2>
-          <p className="text-[#AAB2C7] text-sm leading-relaxed mb-8 max-w-[90%]">
+          <p className="text-[#AAB2C7] text-sm leading-relaxed md:mb-8 !mb-5 max-w-[90%]">
             {description}
           </p>
 
