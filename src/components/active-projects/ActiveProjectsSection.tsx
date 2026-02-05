@@ -84,11 +84,11 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
 
         {/* Buttons */}
         <div className="flex flex-col gap-2 mt-2">
-          <button className="w-full py-3 rounded-full bg-gradient-to-r from-[#E23373] to-[#FEC133] !text-white font-semibold text-[11px] hover:opacity-90 transition-opacity">
+          <button className="w-full py-3 rounded-full bg-gradient-to-r from-[#E23373] to-[#FEC133] !text-white font-semibold text-sm hover:opacity-90 transition-opacity">
             View Artwork
           </button>
           <div className="w-full p-[1px] rounded-full bg-gradient-to-r from-[#E23373] to-[#FEC133]">
-            <button className="w-full py-3 rounded-full bg-[#1A1A1A] !text-white font-semibold text-[11px] hover:opacity-80 transition-opacity">
+            <button className="w-full py-3 rounded-full bg-[#1A1A1A] !text-white font-semibold text-sm hover:opacity-80 transition-opacity">
               Mark as Done
             </button>
           </div>
