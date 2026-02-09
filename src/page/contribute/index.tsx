@@ -408,7 +408,7 @@ const ActiveProjects: React.FC = () => {
                         project.status !== "Completed" && (
                           <div className="w-full p-[1px] rounded-full bg-gradient-to-r from-[#E23373] to-[#FEC133] group hover:shadow-[0_0_15px_rgba(226,51,115,0.2)] transition-shadow">
                             <button
-                              className="w-full py-3 rounded-full bg-[#1A1A1A] text-white font-semibold text-base tracking-wide hover:bg-[#252525] transition-colors flex items-center justify-center gap-2"
+                              className="w-full py-3 rounded-full bg-[#1A1A1A] text-white font-semibold md:text-base text-sm tracking-wide hover:bg-[#252525] transition-colors flex items-center justify-center gap-2"
                               onClick={() =>
                                 openConfirmationDialog(
                                   project._id,
@@ -445,8 +445,8 @@ const ActiveProjects: React.FC = () => {
           open={dialogState.isOpen}
           onOpenChange={(isOpen) => setDialogState({ ...dialogState, isOpen })}
         >
-          <AlertDialogContent className="bg-[#0F0D0D] border border-white/10 text-white font-montserrat w-[calc(100%-2rem)] sm:w-[90%] md:w-[85%] lg:w-[750px] max-w-[750px] p-4 sm:p-6 md:p-8 rounded-[12px] !left-1/2 !top-1/2 !-translate-x-1/2 !-translate-y-1/2 !transform">
-            <AlertDialogHeader className="!space-y-3 sm:!space-y-4">
+          <AlertDialogContent className="!bg-[#0F0D0D] border border-white/10 text-white font-montserrat w-[calc(100%-2rem)] sm:w-[90%] md:w-[85%] lg:w-[750px] !max-w-[650px] p-4 sm:p-6 md:p-8 rounded-[12px] !left-1/2 !top-1/2 !-translate-x-1/2 !-translate-y-1/2 !transform">
+            <AlertDialogHeader className="!space-y-1 md:!space-y-2">
               <AlertDialogTitle className="text-lg md:text-xl lg:text-2xl font-semibold text-center leading-tight !text-white px-2 sm:px-0">
                 {dialogState.actionType === "DELETE"
                   ? "Do you want to Delete the project?"
@@ -458,7 +458,7 @@ const ActiveProjects: React.FC = () => {
                   : "This action will pause your project. This may effect your contributors"}
               </AlertDialogDescription>
             </AlertDialogHeader>
-            <AlertDialogFooter className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mt-4 w-full">
+            <AlertDialogFooter className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 md:mt-4 mt-2 w-full">
               <AlertDialogCancel className="border-none p-[2px] h-10 sm:h-[48px] w-full sm:flex-1 rounded-full bg-gradient-to-r from-[#E23373] to-[#FEC133] hover:bg-gradient-to-r hover:from-[#FEC133] hover:to-[#E23373] transition-colors duration-300 order-2 sm:order-1">
                 <Button
                   variant="outline"
