@@ -768,7 +768,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
                   </button>
                 </div>
               )}
-              {user?.role == "admin" && (
+              {user?.role == "admin" && currentProject?.status !== "Completed" && (
                 <AlertDialog
                   open={isClearAlertOpen}
                   onOpenChange={setIsClearAlertOpen}
