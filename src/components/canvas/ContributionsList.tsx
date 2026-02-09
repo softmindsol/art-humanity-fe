@@ -2,6 +2,7 @@ import useAuth from '@/hook/useAuth';
 import useAppDispatch from '@/hook/useDispatch';
 import { deleteContribution, voteOnContribution } from '@/redux/action/contribution';
 import { Trash2 } from 'lucide-react';
+import { useSelector } from 'react-redux';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -25,6 +26,7 @@ const ContributionsList = ({
     const dispatch = useAppDispatch();
     const { user } = useAuth();
     const [isLoadingVoted, setIsLoadingVoted] = useState(false);
+    const { currentProject } = useSelector((state: any) => state.projects);
 
     const handleVote = async (e: any, contributionId: any, voteType: any) => {
         e.stopPropagation();
@@ -189,7 +191,7 @@ const ContributionsList = ({
                                     <span className="text-[#ffffff] font-semibold">({downvotePercentage.toFixed(1)}%)</span>
                                 </button>
                             </div>
-                            {user?.role === 'admin' && (
+                            {user?.role === 'admin' && currentProject?.status !== "Completed" && (
                                 <button
                                     onClick={(e) => handleDelete(e, contrib._id)}
                                     className="text-[#ffffff] cursor-pointer hover:text-[#f44336]"

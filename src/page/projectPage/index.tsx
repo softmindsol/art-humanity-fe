@@ -12,7 +12,7 @@ import {
   useCallback,
 } from "react";
 import KonvaCanvas from "../../components/common/KonvaCanvas";
-import { Film, Square } from "lucide-react"; // Grid icon imported
+import { Code, Film, Square } from "lucide-react"; // Grid icon imported
 
 import {
   AlertDialog,
@@ -75,6 +75,7 @@ import type { RootState } from "@/redux/store";
 import { useNavigate } from "react-router-dom";
 import { useDebounce } from "@/hook/useDebounce";
 import { getContributionBoundingBox } from "@/utils/contributionUtils";
+import { MdTimelapse } from "react-icons/md";
 
 const TILE_SIZE = 512; // Optimal tile size for performance
 
@@ -747,23 +748,27 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
             <div className="flex justify-center gap-3">
               <button
                 onClick={handleToggleCanvasSize}
-                className="bg-[#FEC13395] hover:bg-[#FEC133] hidden text-white border-none text-[12px] md:text-[16px] px-2 py-2 md:px-4 md:py-2 rounded cursor-pointer xl:flex items-center gap-2"
+                className="bg-gradient-to-r from-[#E23373] to-[#FEC133] hover:bg-gradient-to-r hover:from-[#FEC133] hover:to-[#E23373] transition-colors duration-300 hidden text-white border-none text-[12px] md:text-[16px] px-2 py-2 md:px-4 md:py-2 rounded-full cursor-pointer xl:flex items-center gap-2"
                 title={`Current display size: ${displaySize}px. Click to toggle.`}
               >
-                <Square size={16} />
+                <Code size={16} />
                 Toggle Size
               </button>
               {user?.role == "admin" && (
-                <button
-                  onClick={handleGenerateTimelapse}
-                  disabled={isGeneratingTimelapse}
-                  className="bg-[#E2337395] hover:bg-[#E23373] text-white border-none text-[12px] md:text-[16px] px-2 py-2 md:px-4 md:py-2  rounded cursor-pointer flex items-center gap-2  disabled:opacity-50"
-                >
-                  <Film size={16} />
-                  {isGeneratingTimelapse ? "Generating..." : "Create Timelapse"}
-                </button>
+                <div className="bg-gradient-to-r from-[#E23373] to-[#FEC133] hover:bg-gradient-to-r hover:from-[#FEC133] hover:to-[#E23373] transition-colors duration-300 rounded-full p-0.5">
+                  <button
+                    onClick={handleGenerateTimelapse}
+                    disabled={isGeneratingTimelapse}
+                    className="bg-black text-white border-none text-[12px] md:text-[16px] p-2 md:px-4 md:py-2 rounded-full cursor-pointer flex items-center gap-2 disabled:opacity-50"
+                  >
+                    <MdTimelapse size={18} className="rotate-90" />
+                    {isGeneratingTimelapse
+                      ? "Generating..."
+                      : "Create Timelapse"}
+                  </button>
+                </div>
               )}
-              {user?.role == "admin" && (
+              {user?.role == "admin" && currentProject?.status !== "Completed" && (
                 <AlertDialog
                   open={isClearAlertOpen}
                   onOpenChange={setIsClearAlertOpen}
@@ -779,8 +784,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
                           : "Clear the entire canvas"
                       }
                       // 3. Styling add karein taake user ko pata chale ke button disabled hai
-                      className="bg-[#BE000095] hover:bg-[#BE0000]  text-white border-none text-[12px] md:text-[16px] px-2 py-2 md:px-4 md:py-2 rounded cursor-pointer
-                                        transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="bg-[#BE0000] hover:bg-[#BE0000d0] transition-colors  text-white border-none text-[12px] md:text-[16px] px-2 py-2 md:px-4 md:py-2 rounded-full cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Clear Canvas
                     </button>
@@ -1068,7 +1072,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
                 : "sm:max-w-xl md:max-w-2xl lg:max-w-4xl !h-[95vh]" // Default modal styles
             }
         `}
-        > 
+        >
           <DialogHeader>
             <DialogTitle className="text-lg lg:text-2xl !text-white text-center pt-3">
               Project Timelapse

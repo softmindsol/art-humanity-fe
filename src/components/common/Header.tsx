@@ -223,7 +223,7 @@ const Header = () => {
   return (
     <>
       {/* Fixed Pill Container */}
-      <div className="fixed top-6 left-0 right-0 z-[1000] px-6 2xl:px-8">
+      <div className="fixed top-6 left-0 right-0 z-[1000] px-4 2xl:px-8">
         <header className="flex items-center !justify-between md:!py-[5px] !py-[3px] rounded-full border border-white/20 shadow-2xl bg-[#0000001A] backdrop-blur-[3px] w-full xl:min-w-[1400px] mx-auto">
           {/* Logo Section */}
           <div className="logo-container">
@@ -571,7 +571,7 @@ const Header = () => {
               {user?._id && (
                 <li
                   onClick={handleSupportClick}
-                  className="cursor-pointer text-gray-300 hover:text-white hover:bg-white/5 p-3 rounded-lg transition-all flex items-center gap-3 font-medium"
+                  className="cursor-pointer text-gray-300 hover:text-white hover:bg-white/5 py-1 rounded-lg transition-all flex items-center gap-3 font-medium"
                 >
                   <Heart size={20} />
                   <span>Support Us</span>
@@ -585,7 +585,11 @@ const Header = () => {
             {profile ? (
               // --- AGAR USER LOGGED IN HAI ---
               <div className="flex flex-col items-center gap-4">
-                <div className="flex items-center gap-3 w-full p-2 rounded-lg bg-white/5">
+                <div
+                  onClick={() => navigate("/profile")}
+                  title="Profile"
+                  className="flex items-center gap-3 w-full p-2 rounded-lg bg-white/5 cursor-pointer"
+                >
                   {profile?.avatar ? (
                     <img
                       src={profile?.avatar}

@@ -257,7 +257,7 @@ const ContributionSidebar = ({ projectId,selectedContributionId, isContributor,o
                         />}
 
                         <div className=" text-sm mb-1">
-                            {user?._id && <Button
+                            {user?._id && currentProject?.status !== "Completed" && <Button
                                 onClick={handleCreateNewContribution}
                                 disabled={isCreateLoading || isLimitReached || !isContributor}
                                 title={

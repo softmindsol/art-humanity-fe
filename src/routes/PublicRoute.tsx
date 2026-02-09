@@ -31,10 +31,9 @@ const PublicRoute: React.FC<PublicRouteProps> = ({ children }) => {
 
   if (isAuthenticated === null) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f2e8c9] dark:bg-gray-900">
-        <div className="flex flex-col items-center text-center text-gray-600 dark:text-gray-300">
-          <Loader2 className="animate-spin w-8 h-8 mb-2" />
-          <p>Checking authentication...</p>
+      <div className="flex-col gap-4 w-full flex h-screen items-center justify-center">
+        <div className="w-20 h-20 border-4 border-transparent text-[#FEC133] text-4xl animate-spin flex items-center justify-center border-t-[#FEC133] rounded-full">
+          <div className="w-16 h-16 border-4 border-transparent text-[#E23373] text-2xl animate-spin flex items-center justify-center border-t-[#E23373] rounded-full"></div>
         </div>
       </div>
     );

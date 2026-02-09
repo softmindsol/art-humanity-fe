@@ -186,7 +186,7 @@ const ProfilePage = () => {
 
   return (
     <div className="min-h-screen bg-[#0F0D0D] text-white font-montserrat lg:pb-20 pb-10 pt-10 lg:mt-26 mt-18">
-      <div className="max-w-[1440px] mx-auto md:px-10 px-8">
+      <div className="max-w-[1440px] mx-auto md:px-10 px-5">
         {/* Header */}
         <div className="text-center lg:mb-12 mb-2">
           <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-[54px] font-bold bg-gradient-to-r from-[#E23373] to-[#FEC133] !bg-clip-text !text-transparent inline-block">
@@ -195,7 +195,7 @@ const ProfilePage = () => {
         </div>
 
         {/* Profile Details Card */}
-        <div className="bg-[#141414] rounded-2xl p-6 md:p-10 border border-white/5 shadow-2xl">
+        <div className="bg-[#141414] rounded-2xl p-5 md:p-10 border border-white/5 shadow-2xl">
           {/* Section 1: Profile Photo */}
           <div className="flex flex-col md:flex-row items-center lg:gap-8 gap-4 lg:mb-12 mb-6">
             <div className="relative group">
@@ -271,7 +271,7 @@ const ProfilePage = () => {
                   value={formData.fullName}
                   onChange={handleInputChange}
                   placeholder="Enter your Name"
-                  className="bg-[#2E2E2E] border-none text-white h-12 rounded-lg focus-visible:ring-1 focus-visible:ring-[#E23373] placeholder:text-[#AAB2C7]"
+                  className="bg-[#2E2E2E] border-none text-white h-12 rounded-lg focus-visible:ring-1 focus-visible:ring-[#E23373] placeholder:text-[#AAB2C7] text-sm lg:text-base"
                 />
               </div>
               <div className="space-y-1">
@@ -283,7 +283,7 @@ const ProfilePage = () => {
                   value={formData.email}
                   onChange={handleInputChange}
                   placeholder="Enter your Email"
-                  className="bg-[#2E2E2E] border-none text-white h-12 rounded-lg focus-visible:ring-1 focus-visible:ring-[#E23373] placeholder:text-[#AAB2C7]"
+                  className="bg-[#2E2E2E] border-none text-white h-12 rounded-lg focus-visible:ring-1 focus-visible:ring-[#E23373] placeholder:text-[#AAB2C7] text-sm lg:text-base"
                 />
                 {formData.email !== profile?.email && (
                   <p className="text-xs text-[#FEC133] flex items-center gap-1 mt-1">

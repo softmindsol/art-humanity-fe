@@ -393,7 +393,8 @@ const ActiveProjects: React.FC = () => {
                         className={`w-full relative group overflow-hidden`}
                       >
                         <div
-                          className={`w-full md:py-3 py-2.5 rounded-full bg-gradient-to-r from-[#E23373] to-[#FEC133] text-white font-semibold md:text-base text-sm tracking-wide flex justify-center items-center transition-all duration-300 ${isProjectPaused ? "opacity-50 cursor-not-allowed grayscale" : "hover:shadow-[0_0_20px_rgba(226,51,115,0.4)] hover:scale-[1.02]"}`}
+                          className={`w-full md:py-3 py-2.5 rounded-full bg-gradient-to-r from-[#E23373] to-[#FEC133] hover:bg-gradient-to-r hover:from-[#FEC133] hover:to-[#E23373] transition-colors duration-300 text-white font-semibold md:text-base text-sm tracking-wide flex justify-center items-center
+                            ${isProjectPaused ? "opacity-50 cursor-not-allowed grayscale" : "hover:shadow-[0_0_20px_rgba(226,51,115,0.4)]"}`}
                         >
                           {project.status === "Completed"
                             ? "View Artwork"
@@ -407,7 +408,7 @@ const ActiveProjects: React.FC = () => {
                         project.status !== "Completed" && (
                           <div className="w-full p-[1px] rounded-full bg-gradient-to-r from-[#E23373] to-[#FEC133] group hover:shadow-[0_0_15px_rgba(226,51,115,0.2)] transition-shadow">
                             <button
-                              className="w-full py-3 rounded-full bg-[#1A1A1A] text-white font-semibold text-base tracking-wide hover:bg-[#252525] transition-colors flex items-center justify-center gap-2"
+                              className="w-full py-3 rounded-full bg-[#1A1A1A] text-white font-semibold md:text-base text-sm tracking-wide hover:bg-[#252525] transition-colors flex items-center justify-center gap-2"
                               onClick={() =>
                                 openConfirmationDialog(
                                   project._id,
@@ -444,30 +445,30 @@ const ActiveProjects: React.FC = () => {
           open={dialogState.isOpen}
           onOpenChange={(isOpen) => setDialogState({ ...dialogState, isOpen })}
         >
-          <AlertDialogContent className="bg-[#0F0D0D] border border-white/10 text-white font-montserrat w-[calc(100%-2rem)] sm:w-[90%] md:w-[85%] lg:w-[750px] max-w-[750px] p-4 sm:p-6 md:p-8 rounded-[12px] !left-1/2 !top-1/2 !-translate-x-1/2 !-translate-y-1/2 !transform">
-            <AlertDialogHeader className="!space-y-3 sm:!space-y-4">
-              <AlertDialogTitle className="text-lg sm:text-xl md:text-2xl lg:text-[28px] font-semibold text-center leading-tight !text-white px-2 sm:px-0">
+          <AlertDialogContent className="!bg-[#0F0D0D] border border-white/10 text-white font-montserrat w-[calc(100%-2rem)] sm:w-[90%] md:w-[85%] lg:w-[750px] !max-w-[650px] p-4 sm:p-6 md:p-8 rounded-[12px] !left-1/2 !top-1/2 !-translate-x-1/2 !-translate-y-1/2 !transform">
+            <AlertDialogHeader className="!space-y-1 md:!space-y-2">
+              <AlertDialogTitle className="text-lg md:text-xl lg:text-2xl font-semibold text-center leading-tight !text-white px-2 sm:px-0">
                 {dialogState.actionType === "DELETE"
                   ? "Do you want to Delete the project?"
                   : `Do you want to ${dialogState.actionText?.toLowerCase()} your project?`}
               </AlertDialogTitle>
-              <AlertDialogDescription className="text-center text-[#AAB2C7] text-sm sm:text-base lg:text-lg xl:text-xl 2xl:text-[20px] font-medium max-w-[700px] mx-auto leading-relaxed px-2 sm:px-4">
+              <AlertDialogDescription className="text-center text-[#AAB2C7] text-sm md:text-base font-medium max-w-[700px] mx-auto leading-relaxed px-2 sm:px-4">
                 {dialogState.actionType === "DELETE"
                   ? "Are you sure you want to delete this project? This action can't be undone."
                   : "This action will pause your project. This may effect your contributors"}
               </AlertDialogDescription>
             </AlertDialogHeader>
-            <AlertDialogFooter className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mt-4 sm:mt-8 w-full">
-              <AlertDialogCancel className="border-none p-[2px] h-10 sm:h-[48px] lg:h-[52px] w-full sm:flex-1 rounded-full bg-gradient-to-r from-[#E23373] to-[#FEC133] order-2 sm:order-1">
+            <AlertDialogFooter className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 md:mt-4 mt-2 w-full">
+              <AlertDialogCancel className="border-none p-[2px] h-10 sm:h-[48px] w-full sm:flex-1 rounded-full bg-gradient-to-r from-[#E23373] to-[#FEC133] hover:bg-gradient-to-r hover:from-[#FEC133] hover:to-[#E23373] transition-colors duration-300 order-2 sm:order-1">
                 <Button
                   variant="outline"
-                  className="h-full w-full rounded-full bg-black text-white hover:bg-white/5 transition-all font-medium border-0 text-sm sm:text-base"
+                  className="h-full w-full rounded-full bg-black text-white font-medium border-0 text-sm sm:text-base"
                 >
                   Cancel
                 </Button>
               </AlertDialogCancel>
               <AlertDialogAction
-                className={`w-full sm:flex-1 h-10 sm:h-[48px] lg:h-[52px] rounded-full border-none text-white transition-all font-medium hover:shadow-lg cursor-pointer order-1 sm:order-2 text-sm sm:text-base
+                className={`w-full sm:flex-1 h-10 sm:h-[48px] rounded-full border-none text-white transition-all font-medium hover:shadow-lg cursor-pointer order-1 sm:order-2 text-sm sm:text-base
                     ${
                       dialogState.actionType === "DELETE"
                         ? "bg-[#BE0000] hover:bg-[#d70f0f] hover:shadow-red-500/30"
