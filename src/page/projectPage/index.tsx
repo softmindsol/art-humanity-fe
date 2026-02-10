@@ -727,7 +727,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
     >
       <div className="max-w-screen-2xl mx-auto">
         <div className="mb-4 text-center mt-24">
-          <h1 className="text-[28px] lg:text-[44.8px]     font-serif !text-[#ffffff]">
+          <h1 className="text-[28px] lg:text-[44.8px] font-serif !text-[#ffffff]">
             {projectName}
           </h1>
           <p className="text-[#8D6E63] !text-[#ffffff] italic lg:text-[19.2px]">
@@ -742,7 +742,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
           {/* {!isReadOnly && <Toolbox2 boundaryRef={mainContentRef} />} */}
 
           {/* Right Column: Canvas & Actions */}
-          <div className="flex-1 flex flex-col items-center ">
+          <div className="flex-1 flex flex-col items-center">
             {/* Top Action Buttons */}
 
             <div className="flex justify-center gap-3">
@@ -768,60 +768,61 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
                   </button>
                 </div>
               )}
-              {user?.role == "admin" && currentProject?.status !== "Completed" && (
-                <AlertDialog
-                  open={isClearAlertOpen}
-                  onOpenChange={setIsClearAlertOpen}
-                >
-                  <AlertDialogTrigger asChild>
-                    <button
-                      // 1. Button ko disable karein agar drawing save ho rahi hai
-                      disabled={isContributionSaving || isClearingCanvas}
-                      // 2. Title attribute se user ko wajah batayein (hover karne par dikhega)
-                      title={
-                        isSaving
-                          ? "Cannot clear while a drawing is being saved"
-                          : "Clear the entire canvas"
-                      }
-                      // 3. Styling add karein taake user ko pata chale ke button disabled hai
-                      className="bg-[#BE0000] hover:bg-[#BE0000d0] transition-colors  text-white border-none text-[12px] md:text-[16px] px-2 py-2 md:px-4 md:py-2 rounded-full cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Clear Canvas
-                    </button>
-                  </AlertDialogTrigger>
-
-                  <AlertDialogContent className="bg-[#0F0D0D] border border-white/10 text-white !font-sans rounded-[12px] shadow-2xl max-w-[500px] p-8">
-                    <AlertDialogHeader className="gap-2">
-                      <AlertDialogTitle className="text-2xl sm:text-[28px] font-semibold !text-white text-center">
-                        Are you absolutely sure?
-                      </AlertDialogTitle>
-                      <AlertDialogDescription className="text-center text-[#E0E0E0] text-base leading-relaxed pt-2">
-                        This action cannot be undone. This will permanently
-                        delete all the drawings for the project{" "}
-                        <strong className="text-white">{projectName}</strong>{" "}
-                        from our servers.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter className="flex gap-4 sm:justify-center mt-6 w-full">
-                      {/* Cancel Button */}
-                      <AlertDialogCancel className="w-full sm:w-[180px] PY-1 rounded-full border border-white/20 bg-transparent hover:bg-white/5 hover:text-white text-white transition-colors uppercase tracking-wide text-sm font-semibold">
-                        Cancel
-                      </AlertDialogCancel>
-
-                      {/* Continue Button (Destructive Action) */}
-                      <AlertDialogAction
-                        onClick={handleClearCanvas}
-                        className="bg-[#BE0000] text-white hover:bg-[#B71C1C] px-5 py-1  text-sm font-medium rounded-full border-none transition-all min-w-[160px] cursor-pointer"
+              {user?.role == "admin" &&
+                currentProject?.status !== "Completed" && (
+                  <AlertDialog
+                    open={isClearAlertOpen}
+                    onOpenChange={setIsClearAlertOpen}
+                  >
+                    <AlertDialogTrigger asChild>
+                      <button
+                        // 1. Button ko disable karein agar drawing save ho rahi hai
+                        disabled={isContributionSaving || isClearingCanvas}
+                        // 2. Title attribute se user ko wajah batayein (hover karne par dikhega)
+                        title={
+                          isSaving
+                            ? "Cannot clear while a drawing is being saved"
+                            : "Clear the entire canvas"
+                        }
+                        // 3. Styling add karein taake user ko pata chale ke button disabled hai
+                        className="bg-[#BE0000] hover:bg-[#BE0000d0] transition-colors  text-white border-none text-[12px] md:text-[16px] px-2 py-2 md:px-4 md:py-2 rounded-full cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        Yes, Clear Canvas
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              )}
+                        Clear Canvas
+                      </button>
+                    </AlertDialogTrigger>
+
+                    <AlertDialogContent className="bg-[#0F0D0D] border border-white/10 text-white !font-sans rounded-[12px] shadow-2xl max-w-[500px] p-8">
+                      <AlertDialogHeader className="gap-2">
+                        <AlertDialogTitle className="text-2xl sm:text-[28px] font-semibold !text-white text-center">
+                          Are you absolutely sure?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription className="text-center text-[#E0E0E0] text-base leading-relaxed pt-2">
+                          This action cannot be undone. This will permanently
+                          delete all the drawings for the project{" "}
+                          <strong className="text-white">{projectName}</strong>{" "}
+                          from our servers.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter className="flex gap-4 sm:justify-center mt-6 w-full">
+                        {/* Cancel Button */}
+                        <AlertDialogCancel className="w-full sm:w-[180px] PY-1 rounded-full border border-white/20 bg-transparent hover:bg-white/5 hover:text-white text-white transition-colors uppercase tracking-wide text-sm font-semibold">
+                          Cancel
+                        </AlertDialogCancel>
+
+                        {/* Continue Button (Destructive Action) */}
+                        <AlertDialogAction
+                          onClick={handleClearCanvas}
+                          className="bg-[#BE0000] text-white hover:bg-[#B71C1C] px-5 py-1  text-sm font-medium rounded-full border-none transition-all min-w-[160px] cursor-pointer"
+                        >
+                          Yes, Clear Canvas
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                )}
             </div>
 
-            <div className="text-[1rem] w-[90%]  bg-[#0F0D0D] text-[#ffffff] px-4 py-4 rounded-[5px] shadow-md mt-4 mb-6">
+            <div className="text-[1rem] lg:w-[93%] w-full bg-[#0F0D0D] text-[#ffffff] px-4 py-4 rounded-[5px] shadow-md mt-4 mb-6">
               <p>
                 Use the mouse wheel to zoom, right-click to pan, and left click
                 to draw when zoomed in to at least 100%.{" "}
