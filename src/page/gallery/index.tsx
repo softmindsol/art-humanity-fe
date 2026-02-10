@@ -388,12 +388,12 @@ const GalleryPage: React.FC = () => {
       >
         <DialogContent className="bg-[#1a1a1a] border border-white/10 text-white max-w-lg">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-white">
+            <DialogTitle className="text-2xl font-bold !text-white">
               Complete Your Purchase
             </DialogTitle>
           </DialogHeader>
           {paymentState.clientSecret && paymentState.projectToDownload && (
-            <div className="mt-4">
+            <div className="-mt-2">
               <CheckoutForm
                 clientSecret={paymentState.clientSecret}
                 onPaymentSuccess={handlePaymentSuccess}

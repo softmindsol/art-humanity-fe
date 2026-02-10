@@ -40,7 +40,7 @@
 body {
   font-family: "Montserrat", sans-serif;
   color: var(--text-dark);
-  background-color: #0F0D0D;
+  background-color: #0f0d0d;
   line-height: 1.6;
   margin: 0;
   padding: 0;
@@ -190,8 +190,8 @@ nav ul li a:after {
   height: 2px;
   background: linear-gradient(
     90deg,
-    #E23373 0%,
-    #FEC133 100%
+    #e23373 0%,
+    #fec133 100%
   ); /* User requested gradient */
   transition: width 0.3s ease;
 }
@@ -480,7 +480,6 @@ nav ul li a.active {
   }
 }
 @media (max-width: 900px) {
-
   /* 1. Header ka font size chota karein */
   .rules-header h2 {
     font-size: 2.2rem; /* Original 2.8rem se kam */
@@ -1026,6 +1025,7 @@ footer {
 
 .canvas-count {
   display: flex;
+  flex-wrap: wrap;
   justify-content: center;
   align-items: center;
   font-size: 0.9rem;
@@ -1033,7 +1033,7 @@ footer {
   margin: 1rem 0;
   padding: 1rem;
   background-color: var(--bg-light);
-  gap: 2rem;
+  gap: 1.8rem;
   box-shadow: var(--shadow-sm);
   border-radius: var(--border-radius-md);
 }
@@ -2061,7 +2061,7 @@ footer {
     margin: 1rem 0;
     padding: 1rem;
     background-color: var(--bg-light);
-    gap: 2rem;
+    gap: 0.7rem;
     box-shadow: var(--shadow-sm);
     border-radius: var(--border-radius-md);
   }
