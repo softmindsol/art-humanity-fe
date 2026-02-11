@@ -64,7 +64,7 @@ const PopularGallerySection: React.FC = () => {
     <section className="relative w-full bg-[#0F0D0D] py-10 lg:py-20 overflow-hidden">
       <div className="max-w-[1440px] px-6 2xl:px-8 mx-auto">
         {/* Header Row */}
-        <div className="flex flex-col-reverse md:flex-row justify-between items-start md:items-center lg:gap-6 gap-3 md:mb-12 mb-1">
+        <div className="flex flex-col-reverse md:flex-row justify-between items-start lg:gap-6 gap-3 md:mb-12 mb-1">
           {/* Heading */}
           <h2 className="text-2xl md:text-3xl lg:text-[34px] font-semibold !text-white">
             Our Popular{" "}
@@ -77,7 +77,7 @@ const PopularGallerySection: React.FC = () => {
           <div className="inline-block p-[1px] rounded-full bg-gradient-to-r from-[#E23373] to-[#FEC133]">
             <Link
               to="/gallery"
-              className="block px-[17px] py-[7px] rounded-full bg-[#0F0D0D] !text-white text-sm font-semibold hover:bg-[#1a1a1a] transition-colors"
+              className="block px-[17px] py-[7px] rounded-full bg-[#0F0D0D] !text-white xl:text-base md:text-sm text-xs font-semibold hover:bg-[#1a1a1a] transition-colors"
             >
               Artworks
             </Link>

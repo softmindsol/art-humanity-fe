@@ -45,7 +45,9 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
               style={{ width: `${progress}%` }}
             ></div>
           </div>
-          <span className="!text-white text-xs">{progress}% Complete</span>
+          <span className="!text-white font-semibold lg:text-sm text-xs">
+            {progress}% Complete
+          </span>
         </div>
 
         {/* Title and Actions */}
@@ -69,13 +71,17 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
         {/* Stats */}
         <div className="flex items-center justify-center gap-8">
           <div className="text-center">
-            <p className="!text-[#AAB2C7] text-xs mb-1">Contributor</p>
+            <p className="!text-[#AAB2C7] font-semibold text-xs mb-1">
+              Contributor
+            </p>
             <p className="!text-white lg:text-lg font-semibold">
               {contributors}
             </p>
           </div>
           <div className="text-center">
-            <p className="!text-[#AAB2C7] text-xs mb-1">Pixel Painted</p>
+            <p className="!text-[#AAB2C7] font-semibold text-xs mb-1">
+              Pixel Painted
+            </p>
             <p className="!text-white lg:text-lg font-semibold">
               {pixelsPainted.toLocaleString()}
             </p>
@@ -166,7 +172,13 @@ const ActiveProjectsSection: React.FC = () => {
 
   return (
     <section className="relative w-full bg-[#0F0D0D] py-20 lg:py-10 overflow-hidden">
-      <div className="max-w-[1440px] px-6 2xl:px-8 mx-auto">
+      <img
+        src="/assets/gradient.svg"
+        alt=""
+        className="absolute 2xl:left-0 sm:top-40 top-110 rotate-180 w-1/2 md:w-2/5 h-[650px] opacity-100 pointer-events-none"
+        style={{ zIndex: 0 }}
+      />
+      <div className="max-w-[1440px] px-6 2xl:px-8 mx-auto relative z-10">
         {/* Main Layout - 2 Divs */}
         <div className="flex flex-col lg:flex-row lg:gap-8 gap-5">
           {/* Left Div - Active Projects Header + Button + Cards + See All */}
@@ -182,7 +194,7 @@ const ActiveProjectsSection: React.FC = () => {
 
               {/* Button with Border */}
               <div className="bg-gradient-to-r from-[#E13372] to-[#FEC133] p-[1px] rounded-full">
-                <button className="px-5 md:px-8 py-2 md:py-2.5 bg-clip-border bg-[#0F0D0D] rounded-full !text-white text-xs md:text-sm font-medium">
+                <button className="px-5 md:px-8 py-2 md:py-2.5 bg-clip-border bg-[#0F0D0D] rounded-full !text-white xl:text-base md:text-sm text-xs font-medium">
                   Projects
                 </button>
               </div>
@@ -203,10 +215,10 @@ const ActiveProjectsSection: React.FC = () => {
             </div>
 
             {/* See All Link */}
-            <div className="text-center md:mt-8 mt-4.5">
+            <div className="text-center md:mt-8 sm:my-4.5 mt-4">
               <Link
                 to="/projects"
-                className="!text-white text-sm font-medium hover:!underline underline-offset-4 hover:!text-white/80 transition-colors"
+                className="!text-white text-sm md:text-base font-medium hover:!underline underline-offset-4 hover:!text-white/80 transition-colors"
               >
                 See All
               </Link>

@@ -20,7 +20,7 @@ const AboutUsSection: React.FC = () => {
         <div className="w-full lg:w-1/2 text-left md:space-y-8 space-y-5">
           {/* Badge */}
           <div className="inline-block p-[1px] rounded-full bg-gradient-to-r from-[#E13372] to-[#FEC133]">
-            <div className="px-8 py-2 rounded-full bg-[#0F0D0D] text-white tracking-widest text-xs font-semibold uppercase">
+            <div className="px-8 py-2 rounded-full bg-[#0F0D0D] text-white tracking-widest xl:text-base md:text-sm text-xs font-semibold uppercase">
               About Us
             </div>
           </div>
