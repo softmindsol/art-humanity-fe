@@ -23,7 +23,7 @@ const AboutUsSection: React.FC = () => {
             <div className="px-8 py-2 rounded-full bg-[#0F0D0D] text-white tracking-widest xl:text-base md:text-sm text-xs font-semibold uppercase">
               About Us
             </div>
-          </div>
+          </div> 
 
           {/* Heading */}
           <h2 className="text-2xl md:text-[34px] !font-semibold !text-white leading-tight">
