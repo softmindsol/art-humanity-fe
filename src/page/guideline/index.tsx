@@ -2,6 +2,9 @@ import React from "react";
 import { ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { MdOutlineAlignHorizontalCenter } from "react-icons/md";
+import { IoSunnyOutline } from "react-icons/io5";
+
 
 const GuidelinePage: React.FC = () => {
   return (
@@ -117,7 +120,7 @@ const GuidelinePage: React.FC = () => {
                 </div>
               </div>
 
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold !text-white">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl !font-semibold !text-white">
                 How It{" "}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#E23373] to-[#FEC133]">
                   Works
@@ -151,7 +154,7 @@ const GuidelinePage: React.FC = () => {
         {/* Rules Section */}
         <div className="w-full bg-[#141414] lg:py-20 py-10 mt-12 relative z-50">
           <div className="max-w-[1440px] mx-auto px-6 lg:px-8">
-            <div className="flex flex-col lg:flex-row gap-16 items-center">
+            <div className="flex flex-col lg:flex-row items-center">
               {/* Left Content */}
               <div className="w-full lg:w-1/2 lg:space-y-8 space-y-4">
                 <div className="inline-block p-[1px] rounded-full bg-gradient-to-r from-[#E13372] to-[#FEC133]">
@@ -160,7 +163,7 @@ const GuidelinePage: React.FC = () => {
                   </div>
                 </div>
 
-                <h2 className="text-2xl md:text-3xl lg:text-4xl font-semibold !text-white">
+                <h2 className="text-2xl md:text-3xl lg:text-4xl !font-semibold !text-white">
                   The Rules Are Simple
                 </h2>
 
@@ -180,7 +183,7 @@ const GuidelinePage: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                    <p className="text-sm text-gray-300 font-medium">
+                    <p className="text-sm text-white font-medium">
                       Your Contribution Must Follow The Theme Of The Project.
                     </p>
                   </div>
@@ -189,12 +192,9 @@ const GuidelinePage: React.FC = () => {
                   <div className=" border border-[#AAB2C7] rounded-[12px] p-6 flex flex-col items-center text-center gap-4 hover:border-[#E23373]/50 transition-colors group h-full justify-start">
                     <div className="text-[#FEC133] h-8 flex items-center justify-center">
                       {/* Cross Icon */}
-                      <div className="relative w-6 h-6 flex items-center justify-center">
-                        <div className="absolute w-1.5 h-6 bg-[#FEC133] rounded-full"></div>
-                        <div className="absolute w-6 h-1.5 bg-[#FEC133] rounded-full transform rotate-90"></div>
-                      </div>
+                      <MdOutlineAlignHorizontalCenter size={34} />
                     </div>
-                    <p className="text-sm text-gray-300 font-medium">
+                    <p className="text-sm text-white font-medium">
                       Your Contribution Must Be As Detailed And As Realistic As
                       Possible.
                     </p>
@@ -204,28 +204,9 @@ const GuidelinePage: React.FC = () => {
                   <div className=" border border-[#AAB2C7] rounded-[12px] p-6 flex flex-col items-center text-center gap-4 hover:border-[#E23373]/50 transition-colors group h-full justify-start">
                     <div className="text-[#FEC133] h-8 flex items-center justify-center">
                       {/* Sun Icon (Lucide Sun fallback or similar shape) */}
-                      <svg
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <circle cx="12" cy="12" r="4"></circle>
-                        <path d="M12 2v2"></path>
-                        <path d="M12 20v2"></path>
-                        <path d="M4.93 4.93l1.41 1.41"></path>
-                        <path d="M17.66 17.66l1.41 1.41"></path>
-                        <path d="M2 12h2"></path>
-                        <path d="M20 12h2"></path>
-                        <path d="M6.34 17.66l-1.41 1.41"></path>
-                        <path d="M19.07 4.93l-1.41 1.41"></path>
-                      </svg>
+                      <IoSunnyOutline size={32}/>
                     </div>
-                    <p className="text-sm text-gray-300 font-medium">
+                    <p className="text-sm text-white font-medium">
                       Your Contribution, Its Colors, And Lighting Must Integrate
                       And Flow With Other Contributions.
                     </p>
@@ -295,7 +276,7 @@ const GuidelinePage: React.FC = () => {
               </div>
             </div>
 
-            <h2 className="text-2xl md:text-3xl lg:text-4xl font-semibold !text-white leading-tight">
+            <h2 className="text-2xl md:text-3xl lg:text-4xl !font-semibold !text-white leading-tight">
               Troll Prevention And Promoting Quality Over Quantity
             </h2>
 
