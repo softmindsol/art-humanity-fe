@@ -165,10 +165,10 @@ const ActiveProjects: React.FC = () => {
             <span className="text-white text-base font-medium">
               Collections
             </span>
-            <h1 className="text-[28px] md:text-[36px] lg:text-[46px] font-semibold leading-tight !text-white">
+            <h1 className="text-[28px] md:text-[36px] lg:text-[46px] !font-semibold leading-tight !text-white">
               Active Projects
             </h1>
-            <p className="text-white text-sm lg:text-base xl:text-[22px] leading-relaxed mix-blend-lighten drop-shadow-md w-full lg:w-lg xl:w-2xl">
+            <p className="text-white text-sm lg:text-base xl:text-lg leading-relaxed mix-blend-lighten drop-shadow-md w-full lg:w-lg xl:w-2xl">
               Explore Projects That Are Currently In Progress And Open For
               Collaboration. Each Active Project Allows Contributors From Around
               The World To Add Their Ideas, Creativity, Or Skills, Helping Shape
@@ -191,7 +191,7 @@ const ActiveProjects: React.FC = () => {
 
       <div className="flex flex-col gap-8 mb-12 px-6 container">
         <div className="flex flex-col-reverse md:flex-row justify-between items-start md:items-center md:gap-4 gap-3">
-          <h2 className="text-2xl md:text-3xl lg:text-[34px] !mb-0 font-semibold !text-white">
+          <h2 className="text-2xl md:text-3xl lg:text-[34px] !mb-0 !font-semibold !text-white">
             Create Together,{" "}
             <span className="bg-gradient-to-r from-[#E23373] to-[#FEC133] bg-clip-text text-transparent">
               Live Projects
