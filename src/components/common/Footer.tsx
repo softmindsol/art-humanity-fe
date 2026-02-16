@@ -23,7 +23,8 @@ const Footer = () => {
               <img
                 src="/assets/logo.svg"
                 alt="MurArt Logo"
-                className="size-20 object-contain"
+                className="size-20 object-contain cursor-pointer"
+                onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
               />
             </div>
 
@@ -69,7 +70,7 @@ const Footer = () => {
             <div className="flex flex-wrap sm:justify-center lg:justify-start gap-12 md:gap-24">
               {/* Explore */}
               <div className="flex flex-col lg:space-y-6 space-y-3">
-                <h3 className="!text-white text-[16px] font-semibold">
+                <h3 className="!text-white text-[16px] !font-semibold">
                   Explore
                 </h3>
                 <div className="ftr">
@@ -103,7 +104,7 @@ const Footer = () => {
               </div>
               {/* Participate */}
               <div className="flex flex-col space-y-6">
-                <h3 className="!text-white text-base font-semibold">
+                <h3 className="!text-white text-base !font-semibold">
                   Participate
                 </h3>
                 <div className="ftr">
@@ -129,7 +130,7 @@ const Footer = () => {
               </div>
               {/* About */}
               <div className="flex flex-col space-y-6">
-                <h3 className="!text-white text-base font-semibold">About</h3>
+                <h3 className="!text-white text-base !font-semibold">About</h3>
                 <div className="ftr">
                   <ul className="md:space-y-3 space-y-2 !text-white text-sm font-medium">
                     <li>
