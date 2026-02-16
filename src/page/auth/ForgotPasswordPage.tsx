@@ -61,10 +61,10 @@ const ForgotPasswordPage: React.FC = () => {
           {!submitted ? (
             <>
               <div className="space-y-2">
-                <h3 className="!text-white text-lg lg:text-xl xl:text-[26px] font-semibold">
+                <h3 className="!text-white text-lg lg:text-xl xl:text-[26px] !font-semibold">
                   Reset Password
                 </h3>
-                <h1 className="text-xl lg:text-2xl xl:text-[32px] font-semibold !text-white tracking-tight">
+                <h1 className="text-xl lg:text-2xl xl:text-[32px] !font-semibold !text-white tracking-tight">
                   Join MurArt
                 </h1>
                 <p className="max-w-[600px] w-full text-white font-semibold text-sm lg:text-base xl:text-lg">
@@ -103,7 +103,7 @@ const ForgotPasswordPage: React.FC = () => {
               <div className="mx-auto w-16 h-16 rounded-full bg-green-500/20 flex items-center justify-center">
                 <span className="text-2xl">✅</span>
               </div>
-              <h2 className="text-2xl font-bold text-white">
+              <h2 className="text-2xl font-bold !text-white">
                 Check your email
               </h2>
               <p className="text-gray-300">

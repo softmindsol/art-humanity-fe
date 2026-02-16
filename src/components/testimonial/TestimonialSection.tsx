@@ -28,7 +28,7 @@ const TestimonialSection: React.FC = () => {
         </div>
 
         {/* Testimonial Text */}
-        <p className="!text-white text-left md:text-center text-sm lg:text-[16px] leading-relaxed font-medium">
+        <p className="!text-white text-left md:text-center text-sm lg:text-[16px] leading-relaxed font-semibold">
           "Working with this team has been one of the best decisions I've made
           for my business. Not only did they bring expertise and creativity to
           the table, but they also made the entire process smooth and
@@ -47,7 +47,7 @@ const TestimonialSection: React.FC = () => {
             />
           </div>
           <div className="space-y-1">
-            <h4 className="!text-white text-lg lg:text-[24px] !mb-2 font-semibold">
+            <h4 className="!text-white text-lg lg:text-[24px] !mb-2 !font-medium">
               Jacob Jones
             </h4>
             <p className="text-[#E23373] text-base lg:text-[20px] font-semibold">

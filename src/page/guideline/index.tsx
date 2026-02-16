@@ -2,6 +2,8 @@ import React from "react";
 import { ArrowUpRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { MdOutlineAlignHorizontalCenter } from "react-icons/md";
+import { IoSunnyOutline } from "react-icons/io5";
 
 const GuidelinePage: React.FC = () => {
   return (
@@ -25,11 +27,11 @@ const GuidelinePage: React.FC = () => {
               Project Guideline
             </span>
 
-            <h1 className="text-2xl md:text-3xl lg:text-4xl !text-white lg:text-[46px] font-semibold leading-[1.1] lg:leading-[1.1] ">
+            <h1 className="text-2xl md:text-3xl lg:text-4xl !text-white lg:text-[46px] !font-semibold leading-[1.1] lg:leading-[1.1] ">
               Guideline
             </h1>
 
-            <p className="!text-white !font-medium text-sm lg:text-base 2xl:text-[22px] lg:max-w-2xl leading-relaxed drop-shadow-md">
+            <p className="!text-white !font-medium text-sm lg:text-base 2xl:text-lg lg:max-w-2xl leading-relaxed drop-shadow-md">
               At MurArt, Our Mission Is To Empower Artists, Creators, And
               Curators With A Platform That’s Easy To Use, Inspiring, And Fair.
               These Guidelines Help You Understand How To Participate, Create,
@@ -117,7 +119,7 @@ const GuidelinePage: React.FC = () => {
                 </div>
               </div>
 
-              <h2 className="text-2xl sm:text-3xl md:text-4xl font-semibold !text-white">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl !font-semibold !text-white">
                 How It{" "}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#E23373] to-[#FEC133]">
                   Works
@@ -151,7 +153,7 @@ const GuidelinePage: React.FC = () => {
         {/* Rules Section */}
         <div className="w-full bg-[#141414] lg:py-20 py-10 mt-12 relative z-50">
           <div className="max-w-[1440px] mx-auto px-6 lg:px-8">
-            <div className="flex flex-col lg:flex-row gap-16 items-center">
+            <div className="flex flex-col lg:flex-row items-center">
               {/* Left Content */}
               <div className="w-full lg:w-1/2 lg:space-y-8 space-y-4">
                 <div className="inline-block p-[1px] rounded-full bg-gradient-to-r from-[#E13372] to-[#FEC133]">
@@ -160,7 +162,7 @@ const GuidelinePage: React.FC = () => {
                   </div>
                 </div>
 
-                <h2 className="text-2xl md:text-3xl lg:text-4xl font-semibold !text-white">
+                <h2 className="text-2xl md:text-3xl lg:text-4xl !font-semibold !text-white">
                   The Rules Are Simple
                 </h2>
 
@@ -180,7 +182,7 @@ const GuidelinePage: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                    <p className="text-sm text-gray-300 font-medium">
+                    <p className="text-sm text-white font-medium">
                       Your Contribution Must Follow The Theme Of The Project.
                     </p>
                   </div>
@@ -189,12 +191,9 @@ const GuidelinePage: React.FC = () => {
                   <div className=" border border-[#AAB2C7] rounded-[12px] p-6 flex flex-col items-center text-center gap-4 hover:border-[#E23373]/50 transition-colors group h-full justify-start">
                     <div className="text-[#FEC133] h-8 flex items-center justify-center">
                       {/* Cross Icon */}
-                      <div className="relative w-6 h-6 flex items-center justify-center">
-                        <div className="absolute w-1.5 h-6 bg-[#FEC133] rounded-full"></div>
-                        <div className="absolute w-6 h-1.5 bg-[#FEC133] rounded-full transform rotate-90"></div>
-                      </div>
+                      <MdOutlineAlignHorizontalCenter size={34} />
                     </div>
-                    <p className="text-sm text-gray-300 font-medium">
+                    <p className="text-sm text-white font-medium">
                       Your Contribution Must Be As Detailed And As Realistic As
                       Possible.
                     </p>
@@ -204,28 +203,9 @@ const GuidelinePage: React.FC = () => {
                   <div className=" border border-[#AAB2C7] rounded-[12px] p-6 flex flex-col items-center text-center gap-4 hover:border-[#E23373]/50 transition-colors group h-full justify-start">
                     <div className="text-[#FEC133] h-8 flex items-center justify-center">
                       {/* Sun Icon (Lucide Sun fallback or similar shape) */}
-                      <svg
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      >
-                        <circle cx="12" cy="12" r="4"></circle>
-                        <path d="M12 2v2"></path>
-                        <path d="M12 20v2"></path>
-                        <path d="M4.93 4.93l1.41 1.41"></path>
-                        <path d="M17.66 17.66l1.41 1.41"></path>
-                        <path d="M2 12h2"></path>
-                        <path d="M20 12h2"></path>
-                        <path d="M6.34 17.66l-1.41 1.41"></path>
-                        <path d="M19.07 4.93l-1.41 1.41"></path>
-                      </svg>
+                      <IoSunnyOutline size={32} />
                     </div>
-                    <p className="text-sm text-gray-300 font-medium">
+                    <p className="text-sm text-white font-medium">
                       Your Contribution, Its Colors, And Lighting Must Integrate
                       And Flow With Other Contributions.
                     </p>
@@ -274,7 +254,10 @@ const GuidelinePage: React.FC = () => {
       </main>
 
       {/* Troll Prevention Section */}
-      <div className="max-w-[1440px] mx-auto px-6 lg:px-8 py-10 lg:py-20">
+      <div className="max-w-[1440px] mx-auto px-6 lg:px-8 py-10 lg:py-20 relative">
+        <div className="absolute rotate-90 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+          <img src="/assets/gradient-1.svg" alt="" className="" />
+        </div>
         <div className="flex flex-col-reverse lg:flex-row gap-8 lg:gap-16 items-center">
           {/* Left Image */}
           <div className="w-full lg:w-1/3 flex justify-center lg:justify-start">
@@ -295,11 +278,11 @@ const GuidelinePage: React.FC = () => {
               </div>
             </div>
 
-            <h2 className="text-2xl md:text-3xl lg:text-4xl font-semibold !text-white leading-tight">
+            <h2 className="text-2xl md:text-3xl lg:text-4xl !font-semibold !text-white leading-tight">
               Troll Prevention And Promoting Quality Over Quantity
             </h2>
 
-            <p className="!text-white text-sm sm:text-base 2xl:text-lg leading-relaxed text-left">
+            <p className="!text-white text-sm lg:text-base leading-relaxed text-left">
               We only want painters who are passionate about the project, no
               matter how small your contribution is. The painting system is
               designed to emphasize a slow and steady process for your
@@ -313,14 +296,14 @@ const GuidelinePage: React.FC = () => {
             </p>
 
             <div className="pt-4">
-              <p className="text-2xl 2xl:text-[34px] font-semibold !text-white leading-snug">
-                “Success Is The{" "}
+              <p className="text-xl lg:text-2xl 2xl:text-[34px] font-semibold !text-white leading-snug">
+                "Success Is The{" "}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#E23373] to-[#FEC133]">
                   Sum Of Small Efforts,
                 </span>{" "}
-                Repeated Day In And Day Out ”
+                Repeated Day In And Day Out "
               </p>
-              <p className="text-white mt-4 text-lg font-medium">
+              <p className="text-white md:mt-4 mt-2 text-base md:text-lg font-medium">
                 -Robert Collier
               </p>
             </div>

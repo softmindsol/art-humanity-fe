@@ -21,10 +21,10 @@ const ContactUs: React.FC = () => {
           <span className="!text-white lg:text-base text-sm font-medium">
             Contact Us
           </span>
-          <h1 className="text-3xl lg:text-4xl xl:text-5xl font-semibold leading-tight !text-white">
+          <h1 className="text-3xl lg:text-4xl xl:text-5xl !font-semibold leading-tight !text-white">
             Contact
           </h1>
-          <p className="text-white leading-relaxed xl:max-w-xl lg:text-base text-sm mix-blend-lighten drop-shadow-md mb-3">
+          <p className="text-white leading-relaxed xl:max-w-xl xl:text-lg lg:text-base text-sm mix-blend-lighten drop-shadow-md mb-3">
             At MurArt, Our Mission Is To Empower Artists, Creators, And Curators
             With A Platform That's Easy To Use, Inspiring, And Fair. These
             Guidelines Help You Understand How To Participate, Create, And
@@ -43,10 +43,10 @@ const ContactUs: React.FC = () => {
         </div>
       </section>
 
-      <div className="max-w-[1440px] mx-auto md:px-10 px-8 lg:!py-20 py-7 flex flex-col lg:flex-row xl:gap-12 gap-10 items-start justify-center">
+      <div className="max-w-[1440px] mx-auto md:px-10 px-8 lg:!py-20 py-7 flex flex-col lg:flex-row xl:gap-12 gap-7 items-start justify-center">
         {/* Left Side: Details */}
         <div className="w-full pt-4">
-          <h2 className="text-2xl md:text-3xl lg:text-[34px] font-semibold !text-white mb-6">
+          <h2 className="text-2xl md:text-3xl lg:text-[34px] !font-semibold !text-white mb-6">
             Get In{" "}
             <span className="bg-gradient-to-r from-[#E23373] to-[#FEC133] bg-clip-text text-transparent">
               Touch With Us
@@ -66,52 +66,56 @@ const ContactUs: React.FC = () => {
           <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-white">Name</label>
+                <label className="text-sm md:text-base font-semibold text-white">
+                  First Name
+                </label>
                 <input
                   type="text"
-                  placeholder="Enter your full name"
-                  className="w-full xl:h-12 h-11 rounded-[8px] bg-[#2E2E2E] border-none px-4 text-white placeholder:text-[#AAB2C7] focus:ring-1 focus:ring-white/20 outline-none transition-all"
+                  placeholder="Enter your First Name"
+                  className="w-full xl:h-12 h-11 rounded-[8px] bg-[#2E2E2E] border-none px-4 text-white placeholder:text-[#AAB2C7] placeholder:text-sm focus:ring-1 focus:ring-[#E23373] outline-none transition-all"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-white">
+                <label className="text-sm md:text-base font-semibold text-white">
                   Last Name
                 </label>
                 <input
                   type="text"
                   placeholder="Enter your Last Name"
-                  className="w-full xl:h-12 h-11 rounded-[8px] bg-[#2E2E2E] border-none px-4 text-white placeholder:text-[#AAB2C7] focus:ring-1 focus:ring-white/20 outline-none transition-all"
+                  className="w-full xl:h-12 h-11 rounded-[8px] bg-[#2E2E2E] border-none px-4 text-white placeholder:text-[#AAB2C7] placeholder:text-sm focus:ring-1 focus:ring-[#E23373] outline-none transition-all"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-white">Email</label>
+              <label className="text-sm md:text-base font-semibold text-white">
+                Email
+              </label>
               <input
                 type="email"
                 placeholder="Enter your Email"
-                className="w-full xl:h-12 h-11 rounded-[8px] bg-[#2E2E2E] border-none px-4 text-white placeholder:text-[#AAB2C7] focus:ring-1 focus:ring-white/20 outline-none transition-all"
+                className="w-full xl:h-12 h-11 rounded-[8px] bg-[#2E2E2E] border-none px-4 text-white placeholder:text-sm placeholder:text-[#AAB2C7] focus:ring-1 focus:ring-[#E23373] outline-none transition-all"
               />
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-white">
+              <label className="text-sm md:text-base font-semibold text-white">
                 Message
               </label>
               <textarea
                 rows={4}
                 placeholder="Enter your Description"
-                className="w-full rounded-[8px] !font-montserrat !bg-[#2E2E2E] !border-none p-4 text-white placeholder:text-[#AAB2C7]  !focus:ring-1 !focus:ring-white/20 !outline-none resize-none transition-all"
+                className="w-full rounded-[8px] !font-montserrat !bg-[#2E2E2E] !border-none p-3 text-white placeholder:text-[#AAB2C7] placeholder:text-sm focus:ring-1 focus:ring-[#E23373] outline-none resize-none transition-all"
               />
             </div>
 
-            <Button className="w-full h-[42px] rounded-full bg-gradient-to-r from-[#E23373] to-[#FEC133] text-white font-semibold text-base border-none hover:opacity-90 transition-opacity mt-4 cursor-pointer">
+            <Button className="w-full h-[42px] rounded-full bg-gradient-to-r from-[#E23373] to-[#FEC133] hover:from-[#FEC133] hover:to-[#E23373] text-white font-semibold text-base border-none transition-colors duration-300 mt-4 cursor-pointer">
               Send Message
             </Button>
           </form>
 
           <img
-            src="/assets/gradient.svg" 
+            src="/assets/gradient.svg"
             alt=""
             className="absolute 2xl:-right-20 lg:top-100 md:top-104 md:-right-10 -right-8 -translate-y-1/2 w-1/2 h-[650px] opacity-70 pointer-events-none"
           />
@@ -122,17 +126,17 @@ const ContactUs: React.FC = () => {
       <section className="relative z-50 w-full h-[450px] flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img
-            src="/assets/contact-art-1.svg"
+            src="/assets/contact-art-2.webp"
             alt="Famous Artwork"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover opacity-50"
           />
         </div>
 
-        <div className="relative z-10  mx-auto px-6 text-center py-5 flex flex-col items-center gap-3 lg:gap-6">
-          <h2 className="text-2xl md:text-3xl lg:text-[34px] font-bold !text-white">
+        <div className="relative z-10  mx-auto px-6 text-center py-5 flex flex-col items-center gap-3 lg:gap-8">
+          <h2 className="text-2xl md:text-3xl lg:text-[34px] !font-semibold !text-white">
             Explore Our Famous Artwork
           </h2>
-          <p className="!text-white text-sm md:text-base max-w-4xl leading-relaxed">
+          <p className="!text-white text-sm md:text-base font-medium max-w-5xl leading-relaxed">
             Step into a world of creativity where every artwork tells a story.
             Our famous collection showcases inspiring pieces created with
             passion, skill, and imagination, each reflecting a unique artistic

@@ -22,7 +22,7 @@ const HeroSection: React.FC = () => {
             Stunning Artworks
           </span>
 
-          <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl pr-10 !text-white font-bold leading-[1.1] lg:leading-[1.1] ">
+          <h1 className="text-2xl md:text-3xl lg:text-4xl xl:text-5xl pr-10 !text-white !font-semibold leading-[1.1] lg:leading-[1.1] ">
             Join The Worlds Largest <br className="hidden lg:block" />
             Collaborative{" "}
             <span className="bg-gradient-to-r from-[#E23373] to-[#FEC133] bg-clip-text text-transparent">
