@@ -186,7 +186,7 @@ const ActiveProjectsSection: React.FC = () => {
             {/* Header Row */}
             <div className="flex justify-between items-start lg:mb-5 ">
               {/* Heading */}
-              <h2 className="text-xl md:text-[28px] lg:text-[34px] lg:text-5xl font-bold">
+              <h2 className="text-xl md:text-[28px] lg:text-[34px] lg:text-5xl !font-semibold">
                 <span className="bg-gradient-to-r from-[#E13372] to-[#FEC133] bg-clip-text text-transparent">
                   Active Projects
                 </span>

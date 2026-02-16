@@ -73,7 +73,7 @@ const ServicesSection: React.FC = () => {
         {/* Header Row */}
         <div className="flex flex-col-reverse md:flex-row justify-between items-start !sm:items-center md:gap-6 gap-3 lg:mb-16 md:mb-5 mb-3">
           {/* Heading */}
-          <h2 className="text-2xl md:text-3xl lg:text-[34px] font-semibold !text-white">
+          <h2 className="text-2xl md:text-3xl lg:text-[34px] !font-semibold !text-white">
             Our Amazing{" "}
             <span className="bg-gradient-to-r from-[#E23373] to-[#FEC133] bg-clip-text text-transparent">
               Artwork Services

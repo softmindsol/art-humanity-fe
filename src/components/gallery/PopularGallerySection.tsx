@@ -66,7 +66,7 @@ const PopularGallerySection: React.FC = () => {
         {/* Header Row */}
         <div className="flex flex-col-reverse md:flex-row justify-between items-start lg:gap-6 gap-3 md:mb-12 mb-1">
           {/* Heading */}
-          <h2 className="text-2xl md:text-3xl lg:text-[34px] font-semibold !text-white">
+          <h2 className="text-2xl md:text-3xl lg:text-[34px] !font-semibold !text-white">
             Our Popular{" "}
             <span className="bg-gradient-to-r from-[#E23373] to-[#FEC133] bg-clip-text text-transparent">
               Gallery Artwork

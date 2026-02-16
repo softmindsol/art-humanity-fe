@@ -20,7 +20,7 @@ const ArtworkShowcaseSection: React.FC = () => {
             <br className="hidden md:block" /> to other people artworks
           </p>
 
-          <h2 className="text-[24px] lg:text-[34px] font-semibold !text-white leading-[1.1]">
+          <h2 className="text-[24px] lg:text-[34px] !font-semibold !text-white leading-[1.1]">
             Pastoral Stillness with Sheep <br />
             Anonymous{" "}
             <span className="bg-gradient-to-r from-[#E23373] to-[#FEC133] bg-clip-text text-transparent">
