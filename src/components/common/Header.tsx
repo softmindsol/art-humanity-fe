@@ -17,6 +17,8 @@ import {
   closeAuthModal,
   selectIsAuthModalOpen,
   openDonationForm,
+  selectIsDonationModalOpen,
+  closeDonationForm,
 } from "@/redux/slice/opeModal";
 import { useSocket } from "@/context/SocketContext";
 import {
@@ -51,6 +53,7 @@ const Header = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { user, profile } = useSelector((state: RootState) => state.auth);
+  const isDonationFormOpenRedux = useSelector(selectIsDonationModalOpen);
 
   const notificationRef = useRef<HTMLDivElement>(null);
   // --- DRAWER STATE ---
@@ -136,6 +139,15 @@ const Header = () => {
       dispatch(fetchNotifications({ userId: user?._id })); // <--
     }
   }, [user, dispatch]);
+
+  // --- SYNC REDUX DONATION STATE WITH LOCAL STATE ---
+  useEffect(() => {
+    if (isDonationFormOpenRedux) {
+      setDonationState((prev) => ({ ...prev, isFormOpen: true }));
+      // Reset Redux state immediately so it acts as a trigger
+      dispatch(closeDonationForm());
+    }
+  }, [isDonationFormOpenRedux, dispatch]);
 
   // --- REAL-TIME NOTIFICATION LISTENER ---
   useEffect(() => {

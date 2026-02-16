@@ -152,6 +152,7 @@ function App() {
                 onClose={() => setIsPromptModalOpen(false)}
                 onDonateClick={() => {
                   dispatch(openDonationForm());
+                  setIsPromptModalOpen(false);
                 }}
               />
             </div>
