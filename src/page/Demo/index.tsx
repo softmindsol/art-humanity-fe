@@ -27,11 +27,11 @@ const DemoPage: React.FC = () => {
               Start Your Artwork
             </span>
 
-            <h1 className="text-[28px] md:text-[34px] lg:text-[46px] font-semibold !text-white lg:mb-5 mb-4 leading-tight">
+            <h1 className="text-[28px] md:text-[34px] lg:text-[46px] !font-semibold !text-white lg:mb-5 mb-4 leading-tight">
               Demo
             </h1>
 
-            <p className="!text-white text-sm lg:text-base xl:text-[22px] leading-relaxed lg:mb-10 mb-6 lg:max-w-xl xl:max-w-2xl">
+            <p className="!text-white text-sm lg:text-base xl:text-lg leading-relaxed lg:mb-10 mb-6 lg:max-w-xl xl:max-w-2xl font-medium">
               Explore Our Collection Of Completed Collaborative Canvases And
               Step Into A World Where Creativity Knows No Borders. Each
               Masterpiece You’ll Find Here Is The Result Of Countless Artists
