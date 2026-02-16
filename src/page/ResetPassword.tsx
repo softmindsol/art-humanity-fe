@@ -144,7 +144,7 @@ const ResetPassword = () => {
                                 🚀
                              </div>
                              
-                             <h2 className="text-[20px] lg:text-[24px] font-semibold text-white">
+                             <h2 className="text-[20px] lg:text-[24px] font-semibold !text-white">
                                 Your password has been successfully reset
                              </h2>
 
