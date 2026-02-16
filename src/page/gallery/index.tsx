@@ -192,11 +192,11 @@ const GalleryPage: React.FC = () => {
               Collections
             </span>
 
-            <h1 className="text-2xl lg:text-3xl xl:text-4xl !text-white font-bold leading-[1.1] lg:leading-[1.1] ">
+            <h1 className="text-2xl lg:text-3xl xl:text-4xl !text-white !font-semibold leading-[1.1] lg:leading-[1.1] ">
               Project Gallery
             </h1>
 
-            <p className="!text-white !font-medium text-sm lg:text-base 2xl:text-[22px] max-w-[756px] leading-relaxed drop-shadow-md">
+            <p className="!text-white !font-medium text-sm lg:text-base 2xl:text-lg max-w-[756px] leading-relaxed drop-shadow-md">
               Explore Our Collection Of Completed Collaborative Canvases And
               Step Into A World Where Creativity Knows No Borders. Each
               Masterpiece You'll Find Here Is The Result Of Countless Artists
@@ -233,7 +233,7 @@ const GalleryPage: React.FC = () => {
           </h2>
           <div className="inline-block p-[1px] rounded-full bg-gradient-to-r from-[#E13372] to-[#FEC133]">
             <div className="px-8 py-2 rounded-full bg-[#0F0D0D] text-white tracking-widest text-xs font-semibold uppercase">
-              Guideline
+              Artworks
             </div>
           </div>
         </div>

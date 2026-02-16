@@ -25,11 +25,11 @@ const GuidelinePage: React.FC = () => {
               Project Guideline
             </span>
 
-            <h1 className="text-2xl md:text-3xl lg:text-4xl !text-white lg:text-[46px] font-semibold leading-[1.1] lg:leading-[1.1] ">
+            <h1 className="text-2xl md:text-3xl lg:text-4xl !text-white lg:text-[46px] !font-semibold leading-[1.1] lg:leading-[1.1] ">
               Guideline
             </h1>
 
-            <p className="!text-white !font-medium text-sm lg:text-base 2xl:text-[22px] lg:max-w-2xl leading-relaxed drop-shadow-md">
+            <p className="!text-white !font-medium text-sm lg:text-base 2xl:text-lg lg:max-w-2xl leading-relaxed drop-shadow-md">
               At MurArt, Our Mission Is To Empower Artists, Creators, And
               Curators With A Platform That’s Easy To Use, Inspiring, And Fair.
               These Guidelines Help You Understand How To Participate, Create,
