@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { MdOutlineAlignHorizontalCenter } from "react-icons/md";
 import { IoSunnyOutline } from "react-icons/io5";
 
-
 const GuidelinePage: React.FC = () => {
   return (
     <div className="min-h-screen bg-[#0F0D0D] text-gray-200 font-montserrat">
@@ -204,7 +203,7 @@ const GuidelinePage: React.FC = () => {
                   <div className=" border border-[#AAB2C7] rounded-[12px] p-6 flex flex-col items-center text-center gap-4 hover:border-[#E23373]/50 transition-colors group h-full justify-start">
                     <div className="text-[#FEC133] h-8 flex items-center justify-center">
                       {/* Sun Icon (Lucide Sun fallback or similar shape) */}
-                      <IoSunnyOutline size={32}/>
+                      <IoSunnyOutline size={32} />
                     </div>
                     <p className="text-sm text-white font-medium">
                       Your Contribution, Its Colors, And Lighting Must Integrate
@@ -255,7 +254,10 @@ const GuidelinePage: React.FC = () => {
       </main>
 
       {/* Troll Prevention Section */}
-      <div className="max-w-[1440px] mx-auto px-6 lg:px-8 py-10 lg:py-20">
+      <div className="max-w-[1440px] mx-auto px-6 lg:px-8 py-10 lg:py-20 relative">
+        <div className="absolute rotate-90 left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+          <img src="/assets/gradient-1.svg" alt="" className="" />
+        </div>
         <div className="flex flex-col-reverse lg:flex-row gap-8 lg:gap-16 items-center">
           {/* Left Image */}
           <div className="w-full lg:w-1/3 flex justify-center lg:justify-start">
@@ -280,7 +282,7 @@ const GuidelinePage: React.FC = () => {
               Troll Prevention And Promoting Quality Over Quantity
             </h2>
 
-            <p className="!text-white text-sm sm:text-base 2xl:text-lg leading-relaxed text-left">
+            <p className="!text-white text-sm lg:text-base leading-relaxed text-left">
               We only want painters who are passionate about the project, no
               matter how small your contribution is. The painting system is
               designed to emphasize a slow and steady process for your
@@ -294,14 +296,14 @@ const GuidelinePage: React.FC = () => {
             </p>
 
             <div className="pt-4">
-              <p className="text-2xl 2xl:text-[34px] font-semibold !text-white leading-snug">
-                “Success Is The{" "}
+              <p className="text-xl lg:text-2xl 2xl:text-[34px] font-semibold !text-white leading-snug">
+                "Success Is The{" "}
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#E23373] to-[#FEC133]">
                   Sum Of Small Efforts,
                 </span>{" "}
-                Repeated Day In And Day Out ”
+                Repeated Day In And Day Out "
               </p>
-              <p className="text-white mt-4 text-lg font-medium">
+              <p className="text-white md:mt-4 mt-2 text-base md:text-lg font-medium">
                 -Robert Collier
               </p>
             </div>
