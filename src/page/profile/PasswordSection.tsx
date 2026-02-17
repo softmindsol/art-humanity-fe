@@ -154,7 +154,7 @@ const PasswordSection = () => {
         <Button
           onClick={handlePasswordUpdate}
           disabled={passwordLoader}
-          className="bg-gradient-to-r from-[#E23373] to-[#FEC133] rounded-full px-8 py-2 h-10 text-white font-semibold hover:opacity-90 border-none transition-all"
+          className="bg-gradient-to-r from-[#E23373] to-[#FEC133] rounded-full px-8 py-2 h-10 text-white font-semibold hover:opacity-90 border-none md:text-base transition-all"
         >
           {passwordLoader ? (
             <Loader2 className="animate-spin w-4 h-4 mr-2" />

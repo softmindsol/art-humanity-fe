@@ -258,7 +258,7 @@ const ProfilePage = () => {
 
           {/* Section 2: Personal Details */}
           <div>
-            <h3 className="text-lg font-semibold !text-white lg:!mb-6 !mb-4">
+            <h3 className="text-lg !font-semibold !text-white lg:!mb-6 !mb-4">
               Personal Details
             </h3>
             <div className="lg:space-y-6 space-y-3">
@@ -297,7 +297,7 @@ const ProfilePage = () => {
               <Button
                 onClick={handleProfileUpdate}
                 disabled={profileLoader}
-                className="bg-gradient-to-r from-[#E23373] to-[#FEC133] rounded-full px-8 py-2 h-10 text-white font-semibold hover:opacity-90 border-none transition-all"
+                className="bg-gradient-to-r from-[#E23373] to-[#FEC133] rounded-full px-8 py-2 h-10 text-white font-semibold hover:opacity-90 border-none md:text-base transition-all"
               >
                 {profileLoader ? (
                   <Loader2 className="animate-spin w-4 h-4 mr-2" />

@@ -26,6 +26,26 @@
   --border-radius-lg: 12px;
 }
 
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+/* track (background) */
+::-webkit-scrollbar-track {
+  background: #2e2e2a;
+}
+
+/* thumb (jo move hota hai) */
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #E23373, #FEC133);
+}
+
+/* hover effect */
+::-webkit-scrollbar-thumb:hover {
+  background: #FEC133;
+}
+
 /* Base Styles */
 * {
   /* margin: 0; 
