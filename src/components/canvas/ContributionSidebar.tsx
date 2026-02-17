@@ -240,13 +240,13 @@ const ContributionSidebar = ({
           <div className="flex border-b-[1px] border-[#0F0D0D]">
             <button
               onClick={() => setActiveTab("my")}
-              className={`flex-1 py-4 px-6 text-[16px] cursor-pointer font-semibold ${activeTab === "my" ? "border-b-2  text-[#E23373]" : "text-[#ffffff]"}`}
+              className={`flex-1 py-4 px-6 text-xs sm:text-sm md:text-base cursor-pointer font-semibold ${activeTab === "my" ? "border-b-2  text-[#E23373]" : "text-[#ffffff]"}`}
             >
               My Contributions
             </button>
             <button
               onClick={() => setActiveTab("project")}
-              className={`flex py-4 px-6 text-[16px] cursor-pointer font-semibold ${activeTab === "project" ? "border-b-2   text-[#E23373]" : "text-[#ffffff]"}`}
+              className={`flex py-4 px-6 text-xs sm:text-sm md:text-base cursor-pointer font-semibold ${activeTab === "project" ? "border-b-2   text-[#E23373]" : "text-[#ffffff]"}`}
             >
               Project Contributions
             </button>
