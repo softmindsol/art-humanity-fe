@@ -282,7 +282,7 @@ const GalleryPage: React.FC = () => {
                     <div className="absolute top-3 right-3">
                       <div className="bg-gradient-to-r from-[#E23373] to-[#FEC133] p-[1px] rounded-full">
                         <div className="!text-white px-2  rounded-full">
-                          <span className="bg-gradient-to-r from-[#E23373] to-[#FEC133] lg:text-sm text-xs font-semibold">
+                          <span className="bg-gradient-to-r from-[#E23373] to-[#FEC133] lg:text-base sm:text-sm text-xs font-semibold">
                             Completed
                           </span>
                         </div>
