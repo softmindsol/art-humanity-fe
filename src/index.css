@@ -38,12 +38,12 @@
 
 /* thumb (jo move hota hai) */
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(to bottom, #E23373, #FEC133);
+  background: linear-gradient(to bottom, #e23373, #fec133);
 }
 
 /* hover effect */
 ::-webkit-scrollbar-thumb:hover {
-  background: #FEC133;
+  background: #fec133;
 }
 
 /* Base Styles */
@@ -2095,4 +2095,13 @@ footer {
     (aapke buttons, links, etc.) par jaane do.
   */
   pointer-events: none;
+}
+
+/* Prevent iOS zoom on focus by ensuring font-size is at least 16px */
+@media screen and (max-width: 768px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
 }
