@@ -35,7 +35,7 @@ const SignupPage: React.FC = () => {
                 <img 
                     src="/assets/signup-img.svg" 
                     alt="Collaborative Art" 
-                    className="2xl:w-[calc(100%-20px)] w-[calc(100%-30px)] h-[calc(100vh-60px)] m-6 object-cover rounded-[12px]"
+                    className="m-8 object-cover rounded-[12px]"
                 />
             </div>
  
@@ -43,8 +43,8 @@ const SignupPage: React.FC = () => {
             <div className="w-full lg:w-[680px] 2xl:w-[800px] flex items-center justify-center px-4 py-8 md:p-12 lg:px-10">
                 <div className="w-full max-w-2xl space-y-4 xl:space-y-8">
                     <div className="space-y-2">
-                        <h3 className="!text-white text-[20px] lg:text-[26px] font-semibold">Signup</h3>
-                        <h1 className="text-[26px] lg:text-[32px] font-semibold !text-white tracking-tight">Join MurArt</h1>
+                        <h3 className="!text-white text-[20px] lg:text-[26px] !font-semibold">Signup</h3>
+                        <h1 className="text-[26px] lg:text-[32px] !font-semibold !text-white tracking-tight">Join MurArt</h1>
                         <p className="text-white font-semibold text-[14px] lg:text-lg">
                             Create an account to contribute to the world's largest collaborative art project
                         </p>
@@ -153,10 +153,10 @@ const SignupPage: React.FC = () => {
                             {googleLoading ? 'Signing up...' : 'Sign up with Google'}
                         </button>
 
-                        <p className="text-left text-white font-semibold text-sm">
+                        <p className="text-left text-white font-semibold md:text-base text-sm">
                             Already have an account?{' '}
                             {/* In the future this will link to /login, for now we can leave it or link to home/modal trigger */}
-                            <Link to="/login" className="!text-[#E23373] hover:underline">
+                            <Link to="/login" className="!text-[#E23373] hover:!underline">
                                 Login
                             </Link>
                         </p>

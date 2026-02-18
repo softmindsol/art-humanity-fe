@@ -43,10 +43,10 @@ const LoginPage: React.FC = () => {
       <div className="w-full lg:w-[680px] 2xl:w-[800px] flex items-center justify-center px-4 py-8">
         <div className="w-full max-w-2xl space-y-3 xl:space-y-4">
           <div className="">
-            <h3 className="!text-white text-lg lg:text-xl xl:text-[26px] font-semibold">
+            <h3 className="!text-white text-lg lg:text-xl xl:text-[26px] !font-semibold">
               Log In
             </h3>
-            <h1 className="text-xl lg:text-2xl xl:text-[32px] font-semibold !text-white tracking-tight">
+            <h1 className="text-xl lg:text-2xl xl:text-[32px] !font-semibold !text-white tracking-tight">
               Join MurArt
             </h1>
             <p className="max-w-xl w-full text-white font-semibold text-sm lg:text-base xl:text-lg">

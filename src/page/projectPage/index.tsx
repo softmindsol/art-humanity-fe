@@ -727,10 +727,10 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
     >
       <div className="max-w-screen-2xl mx-auto">
         <div className="mb-4 text-center mt-24">
-          <h1 className="text-[28px] lg:text-[44.8px] font-serif !text-[#ffffff]">
+          <h1 className="text-[28px] lg:text-[44.8px] !font-semibold font-serif !text-[#ffffff]">
             {projectName}
           </h1>
-          <p className="text-[#8D6E63] !text-[#ffffff] italic lg:text-[19.2px]">
+          <p className="text-[#8D6E63] !text-[#ffffff] font-medium italic lg:text-[19.2px]">
             {currentProject?.description}
           </p>
         </div>
@@ -748,10 +748,10 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
             <div className="flex justify-center gap-3">
               <button
                 onClick={handleToggleCanvasSize}
-                className="bg-gradient-to-r from-[#E23373] to-[#FEC133] hover:bg-gradient-to-r hover:from-[#FEC133] hover:to-[#E23373] transition-colors duration-300 hidden text-white border-none text-[12px] md:text-[16px] px-2 py-2 md:px-4 md:py-2 rounded-full cursor-pointer xl:flex items-center gap-2"
+                className="bg-gradient-to-r from-[#E23373] to-[#FEC133] hover:bg-gradient-to-r hover:from-[#FEC133] hover:to-[#E23373] transition-colors duration-300 hidden text-white border-none text-[12px] md:text-[16px] px-2 py-2 md:px-4 md:py-2 rounded-full font-semibold cursor-pointer xl:flex items-center gap-2"
                 title={`Current display size: ${displaySize}px. Click to toggle.`}
               >
-                <Code size={16} />
+                <Code size={16} strokeWidth={3} />
                 Toggle Size
               </button>
               {user?.role == "admin" && (
@@ -759,7 +759,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
                   <button
                     onClick={handleGenerateTimelapse}
                     disabled={isGeneratingTimelapse}
-                    className="bg-black text-white border-none text-[12px] md:text-[16px] p-2 md:px-4 md:py-2 rounded-full cursor-pointer flex items-center gap-2 disabled:opacity-50"
+                    className="bg-black text-white border-none text-[12px] md:text-[16px] p-2 md:px-4 md:py-2 rounded-full cursor-pointer flex items-center font-semibold gap-2 disabled:opacity-50"
                   >
                     <MdTimelapse size={18} className="rotate-90" />
                     {isGeneratingTimelapse
@@ -785,7 +785,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
                             : "Clear the entire canvas"
                         }
                         // 3. Styling add karein taake user ko pata chale ke button disabled hai
-                        className="bg-[#BE0000] hover:bg-[#BE0000d0] transition-colors  text-white border-none text-[12px] md:text-[16px] px-2 py-2 md:px-4 md:py-2 rounded-full cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="bg-[#BE0000] hover:bg-[#BE0000d0] transition-colors  text-white border-none text-[12px] md:text-[16px] px-2 py-2 md:px-4 md:py-2 rounded-full cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
                       >
                         Clear Canvas
                       </button>
@@ -835,32 +835,32 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
             </div>
             <div className="canvas-count !bg-[#0F0D0D]  w-[90%]   ">
               <div className="stat-item">
-                <span className="stat-label  !text-[14.4px] !text-[#ffffff]">
+                <span className="stat-label font-semibold !text-[14.4px] !text-[#ffffff]">
                   Total Contributors:
                 </span>
                 <span
-                  className="stat-value  !text-[14.4px] !text-[#ffffff]"
+                  className="stat-value font-semibold !text-[14.4px] !text-[#ffffff]"
                   id="contributor-count"
                 >
                   {totalContributors}
                 </span>
               </div>
               <div className="stat-item">
-                <span className="stat-label !text-[14.4px] !text-[#ffffff]">
+                <span className="stat-label font-semibold !text-[14.4px] !text-[#ffffff]">
                   Pixels Painted:
                 </span>
                 <span
-                  className="stat-value !text-[14.4px] !text-[#ffffff]"
+                  className="stat-value font-semibold !text-[14.4px] !text-[#ffffff]"
                   id="pixel-count"
                 >
                   {currentProject?.stats?.pixelCount}/104,857,600
                 </span>
               </div>
               <div className="stat-item">
-                <span className="stat-label !text-[14.4px] !text-[#ffffff]">
+                <span className="stat-label font-semibold !text-[14.4px] !text-[#ffffff]">
                   Canvas Size:
                 </span>
-                <span className="stat-value !text-[14.4px] !text-[#ffffff]">
+                <span className="stat-value font-semibold !text-[14.4px] !text-[#ffffff]">
                   2560px by 2560px
                 </span>
               </div>
