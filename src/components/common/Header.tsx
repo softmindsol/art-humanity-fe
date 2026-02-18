@@ -327,7 +327,7 @@ const Header = () => {
             </nav>
           </div>
           {/* Auth Buttons - Hidden on Mobile (moved to sidebar) */}
-          <div className="hidden md:flex items-center gap-6 pr-1">
+          <div className="hidden md:flex items-center gap-6">
             {user?._id && (
               <div ref={notificationRef} className="relative">
                 <div
@@ -400,7 +400,7 @@ const Header = () => {
 
             {profile ? (
               <div>
-                <DropdownMenu>
+                <DropdownMenu modal={false}>
                   <DropdownMenuTrigger asChild>
                     {profile?.avatar ? (
                       <img
@@ -416,9 +416,9 @@ const Header = () => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
                     align="end"
-                    className="w-60 bg-[#1A1D24] border border-white/10 rounded-xl shadow-2xl text-gray-200 mt-2"
+                    className="w-60 bg-[#1A1D24] border border-white/10 rounded-xl shadow-2xl text-gray-200 mt-2.5"
                   >
-                    <DropdownMenuLabel className="p-3">
+                    <DropdownMenuLabel className="p-2">
                       <div className="font-bold !text-white mb-0.5">
                         {profile?.fullName}
                       </div>
@@ -496,7 +496,7 @@ const Header = () => {
             className="flex items-center gap-x-3"
           >
             <img
-              src="/assets/logo.svg"
+              src="/assets/logo2.webp"
               alt="Logo"
               className="size-12 object-contain"
             />
