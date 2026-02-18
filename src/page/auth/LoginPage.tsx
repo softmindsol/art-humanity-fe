@@ -35,13 +35,13 @@ const LoginPage: React.FC = () => {
         <img
           src="/assets/login-img.svg"
           alt="Collaborative Art"
-          className="2xl:w-[calc(100%-150px)] w-[calc(100%-30px)] h-[calc(100vh-60px)] m-auto object-cover rounded-[12px]"
+          className="m-8 object-cover rounded-[12px]"
         />
       </div>
 
       {/* Right Side - Form */}
-      <div className="w-full lg:w-[680px] 2xl:w-[800px] flex items-center justify-center px-4 py-8">
-        <div className="w-full max-w-2xl space-y-3 xl:space-y-4">
+      <div className="w-full lg:w-[680px] 2xl:w-[800px] flex items-center justify-start px-4 py-8 md:p-12 lg:px-12 xl:px-6">
+        <div className="w-full max-w-[740px] space-y-3 xl:space-y-4">
           <div className="">
             <h3 className="!text-white text-lg lg:text-xl xl:text-[26px] !font-semibold">
               Log In
@@ -114,7 +114,7 @@ const LoginPage: React.FC = () => {
                   onChange={(e) => setRememberMe(e.target.checked)}
                   className="w-4 h-4 rounded bg-[#2E2E2E] accent-[#FEC133]"
                 />
-                <span className="text-gray-300 text-sm">Remember Me</span>
+                <span className="text-white text-sm">Remember Me</span>
               </label>
               <Link
                 to="/forgot-password"

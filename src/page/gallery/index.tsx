@@ -225,7 +225,7 @@ const GalleryPage: React.FC = () => {
       >
         {/* Section Header */}
         <div className="flex flex-col-reverse md:flex-row justify-between items-start md:items-center md:mb-10 gap-3">
-          <h2 className="lg:text-[34px] md:text-3xl text-2xl font-bold !text-white">
+          <h2 className="lg:text-[34px] md:text-3xl text-2xl !font-semibold !text-white">
             Our Completed{" "}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#E23373] to-[#FEC133]">
               Gallery Artwork

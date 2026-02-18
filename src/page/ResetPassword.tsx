@@ -63,13 +63,13 @@ const ResetPassword = () => {
             e.currentTarget.src = "/assets/reset-pass-img.svg";
           }}
           alt="Reset Password Art"
-          className="w-[calc(100%-30px)] h-[calc(100vh-60px)] m-6 object-cover rounded-[12px]"
+          className="m-8 object-cover rounded-[12px]"
         />
       </div>
 
       {/* Right Side - Form */}
-      <div className="w-full lg:w-[680px] 2xl:w-[800px] flex items-center justify-center px-4 py-8 md:p-12 lg:px-10">
-        <div className="w-full max-w-2xl space-y-4 xl:space-y-8">
+      <div className="w-full lg:w-[680px] 2xl:w-[800px] flex items-center justify-start px-4 py-8 md:p-12 lg:px-12 xl:px-6">
+        <div className="w-full max-w-[740px] space-y-4 xl:space-y-8">
           {/* Back Button - Gradient Border */}
           <div className="w-10 h-10 p-[1px] rounded-full bg-gradient-to-r from-[#E23373] to-[#FEC133] mb-4 inline-block">
             <button
@@ -83,10 +83,10 @@ const ResetPassword = () => {
           {!isSuccess ? (
             <>
               <div className="space-y-2">
-                <h3 className="!text-white text-[20px] lg:text-[26px] font-semibold">
+                <h3 className="!text-white text-[20px] lg:text-[26px] !font-semibold">
                   Log In
                 </h3>
-                <h1 className="text-[26px] lg:text-[32px] font-semibold !text-white tracking-tight">
+                <h1 className="text-[26px] lg:text-[32px] !font-semibold !text-white tracking-tight">
                   Create New Password
                 </h1>
                 <p className="text-white font-semibold text-[14px] lg:text-lg">

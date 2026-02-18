@@ -29,7 +29,7 @@ const ProjectCard: React.FC<ProjectCardProps> = ({
           className="w-full aspect-[4/3] object-cover rounded-[8.03px]"
         />
         {isActive && (
-          <span className="absolute top-3 right-3 px-4 py-1 rounded-full bg-gradient-to-r from-[#E23373] to-[#FEC133] !text-white text-xs font-semibold">
+          <span className="absolute top-3 right-3 px-4 py-1 rounded-full bg-gradient-to-r from-[#E23373] to-[#FEC133] !text-white text-xs md:text-sm font-semibold">
             Active
           </span>
         )}
@@ -133,7 +133,7 @@ const FeaturedArtwork: React.FC<FeaturedArtworkProps> = ({
         <span className="!text-[#AAB2C7] text-sm font-medium lg:text-base">
           {artistType}
         </span>
-        <h3 className="!text-white text-[36px] font-semibold">{title}</h3>
+        <h3 className="!text-white text-[36px] !font-semibold">{title}</h3>
         <p className="!text-white text-sm lg:text-base font-semibold leading-relaxed">
           {description}
         </p>

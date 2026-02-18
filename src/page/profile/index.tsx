@@ -189,7 +189,7 @@ const ProfilePage = () => {
       <div className="max-w-[1440px] mx-auto md:px-10 px-5">
         {/* Header */}
         <div className="text-center lg:mb-12 mb-2">
-          <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-[54px] font-bold bg-gradient-to-r from-[#E23373] to-[#FEC133] !bg-clip-text !text-transparent inline-block">
+          <h1 className="text-3xl md:text-4xl lg:text-5xl xl:text-[54px] bg-gradient-to-r from-[#E23373] to-[#FEC133] !bg-clip-text !text-transparent inline-block !font-semibold">
             Your Profile
           </h1>
         </div>
