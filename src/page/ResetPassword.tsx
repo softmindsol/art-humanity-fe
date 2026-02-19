@@ -47,7 +47,7 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-black overflow-y-auto">
+    <div className="min-h-screen flex items-center justify-center bg-black overflow-y-auto">
       {/* Left Side - Image */}
       <div className="hidden lg:flex">
         {/* Placeholder for the specific image */}
@@ -63,7 +63,7 @@ const ResetPassword = () => {
             e.currentTarget.src = "/assets/reset-pass-img.svg";
           }}
           alt="Reset Password Art"
-          className="m-6 object-cover rounded-[12px]"
+          className="m-6 max-h-[600px] object-cover rounded-[12px]"
         />
       </div>
 

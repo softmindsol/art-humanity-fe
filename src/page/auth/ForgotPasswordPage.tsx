@@ -33,7 +33,7 @@ const ForgotPasswordPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex !items-center bg-[#0F0D0D] overflow-y-auto">
+    <div className="min-h-screen flex !items-center justify-center bg-[#0F0D0D] overflow-y-auto">
       {/* Left Side - Image */}
       <div className="hidden lg:flex">
         <div className="" />
@@ -41,7 +41,7 @@ const ForgotPasswordPage: React.FC = () => {
         <img
           src="/assets/reset-pass-img.svg"
           alt="Collaborative Art"
-          className="m-6 object-cover rounded-[12px]"
+          className="m-6 max-h-[600px] object-cover rounded-[12px]"
         />
       </div>
 
