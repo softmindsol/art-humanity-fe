@@ -35,19 +35,19 @@ const ForgotPasswordPage: React.FC = () => {
   return (
     <div className="min-h-screen flex !items-center bg-[#0F0D0D] overflow-y-auto">
       {/* Left Side - Image */}
-      <div className="hidden lg:flex lg:flex-1 relative">
+      <div className="hidden lg:flex">
         <div className="" />
         {/* Placeholder for the specific image */}
         <img
           src="/assets/reset-pass-img.svg"
           alt="Collaborative Art"
-          className="m-8 object-cover rounded-[12px]"
+          className="m-6 object-cover rounded-[12px]"
         />
       </div>
 
       {/* Right Side - Form */}
       <div className="w-full lg:w-[680px] 2xl:w-[800px] flex items-center justify-start px-4 py-8 md:p-12 lg:px-12 xl:px-6">
-        <div className="w-full max-w-[740px] space-y-4 xl:space-y-8">
+        <div className="w-full max-w-[800px] space-y-4 xl:space-y-8">
           {/* Back Button - Gradient Border */}
           <div className="w-10 h-10 p-[1px] absolute top-10 rounded-full bg-gradient-to-r from-[#E23373] to-[#FEC133] mb-4 inline-block">
             <button

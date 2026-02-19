@@ -29,19 +29,19 @@ const LoginPage: React.FC = () => {
   return (
     <div className="min-h-screen flex !items-center bg-[#0F0D0D] overflow-y-auto">
       {/* Left Side - Image */}
-      <div className="hidden lg:flex lg:flex-1 relative">
+      <div className="hidden lg:flex">
         <div className="" />
         {/* Placeholder for the login specific image */}
         <img
           src="/assets/login-img.svg"
           alt="Collaborative Art"
-          className="m-8 object-cover rounded-[12px]"
+          className="m-6 object-cover rounded-[12px]"
         />
       </div>
 
       {/* Right Side - Form */}
       <div className="w-full lg:w-[680px] 2xl:w-[800px] flex items-center justify-start px-4 py-8 md:p-12 lg:px-12 xl:px-6">
-        <div className="w-full max-w-[740px] space-y-3 xl:space-y-4">
+        <div className="w-full max-w-[800px] space-y-3 xl:space-y-4">
           <div className="">
             <h3 className="!text-white text-lg lg:text-xl xl:text-[26px] !font-semibold">
               Log In

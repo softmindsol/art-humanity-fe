@@ -29,19 +29,19 @@ const SignupPage: React.FC = () => {
     return (
       <div className="min-h-screen flex bg-black overflow-y-auto">
         {/* Left Side - Image */}
-        <div className="hidden lg:flex lg:flex-1 relative">
+        <div className="hidden lg:flex">
           <div className="" />
           {/* Using a placeholder fractal/art image that matches the vibe */}
           <img
             src="/assets/signup-img.svg"
             alt="Collaborative Art"
-            className="m-8 object-cover rounded-[12px]"
+            className="m-6 object-cover rounded-[12px]"
           />
         </div>
 
         {/* Right Side - Form */}
         <div className="w-full lg:w-[680px] 2xl:w-[800px] flex items-center justify-start px-4 py-8 md:p-12 lg:px-12 xl:px-6">
-          <div className="w-full max-w-[740px] space-y-4 xl:space-y-8">
+          <div className="w-full max-w-[800px] space-y-4 xl:space-y-8">
             <div className="space-y-2">
               <h3 className="!text-white text-[20px] lg:text-[26px] !font-semibold">
                 Signup
