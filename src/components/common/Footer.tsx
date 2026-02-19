@@ -1,65 +1,169 @@
-import { Link } from "react-router-dom";
-import { FaYoutube, FaTiktok, FaInstagram, FaDiscord } from 'react-icons/fa';
+import { Link, useLocation } from "react-router-dom";
+import { FaYoutube, FaTiktok, FaInstagram, FaDiscord } from "react-icons/fa";
 
 const Footer = () => {
+  const location = useLocation();
+
+  if (
+    location.pathname === "/signup" ||
+    location.pathname === "/login" ||
+    location.pathname === "/forgot-password" ||
+    location.pathname.startsWith("/reset-password")
+  ) {
+    return null;
+  }
+
   return (
-    <footer className="flex flex-col justify-end ">
-
-
-      <div className="flex flex-col lg:flex-row justify-center items-start  lg:gap-[13.5rem] xl:gap-[28.5rem]">
-
-        <span className="logo-link-footer">
-          <img src="/favicon.PNG" alt="Logo" className="logo -ml-4 md:-ml-0 lg:-ml-4" />
-          <div>
-            <div className=" ">
-              <h1 className='text-[1.8rem] sm:!text-[2rem] !text-[#efebe9]  '>MurArt</h1>
-              <p className="text-[14px] md:text-[16px] !italic !text-[#efebe9]">Collaborative Canvases of Human Expression</p>
+    <footer className="w-full !bg-[#141414] pt-16 pb-8 border-t border-white/5">
+      <div className="max-w-7xl mx-auto px-6 lg:px-8">
+        <div className="flex flex-col lg:flex-row justify-between gap-12 lg:gap-8 mb-8 md:mb-12 xl:mb-16">
+          {/* Brand Column */}
+          <div className="flex flex-col items-center lg:items-start md:space-y-6 space-y-3">
+            <div className="flex flex-col items-center md:space-y-3 space-y-2">
+              <img
+                src="/assets/logo.svg"
+                alt="MurArt Logo"
+                className="size-20 object-contain cursor-pointer"
+                onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+              />
             </div>
-            <div className="flex my-4">
-              <a href="https://www.youtube.com/@MurArtio" target="_blank" rel="noopener noreferrer" className="!text-white mr-4 text-2xl hover:text-gray-400">
-                <FaYoutube />
+
+            {/* Social Icons */}
+            <div className="flex items-center gap-4">
+              <a
+                href="https://www.instagram.com/murart.io"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center !text-white hover:bg-gradient-to-tr from-[#FFBC41] via-[#D54296] to-[#5763C6] transition-colors duration-300"
+              >
+                <FaInstagram className="text-xl" />
               </a>
-              <a href="https://www.tiktok.com/@murart.io" target="_blank" rel="noopener noreferrer" className="!text-white mx-4 text-2xl hover:text-gray-400">
-                <FaTiktok />
+              <a
+                href="https://www.youtube.com/@MurArtio"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center !text-white hover:bg-[#ff0033] transition-colors"
+              >
+                <FaYoutube className="text-xl" />
               </a>
-              <a href="https://www.instagram.com/murart.io" target="_blank" rel="noopener noreferrer" className="!text-white mx-4 text-2xl hover:text-gray-400">
-                <FaInstagram />
+              <a
+                href="https://www.tiktok.com/@murart.io"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center !text-white hover:bg-white hover:!text-black"
+              >
+                <FaTiktok className="text-lg" strokeWidth="2" />
               </a>
-              <a href="https://discord.gg/ZGWB9zZF" target="_blank" rel="noopener noreferrer" className="!text-white mx-4 text-2xl hover:text-gray-400">
-                <FaDiscord />
+              <a
+                href="https://discord.gg/ZGWB9zZF"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 rounded-full border border-white/20 flex items-center justify-center !text-white hover:bg-[#5865F2] transition-colors"
+              >
+                <FaDiscord className="text-xl" />
               </a>
             </div>
           </div>
 
-        </span>
-        <div className="flex lg:!items-start md:gap-14  mb-2 ">
-          <div className="footer-column ">
-            <h3>Explore</h3>
-            <ul>
-              <li><Link to="/gallery">Gallery</Link></li>
-              <li><Link to="/projects">Projects</Link></li>
-              <li><Link to="/guideline">Guideline</Link></li>
-            </ul>
-          </div>
-          <div className="footer-column ">
-            <h3>Participate</h3>
-            <ul>
-              <li><Link to="/projects">Join a Project</Link></li>
-              <li><Link to="/demo">Try the Demo</Link></li>
-
-            </ul>
-          </div>
-          <div className="footer-column ">
-            <h3>About</h3>
-            <ul>
-              {/* <li><a href="/our-mission">Our Mission</a></li> */}
-              <li><Link to="contact-us">Contact</Link></li>
-            </ul>
+          {/* Navigation Columns */}
+          <div className="flex flex-wrap items-center justify-center lg:justify-between xl:gap-24 gap-10">
+            <div className="flex flex-wrap sm:justify-center lg:justify-start gap-12 md:gap-24">
+              {/* Explore */}
+              <div className="flex flex-col lg:space-y-6 space-y-3">
+                <h3 className="!text-white text-[16px] !font-semibold">
+                  Explore
+                </h3>
+                <div className="ftr">
+                  <ul className="md:space-y-3 space-y-2 !text-white text-sm font-medium">
+                    <li>
+                      <Link
+                        to="/gallery"
+                        className="!text-white transition-colors"
+                      >
+                        Gallery
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/projects"
+                        className="!text-white transition-colors"
+                      >
+                        Projects
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/guideline"
+                        className="!text-white transition-colors"
+                      >
+                        Guideline
+                      </Link>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              {/* Participate */}
+              <div className="flex flex-col space-y-6">
+                <h3 className="!text-white text-base !font-semibold">
+                  Participate
+                </h3>
+                <div className="ftr">
+                  <ul className="md:space-y-3 space-y-2 !text-white text-sm font-medium">
+                    <li>
+                      <Link
+                        to="/projects"
+                        className="!text-white transition-colors"
+                      >
+                        Join a Project
+                      </Link>
+                    </li>
+                    <li>
+                      <Link
+                        to="/demo"
+                        className="!text-white transition-colors"
+                      >
+                        Try Demo
+                      </Link>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              {/* About */}
+              <div className="flex flex-col space-y-6">
+                <h3 className="!text-white text-base !font-semibold">About</h3>
+                <div className="ftr">
+                  <ul className="md:space-y-3 space-y-2 !text-white text-sm font-medium">
+                    <li>
+                      <Link
+                        to="/contact-us"
+                        className="!text-white transition-colors"
+                      >
+                        Contact
+                      </Link>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            {/* Description Column */}
+            <div className="md:w-full xl:w-sm text-left">
+              <p className="!text-white text-sm font-medium leading-relaxed">
+                Project MurArt provides enormous digital canvases that would be
+                nearly impossible to fully paint by one person. We have
+                developed a collaboration system that will allow the creation of
+                the most stunning art pieces the world has ever seen. Anyone can
+                paint a part of the canvas and solidify your spot in history!
+              </p>
+            </div>
           </div>
         </div>
-      </div>
-      <div className="copyright">
-        <p>&copy; 2025 MurArt. All rights reserved.</p>
+
+        {/* Bottom Bar */}
+        <div className="xl:pt-8 pt-5 border-t border-[#545454] text-center">
+          <p className="!text-white text-sm">
+            &copy; 2026 MurArt. All rights reserved.
+          </p>
+        </div>
       </div>
     </footer>
   );

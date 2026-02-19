@@ -1,35 +1,67 @@
-import { useEffect, useRef, useState } from 'react';
-import { Link, NavLink } from 'react-router-dom';
-import AuthModal from '../modal/AuthModal';
-import { useSelector } from 'react-redux';
-import { getUserById, logoutUser } from '@/redux/action/auth';
-import type { RootState } from '@/redux/store';
-import useAppDispatch from '@/hook/useDispatch';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '../ui/dropdown-menu';
-import { openAuthModal, closeAuthModal, selectIsAuthModalOpen, openDonationForm } from '@/redux/slice/opeModal';
-import { useSocket } from '@/context/SocketContext';
-import { fetchNotifications, markNotificationsAsRead, markSingleNotificationRead } from '@/redux/action/notification';
-import { Bell, FileText, Heart, Image, LogOut, Menu, PlayCircle, UserCircle2, Users, X } from 'lucide-react';
-import { addNotification } from '@/redux/slice/notification';
-import useOnClickOutside from '@/hook/useOnClickOutside';
-import { toast } from 'sonner';
-import DonationForm from '../stripe/DonationForm';
-import CheckoutForm from '../stripe/CheckoutForm';
-import PaymentSuccessModal from '../modal/PaymentSuccessModal';
-import ConfirmationModal from '../modal/ConfirmationModal';
-import CustomModal from '../modal/CustomModal';
+import { useEffect, useRef, useState } from "react";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
+import AuthModal from "../modal/AuthModal";
+import { useSelector } from "react-redux";
+import { getUserById, logoutUser } from "@/redux/action/auth";
+import type { RootState } from "@/redux/store";
+import useAppDispatch from "@/hook/useDispatch";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "../ui/dropdown-menu";
+import {
+  closeAuthModal,
+  selectIsAuthModalOpen,
+  openDonationForm,
+  selectIsDonationModalOpen,
+  closeDonationForm,
+} from "@/redux/slice/opeModal";
+import { useSocket } from "@/context/SocketContext";
+import {
+  fetchNotifications,
+  markNotificationsAsRead,
+  markSingleNotificationRead,
+} from "@/redux/action/notification";
+import {
+  Bell,
+  FileText,
+  Heart,
+  Image,
+  LogOut,
+  Menu,
+  PlayCircle,
+  UserCircle2,
+  Users,
+  X,
+  Home,
+} from "lucide-react";
+import { addNotification } from "@/redux/slice/notification";
+import useOnClickOutside from "@/hook/useOnClickOutside";
+import { toast } from "sonner";
+import DonationForm from "../stripe/DonationForm";
+import CheckoutForm from "../stripe/CheckoutForm";
+import PaymentSuccessModal from "../modal/PaymentSuccessModal";
+import ConfirmationModal from "../modal/ConfirmationModal";
+import CustomModal from "../modal/CustomModal";
 
 const Header = () => {
   const isAuthModalOpen = useSelector(selectIsAuthModalOpen);
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const { user, profile } = useSelector((state: RootState) => state.auth);
+  const isDonationFormOpenRedux = useSelector(selectIsDonationModalOpen);
 
   const notificationRef = useRef<HTMLDivElement>(null);
   // --- DRAWER STATE ---
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // --- NOTIFICATION STATE ---
-  const { notifications, unreadCount } = useSelector((state: RootState) => state?.notifications) || []; // <-- Notification state
+  const { notifications, unreadCount } =
+    useSelector((state: RootState) => state?.notifications) || []; // <-- Notification state
   const [isNotificationOpen, setIsNotificationOpen] = useState(false); // <-- Dropdown ke liye state
   const { socket }: any = useSocket(); // <-- Socket instance hasil karein
   // ----State----
@@ -42,7 +74,6 @@ const Header = () => {
     clientSecret: null as string | null,
     amount: 0,
   });
-
 
   useOnClickOutside([notificationRef], () => setIsNotificationOpen(false));
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
@@ -58,9 +89,8 @@ const Header = () => {
     setIsLoggingOut(true);
     try {
       localStorage.clear();
-      window.location.href = '/'; // Redirect to home page for a full refresh
+      window.location.href = "/"; // Redirect to home page for a full refresh
       await dispatch(logoutUser()).unwrap();
-
     } catch (err) {
       // toast.error("Logout failed. Please try again.");
       console.error("Logout failed", err);
@@ -69,7 +99,6 @@ const Header = () => {
       setIsLogoutModalOpen(false); // Modal ko band karein
     }
   };
-
 
   // Jab DonationForm 'onDonate' call kare
   const handleOnDonate = (clientSecret: string, amount: number) => {
@@ -84,9 +113,13 @@ const Header = () => {
   // Jab payment kamyab ho jaye
   const handlePaymentSuccess = () => {
     toast.success("Thank you for your generous donation!");
-    setDonationState({ isFormOpen: false, isCheckoutOpen: false, clientSecret: null, amount: 0 });
+    setDonationState({
+      isFormOpen: false,
+      isCheckoutOpen: false,
+      clientSecret: null,
+      amount: 0,
+    });
     setIsSuccessModalOpen(true);
-
   };
 
   const handleSupportClick = () => {
@@ -95,10 +128,9 @@ const Header = () => {
     // }
     // // Foran apne andar wala modal kholein
     setDonationState({ ...donationState, isFormOpen: true });
-    dispatch(openDonationForm())
+    dispatch(openDonationForm());
     handleLinkClick();
   };
-
 
   useEffect(() => {
     if (user && user?._id) {
@@ -108,33 +140,39 @@ const Header = () => {
     }
   }, [user, dispatch]);
 
+  // --- SYNC REDUX DONATION STATE WITH LOCAL STATE ---
+  useEffect(() => {
+    if (isDonationFormOpenRedux) {
+      setDonationState((prev) => ({ ...prev, isFormOpen: true }));
+      // Reset Redux state immediately so it acts as a trigger
+      dispatch(closeDonationForm());
+    }
+  }, [isDonationFormOpenRedux, dispatch]);
+
   // --- REAL-TIME NOTIFICATION LISTENER ---
   useEffect(() => {
     // Ab 'socket' variable ya to اصل socket instance hai ya null
     if (socket) {
-
       const handleNewNotification = (notification: any) => {
         console.log("New notification received:", notification);
         dispatch(addNotification(notification));
       };
 
-      socket.on('new_notification', handleNewNotification);
+      socket.on("new_notification", handleNewNotification);
 
       // Listener ko hamesha cleanup karein
       return () => {
         console.log("[Header] Cleaning up socket listener.");
-        socket.off('new_notification', handleNewNotification);
+        socket.off("new_notification", handleNewNotification);
       };
     } else {
       console.log("[Header] No socket instance found, listener not attached.");
     }
   }, [socket, dispatch]); // Dependency array bilkul sahi hai
 
-
-
   // --- BELL ICON PAR CLICK HANDLE KAREIN ---
   const handleBellClick = () => {
-    setIsNotificationOpen(prev => !prev);
+    setIsNotificationOpen((prev) => !prev);
   };
   const handleMarkAllAsRead = (e: React.MouseEvent) => {
     e.preventDefault(); // Agar yeh link hai to page navigate na ho
@@ -142,13 +180,12 @@ const Header = () => {
     if (unreadCount > 0) {
       console.log("Marking all notifications as read via button click...");
       dispatch(markNotificationsAsRead({ userId: user?._id }));
-
     }
   };
   // Link click par drawer band karne ke liye function
   const handleLinkClick = () => {
     setIsSidebarOpen(false);
-  }
+  };
 
   const handleNotificationClick = (notification: any) => {
     // Pehle dropdown band kar dein
@@ -157,191 +194,283 @@ const Header = () => {
     // Agar notification pehle se 'read' nahi hai, to hi API call bhejein
     if (!notification.isRead) {
       console.log(`Marking notification ${notification._id} as read...`);
-      dispatch(markSingleNotificationRead({ notificationId: notification._id, userId: user?._id }));
+      dispatch(
+        markSingleNotificationRead({
+          notificationId: notification._id,
+          userId: user?._id,
+        }),
+      );
       dispatch(fetchNotifications({ userId: user?._id }));
-
-    } 
+    }
   };
 
   useEffect(() => {
     if (isAuthModalOpen || isSidebarOpen) {
-      document.body.style.overflow = 'hidden'
-    }
-    else {
-      document.body.style.overflow = 'auto'
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "auto";
     }
 
     return () => {
-      document.body.style.overflow = 'auto'
-    }
-
-  }, [isAuthModalOpen, isSidebarOpen])
+      document.body.style.overflow = "auto";
+    };
+  }, [isAuthModalOpen, isSidebarOpen]);
   useEffect(() => {
     if (user && user._id) {
       dispatch(getUserById(user._id));
     }
   }, [user, dispatch]);
 
+  // --- HIDE HEADER ON AUTH PAGES ---
+  const location = useLocation();
+  if (
+    location.pathname === "/signup" ||
+    location.pathname === "/login" ||
+    location.pathname === "/forgot-password" ||
+    location.pathname.startsWith("/reset-password")
+  ) {
+    return null;
+  }
+
   return (
     <>
-      <div className="header-container ">
-        <header className=' !max-w-7xl  !z-[1000]  '>
+      {/* Fixed Pill Container */}
+      <div className="fixed top-6 left-0 right-0 z-[1000] px-4 2xl:px-8">
+        <header className="flex items-center !justify-between md:!py-[5px] !py-[3px] rounded-full border border-white/20 shadow-2xl bg-[#0000001A] backdrop-blur-[3px] w-full xl:min-w-[1400px] mx-auto">
+          {/* Logo Section */}
           <div className="logo-container">
-            <Link to="/" className="logo-link">
-              <img src="/favicon.PNG" alt="Logo" className="logo" />
-              <div className="logo-text ">
-                <h1 className='text-[24px] text-[#333] font-bold'>MurArt</h1>
-                <p className="tagline">Collaborative Canvases of Human Expression</p>
-              </div>
+            <Link to="/" className="logo-link flex items-center gap-3">
+              <img
+                src="/assets/logo.svg"
+                alt="Logo"
+                className="md:size-14 size-12 object-contain"
+              />
             </Link>
           </div>
 
-
-          <div className="header-right flex items-center">
-            <nav>
-              <ul className=''>
-                <li><NavLink to="/guideline">Guideline</NavLink></li>
+          {/* Navigation - Hidden on Mobile */}
+          <div className="desktop-nav hidden md:flex items-center xl:gap-8">
+            <nav className="hidden md:block">
+              <ul className="flex items-center gap-2">
+                <li>
+                  <NavLink
+                    to="/"
+                    className={({ isActive }) =>
+                      isActive
+                        ? "active text-white flex items-center gap-2"
+                        : "text-gray-400 hover:text-white flex items-center gap-2 transition-colors"
+                    }
+                  >
+                    <Home size={16} />
+                    <span className="hidden lg:inline">Home</span>
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink
+                    to="/guideline"
+                    className={({ isActive }) =>
+                      isActive
+                        ? "active text-white flex items-center gap-2"
+                        : "text-gray-400 hover:text-white flex items-center gap-2 transition-colors"
+                    }
+                  >
+                    <FileText size={16} />
+                    <span className="hidden lg:inline">Guideline</span>
+                  </NavLink>
+                </li>
                 {
-                  // user!=null &&   
-                  <li><NavLink to="/gallery">Gallery</NavLink></li>
-
-                }
-                {
-                  // user != null && 
-                  <li><NavLink to="/projects">Contribute</NavLink></li>
-
-                }
-
-
-                <li><NavLink to="/demo">Demo</NavLink></li>
-                {user?._id && <li>
-                  <div ref={notificationRef} className=" mt-2 md:mt-3">
-                    <button
-                      onClick={handleBellClick}
-                      className="text-gray-600 hover:text-gray-800 transition-colors cursor-pointer"
+                  // user!=null &&
+                  <li>
+                    <NavLink
+                      to="/gallery"
+                      className={({ isActive }) =>
+                        isActive
+                          ? "active text-white flex items-center gap-2"
+                          : "text-gray-400 hover:text-white flex items-center gap-2 transition-colors"
+                      }
                     >
-                      <Bell size={24} className='' />
+                      <Image size={16} />
+                      <span className="hidden lg:inline">Gallery</span>
+                    </NavLink>
+                  </li>
+                }
+                {
+                  // user != null &&
+                  <li>
+                    <NavLink
+                      to="/projects"
+                      className={({ isActive }) =>
+                        isActive
+                          ? "active text-white flex items-center gap-2"
+                          : "text-gray-400 hover:text-white flex items-center gap-2 transition-colors"
+                      }
+                    >
+                      <Users size={16} />
+                      <span className="hidden lg:inline">Contribute</span>
+                    </NavLink>
+                  </li>
+                }
+                <li>
+                  <NavLink
+                    to="/demo"
+                    className={({ isActive }) =>
+                      isActive
+                        ? "active text-white flex items-center gap-2"
+                        : "text-gray-400 hover:text-white flex items-center gap-2 transition-colors"
+                    }
+                  >
+                    <PlayCircle size={16} />
+                    <span className="hidden lg:inline">Demo</span>
+                  </NavLink>
+                </li>
+              </ul>
+            </nav>
+          </div>
+          {/* Auth Buttons - Hidden on Mobile (moved to sidebar) */}
+          <div className="hidden md:flex items-center gap-6">
+            {user?._id && (
+              <div ref={notificationRef} className="relative">
+                <div
+                  onClick={handleBellClick}
+                  className="relative cursor-pointer group"
+                >
+                  {/* Gradient Border Container */}
+                  <div className="absolute -inset-0.5 bg-gradient-to-r from-[#E13372] to-[#FEC133] rounded-xl opacity-70 group-hover:opacity-100 transition duration-200 blur-[0.5px]"></div>
+                  {/* Inner Black Box */}
+                  <div className="relative w-10 h-10 bg-black rounded-xl flex items-center justify-center border border-white/10">
+                    <Bell size={20} className="text-white" />
+                  </div>
+
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-red-500 border border-black">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    </span>
+                  )}
+                </div>
+
+                {/* --- NOTIFICATION DROPDOWN --- */}
+                {isNotificationOpen && (
+                  <div className="absolute right-0 mt-4 w-80 bg-[#1A1D24] border border-white/10 rounded-xl shadow-2xl max-h-96 overflow-y-auto p-2 z-[2000]">
+                    <div className="p-3 flex justify-between items-center border-b border-white/5 mb-2">
+                      <span className="font-bold text-white text-sm">
+                        Notifications
+                      </span>
                       {unreadCount > 0 && (
-                        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-xs text-white">
-                          {unreadCount}
-                        </span>
+                        <button
+                          onClick={handleMarkAllAsRead}
+                          className="text-xs text-red-400 hover:text-red-300 transition-colors"
+                        >
+                          Mark all as read
+                        </button>
                       )}
-                    </button>
-
-                    {/* --- NOTIFICATION DROPDOWN --- */}
-                    {isNotificationOpen && (
-                      <div className="absolute right-0 mt-2 w-80 bg-[#fef9f4] border border-[#d4af37] rounded-lg shadow-lg max-h-96 overflow-y-auto p-2">
-                        <div className="p-2 flex justify-between items-center">
-                          <span className="font-bold text-[#5d4037]">Notifications</span>
-
-                          {/* --- YAHAN PAR BUTTON HAI --- */}
-                          {unreadCount > 0 && (
-                            <button
-                              onClick={handleMarkAllAsRead}
-                              className="text-xs text-red-600 hover:underline cursor-pointer"
+                    </div>
+                    {notifications.length > 0 ? (
+                      <ul className="space-y-1 flex flex-col">
+                        {notifications.map((notif: any) => (
+                          <li
+                            key={notif?._id}
+                            className={`p-3 rounded-lg text-sm transition-colors ${!notif.isRead ? "bg-white/5 hover:bg-white/10" : "bg-transparent hover:bg-white/5"} mb-1`}
+                          >
+                            <Link
+                              to={`/project/${notif.project?.canvasId}`}
+                              onClick={() => handleNotificationClick(notif)}
+                              className="block"
                             >
-                              Mark all as read
-                            </button>
-                          )}
-                        </div>
-                        <DropdownMenuSeparator className="bg-[#d4af37]" />
-                        {notifications.length > 0 ? (
-                          <ul className="space-y-1 flex flex-col ">
-                            {notifications.map((notif: any) => (
-                              <li
-                                key={notif?._id}
-                                className={`p-2 rounded-md text-sm !mr-0 ${!notif.isRead ? 'bg-[#f1e6da] font-semibold ' : 'text-gray-600'} mb-2`}
+                              <div
+                                className={`mb-1 ${!notif.isRead ? "text-white font-medium" : "text-gray-400"}`}
                               >
-                                <Link to={`/project/${notif.project?.canvasId}`} onClick={() => handleNotificationClick(notif)}
-                                >
-                                  {notif?.message}
-                                  <div className='text-xs text-gray-500 mt-1'>{new Date(notif?.createdAt).toLocaleString()}</div>
-                                </Link>
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <div className="p-4 text-center text-gray-500">You have no notifications.</div>
-                        )}
+                                {notif?.message}
+                              </div>
+                              <div className="text-[10px] text-gray-500">
+                                {new Date(notif?.createdAt).toLocaleString()}
+                              </div>
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div className="p-8 text-center text-gray-500 text-sm">
+                        No new notifications
                       </div>
                     )}
                   </div>
-                </li>}
-              </ul>
-            </nav>
+                )}
+              </div>
+            )}
 
-            <div className="auth-buttons " style={{ zIndex: 2000 }} >
-              {profile ? (
-                <div >
+            {profile ? (
+              <div>
+                <DropdownMenu modal={false}>
+                  <DropdownMenuTrigger asChild>
+                    {profile?.avatar ? (
+                      <img
+                        src={profile?.avatar}
+                        alt="Avatar"
+                        className="w-10 h-10 rounded-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#FF6B6B] to-[#FFD93D] text-white flex items-center justify-center font-bold cursor-pointer select-none shadow-lg">
+                        {profile?.fullName.charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    align="end"
+                    className="w-60 bg-[#1A1D24] border border-white/10 rounded-xl shadow-2xl text-gray-200 mt-2.5"
+                  >
+                    <DropdownMenuLabel className="p-2">
+                      <div className="font-bold !text-white mb-0.5">
+                        {profile?.fullName}
+                      </div>
+                      <div className="text-xs !text-white font-normal truncate">
+                        {profile?.email}
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator className="bg-white/10" />
 
-                  <DropdownMenu >
-                    <DropdownMenuTrigger asChild>
-                      {profile?.avatar ? (
-                        <img
-                          src={profile?.avatar}
-                          alt="Avatar"
-                          className="w-9 h-9 rounded-full object-cover cursor-pointer border-2 border-[#d4af37] shadow-md hover:scale-105 transition-transform"
-                        />
-                      ) : (
-                        <div
-                          className="w-9 h-9 rounded-full bg-[#5d4037] text-white flex items-center justify-center font-bold cursor-pointer select-none transition-transform hover:scale-105 shadow-md"
-                        >
-                          {profile?.fullName.charAt(0).toUpperCase()}
-                        </div>
-                      )}
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent
-                      align="end"
-                      className="w-60 bg-[#fef9f4] border border-[#d4af37] rounded-lg shadow-lg"
+                    <Link to="/profile">
+                      <DropdownMenuItem className="cursor-pointer !text-white hover:bg-gradient-to-r from-[#E13372] to-[#FEC133] font-semibold transition-colors flex items-center gap-2 p-2.5 rounded-full mx-1 my-0.5">
+                        <UserCircle2 size={16} />
+                        <span>Profile</span>
+                      </DropdownMenuItem>
+                    </Link>
+
+                    <DropdownMenuItem
+                      onClick={handleSupportClick}
+                      className="cursor-pointer !text-white hover:bg-gradient-to-r from-[#E13372] to-[#FEC133] font-semibold   transition-colors flex items-center gap-2 p-2.5 rounded-full mx-1 my-0.5"
                     >
-                      <DropdownMenuLabel>
-                        <div className="font-medium text-[#5d4037] ">{profile?.fullName}</div>
-                        <div className="text-xs text-[#7e5d52]">{profile?.email}</div>
-                      </DropdownMenuLabel>
-                      <DropdownMenuSeparator className="bg-[#d4af37]" />
+                      <Heart size={16} />
+                      <span>Support Us</span>
+                    </DropdownMenuItem>
 
-                      {/* --- PROFILE LINK WITH ICON --- */}
-                      <Link to='/profile'>
-                        <DropdownMenuItem className="cursor-pointer text-[#5d4037] hover:bg-[#f1e6da] transition-colors flex items-center gap-2">
-                          <UserCircle2 size={16} />
-                          <span>Profile</span>
-                        </DropdownMenuItem>
-                      </Link>
-
-                      {/* --- SUPPORT US LINK WITH ICON --- */}
-                      <DropdownMenuItem
-                        // onClick={() => setDonationState({ ...donationState, isFormOpen: true })}
-                        onClick={handleSupportClick}
-                        className="cursor-pointer text-[#5d4037] hover:bg-[#f1e6da] transition-colors flex items-center gap-2"
-                      >
-                        <Heart size={16} />
-                        <span>Support Us</span>
-                      </DropdownMenuItem>
-
-                      {/* --- LOGOUT BUTTON WITH ICON --- */}
-                      <DropdownMenuItem
-                        onClick={handleLogout}
-                        className="cursor-pointer text-red-600 hover:bg-[#f1e6da] transition-colors flex items-center gap-2"
-                      >
-                        <LogOut size={16} />
-                        <span>Logout</span>
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu></div>
-              ) : (
-                <button
-                  id="sign-in-btn"
-                  className="btn-auth"
-                  onClick={() => dispatch(openAuthModal())}
-                >
-                  Sign In
-                </button>
-              )}
-            </div>
+                    <DropdownMenuItem
+                      onClick={handleLogout}
+                      className="cursor-pointer !text-white hover:bg-gradient-to-r from-[#E13372] to-[#FEC133] font-semibold focus:bg-[#0F0D0D] focus:text-white transition-colors flex items-center gap-2 p-2.5 rounded-full mx-1 my-0.5"
+                    >
+                      <LogOut size={16} />
+                      <span>Logout</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            ) : (
+              <button
+                id="sign-in-btn"
+                className="px-6 py-2 rounded-full font-medium text-white bg-gradient-to-r from-[#E23373] to-[#FEC133] hover:opacity-90 transition-opacity transform active:scale-95 shadow-[0_0_20px_rgba(226,51,115,0.4)] font-montserrat"
+                onClick={() => navigate("/login")}
+              >
+                Sign In
+              </button>
+            )}
           </div>
-          <div className='lg:hidden mr-3'>
-            <button onClick={() => setIsSidebarOpen(true)}>
-              <Menu size={28} className='cursor-pointer' />
+
+          {/* Mobile Menu Button - Direct Child */}
+          <div className="md:hidden relative z-100 flex items-center">
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="!text-white hover:bg-white/15 p-2 rounded-full transition-colors"
+            >
+              <Menu size={24} />
             </button>
           </div>
         </header>
@@ -349,111 +478,159 @@ const Header = () => {
       <div
         onClick={() => setIsSidebarOpen(false)}
         className={`fixed inset-0 bg-black/50 z-40 transition-opacity duration-300
-                    ${isSidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`
-        }
+                    ${isSidebarOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
       ></div>
 
       {/* ===== SIDEBAR PANEL (WITH AUTH LOGIC) ===== */}
       <div
-        className={`fixed top-0 right-0 h-full w-72 max-w-[80%] bg-[#f5f5dc] p-5 z-50 shadow-lg 
+        className={`fixed top-0 right-0 h-full w-72 max-w-[80%] bg-[#1A1D24] border-l border-white/10 p-5 z-[2000] shadow-2xl 
                 transition-transform duration-300 ease-in-out
-                ${isSidebarOpen ? 'translate-x-0' : 'translate-x-full'}`
-        }
+                ${isSidebarOpen ? "translate-x-0" : "translate-x-full"}`}
       >
         {/* Close Button */}
-        <div className="flex items-center justify-between mb-5 pb-2 border-b border-accent-dark">
+        <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/10">
           {/* Logo (Left side) */}
-          <Link to="/" onClick={handleLinkClick} className="flex items-center gap-x-3">
-            <img src="/favicon.PNG" alt="Logo" className="h-10 w-10" />
-            {/* <span className="font-bold text-primary-dark text-lg font-playfair">Project Art</span> */}
+          <Link
+            to="/"
+            onClick={handleLinkClick}
+            className="flex items-center gap-x-3"
+          >
+            <img
+              src="/assets/logo2.webp"
+              alt="Logo"
+              className="size-12 object-contain"
+            />
           </Link>
 
           {/* Close Button (Right side) */}
-          <button onClick={() => setIsSidebarOpen(false)}>
-            <X className="h-6 w-6 text-primary-dark" />
+          <button
+            onClick={() => setIsSidebarOpen(false)}
+            className="text-white/70 hover:text-white transition-colors"
+          >
+            <X className="h-6 w-6" />
           </button>
         </div>
 
-
         {/* Flex container to push auth section to the bottom */}
-        <div className="flex flex-col justify-between h-[calc(100%-64px)]">
-
+        <div className="flex flex-col justify-between h-[calc(100%-100px)]">
           {/* Navigation Links */}
           <nav>
-            <ul className="flex flex-col gap-y-4">
-              {/* Guideline Link with Icon */}
+            <ul className="flex flex-col gap-y-2">
+              {/* Home Link */}
+              <li>
+                <NavLink
+                  to="/"
+                  onClick={handleLinkClick}
+                  className="cursor-pointer text-gray-300 hover:text-white hover:bg-white/5 p-3 rounded-lg transition-all flex items-center gap-3 font-medium"
+                >
+                  <span className="text-lg">Home</span>
+                </NavLink>
+              </li>
+
+              {/* Guideline Link */}
               <li>
                 <NavLink
                   to="/guideline"
                   onClick={handleLinkClick}
-                  className="cursor-pointer text-[#5d4037] hover:bg-[#f1e6da] transition-colors !flex !items-center gap-2"
+                  className="cursor-pointer text-gray-300 hover:text-white hover:bg-white/5 p-3 rounded-lg transition-all flex items-center gap-3 font-medium"
                 >
-                  <FileText size={24} />
+                  <FileText size={20} />
                   <span>Guideline</span>
                 </NavLink>
               </li>
 
-              {/* Gallery Link with Icon */}
+              {/* Gallery Link */}
+              {/* user && ( // Uncomment if needed */}
               <li>
                 <NavLink
                   to="/gallery"
                   onClick={handleLinkClick}
-                  className="cursor-pointer text-[#5d4037] hover:bg-[#f1e6da] transition-colors !flex !items-center gap-2"
+                  className="cursor-pointer text-gray-300 hover:text-white hover:bg-white/5 p-3 rounded-lg transition-all flex items-center gap-3 font-medium"
                 >
-                  <Image size={24} />
+                  <Image size={20} />
                   <span>Gallery</span>
                 </NavLink>
               </li>
+              {/* ) */}
 
-              {/* Contribute Link with Icon */}
+              {/* Contribute Link */}
+              {/* user && ( // Uncomment if needed */}
               <li>
                 <NavLink
                   to="/projects"
                   onClick={handleLinkClick}
-                  className="cursor-pointer text-[#5d4037] hover:bg-[#f1e6da] transition-colors !flex !items-center gap-2"
+                  className="cursor-pointer text-gray-300 hover:text-white hover:bg-white/5 p-3 rounded-lg transition-all flex items-center gap-3 font-medium"
                 >
-                  <Users size={24} />
+                  <Users size={20} />
                   <span>Contribute</span>
                 </NavLink>
               </li>
+              {/* ) */}
 
-              {/* Demo Link with Icon */}
+              {/* Demo Link */}
               <li>
                 <NavLink
                   to="/demo"
                   onClick={handleLinkClick}
-                  className="cursor-pointer text-[#5d4037] hover:bg-[#f1e6da] transition-colors !flex !items-center gap-2"
+                  className="cursor-pointer text-gray-300 hover:text-white hover:bg-white/5 p-3 rounded-lg transition-all flex items-center gap-3 font-medium"
                 >
-                  <PlayCircle size={24} />
+                  <PlayCircle size={20} />
                   <span>Demo</span>
                 </NavLink>
               </li>
 
-              {/* Support Us Link with Icon */}
-              {user?._id && <span
-                onClick={handleSupportClick}
-                className="cursor-pointer text-[#5d4037] hover:bg-[#f1e6da] transition-colors !flex !items-center gap-2"
-              >
-                <Heart size={24} />
-                <span>Support Us</span>
-              </span>}
+              {/* Support Us Link */}
+              {user?._id && (
+                <li
+                  onClick={handleSupportClick}
+                  className="cursor-pointer text-gray-300 hover:text-white hover:bg-white/5 py-1 rounded-lg transition-all flex items-center gap-3 font-medium"
+                >
+                  <Heart size={20} />
+                  <span>Support Us</span>
+                </li>
+              )}
             </ul>
           </nav>
 
           {/* Auth Section (Sign In OR Profile/Logout) */}
-          <div className="pt-6 border-t border-[#a1887f]">
+          <div className="pt-6 border-t border-white/10">
             {profile ? (
               // --- AGAR USER LOGGED IN HAI ---
-              <div className="text-center">
-                <div className="font-semibold text-lg text-[#3e2723]">{profile.fullName}</div>
-                <div className="text-sm text-primary mb-4">{profile.email}</div>
+              <div className="flex flex-col items-center gap-4">
+                <div
+                  onClick={() => navigate("/profile")}
+                  title="Profile"
+                  className="flex items-center gap-3 w-full p-2 rounded-lg bg-white/5 cursor-pointer"
+                >
+                  {profile?.avatar ? (
+                    <img
+                      src={profile?.avatar}
+                      alt="Avatar"
+                      className="w-10 h-10 rounded-full object-cover border border-white/10"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#FF6B6B] to-[#FFD93D] text-white flex items-center justify-center font-bold text-lg shadow-sm">
+                      {profile?.fullName.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                  <div className="flex flex-col overflow-hidden">
+                    <span className="font-semibold text-white truncate">
+                      {profile.fullName}
+                    </span>
+                    <span className="text-xs text-gray-400 truncate">
+                      {profile.email}
+                    </span>
+                  </div>
+                </div>
+
                 <button
                   onClick={() => {
                     handleLogout();
-                    handleLinkClick(); // Sidebar band karein
+                    handleLinkClick();
                   }}
-                  className="w-full cursor-pointer py-2 bg-[#3e2723] text-white rounded-full hover:opacity-75 transition-colors"
+                  className="w-full cursor-pointer py-2.5 bg-red-500/10 text-red-400 border border-red-500/20 rounded-lg hover:bg-red-500/20 transition-colors flex items-center justify-center gap-2 font-medium"
                 >
+                  <LogOut size={16} />
                   Logout
                 </button>
               </div>
@@ -461,19 +638,17 @@ const Header = () => {
               // --- AGAR USER LOGGED OUT HAI ---
               <button
                 onClick={() => {
-                  dispatch(openAuthModal()); // Auth modal kholein
-                  handleLinkClick(); // Sidebar band karein
+                  navigate("/signup");
+                  handleLinkClick();
                 }}
-                className="w-full cursor-pointer py-2 bg-[#3e2723] text-[#ffff] rounded-full font-semibold text-md hover:opacity-75 transition-colors"
+                className="w-full cursor-pointer py-3 rounded-full font-bold text-white bg-gradient-to-r from-[#E23373] to-[#FEC133] hover:opacity-90 shadow-lg transition-all active:scale-95"
               >
-                Sign In / Sign Up
+                Sign In
               </button>
             )}
           </div>
-
         </div>
       </div>
-
 
       {/* 1. Amount Input Wala Modal */}
       {/* <Dialog open={isDonationFormOpen}
@@ -484,13 +659,15 @@ const Header = () => {
           <DonationForm onDonate={handleOnDonate} />
         </DialogContent>
       </Dialog> */}
-      <CustomModal 
+      <CustomModal
         isOpen={donationState.isFormOpen}
-        onClose={() => { setDonationState({ ...donationState, isFormOpen: false }) }}
+        onClose={() => {
+          setDonationState({ ...donationState, isFormOpen: false });
+        }}
       >
         <DonationForm onDonate={handleOnDonate} />
       </CustomModal>
-      
+
       {/* 2. Card Input Wala Modal */}
       {/* <Dialog open={donationState.isCheckoutOpen} onOpenChange={(isOpen) => setDonationState({ ...donationState, isCheckoutOpen: isOpen })}>
         <DialogContent className="!bg-[#5d4037] border-2 border-[#3e2723] text-white font-[Georgia, serif] max-w-3xl">
@@ -508,7 +685,9 @@ const Header = () => {
       </Dialog> */}
       <CustomModal
         isOpen={donationState.isCheckoutOpen}
-        onClose={() => setDonationState({ ...donationState, isCheckoutOpen: false })}
+        onClose={() =>
+          setDonationState({ ...donationState, isCheckoutOpen: false })
+        }
       >
         {donationState.clientSecret && (
           <CheckoutForm
@@ -519,12 +698,17 @@ const Header = () => {
         )}
       </CustomModal>
       {/* Modal renders conditionally */}
-      {isAuthModalOpen && <AuthModal isOpen={isAuthModalOpen} onClose={() => dispatch(closeAuthModal())} />}
+      {isAuthModalOpen && (
+        <AuthModal
+          isOpen={isAuthModalOpen}
+          onClose={() => dispatch(closeAuthModal())}
+        />
+      )}
       <PaymentSuccessModal
         isOpen={isSuccessModalOpen}
         onClose={() => setIsSuccessModalOpen(false)}
         paymentType="donation" // Is baar type 'donation' hai
-      // Donation ke case mein project ya download handler ki zaroorat nahi
+        // Donation ke case mein project ya download handler ki zaroorat nahi
       />
       <ConfirmationModal
         isOpen={isLogoutModalOpen}

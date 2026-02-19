@@ -38,36 +38,40 @@ const ProjectTitle: React.FC<ProjectTitleProps> = ({ project, isAdmin }) => {
             setTitle(project.title); // Error par revert karein
         } finally {
             setIsLoading(false);
-        }
+        } 
     };
 
     if (isEditing) {
         return (
-            <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                onBlur={handleSave} // Jab input se focus hatay, to save karein
-                onKeyDown={(e) => e.key === 'Enter' && handleSave()} // Enter dabane par save karein
-                className="text-xl font-bold text-gray-800 w-full p-1 border rounded"
-                autoFocus
-                disabled={isLoading}
-                maxLength={20}
-            />
+            <div className="w-full p-[1px] rounded bg-gradient-to-r from-[#E23373] to-[#FEC133]">
+                <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    onBlur={handleSave}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSave()}
+                    className="text-[18px] font-semibold text-white w-full px-2 py-1 bg-[#1A1A1A] rounded outline-none placeholder:text-gray-500"
+                    autoFocus
+                    disabled={isLoading}
+                    maxLength={20}
+                />
+            </div>
         );
     }
 
     return (
         <div className="flex items-center justify-between gap-2 group">
-            <h3 className='!text-[#]'>{project.title}</h3>
+            <h3 className='!text-[#ffffff] text-[18px] font-semibold'>{project.title}</h3>
             {isAdmin && (
-                <button
-                    onClick={() => setIsEditing(true)}
-                    className=" transition-opacity"
-                    title="Edit Title"
-                >
-                    <Edit2 size={16} className="text-gray-500 cursor-pointer" />
-                </button>
+                <div className="p-[1px] rounded-[6px] bg-gradient-to-r from-[#E23373] to-[#FEC133]">
+                    <button
+                        onClick={() => setIsEditing(true)}
+                        className="bg-[#1A1A1A] w-8 h-8 rounded-md flex items-center justify-center hover:bg-[#252525] transition-colors"
+                        title="Edit Title"
+                    >
+                        <Edit2 size={14} className="text-white" />
+                    </button>
+                </div>
             )}
         </div>
     );

@@ -3,91 +3,180 @@ import { useParams, useNavigate } from "react-router-dom";
 import { resetPassword } from "@/redux/action/auth";
 import { toast } from "sonner";
 import useAppDispatch from "@/hook/useDispatch";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const ResetPassword = () => {
-    const { token } = useParams<{ token: string }>();
-    const [password, setPassword] = useState("");
-    const [loader,setLoader]=useState(false)
-    const [confirmPassword, setConfirmPassword] = useState("");
-    const [showPassword, setShowPassword] = useState(false);
+  const { token } = useParams<{ token: string }>();
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
 
-    const dispatch = useAppDispatch();
-    const navigate = useNavigate();
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loader, setLoader] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false); // New state for success screen
 
-    console.log(password == confirmPassword)
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!password || !confirmPassword) {
-            toast.error("Please fill all fields");
-            return;
-        }
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-        if (password !== confirmPassword) {
-            toast.error("Passwords do not match");
-            return;
-        }
-        setLoader(true)
+    if (!password || !confirmPassword) {
+      toast.error("Please fill all fields");
+      return;
+    }
 
-        try {
-            await dispatch(resetPassword({ token: token as string, password })).unwrap();
-            toast.success("Password reset successfully. You can now sign in.");
-            navigate("/"); // or "/login"
-            setLoader(false)
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
 
-        } catch (err: any) {
-            setLoader(false)
-            toast.error(err?.message || "Failed to reset password");
-        }
-    };
- 
-    return (
-        <div className="flex flex-col items-center justify-center min-h-screen  px-4">
-            <div className="max-w-md w-full rounded-lg p-6 ">
-                <h2 className="text-2xl font-bold text-[#5d4037] mb-4 text-center">Reset Password</h2>
-                <form onSubmit={handleSubmit}>
-                    <div className="form-group mb-4">
-                        <label className="block text-[#5d4037] font-semibold mb-1">New Password</label>
-                        <input
-                            type={showPassword ? "text" : "password"}
-                            className="w-full px-4 py-2 border border-[#d4af37] rounded focus:outline-none focus:border-[#5d4037]"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label className="block text-[#5d4037] font-semibold mb-2">Confirm Password</label>
-                        <div className="relative">
-                            <input
-                                // Input ka type bhi yahan dynamic hai
-                                type={showPassword ? "text" : "password"}
-                                className="w-full px-4 py-3 border border-[#d4af37] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5d4037] pr-10" // <-- 'pr-10' icon ke liye jagah banata hai
-                                value={confirmPassword}
-                                onChange={(e) => setConfirmPassword(e.target.value)}
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-[#5d4037]"
-                                title={showPassword ? "Hide password" : "Show password"}
-                            >
-                                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                            </button>
-                        </div>
-                    </div>
+    setLoader(true);
 
+    try {
+      await dispatch(
+        resetPassword({ token: token as string, password }),
+      ).unwrap();
+      // Instead of navigating, we set the success state
+      setIsSuccess(true);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to reset password");
+    } finally {
+      setLoader(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-black overflow-y-auto">
+      {/* Left Side - Image */}
+      <div className="hidden lg:flex">
+        {/* Placeholder for the specific image */}
+        <img
+          src={
+            isSuccess
+              ? "/assets/success-bg-flower.png"
+              : "/assets/reset-pass-img.svg"
+          }
+          // Using existing asset if no new one provided, or placeholder logic
+          onError={(e) => {
+            // Fallback if specific success image missing
+            e.currentTarget.src = "/assets/reset-pass-img.svg";
+          }}
+          alt="Reset Password Art"
+          className="m-6 max-h-[600px] object-cover rounded-[12px]"
+        />
+      </div>
+
+      {/* Right Side - Form */}
+      <div className="w-full lg:w-[680px] 2xl:w-[800px] flex items-center justify-start px-4 py-8 md:p-12 lg:px-12 xl:px-6">
+        <div className="w-full max-w-[800px] space-y-4 xl:space-y-8">
+          {/* Back Button - Gradient Border */}
+          <div className="w-10 h-10 p-[1px] absolute top-10 rounded-full bg-gradient-to-r from-[#E23373] to-[#FEC133] mb-4 inline-block">
+            <button
+              onClick={() => navigate("/login")}
+              className="w-full h-full rounded-full bg-black flex items-center justify-center text-white hover:bg-zinc-900 transition-colors"
+            >
+              <ArrowLeft size={20} />
+            </button>
+          </div>
+
+          {!isSuccess ? (
+            <>
+              <div className="space-y-2">
+                <h3 className="!text-white text-[20px] lg:text-[26px] !font-semibold">
+                  Log In
+                </h3>
+                <h1 className="text-xl sm:text-[26px] lg:text-[32px] !font-semibold !text-white tracking-tight">
+                  Create New Password
+                </h1>
+                <p className="text-white font-semibold text-[14px] lg:text-lg">
+                  Don't worry we will reset your password here
+                </p>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-4 lg:space-y-6">
+                {/* Password */}
+                <div className="space-y-2">
+                  <label className="text-[14px] lg:text-base font-semibold text-white">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full bg-[#2E2E2E] border border-gray-800 rounded-[8px] px-4 py-1.5 text-white placeholder-[#AAB2C7] focus:outline-none focus:ring-2 focus:ring-pink-500 transition-all pr-10"
+                    />
                     <button
-                        type="submit"
-                        className="w-full h-12 cursor-pointer bg-[#d4af37] text-[#5d4037] font-semibold hover:bg-transparent hover:border hover:border-[#d4af37] hover:text-[#d4af37] transition-all"
-                    
-                        disabled={loader}
-                        >
-                        {loader?"Reseting...":' Reset Password'}
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
-                </form>
+                  </div>
+                </div>
+
+                {/* Confirm Password */}
+                <div className="space-y-2">
+                  <label className="text-[14px] lg:text-base font-semibold text-white">
+                    Confirm Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full bg-[#2E2E2E] border border-gray-800 rounded-[8px] px-4 py-1.5 text-white placeholder-[#AAB2C7] focus:outline-none focus:ring-2 focus:ring-pink-500 transition-all pr-10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowConfirmPassword(!showConfirmPassword)
+                      }
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                    >
+                      {showConfirmPassword ? (
+                        <EyeOff size={18} />
+                      ) : (
+                        <Eye size={18} />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={loader}
+                  className="w-full h-12 bg-gradient-to-r from-[#E23373] to-[#FEC133] hover:opacity-90 text-white font-semibold rounded-full text-base border-0 transition-transform active:scale-[0.98]"
+                >
+                  {loader ? "Resetting..." : "Continue"}
+                </Button>
+              </form>
+            </>
+          ) : (
+            <div className="flex flex-col items-center text-center space-y-6 animate-in fade-in zoom-in duration-300 mt-6">
+              {/* Rocket Icon */}
+              <div className="text-6xl mb-4">🚀</div>
+
+              <h2 className="text-[20px] lg:text-[24px] font-semibold !text-white">
+                Your password has been successfully reset
+              </h2>
+
+              <Button
+                onClick={() => navigate("/login")}
+                className="w-full max-w-sm h-12 bg-gradient-to-r from-[#E23373] to-[#FEC133] hover:opacity-90 text-white font-semibold rounded-full text-base border-0 transition-transform active:scale-[0.98]"
+              >
+                Back to Login
+              </Button>
             </div>
+          )}
         </div>
-    );
+      </div>
+    </div>
+  );
 };
 
 export default ResetPassword;

@@ -1,174 +1,217 @@
-import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { Minus, Plus } from 'lucide-react';
-import { selectCanvasData } from '@/redux/slice/contribution';
-import { useSelector } from 'react-redux';
-import { useMediaQuery } from '@/hook/useMediaQuery';
+import React, {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+} from "react";
+import { Minus, Plus } from "lucide-react";
+import { selectCanvasData } from "@/redux/slice/contribution";
+import { useSelector } from "react-redux";
+import { useMediaQuery } from "@/hook/useMediaQuery";
 
 const InfoBox = ({ zoom, worldPos, isSaving, saveError, boundaryRef }: any) => {
-    // --- STATE MANAGEMENT ---
-    const isSmallScreen = useMediaQuery(1440);
-    const [isMinimized, setIsMinimized] = useState(isSmallScreen);
-    const [position, setPosition] = useState({ x: 0, y: 0 });
-    const [isDragging, setIsDragging] = useState(false);
-    // This ref will store the precise distance from the box's top-left corner to the mouse click point.
-    const dragOffsetRef = useRef({ x: 0, y: 0 });
-    const infoBoxRef = useRef<HTMLDivElement>(null);
+  // --- STATE MANAGEMENT ---
+  const isSmallScreen = useMediaQuery(1440);
+  const [isMinimized, setIsMinimized] = useState(isSmallScreen);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  // This ref will store the precise distance from the box's top-left corner to the mouse click point.
+  const dragOffsetRef = useRef({ x: 0, y: 0 });
+  const infoBoxRef = useRef<HTMLDivElement>(null);
 
-    // --- REDUX DATA ---
-    const savedStrokes = useSelector(selectCanvasData);
-    const savedStrokeCount = useMemo(() =>
-        savedStrokes.filter((c: any) => c && c._id && !c._id.startsWith('temp_')).length,
-        [savedStrokes]);
+  // --- REDUX DATA ---
+  const savedStrokes = useSelector(selectCanvasData);
+  const savedStrokeCount = useMemo(
+    () =>
+      savedStrokes.filter((c: any) => c && c._id && !c._id.startsWith("temp_"))
+        .length,
+    [savedStrokes],
+  );
 
-    // --- SIDE EFFECTS (Positioning) ---
-    useEffect(() => {
-        setIsMinimized(isSmallScreen);
-    }, [isSmallScreen]);
+  // --- SIDE EFFECTS (Positioning) ---
+  useEffect(() => {
+    setIsMinimized(isSmallScreen);
+  }, [isSmallScreen]);
 
-    // This effect correctly sets the initial or programmatic position of the box.
-    useEffect(() => {
-        if (boundaryRef.current && infoBoxRef.current) {
-            const boundaryRect = boundaryRef.current.getBoundingClientRect();
-            const infoBoxRect = infoBoxRef.current.getBoundingClientRect();
-            let newX, newY;
+  // This effect correctly sets the initial or programmatic position of the box.
+  useEffect(() => {
+    if (boundaryRef.current && infoBoxRef.current) {
+      const boundaryRect = boundaryRef.current.getBoundingClientRect();
+      const infoBoxRect = infoBoxRef.current.getBoundingClientRect();
+      let newX, newY;
 
-            if (isMinimized) {
-                newX = boundaryRect.width - infoBoxRect.width - 20;
-                newY = 20; // Top-right
-            } else {
-                if (isSmallScreen) {
-                    newX = 20;
-                    newY = boundaryRect.height - infoBoxRect.height - 20; // Bottom-left
-                } else {
-                    newX = boundaryRect.width - infoBoxRect.width - 20;
-                    newY = (boundaryRect.height / 2) - (infoBoxRect.height / 2); // Middle-right
-                }
-            }
-            setPosition({ x: newX, y: newY });
+      if (isMinimized) {
+        newX = boundaryRect.width - infoBoxRect.width - 20;
+        newY = 20; // Top-right
+      } else {
+        if (isSmallScreen) {
+          newX = 20;
+          newY = boundaryRect.height - infoBoxRect.height - 20; // Bottom-left
+        } else {
+          newX = boundaryRect.width - infoBoxRect.width - 20;
+          newY = boundaryRect.height / 2 - infoBoxRect.height / 2; // Middle-right
         }
-    }, [boundaryRef, isSmallScreen, isMinimized]);
+      }
+      setPosition({ x: newX, y: newY });
+    }
+  }, [boundaryRef, isSmallScreen, isMinimized]);
 
+  // --- SIMPLE & CORRECT DRAGGING LOGIC (UPDATED) ---
 
-    // --- SIMPLE & CORRECT DRAGGING LOGIC (UPDATED) ---
+  const handleDragStart = useCallback((clientX: number, clientY: number) => {
+    if (!infoBoxRef.current) return;
+    const infoBoxRect = infoBoxRef.current.getBoundingClientRect();
+    setIsDragging(true);
+    dragOffsetRef.current = {
+      x: clientX - infoBoxRect.left,
+      y: clientY - infoBoxRect.top,
+    };
+  }, []);
 
-    const handleDragStart = useCallback((clientX: number, clientY: number) => {
-        if (!infoBoxRef.current) return;
-        const infoBoxRect = infoBoxRef.current.getBoundingClientRect();
-        setIsDragging(true);
-        dragOffsetRef.current = {
-            x: clientX - infoBoxRect.left,
-            y: clientY - infoBoxRect.top,
-        };
-    }, []);
+  const handleDragMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      handleDragStart(e.clientX, e.clientY);
+      e.preventDefault();
+    },
+    [handleDragStart],
+  );
 
-    const handleDragMouseDown = useCallback((e: React.MouseEvent) => {
-        handleDragStart(e.clientX, e.clientY);
-        e.preventDefault();
-    }, [handleDragStart]);
+  const handleDragTouchStart = useCallback(
+    (e: React.TouchEvent) => {
+      const touch = e.touches[0];
+      handleDragStart(touch.clientX, touch.clientY);
+      e.preventDefault(); // Stop creating mouse event
+    },
+    [handleDragStart],
+  );
 
-    const handleDragTouchStart = useCallback((e: React.TouchEvent) => {
-        const touch = e.touches[0];
-        handleDragStart(touch.clientX, touch.clientY);
-        e.preventDefault(); // Stop creating mouse event
-    }, [handleDragStart]);
+  useEffect(() => {
+    const handleDragMove = (clientX: number, clientY: number) => {
+      if (!isDragging || !boundaryRef.current || !infoBoxRef.current) return;
 
-    useEffect(() => {
-        const handleDragMove = (clientX: number, clientY: number) => {
-            if (!isDragging || !boundaryRef.current || !infoBoxRef.current) return;
+      const boundaryRect = boundaryRef.current.getBoundingClientRect();
+      const infoBoxNode = infoBoxRef.current;
 
-            const boundaryRect = boundaryRef.current.getBoundingClientRect();
-            const infoBoxNode = infoBoxRef.current;
+      // Calculate the new top-left position...
+      const newX_viewport = clientX - dragOffsetRef.current.x;
+      const newY_viewport = clientY - dragOffsetRef.current.y;
 
-            // Calculate the new top-left position...
-            const newX_viewport = clientX - dragOffsetRef.current.x;
-            const newY_viewport = clientY - dragOffsetRef.current.y;
+      let newX = newX_viewport - boundaryRect.left;
+      let newY = newY_viewport - boundaryRect.top;
 
-            let newX = newX_viewport - boundaryRect.left;
-            let newY = newY_viewport - boundaryRect.top;
+      newX = Math.max(0, newX);
+      newY = Math.max(0, newY);
+      newX = Math.min(newX, boundaryRect.width - infoBoxNode.offsetWidth);
+      newY = Math.min(newY, boundaryRect.height - infoBoxNode.offsetHeight);
 
-            newX = Math.max(0, newX);
-            newY = Math.max(0, newY);
-            newX = Math.min(newX, boundaryRect.width - infoBoxNode.offsetWidth);
-            newY = Math.min(newY, boundaryRect.height - infoBoxNode.offsetHeight);
+      setPosition({ x: newX, y: newY });
+    };
 
-            setPosition({ x: newX, y: newY });
-        };
+    const handleMouseMove = (e: MouseEvent) =>
+      handleDragMove(e.clientX, e.clientY);
+    const handleTouchMove = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      handleDragMove(touch.clientX, touch.clientY);
+      e.preventDefault(); // Prevent scrolling while dragging
+    };
 
-        const handleMouseMove = (e: MouseEvent) => handleDragMove(e.clientX, e.clientY);
-        const handleTouchMove = (e: TouchEvent) => {
-            const touch = e.touches[0];
-            handleDragMove(touch.clientX, touch.clientY);
-            e.preventDefault(); // Prevent scrolling while dragging
-        };
+    const handleDragEnd = () => setIsDragging(false);
 
-        const handleDragEnd = () => setIsDragging(false);
+    if (isDragging) {
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleDragEnd);
+      document.addEventListener("touchmove", handleTouchMove, {
+        passive: false,
+      });
+      document.addEventListener("touchend", handleDragEnd);
+    }
 
-        if (isDragging) {
-            document.addEventListener('mousemove', handleMouseMove);
-            document.addEventListener('mouseup', handleDragEnd);
-            document.addEventListener('touchmove', handleTouchMove, { passive: false });
-            document.addEventListener('touchend', handleDragEnd);
-        }
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleDragEnd);
+      document.removeEventListener("touchmove", handleTouchMove);
+      document.removeEventListener("touchend", handleDragEnd);
+    };
+  }, [isDragging, boundaryRef]);
 
-        return () => {
-            document.removeEventListener('mousemove', handleMouseMove);
-            document.removeEventListener('mouseup', handleDragEnd);
-            document.removeEventListener('touchmove', handleTouchMove);
-            document.removeEventListener('touchend', handleDragEnd);
-        };
-    }, [isDragging, boundaryRef]);
-
-    // --- RENDER ---
-    return (
-        <div
-            ref={infoBoxRef}
-            className="absolute bg-white/90 p-3 rounded-lg text-base text-[#5d4e37] border border-[#3e2723] shadow-lg select-none"
-            style={{
-                left: `${position.x}px`,
-                top: `${position.y}px`,
-                width: isMinimized ? 'auto' : '200px',
-                visibility: position.x === 0 && position.y === 0 ? 'hidden' : 'visible',
-                // Apply smooth transitions only when NOT dragging
-                transition: isDragging ? 'none' : 'top 0.3s ease-in-out, left 0.3s ease-in-out, width 0.3s ease-in-out',
-            }}
-        >
-            <div
-                className="w-full flex justify-between items-center gap-5 mb-2"
-                style={{ cursor: isMinimized ? 'default' : 'grab', touchAction: 'none' }}
-                onMouseDown={handleDragMouseDown}
-                onTouchStart={handleDragTouchStart}
-            >
-                <p className="text-[#3e2723] text-lg font-bold m-0">Infobox</p>
-                <div className='flex text-[#3e2723] items-center gap-2'>
-                    {isSmallScreen && (
-                        <button
-                            onClick={() => setIsMinimized(!isMinimized)}
-                            className="p-1 hover:bg-gray-200 rounded-full"
-                            title={isMinimized ? "Maximize" : "Minimize"}
-                        >
-                            {isMinimized ? <Plus size={16} /> : <Minus size={16} />}
-                        </button>
-                    )}
-                    <div className="cursor-grab active:cursor-grabbing">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <circle cx="9" cy="12" r="1"></circle><circle cx="9" cy="5" r="1"></circle><circle cx="9" cy="19" r="1"></circle>
-                            <circle cx="15" cy="12" r="1"></circle><circle cx="15" cy="5" r="1"></circle><circle cx="15" cy="19" r="1"></circle>
-                        </svg>
-                    </div>
-                </div>
-            </div>
-
-            {!isMinimized && (
-                <>
-                    <div>Zoom: {Math.round(zoom * 100)}%</div>
-                    <div>World Pos: ({Math.round(worldPos.x)}, {Math.round(worldPos.y)})</div>
-                    <div>Contributions: {savedStrokeCount}</div>
-                    {isSaving && <div className="text-orange-500 font-semibold mt-1">Saving...</div>}
-                    {saveError && <div className="text-red-600 font-semibold mt-1">{saveError}</div>}
-                </>
-            )}
+  return (
+    <div
+      ref={infoBoxRef}
+      className="absolute !top-[41%] sm:!top-1/2 sm:!left-3 !left-2 bg-[#0F0D0D] p-3 rounded-lg text-base text-[#5d4e37] border border-gray-500 sm:w-full !w-fit shadow-lg select-none"
+      style={{
+        left: `${position.x}px`,
+        top: `${position.y}px`,
+        width: isMinimized ? "auto" : "433px",
+        visibility: position.x === 0 && position.y === 0 ? "hidden" : "visible",
+        // Apply smooth transitions only when NOT dragging
+        transition: isDragging
+          ? "none"
+          : "top 0.3s ease-in-out, left 0.3s ease-in-out, width 0.3s ease-in-out",
+      }}
+    >
+      <div
+        className="w-full flex items-center gap-2 mb-2"
+        style={{
+          cursor: isMinimized ? "default" : "grab",
+          touchAction: "none",
+        }}
+        onMouseDown={handleDragMouseDown}
+        onTouchStart={handleDragTouchStart}
+      >
+        <div className="cursor-grab active:cursor-grabbing text-[#ffffff]">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="9" cy="12" r="1"></circle>
+            <circle cx="9" cy="5" r="1"></circle>
+            <circle cx="9" cy="19" r="1"></circle>
+            <circle cx="15" cy="12" r="1"></circle>
+            <circle cx="15" cy="5" r="1"></circle>
+            <circle cx="15" cy="19" r="1"></circle>
+          </svg>
         </div>
-    );
+        <p className="text-[#ffffff] text-base font-medium m-0">Infobox</p>
+        <div className="flex text-[#ffffff] items-center gap-2">
+          {isSmallScreen && (
+            <button
+              onClick={() => setIsMinimized(!isMinimized)}
+              className="p-1 hover:bg-gray-200 rounded-full"
+              title={isMinimized ? "Maximize" : "Minimize"}
+            >
+              {isMinimized ? <Plus size={16} /> : <Minus size={16} />}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {!isMinimized && (
+        <div className="text-base text-[#ffffff] ">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+            <p>Zoom: {Math.round(zoom * 100)}%</p>
+            <p>
+              World Pos: ({Math.round(worldPos.x)}, {Math.round(worldPos.y)})
+            </p>
+            <p>Contributions: {savedStrokeCount}</p>
+          </div>
+
+          {isSaving && (
+            <div className="text-orange-500 font-semibold mt-1">Saving...</div>
+          )}
+          {saveError && (
+            <div className="text-red-600 font-semibold mt-1">{saveError}</div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 };
 
 export default InfoBox;
