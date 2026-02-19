@@ -16,10 +16,8 @@ export default defineConfig({
     port: 5173, // aapka dev port
     strictPort: true,
     allowedHosts: [
-      "localhost",
-      "127.0.0.1",
-      "app.murart.io",
-      "0b320ab301cf.ngrok-free.app",
+      ".murart.io", 
+      
     ],
   },
 });
