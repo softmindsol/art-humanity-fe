@@ -270,12 +270,12 @@ const Toolbox = ({ boundaryRef }: any) => {
         </div>
 
         {/* Text Tool (Placeholder/Visual only as requested design) */}
-        <button
+        {/* <button
           className="p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-all"
           title="Text (Coming Soon)"
         >
           <Type size={20} />
-        </button>
+        </button> */}
 
         {/* Eraser */}
         <button
