@@ -52,11 +52,7 @@ const ResetPassword = () => {
       <div className="hidden lg:flex">
         {/* Placeholder for the specific image */}
         <img
-          src={
-            isSuccess
-              ? "/assets/success-bg-flower.png"
-              : "/assets/reset-pass-img.svg"
-          }
+          src={isSuccess ? "/assets/cnp-rose.svg" : "/assets/reset-pass-img.svg"}
           // Using existing asset if no new one provided, or placeholder logic
           onError={(e) => {
             // Fallback if specific success image missing
