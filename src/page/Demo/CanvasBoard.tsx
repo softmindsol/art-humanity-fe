@@ -744,7 +744,7 @@ const InfoBox = ({ zoom, worldPos, boundaryRef }: any) => {
             }}
         >
             <div
-                className="w-full flex items-center gap-2 mb-3 cursor-move"
+                className="w-full flex items-center gap-2 mb-3 cursor-grab active:cursor-grabbing"
                 onMouseDown={handleDragMouseDown}
             >
                 <List size={18} className="!text-white" />

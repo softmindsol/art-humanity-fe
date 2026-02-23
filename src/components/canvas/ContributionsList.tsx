@@ -124,8 +124,8 @@ const ContributionsList = ({
                     console.log(`[List] Item ${contrib._id} IS ACTIVE.`);
                 }
                 const artistName = contrib.userId?.fullName || 'Artist';
-                const totalVotes = (contrib.upvotes || 0) + (contrib.downvotes || 0);
-                const downvotePercentage = totalVotes === 0 ? 0 : ((contrib.downvotes || 0) / totalVotes) * 100;
+                const totalContributors = currentProject?.contributors?.length || 0;
+                const downvotePercentage = totalContributors === 0 ? 0 : ((contrib.downvotes || 0) / totalContributors) * 100;
                 const pixelCount = (contrib.strokes || [])
                     .reduce((total: number, stroke: any) => {
                         if (stroke && stroke.strokePath) {
