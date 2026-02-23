@@ -167,7 +167,7 @@ const GuidelinePage: React.FC = () => {
                 </h2>
 
                 {/* 3 Cards Row */}
-                <div className="grid grid-cols-1 md:grid-cols-3 lg:gap-6 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 lg:mr-4 xl:mr-0 lg:gap-6 gap-3">
                   {/* Card 1 */}
                   <div className=" border border-[#AAB2C7] rounded-[12px] p-6 flex flex-col items-center text-center gap-4 hover:border-[#E23373]/50 transition-colors group h-full justify-start">
                     <div className="text-[#FEC133] h-8 flex items-center justify-center">
@@ -212,7 +212,7 @@ const GuidelinePage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="space-y-1 text-left font-medium">
+                <div className="space-y-1 text-left font-medium mb-4">
                   <p className="!text-white text-sm md:text-base leading">
                     Graphic Content Is Allowed As Long As It Follows The Other
                     Rules. Nudity Is Prohibited. Moderators Will Be Monitoring

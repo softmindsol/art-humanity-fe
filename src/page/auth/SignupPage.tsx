@@ -174,9 +174,15 @@ const SignupPage: React.FC = () => {
               type="button"
               onClick={handleGoogleLogin}
               disabled={googleLoading}
-              className="w-full h-12 bg-[#2E2E2E] hover:bg-[#252525] border border-gray-800 text-white rounded-[8px] flex items-center justify-center gap-3 transition-colors font-medium disabled:opacity-50"
+              className="w-full h-12 bg-[#2E2E2E] hover:bg-[#252525] border border-gray-800 text-white rounded-[8px] flex items-center justify-center gap-3 text-sm transition-colors font-medium disabled:opacity-50"
             >
-              <img src={googleImage} alt="Google" className="w-5 h-5" />
+              <div className="size-7 md:size-8 bg-white rounded-full flex items-center justify-center">
+                <img
+                  src={googleImage}
+                  alt="Google"
+                  className="md:size-6 size-5"
+                />
+              </div>
               {googleLoading ? "Signing up..." : "Sign up with Google"}
             </button>
 

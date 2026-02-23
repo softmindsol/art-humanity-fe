@@ -5,7 +5,7 @@ import React, {
   useCallback,
   useMemo,
 } from "react";
-import { Minus, Plus } from "lucide-react";
+import { List, Minus, Plus } from "lucide-react";
 import { selectCanvasData } from "@/redux/slice/contribution";
 import { useSelector } from "react-redux";
 import { useMediaQuery } from "@/hook/useMediaQuery";
@@ -36,25 +36,34 @@ const InfoBox = ({ zoom, worldPos, isSaving, saveError, boundaryRef }: any) => {
 
   // This effect correctly sets the initial or programmatic position of the box.
   useEffect(() => {
-    if (boundaryRef.current && infoBoxRef.current) {
-      const boundaryRect = boundaryRef.current.getBoundingClientRect();
-      const infoBoxRect = infoBoxRef.current.getBoundingClientRect();
-      let newX, newY;
+    const updatePosition = () => {
+      if (boundaryRef?.current && infoBoxRef.current) {
+        const boundaryRect = boundaryRef.current.getBoundingClientRect();
+        const infoBoxRect = infoBoxRef.current.getBoundingClientRect();
+        let newX, newY;
 
-      if (isMinimized) {
-        newX = boundaryRect.width - infoBoxRect.width - 20;
-        newY = 20; // Top-right
-      } else {
-        if (isSmallScreen) {
+        if (isMinimized) {
           newX = 20;
-          newY = boundaryRect.height - infoBoxRect.height - 20; // Bottom-left
+          newY = boundaryRect.height / 2 - infoBoxRect.height / 2; // Middle-left
         } else {
-          newX = boundaryRect.width - infoBoxRect.width - 20;
-          newY = boundaryRect.height / 2 - infoBoxRect.height / 2; // Middle-right
+          if (isSmallScreen) {
+            newX = 20;
+            newY = boundaryRect.height / 2 - infoBoxRect.height / 2; // Middle-left
+          } else {
+            newX = 20;
+            newY = boundaryRect.height / 2 - infoBoxRect.height / 2; // Middle-left
+          }
         }
+        setPosition({
+          x: Math.max(0, newX),
+          y: Math.max(0, newY),
+        });
       }
-      setPosition({ x: newX, y: newY });
-    }
+    };
+
+    updatePosition();
+    window.addEventListener('resize', updatePosition);
+    return () => window.removeEventListener('resize', updatePosition);
   }, [boundaryRef, isSmallScreen, isMinimized]);
 
   // --- SIMPLE & CORRECT DRAGGING LOGIC (UPDATED) ---
@@ -138,10 +147,11 @@ const InfoBox = ({ zoom, worldPos, isSaving, saveError, boundaryRef }: any) => {
   return (
     <div
       ref={infoBoxRef}
-      className="absolute !top-[41%] sm:!top-1/2 sm:!left-3 !left-2 bg-[#0F0D0D] p-3 rounded-lg text-base text-[#5d4e37] border border-gray-500 sm:w-full !w-fit shadow-lg select-none"
+      className="absolute bg-[#0F0D0D] p-3 rounded-lg text-base text-[#5d4e37] border border-gray-500 w-fit shadow-lg select-none"
       style={{
         left: `${position.x}px`,
         top: `${position.y}px`,
+        zIndex: 30,
         width: isMinimized ? "auto" : "433px",
         visibility: position.x === 0 && position.y === 0 ? "hidden" : "visible",
         // Apply smooth transitions only when NOT dragging
@@ -160,23 +170,7 @@ const InfoBox = ({ zoom, worldPos, isSaving, saveError, boundaryRef }: any) => {
         onTouchStart={handleDragTouchStart}
       >
         <div className="cursor-grab active:cursor-grabbing text-[#ffffff]">
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="9" cy="12" r="1"></circle>
-            <circle cx="9" cy="5" r="1"></circle>
-            <circle cx="9" cy="19" r="1"></circle>
-            <circle cx="15" cy="12" r="1"></circle>
-            <circle cx="15" cy="5" r="1"></circle>
-            <circle cx="15" cy="19" r="1"></circle>
-          </svg>
+          <List size={16} />
         </div>
         <p className="text-[#ffffff] text-base font-medium m-0">Infobox</p>
         <div className="flex text-[#ffffff] items-center gap-2">
