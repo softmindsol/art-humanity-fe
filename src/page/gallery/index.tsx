@@ -306,7 +306,7 @@ const GalleryPage: React.FC = () => {
                       </div>
                     </div>
                     {/* Title */}
-                    <h3 className="text-lg font-semibold text-center !text-white">
+                    <h3 className="text-lg font-semibold truncate text-center !text-white">
                       {project.title}
                     </h3>
 
