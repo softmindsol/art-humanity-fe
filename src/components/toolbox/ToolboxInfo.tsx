@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useSelector } from 'react-redux';
-import { Brush, Eraser, Baseline, Pipette, ChevronDown, Type, Circle } from 'lucide-react';
+import {  Eraser, ChevronDown, List } from 'lucide-react';
 import {
     setBrushColor,
     setCurrentBrush,
@@ -17,7 +17,7 @@ const Toolbox = ({ boundaryRef }: any) => {
     const dispatch = useAppDispatch();
     const brushState = useSelector(selectCurrentBrush);
     const recentColors = useSelector(selectRecentColors);
-    const [position, setPosition] = useState({ x: 100, y: 100 });
+    const [position, setPosition] = useState({ x:100, y: 200 });
     const [isDragging, setIsDragging] = useState(false);
     const dragOffsetRef = useRef({ x: 0, y: 0 });
     const toolboxRef = useRef<HTMLDivElement>(null);
@@ -31,6 +31,27 @@ const Toolbox = ({ boundaryRef }: any) => {
     useEffect(() => {
         brushStateRef.current = brushState;
     }, [brushState]);
+
+    // --- POSITION BASED ON SCREEN SIZE ---
+    useEffect(() => {
+        const updatePosition = () => {
+            if (boundaryRef?.current && toolboxRef.current) {
+                const boundaryRect = boundaryRef.current.getBoundingClientRect();
+                const toolboxRect = toolboxRef.current.getBoundingClientRect();
+                // Top-right with padding
+                const newX = boundaryRect.width - toolboxRect.width - 20;
+                const newY = 200;
+                setPosition({
+                    x: Math.max(0, newX),
+                    y: Math.max(0, newY),
+                });
+            }
+        };
+
+        updatePosition();
+        window.addEventListener('resize', updatePosition);
+        return () => window.removeEventListener('resize', updatePosition);
+    }, [boundaryRef]);
 
     // --- DRAGGING LOGIC ---
     const handleDragStart = useCallback((clientX: number, clientY: number) => {
@@ -166,16 +187,8 @@ const Toolbox = ({ boundaryRef }: any) => {
             onMouseDown={handleDragMouseDown}
         >
             {/* Drag Handle (Dots) */}
-            <div className="cursor-grab active:cursor-grabbing px-2 text-white hover:text-white/40">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <circle cx="8" cy="4" r="2" />
-                    <circle cx="8" cy="12" r="2" />
-                    <circle cx="8" cy="20" r="2" />
-                    <circle cx="16" cy="4" r="2" />
-                    <circle cx="16" cy="12" r="2" />
-                    <circle cx="16" cy="20" r="2" />
-                </svg>
-            </div>
+                           <List size={18} className="!text-white cursor-grab active:cursor-grabbing" />
+
 
             {/* Tools */}
             <div className="flex items-center gap-1">
@@ -223,12 +236,12 @@ const Toolbox = ({ boundaryRef }: any) => {
                 </div>
 
                 {/* Text Tool (Placeholder/Visual only as requested design) */}
-                <button
+                {/* <button
                     className="p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-all"
                     title="Text (Coming Soon)"
                 >
                     <Type size={20} />
-                </button>              
+                </button>               */}
 
                 {/* Eraser */}
                 <button
@@ -367,6 +380,28 @@ const Toolbox = ({ boundaryRef }: any) => {
                                 <div
                                     className="absolute h-full w-1 bg-white border border-black/20 shadow pointer-events-none z-0"
                                     style={{ left: `${(brushState.color.h / 360) * 100}%` }}
+                                />
+                            </div>
+                        </div>
+
+                        {/* Shade (Lightness) Slider */}
+                        <div>
+                            <label className="text-white/60 text-[11px] font-medium block mb-1">Shade</label>
+                            <div className="h-4 rounded-full relative overflow-hidden">
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max="100"
+                                    value={brushState.color.l}
+                                    onChange={(e) => dispatch(setBrushColor({ l: Number(e.target.value) }))}
+                                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                                />
+                                <div className="absolute inset-0 w-full h-full rounded-full" style={{
+                                    background: `linear-gradient(to right, black, hsl(${brushState.color.h}, ${brushState.color.s}%, 50%), white)`
+                                }} />
+                                <div
+                                    className="absolute h-full w-1 bg-white border border-black/20 shadow pointer-events-none z-0"
+                                    style={{ left: `${brushState.color.l}%` }}
                                 />
                             </div>
                         </div>

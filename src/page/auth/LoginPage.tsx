@@ -152,7 +152,7 @@ const LoginPage: React.FC = () => {
                   className="md:size-6 size-5"
                 />
               </div>
-              {googleLoading ? "Signing in..." : "Sign up with Google"}
+              {googleLoading ? "Signing in..." : "Sign in with Google"}
             </button>
 
             <p className="text-left text-white font-semibold md:text-base text-sm">
