@@ -84,8 +84,8 @@ function App() {
                       <ServicesSection />
                       <ActiveProjectsSection />
                       <ArtworkShowcaseSection />
-                      <PopularGallerySection />
-                      <TestimonialSection />
+                      {/* <PopularGallerySection />
+                      <TestimonialSection /> */}
                     </>
                   }
                 />
