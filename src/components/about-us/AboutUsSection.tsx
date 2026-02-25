@@ -23,7 +23,7 @@ const AboutUsSection: React.FC = () => {
             <div className="px-8 py-2 rounded-full bg-[#0F0D0D] text-white tracking-widest xl:text-base md:text-sm text-xs font-semibold uppercase">
               About Us
             </div>
-          </div> 
+          </div>
 
           {/* Heading */}
           <h2 className="text-2xl md:text-[34px] !font-semibold !text-white leading-tight">
@@ -44,12 +44,10 @@ const AboutUsSection: React.FC = () => {
             <p className="!text-white font-medium text-sm lg:text-base leading-relaxed text-left relative z-10">
               Our journey begins with artwork development a collaborative space
               where ideas evolve, concepts gain clarity, and creativity is given
-              the freedom to grow. We dive deep into your world, learning what
-              inspires you, understanding your goals, and discovering what sets
-              your vision apart. From raw sketches and moodboards to detailed
-              illustrations and polished compositions, we shape a visual
-              direction that captures your unique narrative. This process is
-              immersive, intentional, and full of exploration, allowing us to
+              the freedom to grow. We give you all the tools necessary to
+              collaborate with your fellow contributors from raw sketches to
+              detailed illustrations and polished contributions. This process is
+              immersive, intentional, and full of exploration, allowing you to
               build an artistic identity that feels authentic, expressive, and
               visually unforgettable. Here, art becomes the language of your
               story bold, meaningful, and ready to make an impact.
