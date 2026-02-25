@@ -10,7 +10,6 @@ const ArtworkShowcaseSection: React.FC = () => {
           alt="Pastoral Stillness"
           className="w-full h-full object-cover opacity-65"
         />
-        {/* Gradient Overlay for Text Readability */}
       </div>
 
       <div className="max-w-[1440px] px-6 2xl:px-8 mx-auto h-full flex items-end pb-8 lg:pb-16 relative z-10">
