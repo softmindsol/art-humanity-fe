@@ -65,14 +65,14 @@ const GuidelinePage: React.FC = () => {
                 <div className="flex flex-col gap-4">
                   <div className="h-[120px] sm:h-[160px] md:h-[200px] w-full rounded-[12px] overflow-hidden">
                     <img
-                      src="/assets/guideline-art-1.svg"
+                      src="/assets/guideline-art-1.webp"
                       className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
                       alt="Art 1"
                     />
                   </div>
                   <div className="h-[120px] sm:h-[160px] md:h-[200px] w-full rounded-[12px] overflow-hidden">
                     <img
-                      src="/assets/guideline-art-4.svg"
+                      src="/assets/guideline-art-4.webp"
                       className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
                       alt="Art 4"
                     />
@@ -92,14 +92,14 @@ const GuidelinePage: React.FC = () => {
                 <div className="flex flex-col gap-2 sm:gap-4">
                   <div className="h-[120px] sm:h-[160px] md:h-[200px] w-full rounded-[12px] overflow-hidden">
                     <img
-                      src="/assets/guideline-art-2.svg"
+                      src="/assets/guideline-art-2.webp"
                       className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
                       alt="Art 3"
                     />
                   </div>
                   <div className="h-[120px] sm:h-[160px] md:h-[200px] w-full rounded-[12px] overflow-hidden">
                     <img
-                      src="/assets/guideline-art-5.svg"
+                      src="/assets/guideline-art-5.webp"
                       className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
                       alt="Art 5"
                     />
