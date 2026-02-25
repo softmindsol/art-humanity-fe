@@ -76,7 +76,7 @@ const ServicesSection: React.FC = () => {
           <h2 className="text-2xl md:text-3xl lg:text-[34px] !font-semibold !text-white">
             Our Amazing{" "}
             <span className="bg-gradient-to-r from-[#E23373] to-[#FEC133] bg-clip-text text-transparent">
-              Artwork Services
+              Project Workflow
             </span>
           </h2>
 
