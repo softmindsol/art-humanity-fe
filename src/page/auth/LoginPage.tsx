@@ -121,7 +121,7 @@ const LoginPage: React.FC = () => {
                 to="/forgot-password"
                 className="!text-[#E23373] hover:!underline text-sm font-medium"
               >
-                Forget Password?
+                Forgot Password?
               </Link>
             </div>
 
