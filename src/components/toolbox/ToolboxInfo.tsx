@@ -85,6 +85,16 @@ const Toolbox = ({ boundaryRef }: any) => {
     [handleDragStart],
   );
 
+  const handleDragTouchStart = useCallback(
+    (e: React.TouchEvent) => {
+      // Only drag if clicking the container or dots, not buttons or inputs
+      if ((e.target as HTMLElement).closest("button, input")) return;
+      const touch = e.touches[0];
+      handleDragStart(touch.clientX, touch.clientY);
+    },
+    [handleDragStart],
+  );
+
   useEffect(() => {
     const handleDragMove = (clientX: number, clientY: number) => {
       if (!isDragging || !boundaryRef?.current || !toolboxRef.current) return;
@@ -105,13 +115,25 @@ const Toolbox = ({ boundaryRef }: any) => {
       handleDragMove(e.clientX, e.clientY);
     const handleMouseUp = () => setIsDragging(false);
 
+    const handleTouchMove = (e: TouchEvent) => {
+      const touch = e.touches[0];
+      handleDragMove(touch.clientX, touch.clientY);
+      e.preventDefault();
+    };
+
     if (isDragging) {
       document.addEventListener("mousemove", handleMouseMove);
       document.addEventListener("mouseup", handleMouseUp);
+      document.addEventListener("touchmove", handleTouchMove, {
+        passive: false,
+      });
+      document.addEventListener("touchend", handleMouseUp);
     }
     return () => {
       document.removeEventListener("mousemove", handleMouseMove);
       document.removeEventListener("mouseup", handleMouseUp);
+      document.removeEventListener("touchmove", handleTouchMove);
+      document.removeEventListener("touchend", handleMouseUp);
     };
   }, [isDragging, boundaryRef]);
 
@@ -232,8 +254,13 @@ const Toolbox = ({ boundaryRef }: any) => {
         <div
             ref={toolboxRef}
             className="absolute z-40 bg-[#0F0D0D] border border-white/10 rounded-[12px] p-2 shadow-2xl flex items-center gap-3 select-none backdrop-blur-md"
-            style={{ left: `${position.x}px`, top: `${position.y}px` }}
+            style={{ 
+              left: `${position.x}px`, 
+              top: `${position.y}px`,
+              touchAction: 'none' 
+            }}
             onMouseDown={handleDragMouseDown}
+            onTouchStart={handleDragTouchStart}
         >
             {/* Drag Handle (Dots) */}
                            <List size={18} className="!text-white cursor-grab active:cursor-grabbing" />
