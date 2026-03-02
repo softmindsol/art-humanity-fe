@@ -34,26 +34,17 @@ const InfoBox = ({ zoom, worldPos, isSaving, saveError, boundaryRef }: any) => {
     setIsMinimized(isSmallScreen);
   }, [isSmallScreen]);
 
+  const isUserMovedRef = useRef(false);
+
   // This effect correctly sets the initial or programmatic position of the box.
   useEffect(() => {
     const updatePosition = () => {
+      if (isUserMovedRef.current) return;
       if (boundaryRef?.current && infoBoxRef.current) {
-        const boundaryRect = boundaryRef.current.getBoundingClientRect();
-        const infoBoxRect = infoBoxRef.current.getBoundingClientRect();
-        let newX, newY;
-
-        if (isMinimized) {
-          newX = 20;
-          newY = boundaryRect.height / 2 - infoBoxRect.height / 2; // Middle-left
-        } else {
-          if (isSmallScreen) {
-            newX = 20;
-            newY = boundaryRect.height / 2 - infoBoxRect.height / 2; // Middle-left
-          } else {
-            newX = 20;
-            newY = boundaryRect.height / 2 - infoBoxRect.height / 2; // Middle-left
-          }
-        }
+        // Position on the left, below the Toolbox
+        const newX = 20;
+        const newY = 240;
+        
         setPosition({
           x: Math.max(0, newX),
           y: Math.max(0, newY),
@@ -62,8 +53,8 @@ const InfoBox = ({ zoom, worldPos, isSaving, saveError, boundaryRef }: any) => {
     };
 
     updatePosition();
-    window.addEventListener('resize', updatePosition);
-    return () => window.removeEventListener('resize', updatePosition);
+    window.addEventListener("resize", updatePosition);
+    return () => window.removeEventListener("resize", updatePosition);
   }, [boundaryRef, isSmallScreen, isMinimized]);
 
   // --- SIMPLE & CORRECT DRAGGING LOGIC (UPDATED) ---
@@ -114,6 +105,7 @@ const InfoBox = ({ zoom, worldPos, isSaving, saveError, boundaryRef }: any) => {
       newX = Math.min(newX, boundaryRect.width - infoBoxNode.offsetWidth);
       newY = Math.min(newY, boundaryRect.height - infoBoxNode.offsetHeight);
 
+      isUserMovedRef.current = true;
       setPosition({ x: newX, y: newY });
     };
 
@@ -152,7 +144,7 @@ const InfoBox = ({ zoom, worldPos, isSaving, saveError, boundaryRef }: any) => {
         left: `${position.x}px`,
         top: `${position.y}px`,
         zIndex: 30,
-        width: isMinimized ? "auto" : "433px",
+        width: isMinimized ? "auto" : "400px",
         visibility: position.x === 0 && position.y === 0 ? "hidden" : "visible",
         // Apply smooth transitions only when NOT dragging
         transition: isDragging
@@ -187,8 +179,8 @@ const InfoBox = ({ zoom, worldPos, isSaving, saveError, boundaryRef }: any) => {
       </div>
 
       {!isMinimized && (
-        <div className="text-base text-[#ffffff] ">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+        <div className="text-base text-[#ffffff] text-sm ">
+          <div className="flex flex-col sm:flex-row  sm:items-center gap-2">
             <p>Zoom: {Math.round(zoom * 100)}%</p>
             <p>
               World Pos: ({Math.round(worldPos.x)}, {Math.round(worldPos.y)})

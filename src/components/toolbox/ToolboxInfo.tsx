@@ -8,6 +8,7 @@ import {
   Baseline,
   Pipette,
   ChevronDown,
+  ChevronUp,
   Type,
   Circle,
   List,
@@ -26,7 +27,7 @@ const Toolbox = ({ boundaryRef }: any) => {
     const dispatch = useAppDispatch();
     const brushState = useSelector(selectCurrentBrush);
     const recentColors = useSelector(selectRecentColors);
-    const [position, setPosition] = useState({ x:100, y: 200 });
+    const [position, setOfPosition] = useState({ x: 20, y: 140 });
     const [isDragging, setIsDragging] = useState(false);
     const dragOffsetRef = useRef({ x: 0, y: 0 });
     const toolboxRef = useRef<HTMLDivElement>(null);
@@ -43,26 +44,27 @@ const Toolbox = ({ boundaryRef }: any) => {
         brushStateRef.current = brushState;
     }, [brushState]);
 
-    // --- POSITION BASED ON SCREEN SIZE ---
-    useEffect(() => {
-        const updatePosition = () => {
-            if (boundaryRef?.current && toolboxRef.current) {
-                const boundaryRect = boundaryRef.current.getBoundingClientRect();
-                const toolboxRect = toolboxRef.current.getBoundingClientRect();
-                // Top-right with padding
-                const newX = boundaryRect.width - toolboxRect.width - 20;
-                const newY = 200;
-                setPosition({
-                    x: Math.max(0, newX),
-                    y: Math.max(0, newY),
-                });
-            }
-        };
+  const isUserMovedRef = useRef(false);
 
-        updatePosition();
-        window.addEventListener('resize', updatePosition);
-        return () => window.removeEventListener('resize', updatePosition);
-    }, [boundaryRef]);
+  // --- POSITION BASED ON SCREEN SIZE ---
+  useEffect(() => {
+    const updatePosition = () => {
+      if (isUserMovedRef.current) return; // Don't reset if user moved it
+      if (boundaryRef?.current && toolboxRef.current) {
+        // Position on the left, below the nav/header
+        const newX = 20;
+        const newY = 140;
+        setOfPosition({
+          x: Math.max(0, newX),
+          y: Math.max(0, newY),
+        });
+      }
+    };
+
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    return () => window.removeEventListener("resize", updatePosition);
+  }, [boundaryRef]);
 
   // --- DRAGGING LOGIC ---
   const handleDragStart = useCallback((clientX: number, clientY: number) => {
@@ -108,7 +110,8 @@ const Toolbox = ({ boundaryRef }: any) => {
       newY = Math.max(0, newY);
       newX = Math.min(newX, boundaryRect.width - toolboxRect.width);
       newY = Math.min(newY, boundaryRect.height - toolboxRect.height);
-      setPosition({ x: newX, y: newY });
+      isUserMovedRef.current = true;
+      setOfPosition({ x: newX, y: newY });
     };
 
     const handleMouseMove = (e: MouseEvent) =>
@@ -203,18 +206,31 @@ const Toolbox = ({ boundaryRef }: any) => {
     e.stopPropagation();
     setIsDraggingColor(true);
     const sl = calculateColorFromSquare(e.clientX, e.clientY);
-    if (sl) dispatch(setBrushColor({ s: sl.s, l: sl.l }));
+    if (sl) {
+      dispatch(setBrushColor({ s: sl.s, l: sl.l }));
+      if (brushState.mode === "eraser") {
+        dispatch(setCurrentBrush({ mode: "brush" }));
+      }
+    }
   };
 
   const handleColorHueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(setBrushColor({ h: Number(e.target.value) }));
+    if (brushState.mode === "eraser") {
+      dispatch(setCurrentBrush({ mode: "brush" }));
+    }
   };
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (isDraggingColor && activePopover === "color") {
         const sl = calculateColorFromSquare(e.clientX, e.clientY);
-        if (sl) dispatch(setBrushColor({ s: sl.s, l: sl.l }));
+        if (sl) {
+          dispatch(setBrushColor({ s: sl.s, l: sl.l }));
+          if (brushState.mode === "eraser") {
+            dispatch(setCurrentBrush({ mode: "brush" }));
+          }
+        }
       }
     };
     const handleMouseUp = () => setIsDraggingColor(false);
@@ -227,7 +243,7 @@ const Toolbox = ({ boundaryRef }: any) => {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
     };
-  }, [isDraggingColor, activePopover]);
+  }, [isDraggingColor, activePopover, brushState.mode]);
 
   // --- POPOVER TOGGLERS ---
   const toggleBrushPopover = () =>
@@ -235,7 +251,8 @@ const Toolbox = ({ boundaryRef }: any) => {
   const toggleColorPopover = () =>
     setActivePopover(activePopover === "color" ? null : "color");
 
-  // Close popovers when clicking outside
+  // Close popovers when clicking outside - REMOVED as per user request
+  /*
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (
@@ -248,6 +265,7 @@ const Toolbox = ({ boundaryRef }: any) => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+  */
 
     // --- RENDER ---
     return (
@@ -273,7 +291,7 @@ const Toolbox = ({ boundaryRef }: any) => {
           <button
             onClick={() => {
               dispatch(setCurrentBrush({ mode: "brush" }));
-              if (activePopover !== "brush") setActivePopover("brush");
+              toggleBrushPopover();
             }}
             className={`p-2 rounded-lg flex items-center gap-1 transition-all ${
               brushState.mode === "brush"
@@ -283,16 +301,26 @@ const Toolbox = ({ boundaryRef }: any) => {
           >
             {/* <Brush size={20} /> */}
             <img src="/assets/brush.svg" alt="Brush" className="w-5 h-5" />
-            {brushState.mode === "brush" && (
-              <ChevronDown
-                size={14}
-                className="opacity-80"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleBrushPopover();
-                }}
-              />
-            )}
+            {brushState.mode === "brush" &&
+              (activePopover === "brush" ? (
+                <ChevronUp
+                  size={14}
+                  className="opacity-80"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleBrushPopover();
+                  }}
+                />
+              ) : (
+                <ChevronDown
+                  size={14}
+                  className="opacity-80"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleBrushPopover();
+                  }}
+                />
+              ))}
           </button>
 
           {/* Brush Popover */}
@@ -438,13 +466,17 @@ const Toolbox = ({ boundaryRef }: any) => {
                       l = +(l * 100).toFixed(1);
 
                       dispatch(setBrushColor({ h, s, l }));
+                      if (brushState.mode === "eraser") {
+                        dispatch(setCurrentBrush({ mode: "brush" }));
+                      }
                     } catch (e) {
                       console.error("EyeDropper failed", e);
                     }
                   } else {
-                    alert("Your browser does not support the EyeDropper API");
+                    // console.warn("EyeDropper API not supported");
                   }
                 }}
+                style={{ display: "EyeDropper" in window ? "flex" : "none" }}
                 className="w-6 h-6 flex items-center justify-center text-white/70 hover:text-white transition-colors"
                 title="Pick Color"
               >
@@ -483,7 +515,12 @@ const Toolbox = ({ boundaryRef }: any) => {
                                     min="0"
                                     max="100"
                                     value={brushState.color.l}
-                                    onChange={(e) => dispatch(setBrushColor({ l: Number(e.target.value) }))}
+                                    onChange={(e) => {
+                                      dispatch(setBrushColor({ l: Number(e.target.value) }));
+                                      if (brushState.mode === "eraser") {
+                                        dispatch(setCurrentBrush({ mode: "brush" }));
+                                      }
+                                    }}
                                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                                 />
                                 <div className="absolute inset-0 w-full h-full rounded-full" style={{
@@ -504,7 +541,12 @@ const Toolbox = ({ boundaryRef }: any) => {
                   return (
                     <button
                       key={index}
-                      onClick={() => dispatch(setBrushColor(hslColor))}
+                      onClick={() => {
+                        dispatch(setBrushColor(hslColor));
+                        if (brushState.mode === "eraser") {
+                          dispatch(setCurrentBrush({ mode: "brush" }));
+                        }
+                      }}
                       className="w-6 h-6 rounded-md border border-white/10 hover:scale-110 transition-transform"
                       style={{
                         backgroundColor: `rgb(${rgb.r},${rgb.g},${rgb.b})`,
