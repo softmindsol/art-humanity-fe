@@ -205,7 +205,7 @@ const ActiveProjects: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
           <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
             <SearchBar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
             <ProjectStatusFilter

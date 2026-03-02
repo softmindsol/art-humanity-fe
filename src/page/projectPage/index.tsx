@@ -1,7 +1,6 @@
 // src/pages/ProjectPage.js
 
 import Toolbox from "@/components/toolbox/ToolboxInfo";
-import Toolbox2 from "@/components/toolbox/Toolbox";
 
 import {
   useState,
@@ -12,7 +11,7 @@ import {
   useCallback,
 } from "react";
 import KonvaCanvas from "../../components/common/KonvaCanvas";
-import { Code, Film, Square } from "lucide-react"; // Grid icon imported
+import { Code } from "lucide-react"; // Grid icon imported
 
 import {
   AlertDialog,
@@ -61,7 +60,7 @@ import {
 import { toast } from "sonner";
 import useAuth from "@/hook/useAuth";
 import useAppDispatch from "@/hook/useDispatch";
-import { openAuthModal } from "@/redux/slice/opeModal";
+// import { openAuthModal } from "@/redux/slice/opeModal";
 import { io } from "socket.io-client"; // Socket client import karein
 import { addContributionFromSocket } from "@/redux/slice/contribution"; // Naya action import karein
 import { useSelector } from "react-redux";
@@ -232,16 +231,18 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
 
   const { tilesRef, isClearAlertOpen, setIsClearAlertOpen } = useCanvasState();
 
-  // Canvas se click handle karne wala function
+  /*
   const handleCanvasClick = (contributionId: any) => {
     console.log(`Canvas clicked. Setting selected ID to: ${contributionId}`);
     setSelectedContributionId(contributionId);
   };
+  */
   const handleToggleCanvasSize = () => {
     // Agar mojooda size 1024 hai, to 2560 kar do, warna 1024 kar do
     setDisplaySize((prevSize) => (prevSize === 1024 ? 2560 : 1024));
   };
 
+  /*
   const handleSidebarContributionSelect = useCallback((contributionId: any) => {
     setSelectedContributionId(contributionId);
     const targetContribution = contributions.find(
@@ -256,6 +257,7 @@ const ProjectPage = ({ projectName, projectId, totalContributors }: any) => {
       }
     }
   }, []);
+  */
 
   // --- TILING DATA FETCHING LOGIC ---
   useEffect(() => {
