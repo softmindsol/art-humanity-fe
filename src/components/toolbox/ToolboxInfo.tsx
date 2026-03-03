@@ -3,16 +3,12 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useSelector } from "react-redux";
 import {
-  Brush,
   Eraser,
-  Baseline,
-  Pipette,
   ChevronDown,
   ChevronUp,
-  Type,
-  Circle,
   List,
 } from "lucide-react";
+
 import {
   setBrushColor,
   setCurrentBrush,
@@ -21,7 +17,7 @@ import {
   selectCurrentBrush,
 } from "@/redux/slice/contribution";
 import useAppDispatch from "@/hook/useDispatch";
-import { useMediaQuery } from "@/hook/useMediaQuery";
+
 
 const Toolbox = ({ boundaryRef }: any) => {
     const dispatch = useAppDispatch();
@@ -80,22 +76,25 @@ const Toolbox = ({ boundaryRef }: any) => {
   const handleDragMouseDown = useCallback(
     (e: React.MouseEvent) => {
       // Only drag if clicking the container or dots, not buttons or inputs
-      if ((e.target as HTMLElement).closest("button, input")) return;
+      if ((e.target as HTMLElement).closest("button, input, [data-no-drag]")) return;
       handleDragStart(e.clientX, e.clientY);
       e.preventDefault();
     },
     [handleDragStart],
   );
 
+
   const handleDragTouchStart = useCallback(
     (e: React.TouchEvent) => {
       // Only drag if clicking the container or dots, not buttons or inputs
-      if ((e.target as HTMLElement).closest("button, input")) return;
+      if ((e.target as HTMLElement).closest("button, input, [data-no-drag]")) return;
+      
       const touch = e.touches[0];
       handleDragStart(touch.clientX, touch.clientY);
     },
     [handleDragStart],
   );
+
 
   useEffect(() => {
     const handleDragMove = (clientX: number, clientY: number) => {
@@ -183,7 +182,7 @@ const Toolbox = ({ boundaryRef }: any) => {
     brushState.color.l,
   );
   const currentColorString = `rgba(${rgbColor.r}, ${rgbColor.g}, ${rgbColor.b}, 1)`;
-  const lightnessGradient = `linear-gradient(to right, black, hsl(${brushState.color.h}, 100%, 50%), white)`;
+
 
   // --- COLOR PICKER LOGIC (SQUARE + HUE SLIDER) ---
   // Mapping: Square X = Saturation (0-100), Square Y = Lightness (100-0)
@@ -214,6 +213,21 @@ const Toolbox = ({ boundaryRef }: any) => {
     }
   };
 
+  const handleColorBoxTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingColor(true);
+    const touch = e.touches[0];
+    const sl = calculateColorFromSquare(touch.clientX, touch.clientY);
+    if (sl) {
+      dispatch(setBrushColor({ s: sl.s, l: sl.l }));
+      if (brushState.mode === "eraser") {
+        dispatch(setCurrentBrush({ mode: "brush" }));
+      }
+    }
+  };
+
+
   const handleColorHueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     dispatch(setBrushColor({ h: Number(e.target.value) }));
     if (brushState.mode === "eraser") {
@@ -233,17 +247,37 @@ const Toolbox = ({ boundaryRef }: any) => {
         }
       }
     };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (isDraggingColor && activePopover === "color") {
+        const touch = e.touches[0];
+        const sl = calculateColorFromSquare(touch.clientX, touch.clientY);
+        if (sl) {
+          dispatch(setBrushColor({ s: sl.s, l: sl.l }));
+          if (brushState.mode === "eraser") {
+            dispatch(setCurrentBrush({ mode: "brush" }));
+          }
+        }
+        e.preventDefault(); // Prevent scrolling while adjusting color
+      }
+    };
+
     const handleMouseUp = () => setIsDraggingColor(false);
 
     if (isDraggingColor) {
       window.addEventListener("mousemove", handleMouseMove);
       window.addEventListener("mouseup", handleMouseUp);
+      window.addEventListener("touchmove", handleTouchMove, { passive: false });
+      window.addEventListener("touchend", handleMouseUp);
     }
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
       window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", handleMouseUp);
     };
   }, [isDraggingColor, activePopover, brushState.mode]);
+
 
   // --- POPOVER TOGGLERS ---
   const toggleBrushPopover = () =>
@@ -325,7 +359,7 @@ const Toolbox = ({ boundaryRef }: any) => {
 
           {/* Brush Popover */}
           {activePopover === "brush" && (
-            <div className="absolute top-full left-0 mt-3 w-[176px] bg-[#1D1D1D] border border-white/10 rounded-[12px] px-2 py-2 shadow-xl animate-in fade-in slide-in-from-top-2 z-50">
+            <div data-no-drag className="absolute top-full left-0 mt-3 w-[176px] bg-[#1D1D1D] border border-white/10 rounded-[12px] px-2 py-2 shadow-xl animate-in fade-in slide-in-from-top-2 z-50" onTouchStart={(e) => e.stopPropagation()}>
               <label className="text-white text-[12px] font-medium block">
                 Brush Size: {brushState.size}px
               </label>
@@ -335,6 +369,7 @@ const Toolbox = ({ boundaryRef }: any) => {
                 max="50"
                 value={brushState.size}
                 onChange={(e) => dispatch(setBrushSize(Number(e.target.value)))}
+                onTouchStart={(e) => e.stopPropagation()}
                 className="w-full h-1 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#FEC133] [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-110"
                 style={{
                   background: `linear-gradient(to right, #E23373 0%, #E23373 ${((brushState.size - 1) / 49) * 100}%, rgba(255,255,255,0.1) ${((brushState.size - 1) / 49) * 100}%, rgba(255,255,255,0.1) 100%)`,
@@ -342,6 +377,7 @@ const Toolbox = ({ boundaryRef }: any) => {
               />
             </div>
           )}
+
         </div>
 
                 {/* Text Tool (Placeholder/Visual only as requested design) */}
@@ -392,10 +428,12 @@ const Toolbox = ({ boundaryRef }: any) => {
 
         {/* Color Popover */}
         {activePopover === "color" && (
-          <div className="absolute top-full right-0 mt-3 w-64 bg-[#1D1D1D] border border-white/10 rounded-[12px] p-4 shadow-xl animate-in fade-in slide-in-from-top-2 z-50 flex flex-col gap-4">
+          <div data-no-drag className="absolute top-full right-0 mt-3 w-64 bg-[#1D1D1D] border border-white/10 rounded-[12px] p-4 shadow-xl animate-in fade-in slide-in-from-top-2 z-50 flex flex-col gap-4" onTouchStart={(e) => e.stopPropagation()}>
+
             {/* Saturation/Lightness Square */}
             <div
               ref={colorBoxRef}
+              data-no-drag
               className="w-full h-40 rounded-lg cursor-crosshair relative shadow-inner overflow-hidden"
               style={{
                 backgroundColor: `hsl(${brushState.color.h}, 100%, 50%)`,
@@ -406,6 +444,7 @@ const Toolbox = ({ boundaryRef }: any) => {
                 touchAction: "none",
               }}
               onMouseDown={handleColorBoxMouseDown}
+              onTouchStart={handleColorBoxTouchStart}
             >
               {/* Cursor */}
               <div
@@ -417,6 +456,7 @@ const Toolbox = ({ boundaryRef }: any) => {
                 }}
               />
             </div>
+
 
             <div className="flex items-center gap-3">
               <button
@@ -494,8 +534,10 @@ const Toolbox = ({ boundaryRef }: any) => {
                                     max="360"
                                     value={brushState.color.h}
                                     onChange={handleColorHueChange}
+                                    onTouchStart={(e) => e.stopPropagation()}
                                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                                 />
+
                                 <div className="absolute inset-0 w-full h-full" style={{
                                     background: 'linear-gradient(to right, #FF9797, #8288FF, #FFE26C, #92FF57, #4DC9A1, #729BA6, #FF4242)'
                                 }} />
@@ -521,8 +563,10 @@ const Toolbox = ({ boundaryRef }: any) => {
                                         dispatch(setCurrentBrush({ mode: "brush" }));
                                       }
                                     }}
+                                    onTouchStart={(e) => e.stopPropagation()}
                                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                                 />
+
                                 <div className="absolute inset-0 w-full h-full rounded-full" style={{
                                     background: `linear-gradient(to right, black, hsl(${brushState.color.h}, ${brushState.color.s}%, 50%), white)`
                                 }} />
