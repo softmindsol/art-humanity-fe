@@ -279,15 +279,22 @@ const Toolbox = ({ boundaryRef }: any) => {
             {!isMinimized &&
                 <div className='flex flex-col gap-4'>
                     <div className="flex gap-2">
-                        {(['brush', 'eraser', 'line', 'picker'] as const).map((mode) => {
-                            const Icon = { brush: Brush, eraser: Eraser, line: Baseline, picker: Pipette }[mode];
-                            const isActive = brushState.mode === mode;
-                            return (
-                                <button key={mode} onClick={() => dispatch(setCurrentBrush({ mode }))} title={mode.charAt(0).toUpperCase() + mode.slice(1)} className={`flex-1 p-2 border border-[#8b795e] rounded flex justify-center transition-colors ${isActive ? 'bg-[#8b795e] text-white' : 'bg-white text-[#8b795e] hover:bg-gray-200'}`}>
-                                    <Icon size={18} />
-                                </button>
-                            );
-                        })}
+                        {(['brush', 'eraser', 'line', 'picker'] as const)
+                            .filter(mode => {
+                                if (mode === 'eraser') {
+                                    return window.location.hostname !== "murart.io" && window.location.hostname !== "www.murart.io";
+                                }
+                                return true;
+                            })
+                            .map((mode) => {
+                                const Icon = { brush: Brush, eraser: Eraser, line: Baseline, picker: Pipette }[mode];
+                                const isActive = brushState.mode === mode;
+                                return (
+                                    <button key={mode} onClick={() => dispatch(setCurrentBrush({ mode }))} title={mode.charAt(0).toUpperCase() + mode.slice(1)} className={`flex-1 p-2 border border-[#8b795e] rounded flex justify-center transition-colors ${isActive ? 'bg-[#8b795e] text-white' : 'bg-white text-[#8b795e] hover:bg-gray-200'}`}>
+                                        <Icon size={18} />
+                                    </button>
+                                );
+                            })}
 
 
                     </div>
