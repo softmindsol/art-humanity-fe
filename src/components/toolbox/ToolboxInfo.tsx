@@ -389,16 +389,18 @@ const Toolbox = ({ boundaryRef }: any) => {
                 </button>               */}
 
         {/* Eraser */}
-        <button
-          onClick={() => dispatch(setCurrentBrush({ mode: "eraser" }))}
-          className={`p-2 rounded-lg transition-all ${
-            brushState.mode === "eraser"
-              ? "bg-white/20 text-white"
-              : "text-white/70 hover:text-white hover:bg-white/10"
-          }`}
-        >
-          <Eraser size={20} />
-        </button>
+        {window.location.hostname !== "murart.io" && window.location.hostname !== "www.murart.io" && (
+          <button
+            onClick={() => dispatch(setCurrentBrush({ mode: "eraser" }))}
+            className={`p-2 rounded-lg transition-all ${
+              brushState.mode === "eraser"
+                ? "bg-white/20 text-white"
+                : "text-white/70 hover:text-white hover:bg-white/10"
+            }`}
+          >
+            <Eraser size={20} />
+          </button>
+        )}
       </div>
 
       {/* Color Trigger & Popover */}
