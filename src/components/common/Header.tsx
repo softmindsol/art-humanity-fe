@@ -638,7 +638,7 @@ const Header = () => {
               // --- AGAR USER LOGGED OUT HAI ---
               <button
                 onClick={() => {
-                  navigate("/signup");
+                  navigate("/login");
                   handleLinkClick();
                 }}
                 className="w-full cursor-pointer py-3 rounded-full font-bold text-white bg-gradient-to-r from-[#E23373] to-[#FEC133] hover:opacity-90 shadow-lg transition-all active:scale-95"
