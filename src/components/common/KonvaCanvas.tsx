@@ -94,7 +94,7 @@ const KonvaCanvas = ({
     const savedContributions = useSelector(selectCanvasData);
     const pendingStrokes = useSelector(selectPendingStrokes);
     const { user } = useAuth();
-    const [colorPickerPreview, setColorPickerPreview] = useState<any>(null); // For the preview swatch
+
 
     // This is the baked image canvas context, we need access to it
     const bakedImageContextRef = useRef(null);
@@ -372,7 +372,6 @@ const KonvaCanvas = ({
 
                 // Scenario 1: Agar is pixel ka malik hai lekin woh active contribution nahi hai
                 if (pixelOwnerId && pixelOwnerId !== activeContributionId) {
-                    // Yahan hum pehle owner ka naam nikalenge taake message zyada wazeh ho
                     const ownerContribution = savedContributions.find((c: any) => c._id === pixelOwnerId);
                     const ownerName = ownerContribution?.userId?.fullName || 'another user';
 
@@ -380,8 +379,7 @@ const KonvaCanvas = ({
                     return; // Drawing ko rok dein
                 }
 
-                // Scenario 2: Agar pixel khaali hai, lekin humari active contribution apni nahi hai (sirf doosre ki select ki hui hai)
-                // (Yeh check zaroori hai taake user kisi doosre ki contribution ko "extend" na kar sake)
+                // Scenario 2: Agar pixel khaali hai, lekin humari active contribution apni nahi hai
                 const activeContribution = savedContributions.find((c: any) => c._id === activeContributionId);
                 if (!pixelOwnerId && activeContribution && activeContribution.userId?._id !== user?._id) {
                     toast.error("You can only draw on your own contributions.");
@@ -391,12 +389,14 @@ const KonvaCanvas = ({
                 return; // Canvas se bahar click hua hai
             }
         }
+
+        // Special check: If it's a pen, we might want to allow drawing even in move mode?
+        // For now, keeping the mode check but clarifying stylus interactions.
         if (isReadOnly || !isContributor || brushState.mode === 'move') return;
+
         if (!user) { onGuestInteraction(); return; }
-        if (!isPointerInsideCanvas(pos)) return; // Agar pointer canvas ke bahar hai, drawing stop
+        if (!isPointerInsideCanvas(pos)) return;
         wasInsideCanvasRef.current = true;
-
-
 
         if (onClearHighlight) onClearHighlight();
 
@@ -413,6 +413,7 @@ const KonvaCanvas = ({
             setActiveLine({ points: [pos.x, pos.y], tool: brushState.mode, stroke: colorString, strokeWidth: brushState.size });
         }
     };
+
 
     const draw = (point: any) => {
         if (!isDrawing) return;
@@ -779,49 +780,105 @@ const KonvaCanvas = ({
         if (!stage) return;
 
         const touches = e.evt.touches;
+        const activeTouches = Array.from(touches);
 
-        if (touches.length === 1) {
-            // Check zoom level for touch as well
+        // Apple Pencil / Stylus detection for palm rejection
+        const stylusTouch: any = activeTouches.find((t: any) => t.touchType === 'stylus');
+
+        // Coordinate transformation function for specific touches
+        const getTouchPosOnStage = (touch: any) => {
+            const transform = stage.getAbsoluteTransform().copy().invert();
+            return transform.point({ x: touch.clientX, y: touch.clientY });
+        };
+
+        if (stylusTouch) {
+            // Priority 1: If an Apple Pencil is detected, prioritize it for drawing
             if (stage.scaleX() < 1) {
                 toast.error("Please zoom in to at least 100% to draw.");
                 return;
             }
-            // Agar ek ungli hai, to drawing shuru karein
-            setIsDrawing(true);
-            startDrawing(stage.getRelativePointerPosition());
-        } else if (touches.length >= 2) {
-            // Prevent default browser behavior (zoom/scroll)
-            e.evt.preventDefault();
 
-            // Agar do ya do se zyada ungliyan hain, to drawing ko foran rokein
-            // aur panning/zooming ke liye tayar ho jayein
+            const pos = getTouchPosOnStage(stylusTouch);
+
+            // Handle Picker tool for Stylus
+            if (brushState.mode === 'picker' && bakedImageContextRef.current) {
+                const pixel = (bakedImageContextRef.current as any).getImageData(Math.floor(pos.x), Math.floor(pos.y), 1, 1).data;
+                const rgb = { r: pixel[0], g: pixel[1], b: pixel[2] };
+                const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+                dispatch(setBrushColor({ h: hsl.h, s: hsl.s, l: hsl.l }));
+                dispatch(setCurrentBrush({ mode: 'brush' }));
+                toast.success("Color picked!");
+                return;
+            }
+
+            setIsDrawing(true);
+            startDrawing(pos);
+            return;
+        }
+
+        if (touches.length === 1) {
+            if (stage.scaleX() < 1) {
+                toast.error("Please zoom in to at least 100% to draw.");
+                return;
+            }
+
+            const pos = stage.getRelativePointerPosition();
+
+            // Handle Picker tool for Touch
+            if (brushState.mode === 'picker' && bakedImageContextRef.current) {
+                const pixel = (bakedImageContextRef.current as any).getImageData(Math.floor(pos.x), Math.floor(pos.y), 1, 1).data;
+                const rgb = { r: pixel[0], g: pixel[1], b: pixel[2] };
+                const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+                dispatch(setBrushColor({ h: hsl.h, s: hsl.s, l: hsl.l }));
+                dispatch(setCurrentBrush({ mode: 'brush' }));
+                toast.success("Color picked!");
+                return;
+            }
+
+            setIsDrawing(true);
+            startDrawing(pos);
+        } else if (touches.length >= 2) {
+            // If already drawing with a primary touch, don't start panning
+            if (isDrawing) return;
+
+            e.evt.preventDefault();
             setIsDrawing(false);
 
             const touch1 = touches[0];
             const touch2 = touches[1];
 
-            // Dono ungliyon ke darmiyan center point ko yaad karein
             lastPanPointRef.current = {
                 x: (touch1.clientX + touch2.clientX) / 2,
                 y: (touch1.clientY + touch2.clientY) / 2,
             };
 
-            // Initial distance between fingers record karein
             lastDistRef.current = getDistance(touch1, touch2);
         }
     };
+
     const handleTouchMove = (e: any) => {
         const stage = e.target.getStage();
         if (!stage) return;
 
-        // Prevent page scrolling/zooming while interacting with canvas
         e.evt.preventDefault();
-
         const touches = e.evt.touches;
+        const activeTouches = Array.from(touches);
+        const stylusTouch: any = activeTouches.find((t: any) => t.touchType === 'stylus');
 
-        // --- YEH HAI ASAL NAYI LOGIC (UPDATED FOR ZOOM) ---
-        if (touches.length >= 2 && lastPanPointRef.current) {
-            // Case A: Two fingers -> Pan AND Zoom
+        const getTouchPosOnStage = (touch: any) => {
+            const transform = stage.getAbsoluteTransform().copy().invert();
+            return transform.point({ x: touch.clientX, y: touch.clientY });
+        };
+
+        // Palm Rejection: If drawing with stylus, ignore other touches for pan/zoom
+        if (stylusTouch && isDrawing) {
+            const pos = getTouchPosOnStage(stylusTouch);
+            onStateChange({ worldPos: pos });
+            draw(pos);
+            return;
+        }
+
+        if (touches.length >= 2 && lastPanPointRef.current && !isDrawing) {
             const touch1 = touches[0];
             const touch2 = touches[1];
 
@@ -831,7 +888,6 @@ const KonvaCanvas = ({
                 y: (touch1.clientY + touch2.clientY) / 2,
             };
 
-            // 1. Handle Panning
             const dx = newCenter.x - lastPanPointRef.current.x;
             const dy = newCenter.y - lastPanPointRef.current.y;
 
@@ -843,16 +899,12 @@ const KonvaCanvas = ({
             stage.position(newPos);
             lastPanPointRef.current = newCenter;
 
-            // 2. Handle Zooming if distance changed meaningfully
             if (lastDistRef.current > 0) {
                 const oldScale = stage.scaleX();
                 const scaleBy = dist / lastDistRef.current;
                 const newScale = oldScale * scaleBy;
-
-                // Limit zoom
                 const constrainedScale = Math.max(MIN_ZOOM, Math.min(newScale, MAX_ZOOM));
 
-                // Center zoom on midpoint
                 const mousePointTo = {
                     x: (newCenter.x - stage.x()) / oldScale,
                     y: (newCenter.y - stage.y()) / oldScale,
@@ -871,11 +923,11 @@ const KonvaCanvas = ({
             handleStageChange();
 
         } else if (touches.length === 1 && isDrawing) {
-            // Case B: Agar ek ungli hai, to DRAW karein
             onStateChange({ worldPos: stage.getRelativePointerPosition() });
             draw(stage.getRelativePointerPosition());
         }
     };
+
 
     const handleTouchEnd = () => {
         lastPanPointRef.current = null;
