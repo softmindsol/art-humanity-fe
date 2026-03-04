@@ -515,10 +515,11 @@ const Toolbox = ({ boundaryRef }: any) => {
                       console.error("EyeDropper failed", e);
                     }
                   } else {
-                    // console.warn("EyeDropper API not supported");
+                    // Fallback for Mobile: Switch to Canvas Picker mode
+                    dispatch(setCurrentBrush({ mode: "picker" }));
+                    setActivePopover(null); // Close popover to let user touch canvas
                   }
                 }}
-                style={{ display: "EyeDropper" in window ? "flex" : "none" }}
                 className="w-6 h-6 flex items-center justify-center text-white/70 hover:text-white transition-colors"
                 title="Pick Color"
               >
