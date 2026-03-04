@@ -64,10 +64,8 @@ const hslToRgb = (h: any, s: any, l: any) => {
 const rgbToHsl = (r: any, g: any, b: any) => {
     r /= 255; g /= 255; b /= 255;
     const max = Math.max(r, g, b), min = Math.min(r, g, b);
-    let h, s, l = (max + min) / 2;
-    if (max === min) {
-        h = s = 0; // achromatic
-    } else {
+    let h = 0, s = 0, l = (max + min) / 2;
+    if (max !== min) {
         const d = max - min;
         s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
         switch (max) {
@@ -97,7 +95,7 @@ const KonvaCanvas = ({
 
 
     // This is the baked image canvas context, we need access to it
-    const bakedImageContextRef = useRef(null);
+    const bakedImageContextRef = useRef<CanvasRenderingContext2D | null>(null);
 
     // --- State ---
     const [isDrawing, setIsDrawing] = useState(false);
@@ -105,6 +103,16 @@ const KonvaCanvas = ({
     const [bakedImage, setBakedImage] = useState<HTMLImageElement | null>(null);
     const lineStartPointRef = useRef<{ x: number; y: number } | any>(null);
     const [isPanning, setIsPanning] = useState(false);
+    
+    // Picker Loupe State for Mobile
+    const [loupeData, setLoupeData] = useState<{ 
+        active: boolean, 
+        x: number, 
+        y: number, 
+        color: string, 
+        viewportX: number, 
+        viewportY: number 
+    } | null>(null);
 
     // --- Refs ---
     const currentStrokePathRef = useRef<any[]>([]);
@@ -261,7 +269,7 @@ const KonvaCanvas = ({
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, virtualWidth, virtualHeight);
 
-        const contributionsMap = new Map(savedContributions.map((c: any) => [c._id, JSON.parse(JSON.stringify(c))]));
+        const contributionsMap = new Map<string, any>(savedContributions.map((c: any) => [c._id, JSON.parse(JSON.stringify(c))]));
 
         pendingStrokes.forEach((pending: any) => {
             if (!pending || !pending.contributionId || !Array.isArray(pending.strokes)) return;
@@ -272,7 +280,7 @@ const KonvaCanvas = ({
         const allContributionsToDraw = Array.from(contributionsMap.values());
 
         allContributionsToDraw.forEach((contribution: any) => {
-            if (contribution?.strokes?.length > 0) {
+            if (contribution && contribution.strokes && Array.isArray(contribution.strokes) && contribution.strokes.length > 0) {
                 // Draw visually
                 const konvaData = memoizedTransform(contribution);
                 konvaData.lines.forEach((line: any) => {
@@ -540,9 +548,9 @@ const KonvaCanvas = ({
 
                 // Check bounds
                 if (x >= 0 && x < virtualWidth && y >= 0 && y < virtualHeight) {
-                    const ctx = bakedImageContextRef.current as CanvasRenderingContext2D; // Type Assertion
-                    const pixel = ctx.getImageData(x, y, 1, 1).data;
-                    const rgb = { r: pixel[0], g: pixel[1], b: pixel[2] };
+                    // const ctx = bakedImageContextRef.current as CanvasRenderingContext2D; 
+                    // const pixel = ctx.getImageData(x, y, 1, 1).data;
+                    // const rgb = { r: pixel[0], g: pixel[1], b: pixel[2] };
                     // Update a preview state (optional, for a custom cursor)
                     // setColorPickerPreview(`rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`);
                 }
@@ -803,11 +811,16 @@ const KonvaCanvas = ({
             // Handle Picker tool for Stylus
             if (brushState.mode === 'picker' && bakedImageContextRef.current) {
                 const pixel = (bakedImageContextRef.current as any).getImageData(Math.floor(pos.x), Math.floor(pos.y), 1, 1).data;
-                const rgb = { r: pixel[0], g: pixel[1], b: pixel[2] };
-                const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
-                dispatch(setBrushColor({ h: hsl.h, s: hsl.s, l: hsl.l }));
-                dispatch(setCurrentBrush({ mode: 'brush' }));
-                toast.success("Color picked!");
+                const pickedColor = `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;
+                
+                setLoupeData({
+                    active: true,
+                    x: pos.x,
+                    y: pos.y,
+                    color: pickedColor,
+                    viewportX: stylusTouch.clientX,
+                    viewportY: stylusTouch.clientY
+                });
                 return;
             }
 
@@ -826,12 +839,18 @@ const KonvaCanvas = ({
 
             // Handle Picker tool for Touch
             if (brushState.mode === 'picker' && bakedImageContextRef.current) {
+                const pos = stage.getRelativePointerPosition();
                 const pixel = (bakedImageContextRef.current as any).getImageData(Math.floor(pos.x), Math.floor(pos.y), 1, 1).data;
-                const rgb = { r: pixel[0], g: pixel[1], b: pixel[2] };
-                const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
-                dispatch(setBrushColor({ h: hsl.h, s: hsl.s, l: hsl.l }));
-                dispatch(setCurrentBrush({ mode: 'brush' }));
-                toast.success("Color picked!");
+                const pickedColor = `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;
+                
+                setLoupeData({
+                    active: true,
+                    x: pos.x,
+                    y: pos.y,
+                    color: pickedColor,
+                    viewportX: touches[0].clientX,
+                    viewportY: touches[0].clientY
+                });
                 return;
             }
 
@@ -869,6 +888,27 @@ const KonvaCanvas = ({
             const transform = stage.getAbsoluteTransform().copy().invert();
             return transform.point({ x: touch.clientX, y: touch.clientY });
         };
+
+        // Case 1: Picker Mode Loupe handling
+        if (brushState.mode === 'picker' && loupeData?.active && bakedImageContextRef.current) {
+            const touch = stylusTouch || touches[0];
+            const pos = getTouchPosOnStage(touch);
+            
+            const pixel = (bakedImageContextRef.current as any).getImageData(
+                Math.floor(Math.max(0, Math.min(virtualWidth - 1, pos.x))),
+                Math.floor(Math.max(0, Math.min(virtualHeight - 1, pos.y))),
+                1, 1).data;
+            
+            setLoupeData({
+                active: true,
+                x: pos.x,
+                y: pos.y,
+                color: `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`,
+                viewportX: touch.clientX,
+                viewportY: touch.clientY
+            });
+            return;
+        }
 
         // Palm Rejection: If drawing with stylus, ignore other touches for pan/zoom
         if (stylusTouch && isDrawing) {
@@ -930,10 +970,26 @@ const KonvaCanvas = ({
 
 
     const handleTouchEnd = () => {
+        // Handle Picker completion
+        if (brushState.mode === 'picker' && loupeData?.active) {
+            const rgbMatch = loupeData.color.match(/\d+/g);
+            if (rgbMatch) {
+                const r = parseInt(rgbMatch[0]), g = parseInt(rgbMatch[1]), b = parseInt(rgbMatch[2]);
+                const hsl = rgbToHsl(r, g, b);
+                dispatch(setBrushColor(hsl));
+                dispatch(setCurrentBrush({ mode: 'brush' }));
+                dispatch(addRecentColor(hsl));
+                toast.success("Color picked!");
+            }
+            setLoupeData(null);
+            return;
+        }
+
         lastPanPointRef.current = null;
         if (isDrawing) {
             stopDrawing();
         }
+        lastDistRef.current = 0;
     };
 
     const highlightedBox = useMemo(() => {
@@ -971,6 +1027,7 @@ const KonvaCanvas = ({
     }, [selectedContributionId, savedStrokes]);
 
     return (
+        <>
         <Stage
             ref={stageRef}
             width={width}
@@ -1037,6 +1094,70 @@ const KonvaCanvas = ({
                 )}
             </Layer>
         </Stage>
+
+        {/* Picker Loupe Overlay */}
+        {loupeData?.active && (
+            <div 
+                style={{
+                    position: 'fixed',
+                    left: loupeData.viewportX,
+                    top: loupeData.viewportY - 80, // Position above the finger
+                    width: '100px',
+                    height: '100px',
+                    transform: 'translate(-50%, -100%)',
+                    borderRadius: '50%',
+                    border: '4px solid white',
+                    boxShadow: '0 0 20px rgba(0,0,0,0.3)',
+                    backgroundColor: loupeData.color,
+                    zIndex: 9999,
+                    pointerEvents: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden'
+                }}
+            >
+                {/* Magnified Content */}
+                {bakedImage && (
+                    <div
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            backgroundImage: `url(${bakedImage.src})`,
+                            backgroundSize: `${virtualWidth * 6}px ${virtualHeight * 6}px`, // 6x Zoom
+                            backgroundPosition: `calc(50% - ${(loupeData.x - virtualWidth/2) * 6}px) calc(50% - ${(loupeData.y - virtualHeight/2) * 6}px)`,
+                            backgroundRepeat: 'no-repeat',
+                            borderRadius: '50%'
+                        }}
+                    />
+                )}
+                {/* Crosshair / Center Point */}
+                <div style={{
+                    position: 'absolute',
+                    width: '6px',
+                    height: '6px',
+                    border: '1px solid white',
+                    boxShadow: '0 0 2px black',
+                    backgroundColor: 'transparent',
+                    zIndex: 2
+                }} />
+                
+                {/* Color Label Bottom */}
+                <div style={{
+                    position: 'absolute',
+                    bottom: '5px',
+                    fontSize: '10px',
+                    color: 'white',
+                    backgroundColor: 'rgba(0,0,0,0.5)',
+                    padding: '2px 4px',
+                    borderRadius: '4px',
+                    fontWeight: 'bold'
+                }}>
+                    PICKER
+                </div>
+            </div>
+        )}
+        </>
     );
 };
 
