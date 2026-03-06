@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { Stage, Layer, Line, Rect, Image as KonvaImage } from 'react-konva';
 import { useSelector } from 'react-redux';
 import { toast } from 'sonner';
+import { v4 as uuidv4 } from 'uuid';
 
 // Apne Redux actions aur slices ke ahem imports
 import { getContributionsByProject, addStrokes } from '@/redux/action/contribution';
@@ -253,6 +254,80 @@ const KonvaCanvas = ({
         return pos.x >= 0 && pos.y >= 0 && pos.x <= virtualWidth && pos.y <= virtualHeight;
     };
 
+    // useEffect(() => {
+    //     if (!virtualWidth || !virtualHeight) return;
+
+    //     const offscreenCanvas = document.createElement('canvas');
+    //     offscreenCanvas.width = virtualWidth;
+    //     offscreenCanvas.height = virtualHeight;
+    //     const ctx = offscreenCanvas.getContext('2d');
+    //     bakedImageContextRef.current = ctx;
+
+    //     if (!ctx) return;
+
+    //     const newOwnershipMap = Array(Math.floor(virtualHeight)).fill(null).map(() => Array(Math.floor(virtualWidth)).fill(null));
+
+    //     ctx.fillStyle = 'white';
+    //     ctx.fillRect(0, 0, virtualWidth, virtualHeight);
+
+    //     const contributionsMap = new Map<string, any>(savedContributions.map((c: any) => [c._id, JSON.parse(JSON.stringify(c))]));
+
+    //     pendingStrokes.forEach((pending: any) => {
+    //         if (!pending || !pending.contributionId || !Array.isArray(pending.strokes)) return;
+    //         const container = contributionsMap.get(pending.contributionId);
+    //         if (container) container.strokes.push(...pending.strokes);
+    //     });
+
+    //     const allContributionsToDraw = Array.from(contributionsMap.values());
+
+    //     allContributionsToDraw.forEach((contribution: any) => {
+    //         if (contribution && contribution.strokes && Array.isArray(contribution.strokes) && contribution.strokes.length > 0) {
+    //             // Draw visually
+    //             const konvaData = memoizedTransform(contribution);
+    //             konvaData.lines.forEach((line: any) => {
+    //                 // Safety checks for valid line data
+    //                 if (!line.points || line.points.length < 2) return;
+
+    //                 ctx.beginPath();
+    //                 ctx.moveTo(line.points[0], line.points[1]);
+    //                 for (let i = 2; i < line.points.length; i += 2) {
+    //                     ctx.lineTo(line.points[i], line.points[i + 1]);
+    //                 }
+    //                 ctx.strokeStyle = line.stroke;
+    //                 ctx.lineWidth = line.strokeWidth;
+    //                 ctx.lineCap = 'round';
+    //                 ctx.lineJoin = 'round';
+    //                 ctx.globalCompositeOperation = line.globalCompositeOperation;
+    //                 ctx.stroke();
+    //             });
+
+    //             // Fill the ownership map
+    //             contribution.strokes.forEach((stroke: any) => {
+    //                 // Har stroke ka apna brushSize hota hai
+    //                 const brushSizeForMap = stroke.brushSize || 1; // Default 1 rakhein agar size na mile
+
+    //                 stroke.strokePath.forEach((segment: any) => {
+    //                     plotLine(
+    //                         segment.fromX, segment.fromY,
+    //                         segment.toX, segment.toY,
+    //                         newOwnershipMap,
+    //                         contribution._id,
+    //                         virtualWidth,
+    //                         virtualHeight,
+    //                         brushSizeForMap // <-- YEH MISSING PARAMETER ADD KAR DIYA GAYA HAI
+    //                     );
+    //                 });
+    //             });
+    //         }
+    //     });
+
+    //     ownershipMapRef.current = newOwnershipMap; // Save the map
+
+    //     const image = new window.Image();
+    //     image.src = offscreenCanvas.toDataURL();
+    //     image.onload = () => setBakedImage(image);
+    // }, [savedContributions, pendingStrokes, virtualWidth, virtualHeight, memoizedTransform]);
+
     useEffect(() => {
         if (!virtualWidth || !virtualHeight) return;
 
@@ -260,73 +335,75 @@ const KonvaCanvas = ({
         offscreenCanvas.width = virtualWidth;
         offscreenCanvas.height = virtualHeight;
         const ctx = offscreenCanvas.getContext('2d');
-        bakedImageContextRef.current = ctx;
-
         if (!ctx) return;
-
-        const newOwnershipMap = Array(Math.floor(virtualHeight)).fill(null).map(() => Array(Math.floor(virtualWidth)).fill(null));
 
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, virtualWidth, virtualHeight);
 
-        const contributionsMap = new Map<string, any>(savedContributions.map((c: any) => [c._id, JSON.parse(JSON.stringify(c))]));
+        const contributionsMap = new Map(savedStrokes.map((c: any) =>[c._id, JSON.parse(JSON.stringify(c))]));
 
         pendingStrokes.forEach((pending: any) => {
             if (!pending || !pending.contributionId || !Array.isArray(pending.strokes)) return;
             const container = contributionsMap.get(pending.contributionId);
-            if (container) container.strokes.push(...pending.strokes);
-        });
-
-        const allContributionsToDraw = Array.from(contributionsMap.values());
-
-        allContributionsToDraw.forEach((contribution: any) => {
-            if (contribution && contribution.strokes && Array.isArray(contribution.strokes) && contribution.strokes.length > 0) {
-                // Draw visually
-                const konvaData = memoizedTransform(contribution);
-                konvaData.lines.forEach((line: any) => {
-                    // Safety checks for valid line data
-                    if (!line.points || line.points.length < 2) return;
-
-                    ctx.beginPath();
-                    ctx.moveTo(line.points[0], line.points[1]);
-                    for (let i = 2; i < line.points.length; i += 2) {
-                        ctx.lineTo(line.points[i], line.points[i + 1]);
-                    }
-                    ctx.strokeStyle = line.stroke;
-                    ctx.lineWidth = line.strokeWidth;
-                    ctx.lineCap = 'round';
-                    ctx.lineJoin = 'round';
-                    ctx.globalCompositeOperation = line.globalCompositeOperation;
-                    ctx.stroke();
-                });
-
-                // Fill the ownership map
-                contribution.strokes.forEach((stroke: any) => {
-                    // Har stroke ka apna brushSize hota hai
-                    const brushSizeForMap = stroke.brushSize || 1; // Default 1 rakhein agar size na mile
-
-                    stroke.strokePath.forEach((segment: any) => {
-                        plotLine(
-                            segment.fromX, segment.fromY,
-                            segment.toX, segment.toY,
-                            newOwnershipMap,
-                            contribution._id,
-                            virtualWidth,
-                            virtualHeight,
-                            brushSizeForMap // <-- YEH MISSING PARAMETER ADD KAR DIYA GAYA HAI
-                        );
-                    });
-                });
+            if (container) {
+                container.strokes.push(...pending.strokes);
+            } else {
+                contributionsMap.set(pending._id, { ...pending, userId: user });
             }
         });
 
-        ownershipMapRef.current = newOwnershipMap; // Save the map
+        const allContributionsToDraw: any = Array.from(contributionsMap.values());
+
+        // --- YEH HAI ASAL FIX (DRAWING LOGIC) ---
+        allContributionsToDraw.forEach((contribution: any) => {
+            if (contribution?.strokes?.length > 0) {
+                // Hum ab memoizedTransform ka istemal nahi karenge kyunke woh points ko flat kar deta hai.
+                // Hum direct backend ke data (strokePath) se draw karenge taake 'gaps' ka pata chal sake.
+                
+                contribution.strokes.forEach((stroke: any) => {
+                    if (!stroke.strokePath || stroke.strokePath.length === 0) return;
+
+                    // Style set karein
+                    const c = stroke.color;
+                    ctx.strokeStyle = typeof c === 'string' ? c : `rgba(${c.r},${c.g},${c.b},${c.a || 1})`;
+                    ctx.lineWidth = stroke.brushSize;
+                    ctx.lineCap = 'round';
+                    ctx.lineJoin = 'round';
+                    ctx.globalCompositeOperation = stroke.mode === 'eraser' ? 'destination-out' : 'source-over';
+
+                    ctx.beginPath();
+
+                    // Segment by Segment draw karein aur Gap check karein
+                    stroke.strokePath.forEach((segment: any, index: number) => {
+                        if (index === 0) {
+                            // Pehla point
+                            ctx.moveTo(segment.fromX, segment.fromY);
+                        } else {
+                            // Pishle point ko check karein
+                            const prevSegment = stroke.strokePath[index - 1];
+                            
+                            // AGAR GAP HAI (yani pichla point is naye point se nahi jurta)
+                            if (prevSegment.toX !== segment.fromX || prevSegment.toY !== segment.fromY) {
+                                // To line ko jorne ke bajaye, pencil utha kar naye point par rakhein
+                                ctx.moveTo(segment.fromX, segment.fromY);
+                            }
+                        }
+                        // Line draw karein
+                        ctx.lineTo(segment.toX, segment.toY);
+                    });
+                    
+                    ctx.stroke();
+                });
+            }
+        });
+        // --- FIX KHATAM ---
 
         const image = new window.Image();
         image.src = offscreenCanvas.toDataURL();
         image.onload = () => setBakedImage(image);
-    }, [savedContributions, pendingStrokes, virtualWidth, virtualHeight, memoizedTransform]);
 
+    },[savedStrokes, pendingStrokes, virtualWidth, virtualHeight, user]); 
+  
     const sendBatchToServer = useCallback(() => {
 
         if (isDrawingRef.current) {
@@ -348,10 +425,11 @@ const KonvaCanvas = ({
         const strokesToSend = [...strokeQueueRef.current];
         strokeQueueRef.current = []; // Queue ko foran khaali kar dein
 
-        console.log(`Sending a batch of ${strokesToSend.length} strokes to contribution ${activeContributionId}`);
+        console.log(`Sending a batch of ${strokesToSend.length} strokes to contribution ${activeContributionId} for user ${user?._id}`);
 
         dispatch(addStrokes({
             contributionId: activeContributionId,
+            userId: user?._id as string, // User ID pass karein
             strokes: strokesToSend // Poora batch (strokes ka array) bhejein
         }))
             .unwrap()
@@ -429,34 +507,34 @@ const KonvaCanvas = ({
             return
         }; // Agar pointer canvas ke bahar hai, drawing stop
 
+        const isCurrentlyInside = isPointerInsideCanvas(point);
+        const lastPoints = activeLine.points;
+
         if (brushState.mode === 'line') {
             setActiveLine((prev: any) => ({ ...prev, points: [lineStartPointRef.current.x, lineStartPointRef.current.y, point.x, point.y] }));
         } else {
             setActiveLine((prev: any) => ({ ...prev, points: [...prev.points, point.x, point.y] }));
-            const lastPoints = activeLine.points;
+            
+            // Ek segment banane ke liye pichle points zaroori hain
             if (lastPoints.length >= 2) {
                 const last = { x: lastPoints[lastPoints.length - 2], y: lastPoints[lastPoints.length - 1] };
-                currentStrokePathRef.current.push({ fromX: last.x, fromY: last.y, toX: point.x, toY: point.y });
-            }
-        }
 
-        const isCurrentlyInside = isPointerInsideCanvas(point);
-        const lastPoints = activeLine.points;
-
-        // Ek segment banane ke liye pichla point zaroori hai
-        if (lastPoints.length >= 4) { // Kam se kam 2 points (x1, y1, x2, y2) hone chahiye
-            const last = { x: lastPoints[lastPoints.length - 4], y: lastPoints[lastPoints.length - 3] };
-
-            // Data segment sirf tab save karein jab mojooda point AND pichla point, dono andar hon.
-            // Is se jab user bahar se andar aata hai to ek lambi lakeer nahi banti.
-            if (isCurrentlyInside && wasInsideCanvasRef.current) {
-                currentStrokePathRef.current.push({ fromX: last.x, fromY: last.y, toX: point.x, toY: point.y });
+                // Data segment sirf tab save karein jab mojooda point AND pichla point, dono andar hon.
+                // Is se jab user bahar se andar aata hai to ek lambi lakeer nahi banti.
+                if (isCurrentlyInside && wasInsideCanvasRef.current) {
+                    currentStrokePathRef.current.push({
+                        _id: uuidv4(), // Unique ID for each segment
+                        fromX: last.x,
+                        fromY: last.y,
+                        toX: point.x,
+                        toY: point.y
+                    });
+                }
             }
         }
 
         // 3. Agle event ke liye state ko update karein
         wasInsideCanvasRef.current = isCurrentlyInside;
-
     };
 
     const stopDrawing = () => {
@@ -468,7 +546,13 @@ const KonvaCanvas = ({
         if (brushState.mode === 'line' && lineStartPointRef.current) {
             const startPoint = lineStartPointRef.current;
             const endPoint = activeLine.points.length > 2 ? { x: activeLine.points[2], y: activeLine.points[3] } : startPoint;
-            currentStrokePathRef.current = [{ fromX: startPoint.x, fromY: startPoint.y, toX: endPoint.x, toY: endPoint.y }];
+            currentStrokePathRef.current = [{ 
+                _id: uuidv4(), // Unique ID for line tool segment
+                fromX: startPoint.x, 
+                fromY: startPoint.y, 
+                toX: endPoint.x, 
+                toY: endPoint.y 
+            }];
             lineStartPointRef.current = null;
         }
 
