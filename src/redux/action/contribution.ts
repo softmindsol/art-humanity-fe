@@ -1,6 +1,5 @@
 import api from "@/api/api";
 import type { FetchTilesArgs } from "@/types/canvas";
-import { config } from "@/utils/endpoints";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 
 // Create a single stroke
@@ -193,13 +192,17 @@ export const batchCreateStrokes = createAsyncThunk(
 export const addStrokes = createAsyncThunk(
   "contributions/addStrokes",
   async (
-    { contributionId, strokes }: { contributionId: string; strokes: any[] },
+    {
+      contributionId,
+      strokes,
+      userId,
+    }: { contributionId: string; strokes: any[]; userId: string },
     { rejectWithValue }
   ) => {
     try {
-      // Call our new PATCH endpoint
+      // Call our new PATCH endpoint with userId and contributionId in the path
       const response = await api.patch(
-        `/contributions/${contributionId}/strokes`,
+        `/contributions/${userId}/${contributionId}/strokes`,
         { strokes }
       );
       // The backend will return the fully updated contribution object
