@@ -237,6 +237,34 @@ const KonvaCanvas = ({
         });
     }, [savedStrokes, width, height, memoizedTransformContributionForKonva]);
 
+const renderStrokesWithGaps = (ctx: any, strokes: any[]) => {
+        strokes.forEach((stroke) => {
+            if (!stroke.strokePath || stroke.strokePath.length === 0) return;
+
+            const c = stroke.color;
+            ctx.strokeStyle = typeof c === 'string' ? c : `rgba(${c.r},${c.g},${c.b},${c.a || 1})`;
+            ctx.lineWidth = stroke.brushSize;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            // Eraser mode handling
+            ctx.globalCompositeOperation = stroke.mode === 'eraser' ? 'destination-out' : 'source-over';
+
+            ctx.beginPath();
+            stroke.strokePath.forEach((segment: any, index: number) => {
+                if (index === 0) {
+                    ctx.moveTo(segment.fromX, segment.fromY);
+                } else {
+                    const prev = stroke.strokePath[index - 1];
+                    // Agar coordinates match nahi karte (matlab beech se segment delete hua hai)
+                    if (prev.toX !== segment.fromX || prev.toY !== segment.fromY) {
+                        ctx.moveTo(segment.fromX, segment.fromY);
+                    }
+                }
+                ctx.lineTo(segment.toX, segment.toY);
+            });
+            ctx.stroke();
+        });
+    };
 
 
 
@@ -359,11 +387,10 @@ const KonvaCanvas = ({
             if (contribution?.strokes?.length > 0) {
                 // Hum ab memoizedTransform ka istemal nahi karenge kyunke woh points ko flat kar deta hai.
                 // Hum direct backend ke data (strokePath) se draw karenge taake 'gaps' ka pata chal sake.
-                
-                contribution.strokes.forEach((stroke: any) => {
+             contribution.strokes.forEach((stroke: any) => {
                     if (!stroke.strokePath || stroke.strokePath.length === 0) return;
 
-                    // Style set karein
+                    // 1. Style set karein
                     const c = stroke.color;
                     ctx.strokeStyle = typeof c === 'string' ? c : `rgba(${c.r},${c.g},${c.b},${c.a || 1})`;
                     ctx.lineWidth = stroke.brushSize;
@@ -373,21 +400,22 @@ const KonvaCanvas = ({
 
                     ctx.beginPath();
 
-                    // Segment by Segment draw karein aur Gap check karein
+                    // 2. Segment by Segment draw karein
                     stroke.strokePath.forEach((segment: any, index: number) => {
                         if (index === 0) {
-                            // Pehla point
+                            // Line ka pehla point
                             ctx.moveTo(segment.fromX, segment.fromY);
                         } else {
-                            // Pishle point ko check karein
+                            // Pichla point check karein
                             const prevSegment = stroke.strokePath[index - 1];
                             
-                            // AGAR GAP HAI (yani pichla point is naye point se nahi jurta)
+                            // YEH HAI ASAL FIX: Agar pichli line ka End point, Nayi line ke Start point se nahi milta (yani beech mein gap hai eraser ki wajah se)
                             if (prevSegment.toX !== segment.fromX || prevSegment.toY !== segment.fromY) {
-                                // To line ko jorne ke bajaye, pencil utha kar naye point par rakhein
+                                // Toh line ko jorne ke bajaye, pencil utha kar naye point par rakho
                                 ctx.moveTo(segment.fromX, segment.fromY);
                             }
                         }
+                        
                         // Line draw karein
                         ctx.lineTo(segment.toX, segment.toY);
                     });
@@ -647,102 +675,6 @@ const KonvaCanvas = ({
 
         stopDrawing();
     };
-
-
-    // const handleMouseDown = (e: any) => {
-    //     const stage = stageRef.current;
-    //     if (!stage) return;
-
-    //     if (e.evt.button === 2) { // Right-click for panning
-    //         setIsPanning(true);
-    //         panStartPointRef.current = stage.getPointerPosition();
-    //         return;
-    //     }
-    //     startDrawing(e.target.getStage().getRelativePointerPosition());
-
-    //     if (isReadOnly || !user) {
-    //         if (!user) onGuestInteraction();
-    //         return;
-    //     }
-    //     if (!isContributor) {
-    //         toast.warning("You are not a contributor for this project.");
-    //         return;
-    //     }
-    //     if (brushState.mode === 'move') return;
-    //     if (onClearHighlight) {
-    //         onClearHighlight();
-    //     }
-    //     setIsDrawing(true);
-
-    //     if (brushState.mode === 'picker' && bakedImageContextRef.current) {
-    //         const pixel = bakedImageContextRef.current.getImageData(pos.x, pos.y, 1, 1).data;
-    //         const rgb = { r: pixel[0], g: pixel[1], b: pixel[2], a: 1 };
-
-    //         // Convert the picked RGB color back to HSL for our Redux state
-    //         const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
-
-    //         // Dispatch to set the brush color
-    //         dispatch(setBrushColor({ h: hsl.h, s: hsl.s, l: hsl.l }));
-
-    //         // Add the picked color to recent colors
-    //         dispatch(addRecentColor({ h: hsl.h, s: hsl.s, l: hsl.l }));
-
-    //         // Switch the tool back to the brush
-    //         dispatch(setCurrentBrush({ mode: 'brush' }));
-
-    //         toast.success("Color picked!");
-    //         return; // Stop further execution
-    //     }
-    //     const pos = getCanvasPointerPosition(stage);
-
-    //     const { h, s, l } = brushState.color;
-    //     const rgbColor = hslToRgb(h, s, l);
-    //     const colorString = `rgba(${rgbColor.r}, ${rgbColor.g}, ${rgbColor.b}, 1)`;
-    //     let clickedOnContributionId = null;
-    //     if (ownershipMapRef.current) {
-    //         const x = Math.floor(pos.x);
-    //         const y = Math.floor(pos.y);
-    //         if (y >= 0 && y < virtualHeight && x >= 0 && x < virtualWidth) {
-    //             clickedOnContributionId = ownershipMapRef.current[y][x];
-    //         }
-    //     }
-    //     // Step 2: Faisla karein
-    //     if (clickedOnContributionId) {
-    //         // Agar click drawing par hua hai, to parent ko ID bhejein
-    //         onContributionSelect(clickedOnContributionId);
-    //     } else {
-    //         // Agar click khaali jagah par hua hai, to highlight saaf karne ka event bhejein
-    //         onClearHighlight();
-    //     }
-    //     if (brushState.mode === 'brush' || brushState.mode === 'eraser') {
-    //         setIsDrawing(true);
-    //         currentStrokePathRef.current = [];
-    //         // Redux se anay wale color object ko CSS ke rgba string mein convert karein
-
-    //         setActiveLine({
-    //             points: [pos.x, pos.y],
-    //             tool: brushState.mode,
-    //             stroke: colorString,
-    //             strokeWidth: brushState.size,
-    //         });
-    //     }
-
-    //     if (brushState.mode === 'line') {
-    //         setIsDrawing(true);
-    //         lineStartPointRef.current = pos;
-    //         setActiveLine({
-    //             points: [pos.x, pos.y, pos.x, pos.y],
-    //             tool: 'brush',
-    //             stroke: colorString,
-    //             strokeWidth: brushState.size,
-    //         });
-    //     }
-    //     startDrawing(pos);
-
-
-
-    // };
-
 
     const handleMouseDown = (e: any) => {
         const stage = stageRef.current;
