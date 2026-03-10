@@ -746,7 +746,43 @@ const renderStrokesWithGaps = (ctx: any, strokes: any[]) => {
         startDrawing(pos);
     };
 
-    const handleMouseMove = (e: any) => {
+    // const handleMouseMove = (e: any) => {
+    //     const stage = stageRef.current;
+    //     if (!stage) return;
+
+    //     if (isPanning) {
+    //         const newPoint = stage.getPointerPosition();
+    //         const newPos = {
+    //             x: stage.x() + (newPoint.x - panStartPointRef.current.x),
+    //             y: stage.y() + (newPoint.y - panStartPointRef.current.y),
+    //         };
+    //         stage.position(newPos);
+    //         panStartPointRef.current = newPoint;
+    //         handleStageChange();
+    //         return;
+    //     }
+    //     draw(e.target.getStage().getRelativePointerPosition());
+
+    //     onStateChange({ worldPos: stage.getRelativePointerPosition() });
+
+    //     if (!isDrawing) return;
+    //     const point = stage.getRelativePointerPosition();
+    //     if (!isPointerInsideCanvas(point)) return; // <-- Prevent drawing outside
+
+    //     if (brushState.mode === 'line') {
+    //         setActiveLine((prev: any) => ({ ...prev, points: [lineStartPointRef.current.x, lineStartPointRef.current.y, point.x, point.y] }));
+    //     } else {
+    //         setActiveLine((prev: any) => ({ ...prev, points: [...prev.points, point.x, point.y] }));
+    //         const lastPoints = activeLine.points;
+    //         if (lastPoints.length >= 2) {
+    //             const last = { x: lastPoints[lastPoints.length - 2], y: lastPoints[lastPoints.length - 1] };
+    //             currentStrokePathRef.current.push({ fromX: last.x, fromY: last.y, toX: point.x, toY: point.y });
+    //         }
+    //     }
+    // };
+
+
+const handleMouseMove = (e: any) => {
         const stage = stageRef.current;
         if (!stage) return;
 
@@ -761,28 +797,18 @@ const renderStrokesWithGaps = (ctx: any, strokes: any[]) => {
             handleStageChange();
             return;
         }
-        draw(e.target.getStage().getRelativePointerPosition());
 
-        onStateChange({ worldPos: stage.getRelativePointerPosition() });
+        // --- YEH HAI ASAL FIX ---
+        // Hamesha 'getCanvasPointerPosition' use karein taake zoom/pan par line offset na ho
+        const pos = getCanvasPointerPosition(stage);
+        
+        onStateChange({ worldPos: pos });
 
         if (!isDrawing) return;
-        const point = stage.getRelativePointerPosition();
-        if (!isPointerInsideCanvas(point)) return; // <-- Prevent drawing outside
-
-        if (brushState.mode === 'line') {
-            setActiveLine((prev: any) => ({ ...prev, points: [lineStartPointRef.current.x, lineStartPointRef.current.y, point.x, point.y] }));
-        } else {
-            setActiveLine((prev: any) => ({ ...prev, points: [...prev.points, point.x, point.y] }));
-            const lastPoints = activeLine.points;
-            if (lastPoints.length >= 2) {
-                const last = { x: lastPoints[lastPoints.length - 2], y: lastPoints[lastPoints.length - 1] };
-                currentStrokePathRef.current.push({ fromX: last.x, fromY: last.y, toX: point.x, toY: point.y });
-            }
-        }
+        
+        // Sirf 'draw' function call karein, duplicate logic hata di gayi hai
+        draw(pos);
     };
-
-
-
 
     const handleStageChange = () => {
         if (stageRef.current) {
@@ -1091,7 +1117,18 @@ const renderStrokesWithGaps = (ctx: any, strokes: any[]) => {
             <Layer listening={false}>
                 <Rect x={0} y={0} width={virtualWidth} height={virtualHeight} fill="white" stroke="#E0E0E0" strokeWidth={4 / (stageRef.current?.scaleX() || 1)} />
                 {bakedImage && <KonvaImage image={bakedImage} x={0} y={0} width={virtualWidth} height={virtualHeight} listening={false} />}
-                {isDrawing && <Line points={activeLine.points} stroke={activeLine.stroke} strokeWidth={activeLine.strokeWidth} tension={brushState.mode === 'line' ? 0 : 0.5} lineCap="round" lineJoin="round" globalCompositeOperation={activeLine.tool === 'eraser' ? 'destination-out' : 'source-over'} listening={false} />}
+               {isDrawing && (
+    <Line 
+        points={activeLine.points} 
+        stroke={brushState.mode === 'eraser' ? 'white' : activeLine.stroke} 
+        strokeWidth={activeLine.strokeWidth} 
+        tension={brushState.mode === 'line' ? 0 : 0.5} 
+        lineCap="round" 
+        lineJoin="round" 
+        globalCompositeOperation="source-over" 
+        listening={false} 
+    />
+)}
             </Layer>
             <Layer listening={false}>
                 {highlightedBox && (
