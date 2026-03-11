@@ -391,7 +391,13 @@ const Toolbox = ({ boundaryRef }: any) => {
         {/* Eraser */}
         {window.location.hostname !== "murart.io" && window.location.hostname !== "www.murart.io" && (
           <button
-            onClick={() => dispatch(setCurrentBrush({ mode: "eraser" }))}
+            onClick={() => {
+              if (brushState.mode === "eraser") {
+                dispatch(setCurrentBrush({ mode: "brush" }));
+              } else {
+                dispatch(setCurrentBrush({ mode: "eraser" }));
+              }
+            }}
             className={`p-2 rounded-lg transition-all ${
               brushState.mode === "eraser"
                 ? "bg-white/20 text-white"
