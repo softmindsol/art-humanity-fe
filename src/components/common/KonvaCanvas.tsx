@@ -820,78 +820,48 @@ const handleMouseMove = (e: any) => {
     };
 
     // --- TOUCH EVENT HANDLERS ---
-    // --- TOUCH EVENT HANDLERS ---
     const getDistance = (p1: any, p2: any) => {
         return Math.sqrt(Math.pow(p2.clientX - p1.clientX, 2) + Math.pow(p2.clientY - p1.clientY, 2));
     };
 
-    const handleTouchStart = (e: any) => {
+    const getTouchPosOnStage = (touch: any, stageNode: any) => {
+        const containerRect = stageNode.container().getBoundingClientRect();
+        const rawX = touch.clientX - containerRect.left;
+        const rawY = touch.clientY - containerRect.top;
+        const transform = stageNode.getAbsoluteTransform().copy().invert();
+        return transform.point({ x: rawX, y: rawY });
+    };
+
+ const handleTouchStart = (e: any) => {
         const stage = e.target.getStage();
         if (!stage) return;
 
         const touches = e.evt.touches;
+        if (!touches || touches.length === 0) return;
+
         const activeTouches = Array.from(touches);
-
-        // Apple Pencil / Stylus detection for palm rejection
         const stylusTouch: any = activeTouches.find((t: any) => t.touchType === 'stylus');
+        const primaryTouch = stylusTouch || touches[0];
 
-        // Coordinate transformation function for specific touches
-        const getTouchPosOnStage = (touch: any) => {
-            const transform = stage.getAbsoluteTransform().copy().invert();
-            return transform.point({ x: touch.clientX, y: touch.clientY });
-        };
-
-        if (stylusTouch) {
-            // Priority 1: If an Apple Pencil is detected, prioritize it for drawing
+        if (touches.length === 1 || stylusTouch) {
             if (stage.scaleX() < 1) {
                 toast.error("Please zoom in to at least 100% to draw.");
                 return;
             }
 
-            const pos = getTouchPosOnStage(stylusTouch);
+            // Naya function call karein stage object pass karke
+            const pos = getTouchPosOnStage(primaryTouch, stage);
 
-            // Handle Picker tool for Stylus
             if (brushState.mode === 'picker' && bakedImageContextRef.current) {
-                const pixel = (bakedImageContextRef.current as any).getImageData(Math.floor(pos.x), Math.floor(pos.y), 1, 1).data;
+                if (e.evt.cancelable) e.evt.preventDefault();
+                const safeX = Math.floor(Math.max(0, Math.min(virtualWidth - 1, pos.x)));
+                const safeY = Math.floor(Math.max(0, Math.min(virtualHeight - 1, pos.y)));
+                const pixel = (bakedImageContextRef.current as any).getImageData(safeX, safeY, 1, 1).data;
                 const pickedColor = `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;
                 
                 setLoupeData({
-                    active: true,
-                    x: pos.x,
-                    y: pos.y,
-                    color: pickedColor,
-                    viewportX: stylusTouch.clientX,
-                    viewportY: stylusTouch.clientY
-                });
-                return;
-            }
-
-            setIsDrawing(true);
-            startDrawing(pos);
-            return;
-        }
-
-        if (touches.length === 1) {
-            if (stage.scaleX() < 1) {
-                toast.error("Please zoom in to at least 100% to draw.");
-                return;
-            }
-
-            const pos = stage.getRelativePointerPosition();
-
-            // Handle Picker tool for Touch
-            if (brushState.mode === 'picker' && bakedImageContextRef.current) {
-                const pos = stage.getRelativePointerPosition();
-                const pixel = (bakedImageContextRef.current as any).getImageData(Math.floor(pos.x), Math.floor(pos.y), 1, 1).data;
-                const pickedColor = `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;
-                
-                setLoupeData({
-                    active: true,
-                    x: pos.x,
-                    y: pos.y,
-                    color: pickedColor,
-                    viewportX: touches[0].clientX,
-                    viewportY: touches[0].clientY
+                    active: true, x: pos.x, y: pos.y, color: pickedColor,
+                    viewportX: primaryTouch.clientX, viewportY: primaryTouch.clientY
                 });
                 return;
             }
@@ -899,114 +869,62 @@ const handleMouseMove = (e: any) => {
             setIsDrawing(true);
             startDrawing(pos);
         } else if (touches.length >= 2) {
-            // If already drawing with a primary touch, don't start panning
             if (isDrawing) return;
-
-            e.evt.preventDefault();
+            if (e.evt.cancelable) e.evt.preventDefault();
             setIsDrawing(false);
-
-            const touch1 = touches[0];
-            const touch2 = touches[1];
-
-            lastPanPointRef.current = {
-                x: (touch1.clientX + touch2.clientX) / 2,
-                y: (touch1.clientY + touch2.clientY) / 2,
-            };
-
-            lastDistRef.current = getDistance(touch1, touch2);
+            lastPanPointRef.current = { x: (touches[0].clientX + touches[1].clientX) / 2, y: (touches[0].clientY + touches[1].clientY) / 2 };
+            lastDistRef.current = getDistance(touches[0], touches[1]);
         }
     };
 
     const handleTouchMove = (e: any) => {
         const stage = e.target.getStage();
         if (!stage) return;
+        
+        if (e.evt.cancelable) e.evt.preventDefault(); // Stop native scroll
 
-        e.evt.preventDefault();
         const touches = e.evt.touches;
+        if (!touches || touches.length === 0) return;
+
         const activeTouches = Array.from(touches);
         const stylusTouch: any = activeTouches.find((t: any) => t.touchType === 'stylus');
+        const primaryTouch = stylusTouch || touches[0];
 
-        const getTouchPosOnStage = (touch: any) => {
-            const transform = stage.getAbsoluteTransform().copy().invert();
-            return transform.point({ x: touch.clientX, y: touch.clientY });
-        };
-
-        // Case 1: Picker Mode Loupe handling
         if (brushState.mode === 'picker' && loupeData?.active && bakedImageContextRef.current) {
-            const touch = stylusTouch || touches[0];
-            const pos = getTouchPosOnStage(touch);
+            // Naya function call karein stage object pass karke
+            const pos = getTouchPosOnStage(primaryTouch, stage);
+            const safeX = Math.floor(Math.max(0, Math.min(virtualWidth - 1, pos.x)));
+            const safeY = Math.floor(Math.max(0, Math.min(virtualHeight - 1, pos.y)));
+            const pixel = (bakedImageContextRef.current as any).getImageData(safeX, safeY, 1, 1).data;
             
-            const pixel = (bakedImageContextRef.current as any).getImageData(
-                Math.floor(Math.max(0, Math.min(virtualWidth - 1, pos.x))),
-                Math.floor(Math.max(0, Math.min(virtualHeight - 1, pos.y))),
-                1, 1).data;
-            
-            setLoupeData({
-                active: true,
-                x: pos.x,
-                y: pos.y,
-                color: `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`,
-                viewportX: touch.clientX,
-                viewportY: touch.clientY
-            });
+            setLoupeData({ ...loupeData, x: pos.x, y: pos.y, color: `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`, viewportX: primaryTouch.clientX, viewportY: primaryTouch.clientY });
             return;
         }
 
-        // Palm Rejection: If drawing with stylus, ignore other touches for pan/zoom
-        if (stylusTouch && isDrawing) {
-            const pos = getTouchPosOnStage(stylusTouch);
+        if ((stylusTouch && isDrawing) || (touches.length === 1 && isDrawing)) {
+            // Naya function call karein stage object pass karke
+            const pos = getTouchPosOnStage(primaryTouch, stage);
             onStateChange({ worldPos: pos });
             draw(pos);
             return;
         }
 
         if (touches.length >= 2 && lastPanPointRef.current && !isDrawing) {
-            const touch1 = touches[0];
-            const touch2 = touches[1];
-
-            const dist = getDistance(touch1, touch2);
-            const newCenter = {
-                x: (touch1.clientX + touch2.clientX) / 2,
-                y: (touch1.clientY + touch2.clientY) / 2,
-            };
-
-            const dx = newCenter.x - lastPanPointRef.current.x;
-            const dy = newCenter.y - lastPanPointRef.current.y;
-
-            const newPos = {
-                x: stage.x() + dx,
-                y: stage.y() + dy,
-            };
-
-            stage.position(newPos);
+            const dist = getDistance(touches[0], touches[1]);
+            const newCenter = { x: (touches[0].clientX + touches[1].clientX) / 2, y: (touches[0].clientY + touches[1].clientY) / 2 };
+            stage.position({ x: stage.x() + (newCenter.x - lastPanPointRef.current.x), y: stage.y() + (newCenter.y - lastPanPointRef.current.y) });
             lastPanPointRef.current = newCenter;
 
             if (lastDistRef.current > 0) {
                 const oldScale = stage.scaleX();
                 const scaleBy = dist / lastDistRef.current;
-                const newScale = oldScale * scaleBy;
-                const constrainedScale = Math.max(MIN_ZOOM, Math.min(newScale, MAX_ZOOM));
-
-                const mousePointTo = {
-                    x: (newCenter.x - stage.x()) / oldScale,
-                    y: (newCenter.y - stage.y()) / oldScale,
-                };
-
-                const newPosZoom = {
-                    x: newCenter.x - mousePointTo.x * constrainedScale,
-                    y: newCenter.y - mousePointTo.y * constrainedScale,
-                };
-
-                stage.scale({ x: constrainedScale, y: constrainedScale });
-                stage.position(newPosZoom);
+                const newScale = Math.max(MIN_ZOOM, Math.min(oldScale * scaleBy, MAX_ZOOM));
+                const mousePointTo = { x: (newCenter.x - stage.x()) / oldScale, y: (newCenter.y - stage.y()) / oldScale };
+                stage.scale({ x: newScale, y: newScale });
+                stage.position({ x: newCenter.x - mousePointTo.x * newScale, y: newCenter.y - mousePointTo.y * newScale });
             }
-
             lastDistRef.current = dist;
             handleStageChange();
-
-        } else if (touches.length === 1 && isDrawing) {
-            onStateChange({ worldPos: stage.getRelativePointerPosition() });
-            draw(stage.getRelativePointerPosition());
         }
     };
 
