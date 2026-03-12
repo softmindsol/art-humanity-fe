@@ -819,7 +819,7 @@ const handleMouseMove = (e: any) => {
         }
     };
 
-  const getDistance = (p1: any, p2: any) => {
+    const getDistance = (p1: any, p2: any) => {
         return Math.sqrt(Math.pow(p2.clientX - p1.clientX, 2) + Math.pow(p2.clientY - p1.clientY, 2));
     };
 
@@ -840,80 +840,57 @@ const handleMouseMove = (e: any) => {
 
         const activeTouches = Array.from(touches);
         const stylusTouch: any = activeTouches.find((t: any) => t.touchType === 'stylus');
+        const primaryTouch = stylusTouch || touches[0]; // Stylus ko priority
 
-        // --- 1. STYLUS HAS ULTIMATE PRIORITY (Palm Rejection) ---
+        // --- 1. PICKER MODE (Stylus & Finger dono ke liye ultimate priority) ---
+        if (brushState.mode === 'picker' && bakedImageContextRef.current) {
+            if (e.evt.cancelable) e.evt.preventDefault();
+            const pos = getTouchPosOnStage(primaryTouch, stage);
+            const safeX = Math.floor(Math.max(0, Math.min(virtualWidth - 1, pos.x)));
+            const safeY = Math.floor(Math.max(0, Math.min(virtualHeight - 1, pos.y)));
+            const pixel = (bakedImageContextRef.current as any).getImageData(safeX, safeY, 1, 1).data;
+            const pickedColor = `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;
+            
+            setLoupeData({
+                active: true, x: pos.x, y: pos.y, color: pickedColor,
+                viewportX: primaryTouch.clientX, viewportY: primaryTouch.clientY
+            });
+            return; // Yahan se seedha wapas, drawing na ho
+        }
+
+        // --- 2. STYLUS DRAWING ---
         if (stylusTouch) {
             if (stage.scaleX() < 1) {
                 toast.error("Please zoom in to at least 100% to draw.");
                 return;
             }
-
-            // Agar ghalti se panning start ho gayi thi, toh usey foran rok dein
+            if (e.evt.cancelable) e.evt.preventDefault();
             setIsPanning(false);
             lastPanPointRef.current = null;
 
             const pos = getTouchPosOnStage(stylusTouch, stage);
-
-            if (brushState.mode === 'picker' && bakedImageContextRef.current) {
-                if (e.evt.cancelable) e.evt.preventDefault();
-                const safeX = Math.floor(Math.max(0, Math.min(virtualWidth - 1, pos.x)));
-                const safeY = Math.floor(Math.max(0, Math.min(virtualHeight - 1, pos.y)));
-                const pixel = (bakedImageContextRef.current as any).getImageData(safeX, safeY, 1, 1).data;
-                const pickedColor = `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;
-                
-                setLoupeData({
-                    active: true, x: pos.x, y: pos.y, color: pickedColor,
-                    viewportX: stylusTouch.clientX, viewportY: stylusTouch.clientY
-                });
-                return;
-            }
-
             setIsDrawing(true);
             startDrawing(pos);
-            return; // Stylus mila, toh code yahin se wapas!
+            return;
         }
 
-        // --- 2. SINGLE FINGER (Drawing) ---
+        // --- 3. SINGLE FINGER DRAWING ---
         if (touches.length === 1) {
             if (stage.scaleX() < 1) {
                 toast.error("Please zoom in to at least 100% to draw.");
                 return;
             }
-
+            if (e.evt.cancelable) e.evt.preventDefault();
             const pos = getTouchPosOnStage(touches[0], stage);
-
-            if (brushState.mode === 'picker' && bakedImageContextRef.current) {
-                if (e.evt.cancelable) e.evt.preventDefault();
-                const safeX = Math.floor(Math.max(0, Math.min(virtualWidth - 1, pos.x)));
-                const safeY = Math.floor(Math.max(0, Math.min(virtualHeight - 1, pos.y)));
-                const pixel = (bakedImageContextRef.current as any).getImageData(safeX, safeY, 1, 1).data;
-                const pickedColor = `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`;
-                
-                setLoupeData({
-                    active: true, x: pos.x, y: pos.y, color: pickedColor,
-                    viewportX: touches[0].clientX, viewportY: touches[0].clientY
-                });
-                return;
-            }
-
             setIsDrawing(true);
             startDrawing(pos);
-            
         } 
-        // --- 3. TWO FINGERS (Panning/Zooming) ---
+        // --- 4. TWO FINGERS PANNING ---
         else if (touches.length >= 2) {
-            // Agar finger se draw kar rahe the aur dusri finger lag gayi, toh draw rok dein
-            if (isDrawing) {
-                stopDrawing();
-            }
-
+            if (isDrawing) return;
             if (e.evt.cancelable) e.evt.preventDefault();
             setIsPanning(true);
-            
-            lastPanPointRef.current = { 
-                x: (touches[0].clientX + touches[1].clientX) / 2, 
-                y: (touches[0].clientY + touches[1].clientY) / 2 
-            };
+            lastPanPointRef.current = { x: (touches[0].clientX + touches[1].clientX) / 2, y: (touches[0].clientY + touches[1].clientY) / 2 };
             lastDistRef.current = getDistance(touches[0], touches[1]);
         }
     };
@@ -922,34 +899,43 @@ const handleMouseMove = (e: any) => {
         const stage = e.target.getStage();
         if (!stage) return;
         
-        if (e.evt.cancelable) e.evt.preventDefault(); // Native scrolling ko hamesha rokein
+        if (e.evt.cancelable) e.evt.preventDefault(); // Native scrolling rokne ke liye
 
         const touches = e.evt.touches;
         if (!touches || touches.length === 0) return;
 
         const activeTouches = Array.from(touches);
         const stylusTouch: any = activeTouches.find((t: any) => t.touchType === 'stylus');
+        const primaryTouch = stylusTouch || touches[0];
 
-        // --- 1. STYLUS MOVE (Ultimate Priority) ---
-        if (stylusTouch) {
-            const pos = getTouchPosOnStage(stylusTouch, stage);
-
-            if (brushState.mode === 'picker' && loupeData?.active && bakedImageContextRef.current) {
-                const safeX = Math.floor(Math.max(0, Math.min(virtualWidth - 1, pos.x)));
-                const safeY = Math.floor(Math.max(0, Math.min(virtualHeight - 1, pos.y)));
-                const pixel = (bakedImageContextRef.current as any).getImageData(safeX, safeY, 1, 1).data;
-                setLoupeData({ ...loupeData, x: pos.x, y: pos.y, color: `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`, viewportX: stylusTouch.clientX, viewportY: stylusTouch.clientY });
-                return;
-            }
-
-            if (isDrawing) {
-                onStateChange({ worldPos: pos });
-                draw(pos);
-            }
-            return; // Stylus chal raha hai toh Panning logic ko bilkul ignore karein!
+        // --- 1. PICKER MODE MOVE (Stylus & Finger dono ke liye) ---
+        // Yahan se `loupeData?.active` ka check hata diya gaya hai taake async delay na aaye
+        if (brushState.mode === 'picker' && bakedImageContextRef.current) {
+            const pos = getTouchPosOnStage(primaryTouch, stage);
+            const safeX = Math.floor(Math.max(0, Math.min(virtualWidth - 1, pos.x)));
+            const safeY = Math.floor(Math.max(0, Math.min(virtualHeight - 1, pos.y)));
+            const pixel = (bakedImageContextRef.current as any).getImageData(safeX, safeY, 1, 1).data;
+            
+            setLoupeData({ 
+                active: true, 
+                x: pos.x, 
+                y: pos.y, 
+                color: `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`, 
+                viewportX: primaryTouch.clientX, 
+                viewportY: primaryTouch.clientY 
+            });
+            return; // Move theek se track ho, drawing na ho
         }
 
-        // --- 2. TWO FINGERS PANNING MOVE ---
+        // --- 2. STYLUS DRAWING MOVE ---
+        if (stylusTouch && isDrawing) {
+            const pos = getTouchPosOnStage(stylusTouch, stage);
+            onStateChange({ worldPos: pos });
+            draw(pos);
+            return;
+        }
+
+        // --- 3. TWO FINGERS PANNING MOVE ---
         if (isPanning && touches.length >= 2) {
             const dist = getDistance(touches[0], touches[1]);
             const newCenter = { x: (touches[0].clientX + touches[1].clientX) / 2, y: (touches[0].clientY + touches[1].clientY) / 2 };
@@ -970,44 +956,35 @@ const handleMouseMove = (e: any) => {
             return;
         }
 
-        // --- 3. SINGLE FINGER DRAWING MOVE ---
+        // --- 4. SINGLE FINGER DRAWING MOVE ---
         if (isDrawing && touches.length === 1) {
             const pos = getTouchPosOnStage(touches[0], stage);
-
-            if (brushState.mode === 'picker' && loupeData?.active && bakedImageContextRef.current) {
-                const safeX = Math.floor(Math.max(0, Math.min(virtualWidth - 1, pos.x)));
-                const safeY = Math.floor(Math.max(0, Math.min(virtualHeight - 1, pos.y)));
-                const pixel = (bakedImageContextRef.current as any).getImageData(safeX, safeY, 1, 1).data;
-                setLoupeData({ ...loupeData, x: pos.x, y: pos.y, color: `rgb(${pixel[0]}, ${pixel[1]}, ${pixel[2]})`, viewportX: touches[0].clientX, viewportY: touches[0].clientY });
-                return;
-            }
-
             onStateChange({ worldPos: pos });
             draw(pos);
         }
     };
 
     const handleTouchEnd = () => {
-        // Picker finish
-        if (brushState.mode === 'picker' && loupeData?.active) {
-            const rgbMatch = loupeData.color.match(/\d+/g);
-            if (rgbMatch) {
-                const hsl = rgbToHsl(parseInt(rgbMatch[0]), parseInt(rgbMatch[1]), parseInt(rgbMatch[2]));
-                dispatch(setBrushColor(hsl));
-                dispatch(setCurrentBrush({ mode: 'brush' }));
-                dispatch(addRecentColor(hsl));
-                toast.success("Color picked!");
+        // Picker finish handler
+        if (brushState.mode === 'picker') {
+            if (loupeData?.color) {
+                const rgbMatch = loupeData.color.match(/\d+/g);
+                if (rgbMatch) {
+                    const hsl = rgbToHsl(parseInt(rgbMatch[0]), parseInt(rgbMatch[1]), parseInt(rgbMatch[2]));
+                    dispatch(setBrushColor(hsl));
+                    dispatch(setCurrentBrush({ mode: 'brush' })); // Switch back to brush
+                    dispatch(addRecentColor(hsl));
+                    toast.success("Color picked!");
+                }
             }
             setLoupeData(null);
-            return;
+            return; // Picker mode se wapas, baqi logic na chalaaye
         }
 
-        // Reset Panning state
         setIsPanning(false);
         lastPanPointRef.current = null;
         lastDistRef.current = 0;
         
-        // Stop drawing if active
         if (isDrawing) {
             stopDrawing();
         }
