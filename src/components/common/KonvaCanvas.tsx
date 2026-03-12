@@ -1104,7 +1104,7 @@ const handleMouseMove = (e: any) => {
             onMouseUp={handleMouseUp}
             onMouseLeave={() => {
                 if (isPanning) setIsPanning(false);
-                if (isDrawing) stopDrawing(); // Ab 'stopDrawing' istemal karein
+                if (isDrawing) stopDrawing(); 
             }}
             onContextMenu={(e) => e.evt.preventDefault()}
 
@@ -1118,17 +1118,17 @@ const handleMouseMove = (e: any) => {
                 <Rect x={0} y={0} width={virtualWidth} height={virtualHeight} fill="white" stroke="#E0E0E0" strokeWidth={4 / (stageRef.current?.scaleX() || 1)} />
                 {bakedImage && <KonvaImage image={bakedImage} x={0} y={0} width={virtualWidth} height={virtualHeight} listening={false} />}
                {isDrawing && (
-    <Line 
-        points={activeLine.points} 
-        stroke={brushState.mode === 'eraser' ? 'white' : activeLine.stroke} 
-        strokeWidth={activeLine.strokeWidth} 
-        tension={brushState.mode === 'line' ? 0 : 0.5} 
-        lineCap="round" 
-        lineJoin="round" 
-        globalCompositeOperation="source-over" 
-        listening={false} 
-    />
-)}
+                <Line 
+                    points={activeLine.points} 
+                    stroke={brushState.mode === 'eraser' ? 'white' : activeLine.stroke} 
+                    strokeWidth={activeLine.strokeWidth} 
+                    tension={brushState.mode === 'line' ? 0 : 0.5} 
+                    lineCap="round" 
+                    lineJoin="round" 
+                    globalCompositeOperation="source-over" 
+                    listening={false} 
+                />
+            )}
             </Layer>
             <Layer listening={false}>
                 {highlightedBox && (
